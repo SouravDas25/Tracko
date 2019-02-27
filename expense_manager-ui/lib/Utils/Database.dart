@@ -21,7 +21,7 @@ class Database {
 
   static Database _instance;
 
-  static SqfliteAdapter getInstance() {
+  static SqfliteAdapter getAdapter() {
     if(_instance == null){
       _instance = new Database();
       _instance._initDB();
