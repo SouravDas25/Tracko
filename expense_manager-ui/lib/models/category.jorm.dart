@@ -1,34 +1,31 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'user.dart';
+part of 'category.dart';
 
 // **************************************************************************
 // BeanGenerator
 // **************************************************************************
 
-abstract class _UserBean implements Bean<User> {
+abstract class _CategoryBean implements Bean<Category> {
   final id = IntField('id');
   final name = StrField('name');
-  final phoneNo = StrField('phone_no');
-  final email = StrField('email');
+  final userId = IntField('user_id');
   Map<String, Field> _fields;
   Map<String, Field> get fields => _fields ??= {
         id.name: id,
         name.name: name,
-        phoneNo.name: phoneNo,
-        email.name: email,
+        userId.name: userId,
       };
-  User fromMap(Map map) {
-    User model = User();
+  Category fromMap(Map map) {
+    Category model = Category();
     model.id = adapter.parseValue(map['id']);
     model.name = adapter.parseValue(map['name']);
-    model.phoneNo = adapter.parseValue(map['phone_no']);
-    model.email = adapter.parseValue(map['email']);
+    model.userId = adapter.parseValue(map['user_id']);
 
     return model;
   }
 
-  List<SetColumn> toSetColumns(User model,
+  List<SetColumn> toSetColumns(Category model,
       {bool update = false, Set<String> only}) {
     List<SetColumn> ret = [];
 
@@ -37,15 +34,13 @@ abstract class _UserBean implements Bean<User> {
         ret.add(id.set(model.id));
       }
       ret.add(name.set(model.name));
-      ret.add(phoneNo.set(model.phoneNo));
-      ret.add(email.set(model.email));
+      ret.add(userId.set(model.userId));
     } else {
       if (model.id != null) {
         if (only.contains(id.name)) ret.add(id.set(model.id));
       }
       if (only.contains(name.name)) ret.add(name.set(model.name));
-      if (only.contains(phoneNo.name)) ret.add(phoneNo.set(model.phoneNo));
-      if (only.contains(email.name)) ret.add(email.set(model.email));
+      if (only.contains(userId.name)) ret.add(userId.set(model.userId));
     }
 
     return ret;
@@ -55,36 +50,29 @@ abstract class _UserBean implements Bean<User> {
     final st = Sql.create(tableName, ifNotExists: ifNotExists);
     st.addInt(id.name, primary: true, autoIncrement: true, isNullable: false);
     st.addStr(name.name, length: 250, isNullable: false);
-    st.addStr(phoneNo.name, length: 10, isNullable: false);
-    st.addStr(email.name, length: 250, isNullable: true);
+    st.addInt(userId.name,
+        foreignTable: userBean.tableName, foreignCol: 'id', isNullable: false);
     return adapter.createTable(st);
   }
 
-  Future<dynamic> insert(User model, {bool cascade: false}) async {
+  Future<dynamic> insert(Category model, {bool cascade: false}) async {
     final Insert insert = inserter.setMany(toSetColumns(model)).id(id.name);
     var retId = await adapter.insert(insert);
     if (cascade) {
-      User newModel;
-      if (model.accounts != null) {
+      Category newModel;
+      if (model.transactions != null) {
         newModel ??= await find(retId);
-        model.accounts.forEach((x) => accountBean.associateUser(x, newModel));
-        for (final child in model.accounts) {
-          await accountBean.insert(child);
-        }
-      }
-      if (model.categories != null) {
-        newModel ??= await find(retId);
-        model.categories
-            .forEach((x) => categoryBean.associateUser(x, newModel));
-        for (final child in model.categories) {
-          await categoryBean.insert(child);
+        model.transactions
+            .forEach((x) => transactionBean.associateCategory(x, newModel));
+        for (final child in model.transactions) {
+          await transactionBean.insert(child);
         }
       }
     }
     return retId;
   }
 
-  Future<void> insertMany(List<User> models, {bool cascade: false}) async {
+  Future<void> insertMany(List<Category> models, {bool cascade: false}) async {
     if (cascade) {
       final List<Future> futures = [];
       for (var model in models) {
@@ -101,31 +89,24 @@ abstract class _UserBean implements Bean<User> {
     }
   }
 
-  Future<dynamic> upsert(User model, {bool cascade: false}) async {
+  Future<dynamic> upsert(Category model, {bool cascade: false}) async {
     final Upsert upsert = upserter.setMany(toSetColumns(model)).id(id.name);
     var retId = await adapter.upsert(upsert);
     if (cascade) {
-      User newModel;
-      if (model.accounts != null) {
+      Category newModel;
+      if (model.transactions != null) {
         newModel ??= await find(retId);
-        model.accounts.forEach((x) => accountBean.associateUser(x, newModel));
-        for (final child in model.accounts) {
-          await accountBean.upsert(child);
-        }
-      }
-      if (model.categories != null) {
-        newModel ??= await find(retId);
-        model.categories
-            .forEach((x) => categoryBean.associateUser(x, newModel));
-        for (final child in model.categories) {
-          await categoryBean.upsert(child);
+        model.transactions
+            .forEach((x) => transactionBean.associateCategory(x, newModel));
+        for (final child in model.transactions) {
+          await transactionBean.upsert(child);
         }
       }
     }
     return retId;
   }
 
-  Future<void> upsertMany(List<User> models, {bool cascade: false}) async {
+  Future<void> upsertMany(List<Category> models, {bool cascade: false}) async {
     if (cascade) {
       final List<Future> futures = [];
       for (var model in models) {
@@ -145,38 +126,29 @@ abstract class _UserBean implements Bean<User> {
     }
   }
 
-  Future<int> update(User model,
+  Future<int> update(Category model,
       {bool cascade: false, bool associate: false, Set<String> only}) async {
     final Update update = updater
         .where(this.id.eq(model.id))
         .setMany(toSetColumns(model, only: only));
     final ret = adapter.update(update);
     if (cascade) {
-      User newModel;
-      if (model.accounts != null) {
+      Category newModel;
+      if (model.transactions != null) {
         if (associate) {
           newModel ??= await find(model.id);
-          model.accounts.forEach((x) => accountBean.associateUser(x, newModel));
+          model.transactions
+              .forEach((x) => transactionBean.associateCategory(x, newModel));
         }
-        for (final child in model.accounts) {
-          await accountBean.update(child);
-        }
-      }
-      if (model.categories != null) {
-        if (associate) {
-          newModel ??= await find(model.id);
-          model.categories
-              .forEach((x) => categoryBean.associateUser(x, newModel));
-        }
-        for (final child in model.categories) {
-          await categoryBean.update(child);
+        for (final child in model.transactions) {
+          await transactionBean.update(child);
         }
       }
     }
     return ret;
   }
 
-  Future<void> updateMany(List<User> models, {bool cascade: false}) async {
+  Future<void> updateMany(List<Category> models, {bool cascade: false}) async {
     if (cascade) {
       final List<Future> futures = [];
       for (var model in models) {
@@ -198,9 +170,10 @@ abstract class _UserBean implements Bean<User> {
     }
   }
 
-  Future<User> find(int id, {bool preload: false, bool cascade: false}) async {
+  Future<Category> find(int id,
+      {bool preload: false, bool cascade: false}) async {
     final Find find = finder.where(this.id.eq(id));
-    final User model = await findOne(find);
+    final Category model = await findOne(find);
     if (preload && model != null) {
       await this.preload(model, cascade: cascade);
     }
@@ -209,17 +182,16 @@ abstract class _UserBean implements Bean<User> {
 
   Future<int> remove(int id, [bool cascade = false]) async {
     if (cascade) {
-      final User newModel = await find(id);
+      final Category newModel = await find(id);
       if (newModel != null) {
-        await accountBean.removeByUser(newModel.id);
-        await categoryBean.removeByUser(newModel.id);
+        await transactionBean.removeByCategory(newModel.id);
       }
     }
     final Remove remove = remover.where(this.id.eq(id));
     return adapter.remove(remove);
   }
 
-  Future<int> removeMany(List<User> models) async {
+  Future<int> removeMany(List<Category> models) async {
     final Remove remove = remover;
     for (final model in models) {
       remove.or(this.id.eq(model.id));
@@ -227,35 +199,57 @@ abstract class _UserBean implements Bean<User> {
     return adapter.remove(remove);
   }
 
-  Future<User> preload(User model, {bool cascade: false}) async {
-    model.accounts = await accountBean.findByUser(model.id,
-        preload: cascade, cascade: cascade);
-    model.categories = await categoryBean.findByUser(model.id,
+  Future<List<Category>> findByUser(int userId,
+      {bool preload: false, bool cascade: false}) async {
+    final Find find = finder.where(this.userId.eq(userId));
+    final List<Category> models = await findMany(find);
+    if (preload) {
+      await this.preloadAll(models, cascade: cascade);
+    }
+    return models;
+  }
+
+  Future<List<Category>> findByUserList(List<User> models,
+      {bool preload: false, bool cascade: false}) async {
+    final Find find = finder;
+    for (User model in models) {
+      find.or(this.userId.eq(model.id));
+    }
+    final List<Category> retModels = await findMany(find);
+    if (preload) {
+      await this.preloadAll(retModels, cascade: cascade);
+    }
+    return retModels;
+  }
+
+  Future<int> removeByUser(int userId) async {
+    final Remove rm = remover.where(this.userId.eq(userId));
+    return await adapter.remove(rm);
+  }
+
+  void associateUser(Category child, User parent) {
+    child.userId = parent.id;
+  }
+
+  Future<Category> preload(Category model, {bool cascade: false}) async {
+    model.transactions = await transactionBean.findByCategory(model.id,
         preload: cascade, cascade: cascade);
     return model;
   }
 
-  Future<List<User>> preloadAll(List<User> models,
+  Future<List<Category>> preloadAll(List<Category> models,
       {bool cascade: false}) async {
-    models.forEach((User model) => model.accounts ??= []);
-    await OneToXHelper.preloadAll<User, Account>(
+    models.forEach((Category model) => model.transactions ??= []);
+    await OneToXHelper.preloadAll<Category, Transaction>(
         models,
-        (User model) => [model.id],
-        accountBean.findByUserList,
-        (Account model) => [model.userId],
-        (User model, Account child) => model.accounts.add(child),
-        cascade: cascade);
-    models.forEach((User model) => model.categories ??= []);
-    await OneToXHelper.preloadAll<User, Category>(
-        models,
-        (User model) => [model.id],
-        categoryBean.findByUserList,
-        (Category model) => [model.userId],
-        (User model, Category child) => model.categories.add(child),
+        (Category model) => [model.id],
+        transactionBean.findByCategoryList,
+        (Transaction model) => [model.categoryId],
+        (Category model, Transaction child) => model.transactions.add(child),
         cascade: cascade);
     return models;
   }
 
-  AccountBean get accountBean;
-  CategoryBean get categoryBean;
+  TransactionBean get transactionBean;
+  UserBean get userBean;
 }
