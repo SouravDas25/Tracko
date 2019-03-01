@@ -17,7 +17,7 @@ class WelcomePage extends StatelessWidget {
               padding: const EdgeInsets.all(16.0),
               child: Text(
                 "Welcome to Expense Manager",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w600),
                 textAlign: TextAlign.center,
               ),
             ),
