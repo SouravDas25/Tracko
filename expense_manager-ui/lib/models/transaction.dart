@@ -5,19 +5,20 @@ import 'package:expense_manager/models/account.dart';
 import 'package:expense_manager/models/category.dart';
 import 'package:jaguar_orm/jaguar_orm.dart';
 import 'package:jaguar_query/jaguar_query.dart';
+import 'package:jaguar_query_sqflite/jaguar_query_sqflite.dart';
 
 part 'transaction.jorm.dart';
 
 class Transaction {
   Transaction();
 
-  Transaction.make(this.id,this.name,this.date,this.amount,this.accountId,this.categoryId);
+  Transaction.make(this.id,this.comments,this.date,this.amount,this.accountId,this.categoryId);
 
   @PrimaryKey(auto: true)
   int id;
 
-  @Column(isNullable: false , length: 250)
-  String name;
+  @Column(isNullable: false , length: 500)
+  String comments;
 
   @Column(isNullable: false)
   DateTime date;
@@ -30,6 +31,16 @@ class Transaction {
 
   @BelongsTo(CategoryBean)
   int categoryId;
+
+  Category category;
+
+  Account account;
+
+  @override
+  String toString() {
+    return 'Transaction{id: $id, comments: $comments, date: $date, amount: $amount, accountId: $accountId, categoryId: $categoryId, category: $category, account: $account}';
+  }
+
 
 }
 
@@ -45,4 +56,14 @@ class TransactionBean extends Bean<Transaction> with _TransactionBean {
 
   @override
   CategoryBean get categoryBean => new CategoryBean(adapter);
+
+  static preLoadMappings(List<Transaction> transactions,SqfliteAdapter adapter) async {
+    var cb = new CategoryBean(adapter);
+    var ab = new AccountBean(adapter);
+    for(int i = 0 ; i < transactions.length ; i++) {
+      transactions[i].category = await cb.find(transactions[i].categoryId);
+      transactions[i].account = await ab.find(transactions[i].accountId);
+    }
+  }
+
 }

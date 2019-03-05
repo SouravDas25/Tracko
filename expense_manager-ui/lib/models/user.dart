@@ -33,6 +33,11 @@ class User {
 
   @HasMany(CategoryBean)
   List<Category> categories;
+
+  @override
+  String toString() {
+    return "$id , $name , $email , $phoneNo ";
+  }
 }
 
 @GenBean()
@@ -43,9 +48,23 @@ class UserBean extends Bean<User> with _UserBean {
 
   @override
   // TODO: implement accountBean
-  AccountBean get accountBean => new AccountBean(Database.getAdapter());
+  AccountBean get accountBean => new AccountBean(adapter);
 
   @override
   // TODO: implement categoryBean
   CategoryBean get categoryBean => null;
+
+  static Future<User> getCurrentUser({adapter}) async {
+    User user;
+    if(adapter == null){
+      adapter = await Database.getAdapter();
+      await adapter.connect();
+      user = await UserBean(adapter).find(1);
+      await adapter.close();
+    }
+    else {
+      user = await UserBean(adapter).find(1);
+    }
+    return user;
+  }
 }

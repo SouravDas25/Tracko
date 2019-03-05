@@ -26,6 +26,12 @@ class Category {
   @HasMany(TransactionBean)
   List<Transaction> transactions;
 
+  @override
+  String toString() {
+    return 'Category{id: $id, name: $name, userId: $userId, transactions: $transactions}';
+  }
+
+
 }
 
 @GenBean()

@@ -28,6 +28,12 @@ class Account {
   @HasMany(TransactionBean)
   List<Transaction> transactions;
 
+  @override
+  String toString() {
+    return 'Account{id: $id, name: $name, userId: $userId, transactions: $transactions}';
+  }
+
+
 }
 
 @GenBean()

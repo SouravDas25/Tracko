@@ -1,9 +1,13 @@
 
+import 'package:expense_manager/Init.dart';
 import 'package:expense_manager/pages/route.dart';
 import 'package:flutter/material.dart';
 import 'package:expense_manager/pages/welcome_page/welcome_page.dart';
 
-void main() => runApp(MyApp());
+void main() async {
+  await InitializeApp.init();
+  runApp(MyApp());
+}
 
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.

@@ -8,7 +8,7 @@ part of 'transaction.dart';
 
 abstract class _TransactionBean implements Bean<Transaction> {
   final id = IntField('id');
-  final name = StrField('name');
+  final comments = StrField('comments');
   final date = DateTimeField('date');
   final amount = DoubleField('amount');
   final accountId = IntField('account_id');
@@ -16,7 +16,7 @@ abstract class _TransactionBean implements Bean<Transaction> {
   Map<String, Field> _fields;
   Map<String, Field> get fields => _fields ??= {
         id.name: id,
-        name.name: name,
+        comments.name: comments,
         date.name: date,
         amount.name: amount,
         accountId.name: accountId,
@@ -25,7 +25,7 @@ abstract class _TransactionBean implements Bean<Transaction> {
   Transaction fromMap(Map map) {
     Transaction model = Transaction();
     model.id = adapter.parseValue(map['id']);
-    model.name = adapter.parseValue(map['name']);
+    model.comments = adapter.parseValue(map['comments']);
     model.date = adapter.parseValue(map['date']);
     model.amount = adapter.parseValue(map['amount']);
     model.accountId = adapter.parseValue(map['account_id']);
@@ -42,7 +42,7 @@ abstract class _TransactionBean implements Bean<Transaction> {
       if (model.id != null) {
         ret.add(id.set(model.id));
       }
-      ret.add(name.set(model.name));
+      ret.add(comments.set(model.comments));
       ret.add(date.set(model.date));
       ret.add(amount.set(model.amount));
       ret.add(accountId.set(model.accountId));
@@ -51,7 +51,7 @@ abstract class _TransactionBean implements Bean<Transaction> {
       if (model.id != null) {
         if (only.contains(id.name)) ret.add(id.set(model.id));
       }
-      if (only.contains(name.name)) ret.add(name.set(model.name));
+      if (only.contains(comments.name)) ret.add(comments.set(model.comments));
       if (only.contains(date.name)) ret.add(date.set(model.date));
       if (only.contains(amount.name)) ret.add(amount.set(model.amount));
       if (only.contains(accountId.name))
@@ -66,7 +66,7 @@ abstract class _TransactionBean implements Bean<Transaction> {
   Future<void> createTable({bool ifNotExists: false}) async {
     final st = Sql.create(tableName, ifNotExists: ifNotExists);
     st.addInt(id.name, primary: true, autoIncrement: true, isNullable: false);
-    st.addStr(name.name, length: 250, isNullable: false);
+    st.addStr(comments.name, length: 500, isNullable: false);
     st.addDateTime(date.name, isNullable: false);
     st.addDouble(amount.name, isNullable: false);
     st.addInt(accountId.name,

@@ -1,12 +1,67 @@
+import 'package:expense_manager/models/user.dart';
 import 'package:flutter/material.dart';
 import 'package:expense_manager/component/menu_bar.dart';
 import 'package:expense_manager/pages/phone_login_page/phone_login_page.dart';
 
-class WelcomePage extends StatelessWidget {
-  WelcomePage({Key key}) : super(key: key);
+class WelcomePage extends StatefulWidget {
+  @override
+  State<StatefulWidget> createState() {
+    return new _WelcomePage();
+  }
+}
+
+class _WelcomePage extends State<WelcomePage> {
+  User user;
+  bool loading = true;
+
+  @override
+  initState() {
+    super.initState();
+    this.loadData();
+  }
+
+  loadData() async {
+    if (this.user == null) {
+      this.user = await UserBean.getCurrentUser();
+      await Future<void>.delayed(new Duration(seconds: 2));
+      setState(() {
+        if (user != null) {
+          Navigator.pushReplacementNamed(
+            context,
+            "/home",
+          );
+        }
+      });
+      print(this.user);
+    }
+    loading = false;
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (this.user != null) {
+      return new Container();
+    }
+    Widget loaderOrButton;
+    if (loading) {
+      loaderOrButton = Text(
+        "Loading...",
+        textAlign: TextAlign.center,
+      );
+    } else {
+      loaderOrButton = new RaisedButton(
+        color: Theme.of(context).primaryColor,
+        textColor: Colors.white,
+        onPressed: () {
+          Navigator.pushReplacementNamed(
+            context,
+            "/phone_login",
+          );
+        },
+        padding: EdgeInsets.symmetric(vertical: 20.0),
+        child: Text('Login'),
+      );
+    }
     return Scaffold(
         appBar: MenuBar(),
         body: Padding(
@@ -23,27 +78,7 @@ class WelcomePage extends StatelessWidget {
             ),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 100.0, vertical: 20.0),
-              child: RaisedButton(
-                color: Theme.of(context).primaryColor,
-                textColor: Colors.white,
-                onPressed: () {
-                  Navigator.of(context).pushNamed("/phone_login");
-                },
-                padding: EdgeInsets.symmetric(vertical: 20.0),
-                child: Text('GO'),
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 100.0, vertical: 20.0),
-              child: RaisedButton(
-                color: Theme.of(context).primaryColor,
-                textColor: Colors.white,
-                onPressed: () {
-                  Navigator.of(context).pushNamed("/home");
-                },
-                padding: EdgeInsets.symmetric(vertical: 20.0),
-                child: Text('Home'),
-              ),
+              child: loaderOrButton,
             ),
           ]),
         ));
