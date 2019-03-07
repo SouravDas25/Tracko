@@ -57,7 +57,7 @@ class UserBean extends Bean<User> with _UserBean {
   static Future<User> getCurrentUser({adapter}) async {
     User user;
     if(adapter == null){
-      adapter = await Database.getAdapter();
+      adapter = await DatabaseUtil.getAdapter();
       await adapter.connect();
       user = await UserBean(adapter).find(1);
       await adapter.close();

@@ -6,7 +6,7 @@ import 'package:expense_manager/models/user.dart';
 import 'package:jaguar_query_sqflite/jaguar_query_sqflite.dart';
 
 void main() async {
-  SqfliteAdapter adapter = await Database.getAdapter();
+  SqfliteAdapter adapter = await DatabaseUtil.getAdapter();
   await adapter.connect();
   var userBean = new UserBean(adapter);
   await userBean.createTable(ifNotExists: true);

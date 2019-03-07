@@ -36,7 +36,7 @@ class _AddItemPage extends State<AddItemPage> {
   }
 
   initData() async {
-    var adapter = await Database.getAdapter();
+    var adapter = await DatabaseUtil.getAdapter();
     await adapter.connect();
     CategoryBean categoryBean = CategoryBean(adapter);
     categories = await categoryBean.getAll();
@@ -57,7 +57,7 @@ class _AddItemPage extends State<AddItemPage> {
 //      snackbarContext.currentState.showSnackBar(snackBar);
       return;
     }
-    var adapter = await Database.getAdapter();
+    var adapter = await DatabaseUtil.getAdapter();
     await adapter.connect();
     TransactionBean transactionBean = TransactionBean(adapter);
     Transaction transaction = new Transaction();

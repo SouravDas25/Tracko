@@ -32,14 +32,18 @@ class Transaction {
   @BelongsTo(CategoryBean)
   int categoryId;
 
-  Category category;
-
-  Account account;
-
   @override
   String toString() {
-    return 'Transaction{id: $id, comments: $comments, date: $date, amount: $amount, accountId: $accountId, categoryId: $categoryId, category: $category, account: $account}';
+    return 'Transaction{id: $id, comments: $comments, date: $date, amount: $amount, accountId: $accountId, categoryId: $categoryId}';
   }
+
+//  @IgnoreColumn()
+//  Category category;
+//
+//  @IgnoreColumn()
+//  Account account;
+
+
 
 
 }
@@ -47,23 +51,27 @@ class Transaction {
 
 @GenBean()
 class TransactionBean extends Bean<Transaction> with _TransactionBean {
-  TransactionBean(Adapter adapter) : super(adapter);
-
+  AccountBean _accountBean;
+  CategoryBean _categoryBean;
   final String tableName = 'transactions';
 
-  @override
-  AccountBean get accountBean => new AccountBean(adapter);
-
-  @override
-  CategoryBean get categoryBean => new CategoryBean(adapter);
-
-  static preLoadMappings(List<Transaction> transactions,SqfliteAdapter adapter) async {
-    var cb = new CategoryBean(adapter);
-    var ab = new AccountBean(adapter);
-    for(int i = 0 ; i < transactions.length ; i++) {
-      transactions[i].category = await cb.find(transactions[i].categoryId);
-      transactions[i].account = await ab.find(transactions[i].accountId);
-    }
+  TransactionBean(Adapter adapter) : super(adapter){
+    _accountBean = new AccountBean(adapter);
+    _categoryBean = new CategoryBean(adapter);
   }
+
+  @override
+  AccountBean get accountBean => _accountBean;
+
+  @override
+  CategoryBean get categoryBean => _categoryBean;
+
+//  preloadAllMappings(List<Transaction> transactions) async {
+//    for(int i =0;i<transactions.length;i++){
+//      transactions[i].category = await categoryBean.find(transactions[i].categoryId);
+//      print(transactions[i]);
+//      transactions[i].account = await accountBean.find(transactions[i].accountId);
+//    }
+//  }
 
 }

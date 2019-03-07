@@ -16,7 +16,7 @@ class AccountDialog extends StatelessWidget {
     if(name.trim().length <= 0){
       return;
     }
-    var adapter = await Database.getAdapter();
+    var adapter = await DatabaseUtil.getAdapter();
     await adapter.connect();
     AccountBean accountBean = AccountBean(adapter);
     Account account = new Account();

@@ -5,9 +5,10 @@ import 'package:expense_manager/Utils/Database.dart';
 
 class InitializeApp {
   static init() async {
-    var adapter = await Database.getAdapter();
+    var adapter = await DatabaseUtil.getAdapter();
     await adapter.connect();
-    await Database.createTables(adapter);
+//    await Database.dropTables(adapter);
+    await DatabaseUtil.createTables(adapter);
     await adapter.close();
   }
 }
