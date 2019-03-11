@@ -1,4 +1,7 @@
+import 'package:expense_manager/Utils/CommonUtil.dart';
 import 'package:expense_manager/Utils/Database.dart';
+import 'package:expense_manager/component/TransactionTile.dart';
+import 'package:expense_manager/component/multi_select/multi_select.dart';
 import 'package:expense_manager/models/account.dart';
 import 'package:flutter/material.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
@@ -14,12 +17,15 @@ class AccountsPage extends StatefulWidget {
 class _AccountsPage extends State<AccountsPage> {
   RefreshController refreshController = new RefreshController();
   List<Account> accounts = new List(0);
+  List<dynamic> transactions = new List(0);
+  List<dynamic> selections = new List(0);
+  final GlobalKey<FormState> _formKey = new GlobalKey<FormState>();
 
   _AccountsPage() {
-    initData();
+    initAccountData();
   }
 
-  void initData() async {
+  void initAccountData() async {
     var adapter = await DatabaseUtil.getAdapter();
     await adapter.connect();
     AccountBean accountBean = new AccountBean(adapter);
@@ -29,43 +35,80 @@ class _AccountsPage extends State<AccountsPage> {
     setState(() {
       refreshController.sendBack(true, RefreshStatus.completed);
     });
+    initTransactionData();
+  }
+
+  void initTransactionData() async {
+    Database db = await DatabaseUtil.getRawDatabase();
+
+    String query = "SELECT t.*, c.name AS category_name from transactions t"
+        " JOIN categories c ON t.category_id = c.id ";
+
+    if (selections != null && selections.length > 0) {
+      String param = "";
+      for (int i = 0; i < selections.length; i++) {
+        param += selections[i].toString();
+        if (i + 1 != selections.length) {
+          param += " ,";
+        }
+      }
+      query += "WHERE t.account_id IN (" + param + ")";
+    }
+    print(query);
+    transactions = (await db.rawQuery(query)).toList();
+//    print(transactions);
+    await db.close();
+    Future<void>.delayed(Duration(seconds: 1));
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    return SmartRefresher(
-      controller: refreshController,
-      enablePullDown: true,
-      enablePullUp: false,
-      onRefresh: (bool up) {
-        if (up) {
-          initData();
-        }
-      },
-      child: ListView(
-        children: <Widget>[
-          Padding(
-            padding: EdgeInsets.symmetric(vertical: 20.0),
-            child: ListView(
-              primary: false,
-              shrinkWrap: true,
-              children: accounts.map((Account account) {
-                return Card(
-                    child: ListTile(
-                  trailing: Text(
-                    "₹ 240.00",
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20),
-                  ),
-                  title: Text(
-                    account.name,
-                    style: TextStyle(fontWeight: FontWeight.w500, fontSize: 20),
-                  ),
-                  subtitle: Text(""),
-                ));
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: SmartRefresher(
+        controller: refreshController,
+        enablePullDown: true,
+        enablePullUp: false,
+        onRefresh: (bool up) {
+          if (up) {
+            initAccountData();
+          }
+        },
+        child: ListView(
+          children: <Widget>[
+            MultiSelect(
+              autovalidate: false,
+              titleText: 'Select multiple accounts',
+              textField: 'name',
+              valueField: 'id',
+              required: false,
+              filterable: true,
+              value: null,
+              onSaved: (values) {
+                selections = values;
+//                print("selected $values ");
+                initTransactionData();
+              },
+              dataSource: accounts.map((Account account) {
+                return {
+                  "name": account.name,
+                  "id": account.id,
+                };
               }).toList(),
             ),
-          ),
-        ],
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: 10.0),
+              child: ListView(
+                primary: false,
+                shrinkWrap: true,
+                children: transactions.map((dynamic transaction) {
+                  return TransactionTile(transaction);
+                }).toList(),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

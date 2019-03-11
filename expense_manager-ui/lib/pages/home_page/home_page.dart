@@ -2,13 +2,15 @@ import 'package:expense_manager/Utils/CommonUtil.dart';
 import 'package:expense_manager/Utils/Database.dart';
 import 'package:expense_manager/component/MenuDrawer.dart';
 import 'package:expense_manager/component/PaddedText.dart';
+import 'package:expense_manager/component/TransactionTile.dart';
 import 'package:expense_manager/component/screen.dart';
 import 'package:expense_manager/models/transaction.dart';
+import 'package:expense_manager/pages/add_item_page/add_item.dart';
 import 'package:flutter/material.dart';
 import 'package:expense_manager/component/menu_bar.dart';
 import "package:pull_to_refresh/pull_to_refresh.dart";
 import 'package:sqflite/sqflite.dart';
-
+import 'package:flutter_slidable/flutter_slidable.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({Key key}) : super(key: key);
@@ -17,11 +19,11 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin {
+class _HomePageState extends State<HomePage>
+    with SingleTickerProviderStateMixin {
   List<dynamic> transactions = new List(0);
   bool refreshIndicator = true;
   RefreshController refreshController = new RefreshController();
-
 
   @override
   initState() {
@@ -32,7 +34,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   initData() async {
 //    refreshController.sendBack(true, RefreshStatus.refreshing);
     Database db = await DatabaseUtil.getRawDatabase();
-    String query = "SELECT *, c.name AS category_name from transactions t"
+    String query = "SELECT t.*, c.name AS category_name from transactions t"
         " JOIN categories c ON t.category_id = c.id"
         " LIMIT 5";
     transactions = (await db.rawQuery(query)).toList();
@@ -65,7 +67,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                   child: Column(
                     children: <Widget>[
                       ListTile(
-                        leading:  PaddedText("Total Balance",
+                        leading: PaddedText("Total Balance",
                             textAlign: TextAlign.left),
                       ),
                       PaddedText(
@@ -87,12 +89,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                   primary: false,
                   shrinkWrap: true,
                   children: transactions.map((dynamic transaction) {
-                    return Card(
-                        child: ListTile(
-                          trailing: Text("₹ " + transaction['amount'].toString(), style: TextStyle(fontWeight: FontWeight.w600,fontSize: 20),),
-                          title: Text(transaction['category_name'].toString() ,style: TextStyle(fontWeight: FontWeight.w500,fontSize: 20),),
-                          subtitle: Text(transaction['comments'].toString().isEmpty ? CommonUtil.humanDate(transaction['date']) : transaction['comments']),
-                        ));
+                    return TransactionTile(transaction);
                   }).toList(),
                 )
               ],

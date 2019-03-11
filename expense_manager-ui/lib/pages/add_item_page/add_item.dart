@@ -12,16 +12,22 @@ import 'package:datetime_picker_formfield/datetime_picker_formfield.dart';
 import 'package:intl/intl.dart';
 
 class AddItemPage extends StatefulWidget {
+  int id;
+
+  AddItemPage({this.id : -1});
+
   @override
   State<StatefulWidget> createState() {
     // TODO: implement createState
-    return _AddItemPage();
+    return _AddItemPage(this.id);
   }
 }
 
 class _AddItemPage extends State<AddItemPage> {
   TextEditingController comments = TextEditingController();
-  double amount;
+  TextEditingController amount = TextEditingController();
+  bool isEdit = false;
+  Transaction current;
 
   DateTime date = DateTime.now();
   Category category;
@@ -31,11 +37,11 @@ class _AddItemPage extends State<AddItemPage> {
 
   List<Account> accounts = new List<Account>(0);
 
-  _AddItemPage() {
-    initData();
+  _AddItemPage(int id) {
+    initData(id);
   }
 
-  initData() async {
+  initData(int id) async {
     var adapter = await DatabaseUtil.getAdapter();
     await adapter.connect();
     CategoryBean categoryBean = CategoryBean(adapter);
@@ -43,6 +49,21 @@ class _AddItemPage extends State<AddItemPage> {
     AccountBean accountBean = AccountBean(adapter);
     accounts = await accountBean.getAll();
     account = accounts[0];
+
+    if(id != -1){
+      isEdit = true;
+      TransactionBean transactionBean = new TransactionBean(adapter);
+      current = await transactionBean.find(id);
+      date = current.date;
+      amount.value = TextEditingValue(text: current.amount.toString());
+      comments.value = TextEditingValue(text: current.comments) ;
+      category = categories.firstWhere((category) => category.id == current.categoryId);
+      account = accounts.firstWhere((acc)=> acc.id == current.accountId);
+      print(current);
+      print(account);
+    }
+
+
     await adapter.close();
     Future<void>.delayed(new Duration(seconds: 1));
     setState(() {});
@@ -60,15 +81,15 @@ class _AddItemPage extends State<AddItemPage> {
     var adapter = await DatabaseUtil.getAdapter();
     await adapter.connect();
     TransactionBean transactionBean = TransactionBean(adapter);
-    Transaction transaction = new Transaction();
-    transaction.comments = comments.text;
-    transaction.date = this.date;
-    transaction.amount = amount;
-    transactionBean.associateAccount(transaction, account);
-    transactionBean.associateCategory(transaction, category);
+
+    current.comments = comments.text;
+    current.date = this.date;
+    current.amount = double.parse(amount.text);
+    transactionBean.associateAccount(current, account);
+    transactionBean.associateCategory(current, category);
 //    print(date);
 //    print(transaction);
-    await transactionBean.insert(transaction);
+    await transactionBean.upsert(current);
 
     await adapter.close();
     Navigator.of(context).pop();
@@ -113,7 +134,7 @@ class _AddItemPage extends State<AddItemPage> {
                       builder: (_) => CategoryDialog(
                             callback: () {
                               setState(() {
-                                initData();
+                                initData(-1);
                               });
                             },
                           ),
@@ -132,9 +153,7 @@ class _AddItemPage extends State<AddItemPage> {
             decoration: new InputDecoration(
               labelText: 'Amount',
             ),
-            onChanged: (text) {
-              amount = double.parse(text);
-            },
+            controller: amount,
           ),
           DateTimePickerFormField(
             initialValue: date,
@@ -176,7 +195,7 @@ class _AddItemPage extends State<AddItemPage> {
                         builder: (_) => AccountDialog(
                               callback: () {
                                 setState(() {
-                                  initData();
+                                  initData(-1);
                                 });
                               },
                             ),
