@@ -23,7 +23,7 @@ class _WelcomePage extends State<WelcomePage> {
   loadData() async {
     if (this.user == null) {
       this.user = await UserBean.getCurrentUser();
-      await Future<void>.delayed(new Duration(seconds: 2));
+      await Future<void>.delayed(new Duration(seconds: 3));
       setState(() {
         if (user != null) {
           Navigator.pushReplacementNamed(
@@ -44,10 +44,7 @@ class _WelcomePage extends State<WelcomePage> {
     }
     Widget loaderOrButton;
     if (loading) {
-      loaderOrButton = Text(
-        "Loading...",
-        textAlign: TextAlign.center,
-      );
+      loaderOrButton = Image.asset("assets/images/loader.gif",scale: 2.5,);
     } else {
       loaderOrButton = new RaisedButton(
         color: Theme.of(context).primaryColor,
@@ -77,7 +74,7 @@ class _WelcomePage extends State<WelcomePage> {
               ),
             ),
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 100.0, vertical: 20.0),
+              padding: EdgeInsets.symmetric(horizontal: 100.0, vertical: 0.0),
               child: loaderOrButton,
             ),
           ]),

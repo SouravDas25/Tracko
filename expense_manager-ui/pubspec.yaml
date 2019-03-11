@@ -24,6 +24,7 @@ dependencies:
   pull_to_refresh: ^1.1.6
   timeago: ^2.0.10
   flutter_slidable: "^0.4.9"
+  sms: ^0.2.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -51,6 +52,9 @@ flutter:
     - assets/images/otp-icon.png
     - assets/images/phone_img.png
     - assets/images/success.png
+    - assets/images/document-scanning.gif
+    - assets/images/loader.gif
+    - assets/images/scaning.gif
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

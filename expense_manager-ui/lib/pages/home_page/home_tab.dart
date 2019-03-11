@@ -53,21 +53,24 @@ class _HomeTab extends State<HomeTab> with SingleTickerProviderStateMixin {
             )
           ]),
       appBar: AppBar(
+        leading: IconButton(
+            iconSize: 35.0,
+            icon: Icon(Icons.add),
+            onPressed: () {
+              Navigator.pushNamed(context, "/add_item");
+            }),
         actions: <Widget>[
           IconButton(
             tooltip: "Current Month",
-            icon: Text(DateFormat("MMM").format(DateTime.now()),style: TextStyle(fontWeight: FontWeight.bold),),
+            icon: Text(
+              DateFormat("MMM").format(DateTime.now()),
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
             onPressed: () {},
           )
         ],
         title: Text("Expense Manager"),
         centerTitle: true,
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.pushNamed(context, "/add_item");
-        },
-        child: Icon(Icons.add),
       ),
       body: TabBarView(controller: tabController, children: <Widget>[
         AccountsPage(),

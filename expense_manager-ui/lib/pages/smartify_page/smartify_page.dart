@@ -26,7 +26,19 @@ class _SmartPage extends State<SmartPage> {
   Widget build(BuildContext context) {
     return ListView(
       children: <Widget>[
-
+        Container(
+          child: Image.asset("assets/images/scaning.gif"),
+        ),
+        Container(
+          padding: EdgeInsets.all(40.0),
+          child: RaisedButton(
+            padding: EdgeInsets.all(20.0),
+            color: Theme.of(context).primaryColor,
+            textColor: Colors.white,
+            onPressed: () {},
+            child: Text("Scan" ,style: TextStyle(fontSize: 25.0),),
+          ),
+        )
       ],
     );
   }
