@@ -81,7 +81,7 @@ class _AddItemPage extends State<AddItemPage> {
     var adapter = await DatabaseUtil.getAdapter();
     await adapter.connect();
     TransactionBean transactionBean = TransactionBean(adapter);
-
+    if(current == null) current = new Transaction();
     current.comments = comments.text;
     current.date = this.date;
     current.amount = double.parse(amount.text);
