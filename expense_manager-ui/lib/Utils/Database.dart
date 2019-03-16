@@ -6,20 +6,29 @@ import 'package:expense_manager/models/user.dart';
 import 'package:jaguar_query_sqflite/jaguar_query_sqflite.dart';
 import 'package:path/path.dart' as path;
 import 'package:sqflite/sqflite.dart';
+import 'package:sembast/sembast.dart' as JsonStore;
+import 'package:sembast/sembast_io.dart' as JsonStoreIO;
 
 const String databaseName = "test.db";
+const String jsonStoreName = "jsonStore.db";
 
 class DatabaseUtil {
   String databasePath;
+  String jsonStorePath;
 
   DatabaseUtil();
 
   _initDB() async {
     databasePath = await getDatabasesPath();
     databasePath = path.join(databasePath, databaseName);
+    jsonStorePath = path.join(databasePath,jsonStoreName);
   }
 
   static DatabaseUtil _instance;
+
+  static getJsonStore() async {
+    return await JsonStoreIO.databaseFactoryIo.openDatabase(_instance.jsonStorePath);
+  }
 
   static getRawDatabase() async {
     Database db = (await openDatabase(_instance.databasePath));

@@ -113,6 +113,16 @@ class _SmartPage extends State<SmartPage> {
     flushbar.show(context);
   }
 
+  void dismissAll() {
+    widget.possibleTransactions.clear();
+    widget.scanning = false;
+    setState(() {});
+  }
+
+  void saveAll() {
+
+  }
+
   @override
   Widget build(BuildContext context) {
     if (widget.scanning) {
@@ -140,12 +150,13 @@ class _SmartPage extends State<SmartPage> {
             ),
           );
         }).toList()
-              ..add(Row(
-                children: <Widget>[
-                  Expanded(
-                    child: SizedBox(
-                      width: double.infinity,
+              ..add(Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Row(
+                  children: <Widget>[
+                    Expanded(
                       child: RaisedButton(
+                        padding: EdgeInsets.all(20.0),
                         color: Colors.green,
                         textColor: Colors.white,
                         onPressed: () {},
@@ -155,20 +166,21 @@ class _SmartPage extends State<SmartPage> {
                         ),
                       ),
                     ),
-                  ),
-                  Column(
-                    children: <Widget>[
-                      RaisedButton(
+                    Container(
+                      child: RaisedButton(
+                        padding: EdgeInsets.all(20.0),
                         color: Colors.red,
-                        onPressed: () {},
+                        onPressed: () {
+                          dismissAll();
+                        },
                         child: Icon(
                           Icons.delete,
                           color: Colors.white,
                         ),
                       ),
-                    ],
-                  )
-                ],
+                    )
+                  ],
+                ),
               )),
       );
     }
