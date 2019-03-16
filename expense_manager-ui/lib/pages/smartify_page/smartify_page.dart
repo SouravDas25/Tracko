@@ -2,10 +2,13 @@ import 'dart:async';
 
 import 'package:expense_manager/Utils/CommonUtil.dart';
 import 'package:expense_manager/Utils/Database.dart';
+import 'package:expense_manager/Utils/SmartUtil.dart';
 import 'package:expense_manager/models/PossibleTransaction.dart';
 import 'package:expense_manager/models/transaction.dart';
 import 'package:expense_manager/models/user.dart';
+import 'package:expense_manager/pages/smart_add_item/smart_add_item.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:sms/sms.dart';
 import 'package:http/http.dart' as http;
@@ -16,9 +19,12 @@ import 'package:flushbar/flushbar.dart';
 * */
 
 class SmartPage extends StatefulWidget {
-
-  List<PossibleTransaction> possibleTransactions = List<PossibleTransaction>();
+  List<PossibleTransaction> possibleTransactions = SmartUtil.getPT();
   bool scanning = false;
+
+  SmartPage() {
+    if (possibleTransactions.length > 0) this.scanning = true;
+  }
 
   @override
   State<StatefulWidget> createState() {
@@ -27,23 +33,39 @@ class SmartPage extends StatefulWidget {
 }
 
 class _SmartPage extends State<SmartPage> {
-
-
   SmsQuery query = new SmsQuery();
 
-  Flushbar flushbar = Flushbar(
-    icon: Icon(Icons.search,color: Colors.white,),
-    flushbarPosition: FlushbarPosition.BOTTOM,
-    title: "Scanning...",
-    isDismissible: false,
-    showProgressIndicator: true,
-    message: "Please be patient, It may take a while.",
-    duration: Duration(seconds: 200),
-  );
-
+  Flushbar flushbar;
 
   _SmartPage() {
-//    initData();
+    this.flushbar = Flushbar(
+      icon: Icon(
+        Icons.search,
+        color: Colors.white,
+      ),
+      flushbarPosition: FlushbarPosition.BOTTOM,
+      title: "Scanning...",
+      isDismissible: false,
+      showProgressIndicator: true,
+      message: "Please be patient, It may take a while.",
+      duration: Duration(seconds: 200),
+      mainButton: FlatButton(
+        onPressed: () {
+          this.cancle();
+        },
+        child: Text(
+          "Cancle",
+          style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+        ),
+      ),
+    );
+  }
+
+  void cancle() {
+    flushbar.dismiss();
+    widget.possibleTransactions.clear();
+    widget.scanning = false;
+    setState(() {});
   }
 
   Future<PossibleTransaction> getApiData(String message) async {
@@ -54,8 +76,8 @@ class _SmartPage extends State<SmartPage> {
     if (response.statusCode == 200) {
       var jsonResponse = convert.jsonDecode(response.body);
       print(jsonResponse);
-      PossibleTransaction transaction = PossibleTransaction.fromJson(
-          jsonResponse);
+      PossibleTransaction transaction =
+          PossibleTransaction.fromJson(jsonResponse);
       if (transaction.valid) {
         return transaction;
       }
@@ -66,6 +88,7 @@ class _SmartPage extends State<SmartPage> {
   }
 
   void processMessages(List<SmsMessage> messages) async {
+    setState(() {});
     print(messages.length);
     for (SmsMessage message in messages) {
 //      print(message.body);
@@ -92,43 +115,82 @@ class _SmartPage extends State<SmartPage> {
 
   @override
   Widget build(BuildContext context) {
-    if(widget.scanning){
+    if (widget.scanning) {
       return ListView(
-        children: widget.possibleTransactions.map((
-            PossibleTransaction transaction) {
+        children: widget.possibleTransactions
+            .map<Widget>((PossibleTransaction transaction) {
           return Card(
             child: ListTile(
               onTap: () {
-
+                Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) => SmartAddItemPage(transaction)));
               },
               contentPadding: EdgeInsets.all(10.0),
-              title: Text("Item "),
+              title: Text(
+                transaction.category == null
+                    ? "Item "
+                    : transaction.category.name,
+                style: TextStyle(fontSize: 20.0),
+              ),
               subtitle: Text(CommonUtil.humanDate(transaction.dates[0])),
               trailing: Text(
                 "₹ " + transaction.amounts[0].toString(),
-                style: TextStyle(
-                    fontWeight: FontWeight.w600, fontSize: 20),
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20),
               ),
             ),
           );
-        }).toList(),
+        }).toList()
+              ..add(Row(
+                children: <Widget>[
+                  Container(
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: RaisedButton(
+                        color: Colors.green,
+                        textColor: Colors.white,
+                        onPressed: () {},
+                        child: Text(
+                          "Save All",
+                          style: TextStyle(fontSize: 20.0),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Column(
+                    children: <Widget>[
+                      RaisedButton(
+                        color: Colors.red,
+                        onPressed: () {},
+                        child: Icon(
+                          Icons.delete,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  )
+                ],
+              )),
       );
     }
     return ListView(
       children: <Widget>[
-        Image.asset("assets/images/scaning.png",scale: 2.0,) ,
+        Image.asset(
+          "assets/images/scaning.png",
+          scale: 2.0,
+        ),
         Container(
           padding: EdgeInsets.all(40.0),
           child: RaisedButton(
             padding: EdgeInsets.all(20.0),
-            color: Theme
-                .of(context)
-                .primaryColor,
+            color: Theme.of(context).primaryColor,
             textColor: Colors.white,
             onPressed: () {
               initData();
             },
-            child: Text("Scan", style: TextStyle(fontSize: 25.0),),
+            child: Text(
+              "Scan",
+              style: TextStyle(fontSize: 25.0),
+            ),
           ),
         )
       ],

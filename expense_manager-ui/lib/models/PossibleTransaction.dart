@@ -1,9 +1,15 @@
 
 
 
+import 'package:expense_manager/models/account.dart';
+import 'package:expense_manager/models/category.dart';
 import 'package:http/http.dart';
 
 class PossibleTransaction {
+
+  Category category;
+  Account account;
+
   List<double> amounts;
   List<DateTime> dates;
   List<String>  comments;
