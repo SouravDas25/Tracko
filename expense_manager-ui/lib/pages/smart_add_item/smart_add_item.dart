@@ -3,6 +3,7 @@ import 'package:expense_manager/component/AccountDialog.dart';
 import 'package:expense_manager/component/CategoryDialog.dart';
 import 'package:expense_manager/component/PaddedText.dart';
 import 'package:expense_manager/component/screen.dart';
+import 'package:expense_manager/models/PossibleTransaction.dart';
 import 'package:expense_manager/models/account.dart';
 import 'package:expense_manager/models/category.dart';
 import 'package:expense_manager/models/transaction.dart';
@@ -12,19 +13,20 @@ import 'package:flutter/material.dart';
 import 'package:datetime_picker_formfield/datetime_picker_formfield.dart';
 import 'package:intl/intl.dart';
 
-class AddItemPage extends StatefulWidget {
-  int id;
+class SmartAddItemPage extends StatefulWidget {
 
-  AddItemPage({this.id : -1});
+  PossibleTransaction possibleTransaction;
+
+  SmartAddItemPage(this.possibleTransaction);
 
   @override
   State<StatefulWidget> createState() {
     // TODO: implement createState
-    return _AddItemPage(this.id);
+    return _SmartAddItemPage(this.possibleTransaction);
   }
 }
 
-class _AddItemPage extends State<AddItemPage> {
+class _SmartAddItemPage extends State<SmartAddItemPage> {
   TextEditingController comments = TextEditingController();
   TextEditingController amount = TextEditingController();
   bool isEdit = false;
@@ -38,11 +40,14 @@ class _AddItemPage extends State<AddItemPage> {
 
   List<Account> accounts = new List<Account>(0);
 
-  _AddItemPage(int id) {
-    initData(id);
+  _SmartAddItemPage(PossibleTransaction possibleTransaction){
+    this.date = possibleTransaction.dates[0];
+    this.amount.text = possibleTransaction.amounts[0].toString();
+    this.comments.text = possibleTransaction.comments.join(" ");
+    initData();
   }
 
-  initData(int id) async {
+  initData() async {
     var adapter = await DatabaseUtil.getAdapter();
     await adapter.connect();
     CategoryBean categoryBean = CategoryBean(adapter);
@@ -50,20 +55,6 @@ class _AddItemPage extends State<AddItemPage> {
     AccountBean accountBean = AccountBean(adapter);
     accounts = await accountBean.getAll();
     account = accounts[0];
-
-    if(id != -1){
-      isEdit = true;
-      TransactionBean transactionBean = new TransactionBean(adapter);
-      current = await transactionBean.find(id);
-      date = current.date;
-      amount.value = TextEditingValue(text: current.amount.toString());
-      comments.value = TextEditingValue(text: current.comments) ;
-      category = categories.firstWhere((category) => category.id == current.categoryId);
-      account = accounts.firstWhere((acc)=> acc.id == current.accountId);
-      print(current);
-      print(account);
-    }
-
 
     await adapter.close();
     Future<void>.delayed(new Duration(seconds: 1));
@@ -79,20 +70,13 @@ class _AddItemPage extends State<AddItemPage> {
       )..show(context);
       return;
     }
-    var adapter = await DatabaseUtil.getAdapter();
-    await adapter.connect();
-    TransactionBean transactionBean = TransactionBean(adapter);
-    if(current == null) current = new Transaction();
-    current.comments = comments.text;
-    current.date = this.date;
-    current.amount = double.parse(amount.text);
-    transactionBean.associateAccount(current, account);
-    transactionBean.associateCategory(current, category);
-//    print(date);
-//    print(transaction);
-    await transactionBean.upsert(current);
+    widget.possibleTransaction.comments.clear();
+    widget.possibleTransaction.comments.add(comments.text);
 
-    await adapter.close();
+    widget.possibleTransaction.amounts[0] = double.parse(amount.text);
+    widget.possibleTransaction.dates[0] = date;
+    widget.possibleTransaction.category = category;
+    widget.possibleTransaction.account = account;
     Navigator.of(context).pop();
   }
 
@@ -133,12 +117,12 @@ class _AddItemPage extends State<AddItemPage> {
                     showDialog(
                       context: context,
                       builder: (_) => CategoryDialog(
-                            callback: () {
-                              setState(() {
-                                initData(-1);
-                              });
-                            },
-                          ),
+                        callback: () {
+                          setState(() {
+                            initData();
+                          });
+                        },
+                      ),
                     );
                   },
                   child: Text(
@@ -194,12 +178,12 @@ class _AddItemPage extends State<AddItemPage> {
                       showDialog(
                         context: context,
                         builder: (_) => AccountDialog(
-                              callback: () {
-                                setState(() {
-                                  initData(-1);
-                                });
-                              },
-                            ),
+                          callback: () {
+                            setState(() {
+                              initData();
+                            });
+                          },
+                        ),
                       );
                     },
                     child: Text(
