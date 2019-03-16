@@ -2,6 +2,7 @@ import 'package:expense_manager/pages/accounts_page/accounts_page.dart';
 import 'package:expense_manager/pages/home_page/home_page.dart';
 import 'package:expense_manager/pages/settings_page/settings_page.dart';
 import 'package:expense_manager/pages/smartify_page/smartify_page.dart';
+import 'package:expense_manager/pages/split_page/split_page.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -40,6 +41,10 @@ class _HomeTab extends State<HomeTab> with SingleTickerProviderStateMixin {
               text: "Accounts",
             ),
             Tab(
+              icon: Icon(Icons.call_split),
+              text: "Splits",
+            ),
+            Tab(
               icon: Icon(Icons.home),
               text: "Home",
             ),
@@ -71,6 +76,7 @@ class _HomeTab extends State<HomeTab> with SingleTickerProviderStateMixin {
       ),
       body: TabBarView(controller: tabController, children: <Widget>[
         AccountsPage(),
+        SplitPage(),
         HomePage(),
         SmartPage(),
         SettingsPage(),
