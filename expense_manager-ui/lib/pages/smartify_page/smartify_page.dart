@@ -142,7 +142,7 @@ class _SmartPage extends State<SmartPage> {
         }).toList()
               ..add(Row(
                 children: <Widget>[
-                  Container(
+                  Expanded(
                     child: SizedBox(
                       width: double.infinity,
                       child: RaisedButton(
