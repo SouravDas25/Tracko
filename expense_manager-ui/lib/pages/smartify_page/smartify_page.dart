@@ -51,7 +51,7 @@ class _SmartPage extends State<SmartPage> {
       duration: Duration(seconds: 200),
       mainButton: FlatButton(
         onPressed: () {
-          this.cancle();
+          this.cancel();
         },
         child: Text(
           "Cancle",
@@ -61,7 +61,7 @@ class _SmartPage extends State<SmartPage> {
     );
   }
 
-  void cancle() {
+  void cancel() {
     flushbar.dismiss();
     widget.possibleTransactions.clear();
     widget.scanning = false;
