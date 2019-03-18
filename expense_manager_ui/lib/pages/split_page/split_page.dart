@@ -3,7 +3,11 @@ import 'package:expense_manager/models/user.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:flutter/material.dart';
 
+
 class SplitPage extends StatefulWidget {
+  splitAmount(double amount){
+
+  }
   @override
   State<StatefulWidget> createState() {
     return _SplitPage();
@@ -31,3 +35,4 @@ class _SplitPage extends State<SplitPage> {
     );
   }
 }
+

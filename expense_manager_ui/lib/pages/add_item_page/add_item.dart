@@ -11,7 +11,7 @@ import 'package:flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
 import 'package:datetime_picker_formfield/datetime_picker_formfield.dart';
 import 'package:intl/intl.dart';
-
+import 'package:contacts_service/contacts_service.dart';
 class AddItemPage extends StatefulWidget {
   int id;
 
@@ -40,6 +40,8 @@ class _AddItemPage extends State<AddItemPage> {
 
   _AddItemPage(int id) {
     initData(id);
+
+
   }
 
   initData(int id) async {
@@ -94,6 +96,11 @@ class _AddItemPage extends State<AddItemPage> {
 
     await adapter.close();
     Navigator.of(context).pop();
+  }
+
+
+  openContactPage() async {
+    Iterable<Contact> contacts= await ContactsService.getContacts();
   }
 
   @override
@@ -216,12 +223,23 @@ class _AddItemPage extends State<AddItemPage> {
             ),
             onChanged: (text) {},
           ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: RaisedButton(
+              color: Theme.of(context).primaryColor,
+              padding: EdgeInsets.all(20.0),
+              onPressed: () {
+                openContactPage();
+              },
+              textColor: Colors.white,
+              child: Text("Split the Amount"),
+
+            ),
+          ),
           RaisedButton(
             color: Theme.of(context).primaryColor,
             padding: EdgeInsets.all(20.0),
-            onPressed: () {
-              this.save();
-            },
+            onPressed: () {},
             textColor: Colors.white,
             child: Text("Save"),
           )
@@ -230,3 +248,4 @@ class _AddItemPage extends State<AddItemPage> {
     );
   }
 }
+
