@@ -6,6 +6,8 @@ import 'package:expense_manager/pages/split_page/split_page.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+const double tabIconSize = 30.0;
+
 class HomeTab extends StatefulWidget {
   @override
   State<StatefulWidget> createState() {
@@ -37,24 +39,24 @@ class _HomeTab extends State<HomeTab> with SingleTickerProviderStateMixin {
           labelColor: Colors.black,
           tabs: <Widget>[
             Tab(
-              icon: Icon(Icons.account_circle),
-              text: "Accounts",
+              icon: Icon(Icons.account_circle, size: tabIconSize),
+//              text: "Accounts",
             ),
             Tab(
-              icon: Icon(Icons.call_split),
-              text: "Splits",
+              icon: Icon(Icons.call_split, size: tabIconSize),
+//              text: "Splits",
             ),
             Tab(
-              icon: Icon(Icons.home),
-              text: "Home",
+              icon: Icon(Icons.home, size: tabIconSize),
+//              text: "Home",
             ),
             Tab(
-              icon: Icon(Icons.wb_incandescent),
-              text: "Smartify",
+              icon: Icon(Icons.wb_incandescent, size: tabIconSize),
+//              text: "Smartify",
             ),
             Tab(
-              icon: Icon(Icons.settings),
-              text: "Settings",
+              icon: Icon(Icons.settings , size: tabIconSize),
+//              text: "Settings",
             )
           ]),
       appBar: AppBar(
