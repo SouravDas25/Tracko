@@ -4,11 +4,13 @@ from nltk.corpus import wordnet
 import datefinder
 import datetime
 from nltk.tokenize import word_tokenize
-from django.forms.models import model_to_dict
 from apis.models import Entity
+# import spacy
+import re
 
 lemma = nltk.stem.WordNetLemmatizer()
 
+# nlp = spacy.load("en_core_web_sm")
 
 # print(tags)
 
@@ -31,6 +33,13 @@ def scanAmount(tag):
         nxt = tag[i + 1][0].lower() if i + 1 < len(tag) else ""
         if chunk[1] == "CD" and "rs" in (prev, nxt):
             amounts.append(float(chunk[0]))
+        nxt = tag[i + 1] if i + 1 < len(tag) else ""
+        if chunk[0].lower().startswith("rs") and nxt[1] != "CD":
+            match = re.match(r"([a-z]+).?([0-9]+)", chunk[0], re.I)
+            Log.info(match)
+            if match and len(match.groups()) > 1:
+                amt = match.groups()[1]
+                amounts.append(int(amt))
     return amounts
 
 
@@ -102,12 +111,12 @@ def getCategory(properNoun):
 
 
 def scanCategry(tags):
-    categories = []
+    entities = []
     for tag in tags:
-        category = getCategory(tag[0])
-        if category is not None:
-            categories.append(model_to_dict(category))
-    return categories
+        entity = getCategory(tag[0])
+        if entity is not None:
+            entities.append(entity.get_dict())
+    return entities
 
 
 def printDates(dates):

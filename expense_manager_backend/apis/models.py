@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from django.db import models
-
+from django.forms.models import model_to_dict
 
 # Create your models here.
 class Category(models.Model):
@@ -29,6 +29,12 @@ class Entity(models.Model):
 
     def __str__(self):
         return self.name
+
+    def get_dict(self):
+        d = model_to_dict(self)
+        d['category'] = self.category.name
+        d['entity_type'] = self.get_entity_type_display()
+        return d
 
 
 
