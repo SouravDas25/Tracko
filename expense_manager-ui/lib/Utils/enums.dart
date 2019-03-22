@@ -1,0 +1,1 @@
+enum ScanningStatus { NOT_RUNNING, RUNNING, COMPLETED }

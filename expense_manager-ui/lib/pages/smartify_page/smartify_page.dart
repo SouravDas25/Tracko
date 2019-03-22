@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:expense_manager/Utils/CommonUtil.dart';
 import 'package:expense_manager/Utils/Database.dart';
 import 'package:expense_manager/Utils/SmartUtil.dart';
+import 'package:expense_manager/Utils/enums.dart';
+import 'package:expense_manager/component/PossibleTransactionList.dart';
 import 'package:expense_manager/models/PossibleTransaction.dart';
 import 'package:expense_manager/models/transaction.dart';
 import 'package:expense_manager/models/user.dart';
@@ -18,7 +20,7 @@ import 'package:flushbar/flushbar.dart';
 * Text Razor APi KEY - 6a72f94bb1182f454256c0591e99e75dcc630bdb8054f2fa05edd15b
 * */
 
-enum ScanningStatus { NOT_RUNNING, RUNNING, COMPLETED }
+
 
 class SmartPage extends StatefulWidget {
   List<PossibleTransaction> possibleTransactions = SmartUtil.getPT();
@@ -58,7 +60,7 @@ class _SmartPage extends State<SmartPage> {
           this.cancel();
         },
         child: Text(
-          "Cancle",
+          "Cancel",
           style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
         ),
       ),
@@ -76,8 +78,9 @@ class _SmartPage extends State<SmartPage> {
     setState(() {});
     print(messages.length);
     for (SmsMessage message in messages) {
-//      print(message.body);
-      PossibleTransaction transaction = await getApiData(message.body);
+//      print(message.toMap);
+//      print(message.sender);
+      PossibleTransaction transaction = await getApiData(message);
       if (transaction != null) {
         transaction.dates.add(message.date);
         widget.possibleTransactions.add(transaction);
@@ -111,32 +114,7 @@ class _SmartPage extends State<SmartPage> {
     if (widget.scanning == ScanningStatus.RUNNING ||
         widget.scanning == ScanningStatus.COMPLETED) {
       return ListView(
-        children: widget.possibleTransactions
-            .map<Widget>((PossibleTransaction transaction) {
-          return IgnorePointer(
-            ignoring: widget.scanning == ScanningStatus.RUNNING ? true : false,
-            child: Card(
-              child: ListTile(
-                onTap: () {
-                  Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) => SmartAddItemPage(transaction)));
-                },
-                contentPadding: EdgeInsets.all(10.0),
-                title: Text(
-                  transaction.category == null
-                      ? "Item "
-                      : transaction.category.name,
-                  style: TextStyle(fontSize: 20.0),
-                ),
-                subtitle: Text(CommonUtil.humanDate(transaction.dates[0])),
-                trailing: Text(
-                  "₹ " + transaction.amounts[0].toString(),
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20),
-                ),
-              ),
-            ),
-          );
-        }).toList()
+        children: PossibleTransactionList(widget.possibleTransactions,widget.scanning).generate(context)
               ..add(Padding(
                 padding: const EdgeInsets.all(20.0),
                 child: Row(
@@ -148,7 +126,7 @@ class _SmartPage extends State<SmartPage> {
                             : false,
                         child: RaisedButton(
                           padding: EdgeInsets.all(20.0),
-                          color: Colors.green,
+                          color: Colors.lightGreen,
                           textColor: Colors.white,
                           onPressed: () {},
                           child: Text(
@@ -207,16 +185,20 @@ class _SmartPage extends State<SmartPage> {
   }
 }
 
-Future<PossibleTransaction> getApiData(String message) async {
-  var url = "http://souravdas25.pythonanywhere.com/apis/?text=$message";
-
-  // Await the http get response, then decode the json-formatted responce.
-  var response = await http.get(url);
+Future<PossibleTransaction> getApiData(SmsMessage message) async {
+  var url = "http://souravdas25.pythonanywhere.com/apis/";
+  Map<String,String> body = new Map();
+  body['text'] = message.body;
+  body['address'] = message.address;
+  body['date'] = message.dateSent.toString();
+  String data = convert.jsonEncode(body);
+  var response = await http.post(url,body: data, headers: {"Content-Type": "application/json"},);
+//  print(response.statusCode);
   if (response.statusCode == 200) {
+//    print(response.body);
     var jsonResponse = convert.jsonDecode(response.body);
     print(jsonResponse);
-    PossibleTransaction transaction =
-        PossibleTransaction.fromJson(jsonResponse);
+    PossibleTransaction transaction = await PossibleTransaction.fromJson(jsonResponse);
     if (transaction.valid) {
       return transaction;
     }

@@ -78,6 +78,11 @@ class DatabaseUtil {
       savingsAccount = Account.make(1, "Savings", 1);
       await accountBean.insert(savingsAccount);
     }
+    Category category = await categoryBean.find(1);
+    if(category == null){
+      category = Category.make(1, "Not Categorised", 1);
+      await categoryBean.upsert(category);
+    }
 //    print(user);
   }
 }

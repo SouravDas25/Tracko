@@ -3,9 +3,14 @@ from nltk.corpus import stopwords
 from nltk.corpus import wordnet
 import datefinder
 import datetime
+from nltk.tokenize import word_tokenize
+from apis.models import Entity
+# import spacy
+import re
 
 lemma = nltk.stem.WordNetLemmatizer()
 
+# nlp = spacy.load("en_core_web_sm")
 
 # print(tags)
 
@@ -28,6 +33,13 @@ def scanAmount(tag):
         nxt = tag[i + 1][0].lower() if i + 1 < len(tag) else ""
         if chunk[1] == "CD" and "rs" in (prev, nxt):
             amounts.append(float(chunk[0]))
+        nxt = tag[i + 1] if i + 1 < len(tag) else ""
+        if chunk[0].lower().startswith("rs") and nxt[1] != "CD":
+            match = re.match(r"([a-z]+).?([0-9]+)", chunk[0], re.I)
+            Log.info(match)
+            if match and len(match.groups()) > 1:
+                amt = match.groups()[1]
+                amounts.append(int(amt))
     return amounts
 
 
@@ -51,17 +63,17 @@ def scanTransactionType(tags):
         pos = tags[i]
         if pos[1].startswith("VB"):
             verbs.append(pos[0])
-    maxDebitCorr = 0.0
-    maxCreditCorr = 0.0
+    max_debit_corr = 0.0
+    max_credit_corr = 0.0
     for verb in verbs:
-        debitCor = maxCorrelation(verb, True)
-        creditCor = maxCorrelation(verb, False)
-        if debitCor > maxDebitCorr:
-            maxDebitCorr = debitCor
-        if creditCor > maxCreditCorr:
-            maxCreditCorr = creditCor
-    if maxDebitCorr > 0 and maxCreditCorr > 0:
-        if maxDebitCorr > maxCreditCorr:
+        debit_cor = maxCorrelation(verb, True)
+        credit_cor = maxCorrelation(verb, False)
+        if debit_cor > max_debit_corr:
+            max_debit_corr = debit_cor
+        if credit_cor > max_credit_corr:
+            max_credit_corr = credit_cor
+    if max_debit_corr > 0 and max_credit_corr > 0:
+        if max_debit_corr > max_credit_corr:
             return "Debit"
         else:
             return "Credit"
@@ -86,9 +98,30 @@ def scanDates(dates):
 def scanComments(tags):
     comments = []
     for tag in tags:
-        if tag[1].startswith("NN") and tag[0].lower() != "rs":
+        if tag[1].startswith("NNP") and tag[0].lower() != "rs":
             comments.append(tag[0])
     return comments
+
+
+def getCategory(properNoun):
+    entities = Entity.objects.filter(name__contains=properNoun)
+    if len(entities) > 0:
+        return entities[0]
+    return None
+
+
+def scanCategry(tags):
+    entities = []
+    for tag in tags:
+        entity = getCategory(tag[0])
+        if entity is not None:
+            entities.append(entity.get_dict())
+    return entities
+
+
+def printDates(dates):
+    for i in dates:
+        print(i)
 
 
 class Log(object):
@@ -97,12 +130,14 @@ class Log(object):
     def info(text):
         print(text);
 
+
 """
 clearbit
 souravbumbadas25@gmail.com
 SD2525SD25
 pk_bc92554fd02164456be28099e35a2fa4
 """
+
 
 class Language(object):
 
@@ -113,25 +148,36 @@ class Language(object):
         @param text str
     """
 
-    def process(self, text):
+    def __init__(self, text):
         self.text = text
-        self.words = text.strip().split(" ")
+        self.words = word_tokenize(text.strip())
+        Log.info(self.words)
         stops = set(stopwords.words("english"))
-        self.meaningful_words = [lemma.lemmatize(w) for w in self.words if not w in stops]
+        self.meaningful_words = [lemma.lemmatize(w) for w in self.words if w not in stops]
         Log.info(self.meaningful_words)
         self.tags = nltk.pos_tag(self.meaningful_words)
+        Log.info(self.tags)
         self.dates = datefinder.find_dates(text)
-        return self
+        Log.info(self.dates)
 
     def getDict(self):
         d = {}
         valid = True
         d['amounts'] = scanAmount(self.tags)
         d['type'] = scanTransactionType(self.tags)
-        d['dates'] = scanDates(self.dates)
+        # d['dates'] = scanDates(self.dates)
         d['comments'] = scanComments(self.tags)
+        d['entity'] = scanCategry(self.tags)
         if len(d['amounts']) <= 0:
             valid = False
-        if d['type'] == None:
+        if d['type'] is None:
             valid = False
         d['valid'] = valid
+
+        return d
+
+
+# print(word_correlation('debit','deduct'))
+# lang = Language(" I have paid Mr. Arvani Rs 200 on 12-02-19.")
+# print(lang.getDict())
+# printDates(lang.dates)

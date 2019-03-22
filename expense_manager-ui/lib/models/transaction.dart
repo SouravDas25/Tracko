@@ -17,7 +17,13 @@ class Transaction {
   @PrimaryKey(auto: true)
   int id;
 
-  @Column(isNullable: false , length: 500)
+  @Column(isNullable: false , length: 128)
+  String name;
+
+  @Column(isNullable: true , length: 512)
+  String logo;
+
+  @Column(isNullable: true , length: 512)
   String comments;
 
   @Column(isNullable: false)
@@ -34,8 +40,9 @@ class Transaction {
 
   @override
   String toString() {
-    return 'Transaction{id: $id, comments: $comments, date: $date, amount: $amount, accountId: $accountId, categoryId: $categoryId}';
+    return 'Transaction{id: $id, name: $name, comments: $comments, date: $date, amount: $amount, accountId: $accountId, categoryId: $categoryId}';
   }
+
 
 //  @IgnoreColumn()
 //  Category category;
