@@ -1,17 +1,10 @@
 import 'dart:async';
 
-import 'package:expense_manager/Utils/CommonUtil.dart';
-import 'package:expense_manager/Utils/Database.dart';
 import 'package:expense_manager/Utils/SmartUtil.dart';
 import 'package:expense_manager/Utils/enums.dart';
-import 'package:expense_manager/component/PossibleTransactionList.dart';
 import 'package:expense_manager/models/PossibleTransaction.dart';
-import 'package:expense_manager/models/transaction.dart';
-import 'package:expense_manager/models/user.dart';
-import 'package:expense_manager/pages/smart_add_item/smart_add_item.dart';
+import 'package:expense_manager/pages/smartify_page/list_view.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:sms/sms.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert' as convert;
@@ -101,6 +94,14 @@ class _SmartPage extends State<SmartPage> {
     flushbar.show(context);
   }
 
+  void dismissSingle(int index){
+    widget.possibleTransactions.removeAt(index);
+    if(widget.possibleTransactions.length <= 0){
+      widget.scanning = ScanningStatus.NOT_RUNNING;
+    }
+    setState(() {});
+  }
+
   void dismissAll() {
     widget.possibleTransactions.clear();
     widget.scanning = ScanningStatus.NOT_RUNNING;
@@ -113,50 +114,11 @@ class _SmartPage extends State<SmartPage> {
   Widget build(BuildContext context) {
     if (widget.scanning == ScanningStatus.RUNNING ||
         widget.scanning == ScanningStatus.COMPLETED) {
-      return ListView(
-        children: PossibleTransactionList(widget.possibleTransactions,widget.scanning).generate(context)
-              ..add(Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Row(
-                  children: <Widget>[
-                    Expanded(
-                      child: IgnorePointer(
-                        ignoring: widget.scanning == ScanningStatus.RUNNING
-                            ? true
-                            : false,
-                        child: RaisedButton(
-                          padding: EdgeInsets.all(20.0),
-                          color: Colors.lightGreen,
-                          textColor: Colors.white,
-                          onPressed: () {},
-                          child: Text(
-                            "Save All",
-                            style: TextStyle(fontSize: 20.0),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Container(
-                      child: IgnorePointer(
-                        ignoring: widget.scanning == ScanningStatus.RUNNING
-                            ? true
-                            : false,
-                        child: RaisedButton(
-                          padding: EdgeInsets.all(20.0),
-                          color: Colors.red,
-                          onPressed: () {
-                            dismissAll();
-                          },
-                          child: Icon(
-                            Icons.delete,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    )
-                  ],
-                ),
-              )),
+      return SmartListView(
+        widget.possibleTransactions,
+        widget.scanning,
+        dismissAll: this.dismissAll,
+        dismissSingle: this.dismissSingle,
       );
     }
     return ListView(

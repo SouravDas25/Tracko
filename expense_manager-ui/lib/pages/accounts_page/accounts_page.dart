@@ -3,6 +3,7 @@ import 'package:expense_manager/Utils/Database.dart';
 import 'package:expense_manager/component/TransactionTile.dart';
 import 'package:expense_manager/component/multi_select/multi_select.dart';
 import 'package:expense_manager/models/account.dart';
+import 'package:flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:sqflite/sqflite.dart';
@@ -21,11 +22,29 @@ class _AccountsPage extends State<AccountsPage> {
   List<dynamic> selections = new List(0);
   final GlobalKey<FormState> _formKey = new GlobalKey<FormState>();
 
-  _AccountsPage() {
+  Flushbar flushbar = Flushbar(
+    icon: Icon(
+      Icons.search,
+      color: Colors.white,
+    ),
+    flushbarPosition: FlushbarPosition.BOTTOM,
+    title: "Scanning...",
+    isDismissible: false,
+    showProgressIndicator: true,
+    message: "Please be patient, It may take a while.",
+    duration: Duration(seconds: 200),
+  );
+
+  _AccountsPage();
+
+  @override
+  void initState() {
+    super.initState();
     initAccountData();
   }
 
   void initAccountData() async {
+    flushbar.show(context);
     var adapter = await DatabaseUtil.getAdapter();
     await adapter.connect();
     AccountBean accountBean = new AccountBean(adapter);
@@ -54,12 +73,14 @@ class _AccountsPage extends State<AccountsPage> {
       }
       query += "WHERE t.account_id IN (" + param + ")";
     }
-    print(query);
+//    print(query);
     transactions = (await db.rawQuery(query)).toList();
 //    print(transactions);
     await db.close();
+    print(query);
     Future<void>.delayed(Duration(seconds: 1));
     setState(() {});
+    flushbar.dismiss();
   }
 
   @override

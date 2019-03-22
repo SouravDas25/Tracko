@@ -12,10 +12,15 @@ part 'transaction.jorm.dart';
 class Transaction {
   Transaction();
 
-  Transaction.make(this.id,this.comments,this.date,this.amount,this.accountId,this.categoryId);
+
+  Transaction.make(this.id, this.name, this.logo, this.comments, this.date,
+      this.amount, this.accountId, this.categoryId);
 
   @PrimaryKey(auto: true)
   int id;
+
+  @Column(isNullable: false )
+  int transactionType;
 
   @Column(isNullable: false , length: 128)
   String name;

@@ -19,7 +19,7 @@ class TransactionTile extends StatelessWidget {
       child: Card(
           child: ListTile(
             trailing: Text(
-              "₹ " + transaction['amount'].toString(),
+              CommonUtil.toCurrency(transaction['amount']),
               style: TextStyle(
                   fontWeight: FontWeight.w600, fontSize: 20),
             ),

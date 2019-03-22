@@ -49,8 +49,8 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
     this.date = possibleTransaction.dates[0];
     this.amount.text = possibleTransaction.amounts[0].toString();
     this.comments.text = possibleTransaction.smsText;
-    this.categoryId = possibleTransaction.category.id;
-    this.accountId = possibleTransaction.account.id;
+    this.categoryId = possibleTransaction.categoryId;
+    this.accountId = possibleTransaction.accountId;
     this.logo = possibleTransaction.logo();
     this.name.text = possibleTransaction.name;
 //    print(possibleTransaction.category);
@@ -84,6 +84,8 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
     possibleTransaction.amounts[0] = double.parse(amount.text);
     possibleTransaction.dates[0] = date;
     possibleTransaction.name = name.text;
+    possibleTransaction.categoryId = categoryId;
+    possibleTransaction.accountId = accountId;
     Navigator.of(context).pop();
   }
 
@@ -95,6 +97,7 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
           Row(
             children: <Widget>[
               CircleAvatar(
+                minRadius: 30,
                 backgroundColor: Colors.transparent,
                 backgroundImage: NetworkImage(this.logo),
               ),

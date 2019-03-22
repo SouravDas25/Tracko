@@ -11,7 +11,7 @@ class Entity {
   String entity_type;
   String logo;
 
-  Future<Category> fetchOrNewCategory(var adapter) async {
+  Future<int> fetchOrNewCategory(var adapter) async {
     CategoryBean categoryBean = new CategoryBean(adapter);
     List<Category> categories = await categoryBean.getAll();
     Category category;
@@ -26,7 +26,7 @@ class Entity {
       category.userId = 1;
       category.id = await categoryBean.insert(category);
     }
-    return category;
+    return category.id;
   }
   
   static Entity fromMap(dynamic jsonEntity){
@@ -43,8 +43,8 @@ class Entity {
 
 class PossibleTransaction {
 
-  Category category;
-  Account account;
+  int categoryId;
+  int accountId;
 
   List<double> amounts;
   List<DateTime> dates;
@@ -65,12 +65,12 @@ class PossibleTransaction {
     await adapter.connect();
     AccountBean accountBean = AccountBean(adapter);
     List<Account> accounts = await accountBean.getAll();
-    possibleTransaction.account = accounts[0];
+    possibleTransaction.accountId = accounts[0].id;
     if(possibleTransaction.entities.length > 0){
       Entity entity = possibleTransaction.entities[0];
-      possibleTransaction.category = await entity.fetchOrNewCategory(adapter);
+      possibleTransaction.categoryId = await entity.fetchOrNewCategory(adapter);
     }
-    else possibleTransaction.category = await Category.defaultCategory(adapter);
+    else possibleTransaction.categoryId = Category.defaultCategory();
 //    print(possibleTransaction.category);
     await adapter.close();
   }

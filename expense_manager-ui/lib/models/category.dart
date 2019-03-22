@@ -31,8 +31,8 @@ class Category {
     return 'Category{id: $id, name: $name, userId: $userId, transactions: $transactions}';
   }
 
-  static Future<Category> defaultCategory(var adapter) async {
-    return await CategoryBean(adapter).find(1);
+  static int defaultCategory() {
+    return 1;
   }
 
 
