@@ -7,6 +7,9 @@ from nltk.corpus import wordnet
 import datefinder
 import datetime
 
+import spacy
+nlp = spacy.load("en_core_web_lg")
+
 lemma = nltk.stem.WordNetLemmatizer()
 
 
@@ -120,6 +123,7 @@ class Language(object):
         Log.info(self.meaningful_words)
         self.tags = nltk.pos_tag(self.meaningful_words)
         self.dates = datefinder.find_dates(text)
+        self.spacy_nlp = nlp(text)
         return self
 
     def getDict(self):
@@ -129,7 +133,7 @@ class Language(object):
         d['type'] = scanTransactionType(self.tags)
         d['dates'] = scanDates(self.dates)
         d['comments'] = scanComments(self.tags)
-        if d['amounts'] <= 0 :
+        if len(d['amounts']) <= 0 :
             valid = False
         if d['type'] == None :
             valid = False
@@ -140,5 +144,14 @@ class Language(object):
 
 # print(word_correlation('debit','deduct'))
 lang = Language()
-print(lang.process(" I have paid Mr. Arvani Rs 200 on 12-02-19.").getDict())
-printDates(lang.dates)
+print(lang.process("Rs 144.00 debited from a/c **0915 on 14-03-19 to VPA upiswiggy@icici(UPI Ref No 907310835146). Not you? Call on 18002586161 to report").getDict())
+# printDates(lang.dates)
+
+for entity in lang.spacy_nlp.ents:
+    print(entity.text, entity.label_)
+
+for token in lang.spacy_nlp:
+    print(token.text, token.lemma_, token.pos_, token.tag_, token.dep_,
+            token.shape_, token.is_alpha, token.is_stop)
+
+
