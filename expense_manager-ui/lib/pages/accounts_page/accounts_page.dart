@@ -3,7 +3,6 @@ import 'package:expense_manager/Utils/Database.dart';
 import 'package:expense_manager/component/TransactionTile.dart';
 import 'package:expense_manager/component/multi_select/multi_select.dart';
 import 'package:expense_manager/models/account.dart';
-import 'package:flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:sqflite/sqflite.dart';
@@ -20,20 +19,7 @@ class _AccountsPage extends State<AccountsPage> {
   List<Account> accounts = new List(0);
   List<dynamic> transactions = new List(0);
   List<dynamic> selections = new List(0);
-  final GlobalKey<FormState> _formKey = new GlobalKey<FormState>();
 
-  Flushbar flushbar = Flushbar(
-    icon: Icon(
-      Icons.search,
-      color: Colors.white,
-    ),
-    flushbarPosition: FlushbarPosition.BOTTOM,
-    title: "Scanning...",
-    isDismissible: false,
-    showProgressIndicator: true,
-    message: "Please be patient, It may take a while.",
-    duration: Duration(seconds: 200),
-  );
 
   _AccountsPage();
 
@@ -44,23 +30,23 @@ class _AccountsPage extends State<AccountsPage> {
   }
 
   void initAccountData() async {
-    flushbar.show(context);
     var adapter = await DatabaseUtil.getAdapter();
     await adapter.connect();
     AccountBean accountBean = new AccountBean(adapter);
     accounts = await accountBean.getAll();
     print(accounts);
-    await adapter.close();
+//    await adapter.close();
+    await initTransactionData();
+    Future<void>.delayed(Duration(milliseconds: 5));
     setState(() {
       refreshController.sendBack(true, RefreshStatus.completed);
     });
-    initTransactionData();
   }
 
-  void initTransactionData() async {
+  initTransactionData() async {
     Database db = await DatabaseUtil.getRawDatabase();
 
-    String query = "SELECT t.*, c.name AS category_name from transactions t"
+    String query = "SELECT t.*, c.name AS category_name FROM transactions t"
         " JOIN categories c ON t.category_id = c.id ";
 
     if (selections != null && selections.length > 0) {
@@ -76,11 +62,8 @@ class _AccountsPage extends State<AccountsPage> {
 //    print(query);
     transactions = (await db.rawQuery(query)).toList();
 //    print(transactions);
-    await db.close();
+//    await db.close();
     print(query);
-    Future<void>.delayed(Duration(seconds: 1));
-    setState(() {});
-    flushbar.dismiss();
   }
 
   @override

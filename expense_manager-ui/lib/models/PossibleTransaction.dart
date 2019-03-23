@@ -72,7 +72,7 @@ class PossibleTransaction {
     }
     else possibleTransaction.categoryId = Category.defaultCategory();
 //    print(possibleTransaction.category);
-    await adapter.close();
+//    await adapter.close();
   }
 
   static Future<PossibleTransaction> fromJson(dynamic jsonResponse) async {

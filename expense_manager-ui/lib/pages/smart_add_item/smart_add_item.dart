@@ -66,7 +66,7 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
     accounts = await accountBean.getAll();
     accountId = accounts[0].id;
 
-    await adapter.close();
+//    await adapter.close();
     Future<void>.delayed(new Duration(seconds: 1));
     setState(() {});
   }

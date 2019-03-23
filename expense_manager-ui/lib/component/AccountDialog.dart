@@ -25,7 +25,7 @@ class AccountDialog extends StatelessWidget {
     accountBean.associateUser(account, user);
     await accountBean.insert(account);
     print(account);
-    await adapter.close();
+//    await adapter.close();
     if(callback != null){
       callback();
     }

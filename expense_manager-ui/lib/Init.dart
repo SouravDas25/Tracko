@@ -9,6 +9,6 @@ class InitializeApp {
     await adapter.connect();
 //    await DatabaseUtil.dropTables(adapter);
     await DatabaseUtil.createTables(adapter);
-    await adapter.close();
+//    await adapter.close();
   }
 }

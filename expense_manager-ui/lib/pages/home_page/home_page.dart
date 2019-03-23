@@ -30,16 +30,17 @@ class _HomePageState extends State<HomePage>
   initData() async {
 //    refreshController.sendBack(true, RefreshStatus.refreshing);
     Database db = await DatabaseUtil.getRawDatabase();
-    String query = "SELECT t.*, c.name AS category_name from transactions t"
+    String query = "SELECT t.*, c.name AS category_name FROM transactions t"
         " JOIN categories c ON t.category_id = c.id"
         " LIMIT 5";
     transactions = (await db.rawQuery(query)).toList();
+    print(transactions);
     var tmp =
-        (await db.rawQuery("SELECT SUM(amount) AS amount from transactions"))
+        (await db.rawQuery("SELECT SUM(amount) AS amount FROM transactions"))
             .toList();
 //    print(tmp);
     totalAmount = tmp[0]['amount'];
-    await db.close();
+//    await db.close();
     setState(() {
       refreshController.sendBack(refreshIndicator, RefreshStatus.completed);
     });

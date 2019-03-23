@@ -6,41 +6,37 @@ import 'package:expense_manager/models/user.dart';
 import 'package:jaguar_query_sqflite/jaguar_query_sqflite.dart';
 import 'package:path/path.dart' as path;
 import 'package:sqflite/sqflite.dart';
-import 'package:sembast/sembast.dart' as JsonStore;
-import 'package:sembast/sembast_io.dart' as JsonStoreIO;
 
 const String databaseName = "test.db";
-const String jsonStoreName = "jsonStore.db";
+
 
 class DatabaseUtil {
   String databasePath;
-  String jsonStorePath;
+  Database rawDatabase;
 
   DatabaseUtil();
 
-  _initDB() async {
-    databasePath = await getDatabasesPath();
-    databasePath = path.join(databasePath, databaseName);
-    jsonStorePath = path.join(databasePath,jsonStoreName);
-  }
-
   static DatabaseUtil _instance;
 
-  static getJsonStore() async {
-    return await JsonStoreIO.databaseFactoryIo.openDatabase(_instance.jsonStorePath);
+  static _initDB() async {
+    _instance = new DatabaseUtil();
+    _instance.databasePath = await getDatabasesPath();
+    _instance.databasePath = path.join(_instance.databasePath, databaseName);
+    _instance.rawDatabase = (await openDatabase(_instance.databasePath));
   }
 
   static getRawDatabase() async {
-    Database db = (await openDatabase(_instance.databasePath));
-    return db;
+    if (_instance == null) {
+      await DatabaseUtil._initDB();
+    }
+    return _instance.rawDatabase;
   }
 
   static getAdapter() async {
     if (_instance == null) {
-      _instance = new DatabaseUtil();
-      await _instance._initDB();
+      await DatabaseUtil._initDB();
     }
-    return new SqfliteAdapter(_instance.databasePath);
+    return new SqfliteAdapter.fromConnection(_instance.rawDatabase);
   }
 
   static dropTables(adapter) async {

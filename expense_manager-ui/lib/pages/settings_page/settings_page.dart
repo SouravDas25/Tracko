@@ -21,7 +21,7 @@ class _SettingsPage extends State<SettingsPage> {
     var adapter = await DatabaseUtil.getAdapter();
     await adapter.connect();
     user = await UserBean.getCurrentUser(adapter: adapter);
-    await adapter.close();
+//    await adapter.close();
     Future<void>.delayed(Duration(seconds: 1));
     setState(() {});
   }

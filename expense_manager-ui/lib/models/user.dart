@@ -60,7 +60,7 @@ class UserBean extends Bean<User> with _UserBean {
       adapter = await DatabaseUtil.getAdapter();
       await adapter.connect();
       user = await UserBean(adapter).find(1);
-      await adapter.close();
+//      await adapter.close();
     }
     else {
       user = await UserBean(adapter).find(1);

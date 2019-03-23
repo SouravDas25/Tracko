@@ -65,7 +65,7 @@ class _AddItemPage extends State<AddItemPage> {
     }
 
 
-    await adapter.close();
+//    await adapter.close();
     Future<void>.delayed(new Duration(seconds: 1));
     setState(() {});
   }
@@ -92,7 +92,7 @@ class _AddItemPage extends State<AddItemPage> {
 //    print(transaction);
     await transactionBean.upsert(current);
 
-    await adapter.close();
+//    await adapter.close();
     Navigator.of(context).pop();
   }
 

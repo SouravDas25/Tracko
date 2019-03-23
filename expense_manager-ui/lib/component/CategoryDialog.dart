@@ -24,7 +24,7 @@ class CategoryDialog extends StatelessWidget {
     categoryBean.associateUser(category, user);
     await categoryBean.insert(category);
     print(category);
-    await adapter.close();
+//    await adapter.close();
     if(callback != null){
       callback();
     }
