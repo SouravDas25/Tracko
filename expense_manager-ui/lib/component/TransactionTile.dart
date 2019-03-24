@@ -1,14 +1,12 @@
-
-
-
 import 'package:expense_manager/Utils/CommonUtil.dart';
+import 'package:expense_manager/models/transaction.dart';
 import 'package:expense_manager/pages/add_item_page/add_item.dart';
+import 'package:expense_manager/pages/smart_add_item/smart_add_item.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 
 class TransactionTile extends StatelessWidget {
-
-  Map<String,dynamic> transaction;
+  Transaction transaction;
 
   TransactionTile(this.transaction);
 
@@ -18,24 +16,24 @@ class TransactionTile extends StatelessWidget {
       delegate: new SlidableScrollDelegate(),
       child: Card(
           child: ListTile(
-            trailing: Text(
-              CommonUtil.toCurrency(transaction['amount']),
-              style: TextStyle(
-                  fontWeight: FontWeight.w600, fontSize: 20),
-            ),
-            title: Text(
-              transaction['category_name'].toString(),
-              style: TextStyle(
-                  fontWeight: FontWeight.w500, fontSize: 20),
-            ),
-            subtitle: Text(
-                transaction['comments'].toString().isEmpty
-                    ? CommonUtil.humanDate(transaction['date'])
-                    : transaction['comments']),
-          )),
+              leading: CircleAvatar(
+                backgroundColor: Colors.transparent,
+                backgroundImage: NetworkImage(transaction.logo),
+              ),
+              title: Text(
+                transaction.name,
+                style: TextStyle(fontSize: 20.0),
+              ),
+              subtitle: Text(
+                CommonUtil.humanDate(transaction.date),
+              ),
+              trailing: Text(
+                  CommonUtil.toSign(transaction.transactionType) + CommonUtil.toCurrency(transaction.amount),
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20,color: CommonUtil.toTypeColor(transaction.transactionType)),
+              ))),
       secondaryActions: <Widget>[
         Card(
-          margin: EdgeInsets.symmetric(vertical:10.0,horizontal: 5),
+          margin: EdgeInsets.symmetric(vertical: 10.0, horizontal: 5),
           child: new IconSlideAction(
             caption: 'Edit',
             color: Colors.blue,
@@ -43,13 +41,12 @@ class TransactionTile extends StatelessWidget {
             onTap: () {
               print(transaction);
               Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) =>
-                      AddItemPage(id: transaction['id'])));
+                  builder: (context) => AddItemPage(transaction: transaction)));
             },
           ),
         ),
         Card(
-          margin: EdgeInsets.symmetric(vertical:10.0,horizontal: 5),
+          margin: EdgeInsets.symmetric(vertical: 10.0, horizontal: 5),
           child: new IconSlideAction(
             caption: 'Delete',
             color: Colors.red,
@@ -59,5 +56,4 @@ class TransactionTile extends StatelessWidget {
       ],
     );
   }
-
 }

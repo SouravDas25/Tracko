@@ -3,9 +3,10 @@ import 'package:expense_manager/Utils/Database.dart';
 import 'package:expense_manager/component/TransactionTile.dart';
 import 'package:expense_manager/component/multi_select/multi_select.dart';
 import 'package:expense_manager/models/account.dart';
+import 'package:expense_manager/models/transaction.dart';
 import 'package:flutter/material.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
-import 'package:sqflite/sqflite.dart';
+import 'package:sqflite/sqflite.dart' as Sqflite;
 
 class AccountsPage extends StatefulWidget {
   @override
@@ -17,7 +18,7 @@ class AccountsPage extends StatefulWidget {
 class _AccountsPage extends State<AccountsPage> {
   RefreshController refreshController = new RefreshController();
   List<Account> accounts = new List(0);
-  List<dynamic> transactions = new List(0);
+  List<Transaction> transactions = new List(0);
   List<dynamic> selections = new List(0);
 
 
@@ -44,7 +45,7 @@ class _AccountsPage extends State<AccountsPage> {
   }
 
   initTransactionData() async {
-    Database db = await DatabaseUtil.getRawDatabase();
+    Sqflite.Database db = await DatabaseUtil.getRawDatabase();
 
     String query = "SELECT t.*, c.name AS category_name FROM transactions t"
         " JOIN categories c ON t.category_id = c.id ";
@@ -59,8 +60,13 @@ class _AccountsPage extends State<AccountsPage> {
       }
       query += "WHERE t.account_id IN (" + param + ")";
     }
+    query += " ORDER BY t.date DESC";
+    var adapter = await DatabaseUtil.getAdapter();
+    var tb = new TransactionBean(adapter);
 //    print(query);
-    transactions = (await db.rawQuery(query)).toList();
+    transactions = (await db.rawQuery(query)).map((dynamic map) {
+      return tb.fromMap(map);
+    }).toList();
 //    print(transactions);
 //    await db.close();
     print(query);
@@ -106,7 +112,7 @@ class _AccountsPage extends State<AccountsPage> {
               child: ListView(
                 primary: false,
                 shrinkWrap: true,
-                children: transactions.map((dynamic transaction) {
+                children: transactions.map((Transaction transaction) {
                   return TransactionTile(transaction);
                 }).toList(),
               ),

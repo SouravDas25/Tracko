@@ -33,6 +33,10 @@ class Account {
     return 'Account{id: $id, name: $name, userId: $userId, transactions: $transactions}';
   }
 
+  static int defaultAccountId() {
+    return 1;
+  }
+
 
 }
 

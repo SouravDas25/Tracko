@@ -1,6 +1,7 @@
 
 import 'dart:async';
 
+import 'package:expense_manager/Utils/Database.dart';
 import 'package:expense_manager/models/transaction.dart';
 import 'package:expense_manager/models/user.dart';
 import 'package:jaguar_orm/jaguar_orm.dart';
@@ -31,8 +32,28 @@ class Category {
     return 'Category{id: $id, name: $name, userId: $userId, transactions: $transactions}';
   }
 
-  static int defaultCategory() {
+  static int defaultCategoryId() {
     return 1;
+  }
+
+  static Future<int> findOrCreateByName(String name) async {
+    var adapter = await DatabaseUtil.getAdapter();
+    await adapter.connect();
+    CategoryBean categoryBean = new CategoryBean(adapter);
+    List<Category> categories = await categoryBean.getAll();
+    Category category;
+    for(Category cat in categories){
+      if(cat.name.toLowerCase().compareTo(name.toLowerCase()) == 0) {
+        category = cat;
+      }
+    }
+    if(category == null) {
+      category = new Category();
+      category.name = name;
+      category.userId = 1;
+      category.id = await categoryBean.insert(category);
+    }
+    return category.id;
   }
 
 

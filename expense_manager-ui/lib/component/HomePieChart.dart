@@ -1,7 +1,7 @@
 import 'package:charts_flutter/flutter.dart' as charts;
 import 'package:flutter/material.dart';
 
-class CategoryPieChart extends StatelessWidget {
+class CategoryChart extends StatelessWidget {
   final List<charts.Series> seriesList = _createSampleData();
   final bool animate = true;
 

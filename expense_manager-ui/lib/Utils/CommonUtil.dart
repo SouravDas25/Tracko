@@ -1,4 +1,6 @@
 
+import 'package:expense_manager/Utils/enums.dart';
+import 'package:flutter/material.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:intl/intl.dart';
 
@@ -24,5 +26,16 @@ class CommonUtil {
     return '₹ ' + formatCurrency.format(amount);
   }
 
+  static String toImageUrl(String name){
+    return "https://ui-avatars.com/api/?name=$name";
+  }
+
+  static String toSign(int type){
+    return type == TransactionType.DEBIT ? " - " : " + ";
+  }
+
+  static Color toTypeColor(int type){
+    return type == TransactionType.DEBIT ? Colors.red : Colors.green ;
+  }
 
 }

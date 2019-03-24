@@ -1,13 +1,13 @@
 
 
 
-import 'package:expense_manager/models/PossibleTransaction.dart';
+import 'package:expense_manager/models/transaction.dart';
 
 class SmartUtil {
 
-  static List<PossibleTransaction> possibleTransactions = List<PossibleTransaction>();
+  static List<Transaction> possibleTransactions = List<Transaction>();
 
-  static List<PossibleTransaction> getPT() {
+  static List<Transaction> getPT() {
     return possibleTransactions;
   }
 

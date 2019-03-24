@@ -1,25 +1,26 @@
 import 'package:expense_manager/Utils/CommonUtil.dart';
 import 'package:expense_manager/Utils/enums.dart';
-import 'package:expense_manager/models/PossibleTransaction.dart';
+import 'package:expense_manager/models/transaction.dart';
 import 'package:expense_manager/pages/smart_add_item/smart_add_item.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 
 class SmartListView extends StatelessWidget {
-  final List<PossibleTransaction> possibleTransactions;
+  final List<Transaction> transactions;
   final ScanningStatus scanning;
   final Function dismissAll;
   final Function dismissSingle;
+  final Function saveAll;
 
-  SmartListView(this.possibleTransactions, this.scanning,
-      {this.dismissAll,this.dismissSingle});
+  SmartListView(this.transactions, this.scanning,
+      {this.dismissAll, this.dismissSingle, this.saveAll});
 
   List<Widget> generate(BuildContext context) {
     List<Widget> widgets = List<Widget>();
     int i = 0;
-    for (i = 0; i < possibleTransactions.length; i++) {
+    for (i = 0; i < transactions.length; i++) {
       int index = i;
-      PossibleTransaction transaction = possibleTransactions[i];
+      Transaction transaction = transactions[i];
       widgets.add(IgnorePointer(
         ignoring: this.scanning == ScanningStatus.RUNNING ? true : false,
         child: Slidable(
@@ -27,26 +28,22 @@ class SmartListView extends StatelessWidget {
             child: ListTile(
               onTap: () {
                 Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) =>
-                        SmartAddItemPage(transaction, index)));
+                    builder: (context) => SmartAddItemPage(transaction)));
               },
 //              contentPadding: EdgeInsets.all(10.0),
               leading: CircleAvatar(
                 backgroundColor: Colors.transparent,
-                backgroundImage: NetworkImage(transaction.logo(),
-                    scale: transaction.entities.length <= 0 ? 1.0 : 2.0),
+                backgroundImage: NetworkImage(transaction.logo),
               ),
               title: Text(
                 transaction.name,
                 style: TextStyle(fontSize: 20.0),
               ),
               subtitle: Text(
-                transaction.entities.length <= 0
-                    ? CommonUtil.humanDate(transaction.dates[0])
-                    : transaction.entities[0].category,
+                CommonUtil.humanDate(transaction.date),
               ),
               trailing: Text(
-                "₹ " + transaction.amounts[0].toString(),
+                CommonUtil.toCurrency(transaction.amount),
                 style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20),
               ),
             ),
@@ -57,6 +54,7 @@ class SmartListView extends StatelessWidget {
               margin: EdgeInsets.symmetric(vertical: 10.0, horizontal: 5),
               child: new IconSlideAction(
                 color: Colors.red,
+                caption: "Delete",
                 icon: Icons.delete,
                 onTap: () {
                   this.dismissSingle(index);
@@ -86,7 +84,9 @@ class SmartListView extends StatelessWidget {
                     padding: EdgeInsets.all(20.0),
                     color: Colors.lightGreen,
                     textColor: Colors.white,
-                    onPressed: () {},
+                    onPressed: () {
+                      if (this.saveAll != null) this.saveAll();
+                    },
                     child: Text(
                       "Save All",
                       style: TextStyle(fontSize: 20.0),

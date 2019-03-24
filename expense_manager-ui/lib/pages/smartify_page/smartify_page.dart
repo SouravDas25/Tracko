@@ -1,8 +1,10 @@
 import 'dart:async';
 
+import 'package:expense_manager/Utils/Database.dart';
 import 'package:expense_manager/Utils/SmartUtil.dart';
 import 'package:expense_manager/Utils/enums.dart';
-import 'package:expense_manager/models/PossibleTransaction.dart';
+import 'package:expense_manager/component/FLushDialog.dart';
+import 'package:expense_manager/models/transaction.dart';
 import 'package:expense_manager/pages/smartify_page/list_view.dart';
 import 'package:flutter/material.dart';
 import 'package:sms/sms.dart';
@@ -16,7 +18,7 @@ import 'package:flushbar/flushbar.dart';
 
 
 class SmartPage extends StatefulWidget {
-  List<PossibleTransaction> possibleTransactions = SmartUtil.getPT();
+  List<Transaction> possibleTransactions = SmartUtil.getPT();
   ScanningStatus scanning = ScanningStatus.NOT_RUNNING;
 
   SmartPage() {
@@ -73,9 +75,9 @@ class _SmartPage extends State<SmartPage> {
     for (SmsMessage message in messages) {
 //      print(message.toMap);
 //      print(message.sender);
-      PossibleTransaction transaction = await getApiData(message);
+      Transaction transaction = await getApiData(message);
       if (transaction != null) {
-        transaction.dates.add(message.date);
+//        transaction.dates.add(message.date);
         widget.possibleTransactions.add(transaction);
         print(transaction);
         setState(() {});
@@ -108,7 +110,17 @@ class _SmartPage extends State<SmartPage> {
     setState(() {});
   }
 
-  void saveAll() {}
+  void saveAll() async {
+    var adapter = await DatabaseUtil.getAdapter();
+    TransactionBean transactionBean = TransactionBean(adapter);
+    for(Transaction transaction in widget.possibleTransactions){
+      await transactionBean.insert(transaction);
+    }
+    FlushDialog.flash(context, "Saved", "All Transaction Persisted!");
+    widget.possibleTransactions.clear();
+    widget.scanning = ScanningStatus.NOT_RUNNING;
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -119,6 +131,7 @@ class _SmartPage extends State<SmartPage> {
         widget.scanning,
         dismissAll: this.dismissAll,
         dismissSingle: this.dismissSingle,
+        saveAll: this.saveAll,
       );
     }
     return ListView(
@@ -147,7 +160,7 @@ class _SmartPage extends State<SmartPage> {
   }
 }
 
-Future<PossibleTransaction> getApiData(SmsMessage message) async {
+Future<Transaction> getApiData(SmsMessage message) async {
   var url = "http://souravdas25.pythonanywhere.com/apis/";
   Map<String,String> body = new Map();
   body['text'] = message.body;
@@ -160,8 +173,8 @@ Future<PossibleTransaction> getApiData(SmsMessage message) async {
 //    print(response.body);
     var jsonResponse = convert.jsonDecode(response.body);
     print(jsonResponse);
-    PossibleTransaction transaction = await PossibleTransaction.fromJson(jsonResponse);
-    if (transaction.valid) {
+    Transaction transaction = await Transaction.fromJson(jsonResponse);
+    if (transaction != null) {
       return transaction;
     }
     return null;
