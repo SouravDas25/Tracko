@@ -140,7 +140,7 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
                 onChanged: onRadioChange,
               ),
               new Text(
-                'CREDIT',
+                'Income',
                 style: new TextStyle(fontSize: 16.0),
               ),
               new Radio<int>(
@@ -149,7 +149,7 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
                 onChanged: onRadioChange,
               ),
               new Text(
-                'DEBIT',
+                'Expense',
                 style: new TextStyle(fontSize: 16.0),
               ),
             ],
