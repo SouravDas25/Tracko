@@ -9,6 +9,7 @@ import 'package:expense_manager/models/category.dart';
 import 'package:jaguar_orm/jaguar_orm.dart';
 import 'package:jaguar_query/jaguar_query.dart';
 import 'package:jaguar_query_sqflite/jaguar_query_sqflite.dart';
+import 'package:sqflite/sqflite.dart' ;
 
 part 'transaction.jorm.dart';
 
@@ -89,9 +90,7 @@ class Transaction {
     return transaction;
   }
 
-
 }
-
 
 @GenBean()
 class TransactionBean extends Bean<Transaction> with _TransactionBean {

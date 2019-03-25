@@ -20,7 +20,7 @@ class _AccountsPage extends State<AccountsPage> {
   List<Account> accounts = new List(0);
   List<Transaction> transactions = new List(0);
   List<dynamic> selections = new List(0);
-
+  double totalAmount = 0.0;
 
   _AccountsPage();
 
@@ -47,8 +47,7 @@ class _AccountsPage extends State<AccountsPage> {
   initTransactionData() async {
     Sqflite.Database db = await DatabaseUtil.getRawDatabase();
 
-    String query = "SELECT t.*, c.name AS category_name FROM transactions t"
-        " JOIN categories c ON t.category_id = c.id ";
+    String query = "SELECT * FROM transactions t";
 
     if (selections != null && selections.length > 0) {
       String param = "";
@@ -106,6 +105,46 @@ class _AccountsPage extends State<AccountsPage> {
                   "id": account.id,
                 };
               }).toList(),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Card(
+                child: ListView(
+                  shrinkWrap: true,
+                  children: <Widget>[
+                    ListTile(
+                      trailing: Text(
+                        CommonUtil.toCurrency(totalAmount),
+                        style: TextStyle(fontSize: 18.0,fontWeight: FontWeight.bold),
+                      ),
+                      title: Text(
+                        "Income",
+                        style: TextStyle(fontSize: 18.0),
+                      ),
+                    ),
+                    ListTile(
+                      trailing: Text(
+                        CommonUtil.toCurrency(totalAmount),
+                        style: TextStyle(fontSize: 18.0,fontWeight: FontWeight.bold),
+                      ),
+                      title: Text(
+                        "Expense",
+                        style: TextStyle(fontSize: 18.0),
+                      ),
+                    ),
+                    ListTile(
+                      trailing: Text(
+                        CommonUtil.toCurrency(totalAmount),
+                        style: TextStyle(fontSize: 18.0,fontWeight: FontWeight.bold),
+                      ),
+                      title: Text(
+                        "Total Amount",
+                        style: TextStyle(fontSize: 18.0),
+                      ),
+                    )
+                  ],
+                ),
+              ),
             ),
             Padding(
               padding: EdgeInsets.symmetric(vertical: 10.0),

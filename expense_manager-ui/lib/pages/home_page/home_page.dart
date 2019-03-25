@@ -3,6 +3,7 @@ import 'package:expense_manager/Utils/Database.dart';
 import 'package:expense_manager/component/HomePieChart.dart';
 import 'package:expense_manager/component/PaddedText.dart';
 import 'package:expense_manager/component/TransactionTile.dart';
+import 'package:expense_manager/models/TransactionFacade.dart';
 import 'package:expense_manager/models/transaction.dart';
 import 'package:flutter/material.dart';
 import 'package:jaguar_query_sqflite/jaguar_query_sqflite.dart';
@@ -31,18 +32,13 @@ class _HomePageState extends State<HomePage>
 
   initData() async {
 //    refreshController.sendBack(true, RefreshStatus.refreshing);
-    Sqflite.Database db = await DatabaseUtil.getRawDatabase();
 
     var adapter = await DatabaseUtil.getAdapter();
     TransactionBean transactionBean = new TransactionBean(adapter);
     Find query = transactionBean.finder.limit(5).orderBy(transactionBean.date.name);
     transactions = await transactionBean.findMany(query);
     print(transactions);
-    var tmp =
-        (await db.rawQuery("SELECT SUM(amount) AS amount FROM transactions"))
-            .toList();
-//    print(tmp);
-    totalAmount = tmp[0]['amount'];
+    totalAmount = await TransactionFacade.getCurrentAmount();
 //    await db.close();
     setState(() {
       refreshController.sendBack(refreshIndicator, RefreshStatus.completed);
