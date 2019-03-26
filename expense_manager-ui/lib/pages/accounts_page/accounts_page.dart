@@ -110,6 +110,7 @@ class _AccountsPage extends State<AccountsPage> {
               padding: const EdgeInsets.only(top: 8.0),
               child: Card(
                 child: ListView(
+                  primary: false,
                   shrinkWrap: true,
                   children: <Widget>[
                     ListTile(
@@ -138,7 +139,7 @@ class _AccountsPage extends State<AccountsPage> {
                         style: TextStyle(fontSize: 18.0,fontWeight: FontWeight.bold),
                       ),
                       title: Text(
-                        "Total Amount",
+                        "Balance",
                         style: TextStyle(fontSize: 18.0),
                       ),
                     )
