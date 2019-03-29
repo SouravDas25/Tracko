@@ -1,5 +1,6 @@
 import 'package:expense_manager/Utils/CommonUtil.dart';
 import 'package:expense_manager/Utils/Database.dart';
+import 'package:expense_manager/Utils/enums.dart';
 import 'package:expense_manager/component/TransactionTile.dart';
 import 'package:expense_manager/component/multi_select/multi_select.dart';
 import 'package:expense_manager/models/account.dart';
@@ -17,10 +18,12 @@ class AccountsPage extends StatefulWidget {
 
 class _AccountsPage extends State<AccountsPage> {
   RefreshController refreshController = new RefreshController();
-  List<Account> accounts = new List(0);
-  List<Transaction> transactions = new List(0);
-  List<dynamic> selections = new List(0);
+  List<Account> accounts = new List();
+  List<Transaction> transactions = new List();
+  List<dynamic> selections = new List();
   double totalAmount = 0.0;
+  double incomeAmount = 0.0;
+  double expenseAmount = 0.0;
 
   _AccountsPage();
 
@@ -45,30 +48,29 @@ class _AccountsPage extends State<AccountsPage> {
   }
 
   initTransactionData() async {
-    Sqflite.Database db = await DatabaseUtil.getRawDatabase();
-
-    String query = "SELECT * FROM transactions t";
-
-    if (selections != null && selections.length > 0) {
-      String param = "";
-      for (int i = 0; i < selections.length; i++) {
-        param += selections[i].toString();
-        if (i + 1 != selections.length) {
-          param += " ,";
-        }
-      }
-      query += "WHERE t.account_id IN (" + param + ")";
-    }
-    query += " ORDER BY t.date DESC";
     var adapter = await DatabaseUtil.getAdapter();
-    var tb = new TransactionBean(adapter);
-//    print(query);
-    transactions = (await db.rawQuery(query)).map((dynamic map) {
-      return tb.fromMap(map);
-    }).toList();
-//    print(transactions);
-//    await db.close();
-    print(query);
+    TransactionBean transactionBean = new TransactionBean(adapter);
+    transactions.clear();
+    if (selections != null && selections.length > 0) {
+      int accountId;
+      for (int i = 0; i < selections.length; i++) {
+        accountId = int.parse(selections[i].toString());
+        List<Transaction> ts = await transactionBean.findByAccount(accountId);
+        transactions.addAll(ts);
+      }
+    }
+    else {
+      transactions = await transactionBean.getAll();
+    }
+    transactions.sort((a,b)=> b.date.compareTo(a.date));
+    totalAmount = incomeAmount = expenseAmount = 0;
+    transactions.forEach((Transaction element) {
+      if(element.transactionType == TransactionType.CREDIT)
+        incomeAmount += element.amount;
+      else
+        expenseAmount += element.amount;
+    });
+    totalAmount = incomeAmount - expenseAmount;
   }
 
   @override
@@ -115,7 +117,7 @@ class _AccountsPage extends State<AccountsPage> {
                   children: <Widget>[
                     ListTile(
                       trailing: Text(
-                        CommonUtil.toCurrency(totalAmount),
+                        CommonUtil.toCurrency(incomeAmount),
                         style: TextStyle(fontSize: 18.0,fontWeight: FontWeight.bold),
                       ),
                       title: Text(
@@ -125,7 +127,7 @@ class _AccountsPage extends State<AccountsPage> {
                     ),
                     ListTile(
                       trailing: Text(
-                        CommonUtil.toCurrency(totalAmount),
+                        CommonUtil.toCurrency(expenseAmount),
                         style: TextStyle(fontSize: 18.0,fontWeight: FontWeight.bold),
                       ),
                       title: Text(

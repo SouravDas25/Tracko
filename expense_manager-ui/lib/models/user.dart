@@ -47,12 +47,10 @@ class UserBean extends Bean<User> with _UserBean {
   final String tableName = 'users';
 
   @override
-  // TODO: implement accountBean
   AccountBean get accountBean => new AccountBean(adapter);
 
   @override
-  // TODO: implement categoryBean
-  CategoryBean get categoryBean => null;
+  CategoryBean get categoryBean => new CategoryBean(adapter);
 
   static Future<User> getCurrentUser({adapter}) async {
     User user;
