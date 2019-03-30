@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:intl/intl.dart';
 
+const double billion = 1000000000;
+const double million = 1000000;
 
 class CommonUtil {
 
@@ -14,16 +16,36 @@ class CommonUtil {
     return timeago.format(date);
   }
 
-  static NumberFormat formatCurrency;
-
   static String toCurrency(double amount){
+    NumberFormat formatCurrency;
+    String tail = "";
+    double absAmount = amount.abs();
     if(amount == null){
       amount = 0;
     }
-    if(formatCurrency == null){
-      formatCurrency = new NumberFormat("#,##0.00", "en_INR");;
+    if(absAmount >= million && absAmount < billion){
+      amount = amount/million;
+      formatCurrency =  NumberFormat.currency(
+        decimalDigits: 0,
+        symbol: '₹ ',
+      );
+      tail = " million";
     }
-    return '₹ ' + formatCurrency.format(amount);
+    else if(absAmount >= billion){
+      amount = amount/billion;
+      formatCurrency =  NumberFormat.currency(
+        decimalDigits: 0,
+        symbol: '₹ ',
+      );
+      tail = " billion";
+    }
+    else {
+      formatCurrency =  NumberFormat.currency(
+        decimalDigits: amount - amount.round() > 0.0 ? 2 : 0,
+        symbol: '₹ ',
+      );
+    }
+    return formatCurrency.format(amount) + tail;
   }
 
   static String toImageUrl(String name){

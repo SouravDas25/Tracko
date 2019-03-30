@@ -38,6 +38,8 @@ class _AddItemPage extends State<AddItemPage> {
     var adapter = await DatabaseUtil.getAdapter();
     await adapter.connect();
 
+//    print(current);
+
     TransactionBean transactionBean = TransactionBean(adapter);
     await transactionBean.upsert(current);
 

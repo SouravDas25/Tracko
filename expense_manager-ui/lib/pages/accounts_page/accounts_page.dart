@@ -38,7 +38,7 @@ class _AccountsPage extends State<AccountsPage> {
     await adapter.connect();
     AccountBean accountBean = new AccountBean(adapter);
     accounts = await accountBean.getAll();
-    print(accounts);
+//    print(accounts);
 //    await adapter.close();
     await initTransactionData();
     Future<void>.delayed(Duration(milliseconds: 5));
@@ -52,20 +52,23 @@ class _AccountsPage extends State<AccountsPage> {
     TransactionBean transactionBean = new TransactionBean(adapter);
     transactions.clear();
     if (selections != null && selections.length > 0) {
+//      print(selections);
       int accountId;
       for (int i = 0; i < selections.length; i++) {
         accountId = int.parse(selections[i].toString());
+//        print(accountId);
         List<Transaction> ts = await transactionBean.findByAccount(accountId);
+//        print(ts);
         transactions.addAll(ts);
       }
-    }
-    else {
+    } else {
       transactions = await transactionBean.getAll();
     }
-    transactions.sort((a,b)=> b.date.compareTo(a.date));
+    print(transactions);
+    transactions.sort((a, b) => b.date.compareTo(a.date));
     totalAmount = incomeAmount = expenseAmount = 0;
     transactions.forEach((Transaction element) {
-      if(element.transactionType == TransactionType.CREDIT)
+      if (element.transactionType == TransactionType.CREDIT)
         incomeAmount += element.amount;
       else
         expenseAmount += element.amount;
@@ -111,6 +114,9 @@ class _AccountsPage extends State<AccountsPage> {
             Padding(
               padding: const EdgeInsets.only(top: 8.0),
               child: Card(
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4.0),
+                    side: new BorderSide(color: Colors.grey, width: 0.5)),
                 child: ListView(
                   primary: false,
                   shrinkWrap: true,
@@ -118,8 +124,10 @@ class _AccountsPage extends State<AccountsPage> {
                     ListTile(
                       trailing: Text(
                         CommonUtil.toCurrency(incomeAmount),
-                        style: TextStyle(fontSize: 18.0,fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 18.0, fontWeight: FontWeight.w500),
                       ),
+                      dense: true,
                       title: Text(
                         "Income",
                         style: TextStyle(fontSize: 18.0),
@@ -128,17 +136,28 @@ class _AccountsPage extends State<AccountsPage> {
                     ListTile(
                       trailing: Text(
                         CommonUtil.toCurrency(expenseAmount),
-                        style: TextStyle(fontSize: 18.0,fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 18.0, fontWeight: FontWeight.w500),
                       ),
+                      dense: true,
                       title: Text(
                         "Expense",
                         style: TextStyle(fontSize: 18.0),
                       ),
                     ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 15.0, vertical: 0.0),
+                      child: Container(
+                        height: 0.5,
+                        color: Colors.black,
+                      ),
+                    ),
                     ListTile(
                       trailing: Text(
                         CommonUtil.toCurrency(totalAmount),
-                        style: TextStyle(fontSize: 18.0,fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 18.0, fontWeight: FontWeight.w500),
                       ),
                       title: Text(
                         "Balance",
