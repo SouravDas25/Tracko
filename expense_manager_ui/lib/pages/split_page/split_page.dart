@@ -2,6 +2,7 @@ import 'package:expense_manager/Utils/Database.dart';
 import 'package:expense_manager/models/user.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:flutter/material.dart';
+import 'package:sms/contact.dart';
 
 
 class SplitPage extends StatefulWidget {
@@ -19,7 +20,9 @@ class _SplitPage extends State<SplitPage> {
     initData();
   }
 
-  void initData() async {}
+  void initData() async {
+
+  }
 
   @override
   Widget build(BuildContext context) {

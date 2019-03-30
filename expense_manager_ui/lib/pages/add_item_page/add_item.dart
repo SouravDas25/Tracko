@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:datetime_picker_formfield/datetime_picker_formfield.dart';
 import 'package:intl/intl.dart';
 import 'package:contacts_service/contacts_service.dart';
+import 'package:expense_manager/component/select_contact.dart';
 class AddItemPage extends StatefulWidget {
   int id;
 
@@ -99,9 +100,7 @@ class _AddItemPage extends State<AddItemPage> {
   }
 
 
-  openContactPage() async {
-    Iterable<Contact> contacts= await ContactsService.getContacts();
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -229,7 +228,10 @@ class _AddItemPage extends State<AddItemPage> {
               color: Theme.of(context).primaryColor,
               padding: EdgeInsets.all(20.0),
               onPressed: () {
-                openContactPage();
+//                select_contact ob =new select_contact();
+                Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) =>
+                        select_contact()));
               },
               textColor: Colors.white,
               child: Text("Split the Amount"),
