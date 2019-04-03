@@ -19,10 +19,11 @@ class CommonUtil {
   static String toCurrency(double amount){
     NumberFormat formatCurrency;
     String tail = "";
-    double absAmount = amount.abs();
+
     if(amount == null){
       amount = 0;
     }
+    double absAmount = amount.abs();
     if(absAmount >= million && absAmount < billion){
       amount = amount/million;
       formatCurrency =  NumberFormat.currency(

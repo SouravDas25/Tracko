@@ -4,6 +4,7 @@ import 'package:expense_manager/Utils/enums.dart';
 import 'package:expense_manager/component/AccountDialog.dart';
 import 'package:expense_manager/component/CategoryDialog.dart';
 import 'package:expense_manager/component/screen.dart';
+import 'package:expense_manager/component/select_contact.dart';
 import 'package:expense_manager/models/account.dart';
 import 'package:expense_manager/models/category.dart';
 import 'package:expense_manager/models/transaction.dart';
@@ -285,6 +286,18 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
             child: Text(
               widget.mainButtonText == null ? "Update" : widget.mainButtonText,
               style: TextStyle(fontSize: 18.0),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: RaisedButton(
+              color: Theme.of(context).primaryColor,
+              padding: EdgeInsets.all(20.0),
+              onPressed: () {
+                select_contact();
+              },
+              textColor: Colors.white,
+              child: Text("Split"),
             ),
           ),
         ],
