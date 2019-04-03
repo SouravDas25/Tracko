@@ -88,7 +88,7 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
     transaction.date = date;
     transaction.name = name.text;
     transaction.categoryId = categoryId;
-    transaction.accountId = accountId;
+    transaction.accountId = this.accountId;
     transaction.comments = comments.text;
     transaction.logo = logo;
     transaction.transactionType = transactionType;
@@ -168,7 +168,7 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
             }).toList(),
             onChanged: (int id) {
               setState(() {
-                categoryId = id;
+                this.categoryId = id;
               });
             },
           ),
@@ -236,7 +236,7 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
               }).toList(),
               onChanged: (int value) {
                 setState(() {
-                  accountId = value;
+                  this.accountId = value;
                 });
               },
             ),
@@ -274,7 +274,6 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
               labelStyle: TextStyle(fontSize: 19),
               labelText: 'comments',
             ),
-            onChanged: (text) {},
           ),
           RaisedButton(
             color: Theme.of(context).primaryColor,

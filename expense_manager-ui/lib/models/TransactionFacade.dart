@@ -25,7 +25,7 @@ class TransactionFacade {
       query+=" WHERE account_id = $accountId ";
     }
     var tmp = (await db.rawQuery(query)).toList();
-    print(tmp);
+//    print(tmp);
     return tmp.first['amount'];
   }
 }

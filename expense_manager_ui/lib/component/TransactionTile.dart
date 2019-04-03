@@ -15,6 +15,9 @@ class TransactionTile extends StatelessWidget {
     return Slidable(
       delegate: new SlidableScrollDelegate(),
       child: Card(
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(4.0),
+              side: new BorderSide(color: Colors.grey, width: 0.25)),
           child: ListTile(
               leading: CircleAvatar(
                 backgroundColor: Colors.transparent,
@@ -28,8 +31,12 @@ class TransactionTile extends StatelessWidget {
                 CommonUtil.humanDate(transaction.date),
               ),
               trailing: Text(
-                  CommonUtil.toSign(transaction.transactionType) + CommonUtil.toCurrency(transaction.amount),
-                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20,color: CommonUtil.toTypeColor(transaction.transactionType)),
+                CommonUtil.toSign(transaction.transactionType) +
+                    CommonUtil.toCurrency(transaction.amount),
+                style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 20,
+                    color: CommonUtil.toTypeColor(transaction.transactionType)),
               ))),
       secondaryActions: <Widget>[
         Card(
