@@ -1,4 +1,4 @@
-package com.example.expensemanager;
+package com.example.expense_manager_ui;
 
 import android.os.Bundle;
 import io.flutter.app.FlutterActivity;
