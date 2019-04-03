@@ -1,0 +1,4 @@
+#Thu Mar 21 16:54:25 IST 2019
+base.0=C\:\\Users\\amshaw\\Desktop\\ExpenseManager\\expense_manager_ui\\build\\app\\intermediates\\transforms\\dexMerger\\debug\\0
+path.0=classes.dex
+renamed.0=classes.dex

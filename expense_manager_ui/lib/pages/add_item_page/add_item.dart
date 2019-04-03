@@ -15,8 +15,7 @@ import 'package:flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
 import 'package:datetime_picker_formfield/datetime_picker_formfield.dart';
 import 'package:intl/intl.dart';
-import 'package:contacts_service/contacts_service.dart';
-import 'package:expense_manager/component/select_contact.dart';
+
 class AddItemPage extends StatefulWidget {
   Transaction transaction;
 
@@ -31,7 +30,6 @@ class AddItemPage extends StatefulWidget {
 class _AddItemPage extends State<AddItemPage> {
   Transaction newTransaction;
 
-
   _AddItemPage(this.newTransaction) {
     if (newTransaction == null) newTransaction = Transaction.defaultObject();
   }
@@ -40,18 +38,16 @@ class _AddItemPage extends State<AddItemPage> {
     var adapter = await DatabaseUtil.getAdapter();
     await adapter.connect();
 
+//    print(current);
+
     TransactionBean transactionBean = TransactionBean(adapter);
     await transactionBean.upsert(current);
 
     FlushDialog.flash(context, "Saved", "Transaction Persisted");
   }
 
-
-
-
   @override
   Widget build(BuildContext context) {
-
     return SmartAddItemPage(
       newTransaction,
       mainButtonText: "Save",
@@ -59,4 +55,3 @@ class _AddItemPage extends State<AddItemPage> {
     );
   }
 }
-
