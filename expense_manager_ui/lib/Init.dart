@@ -7,8 +7,8 @@ class InitializeApp {
   static init() async {
     var adapter = await DatabaseUtil.getAdapter();
     await adapter.connect();
-//    await Database.dropTables(adapter);
+//    await DatabaseUtil.dropTables(adapter);
     await DatabaseUtil.createTables(adapter);
-    await adapter.close();
+//    await adapter.close();
   }
 }

@@ -1,16 +1,14 @@
 import 'package:expense_manager/Utils/CommonUtil.dart';
 import 'package:expense_manager/Utils/Database.dart';
-import 'package:expense_manager/component/MenuDrawer.dart';
+import 'package:expense_manager/component/HomePieChart.dart';
 import 'package:expense_manager/component/PaddedText.dart';
 import 'package:expense_manager/component/TransactionTile.dart';
-import 'package:expense_manager/component/screen.dart';
+import 'package:expense_manager/models/TransactionFacade.dart';
 import 'package:expense_manager/models/transaction.dart';
-import 'package:expense_manager/pages/add_item_page/add_item.dart';
 import 'package:flutter/material.dart';
-import 'package:expense_manager/component/menu_bar.dart';
+import 'package:jaguar_query_sqflite/jaguar_query_sqflite.dart';
 import "package:pull_to_refresh/pull_to_refresh.dart";
-import 'package:sqflite/sqflite.dart';
-import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:sqflite/sqflite.dart' as Sqflite;
 
 class HomePage extends StatefulWidget {
   HomePage({Key key}) : super(key: key);
@@ -21,9 +19,10 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage>
     with SingleTickerProviderStateMixin {
-  List<dynamic> transactions = new List(0);
+  List<Transaction> transactions = new List(0);
   bool refreshIndicator = true;
   RefreshController refreshController = new RefreshController();
+  double totalAmount = 0.0;
 
   @override
   initState() {
@@ -33,13 +32,14 @@ class _HomePageState extends State<HomePage>
 
   initData() async {
 //    refreshController.sendBack(true, RefreshStatus.refreshing);
-    Database db = await DatabaseUtil.getRawDatabase();
-    String query = "SELECT t.*, c.name AS category_name from transactions t"
-        " JOIN categories c ON t.category_id = c.id"
-        " LIMIT 5";
-    transactions = (await db.rawQuery(query)).toList();
+
+    var adapter = await DatabaseUtil.getAdapter();
+    TransactionBean transactionBean = new TransactionBean(adapter);
+    Find query = transactionBean.finder.limit(5).orderBy(transactionBean.date.name);
+    transactions = await transactionBean.findMany(query);
     print(transactions);
-    await db.close();
+    totalAmount = await TransactionFacade.getCurrentAmount();
+//    await db.close();
     setState(() {
       refreshController.sendBack(refreshIndicator, RefreshStatus.completed);
     });
@@ -58,43 +58,38 @@ class _HomePageState extends State<HomePage>
       },
       child: ListView(
         children: <Widget>[
-          Padding(
-            padding: EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+          Card(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
-                Card(
-                  child: Column(
-                    children: <Widget>[
-                      ListTile(
-                        leading: PaddedText("Total Balance",
-                            textAlign: TextAlign.left),
-                      ),
-                      PaddedText(
-                        '₹ 24,560',
-                        vertical: 15.0,
-                        horizontal: 10.0,
-                        style: TextStyle(fontSize: 35),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
+                ListTile(
+                  leading: PaddedText("Total Balance",
+                      textAlign: TextAlign.left),
                 ),
                 PaddedText(
-                  "RECENT TRANSACTION",
+                  CommonUtil.toCurrency(totalAmount),
+                  vertical: 15.0,
                   horizontal: 10.0,
-                  vertical: 10.0,
+                  style: TextStyle(fontSize: 35),
+                  textAlign: TextAlign.center,
                 ),
-                ListView(
-                  primary: false,
-                  shrinkWrap: true,
-                  children: transactions.map((dynamic transaction) {
-                    return TransactionTile(transaction);
-                  }).toList(),
-                )
               ],
             ),
-          )
+          ),
+          Card(
+            child: CategoryChart(),
+          ),
+          PaddedText(
+            "RECENT TRANSACTION",
+            horizontal: 10.0,
+            vertical: 10.0,
+          ),
+          ListView(
+            primary: false,
+            shrinkWrap: true,
+            children: transactions.map((Transaction transaction) {
+              return TransactionTile(transaction);
+            }).toList(),
+          ),
         ],
       ),
     );

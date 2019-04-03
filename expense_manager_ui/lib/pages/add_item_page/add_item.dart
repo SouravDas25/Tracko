@@ -1,12 +1,16 @@
+import 'package:expense_manager/Utils/CommonUtil.dart';
 import 'package:expense_manager/Utils/Database.dart';
+import 'package:expense_manager/Utils/enums.dart';
 import 'package:expense_manager/component/AccountDialog.dart';
 import 'package:expense_manager/component/CategoryDialog.dart';
+import 'package:expense_manager/component/FLushDialog.dart';
 import 'package:expense_manager/component/PaddedText.dart';
 import 'package:expense_manager/component/screen.dart';
 import 'package:expense_manager/models/account.dart';
 import 'package:expense_manager/models/category.dart';
 import 'package:expense_manager/models/transaction.dart';
 import 'package:expense_manager/models/user.dart';
+import 'package:expense_manager/pages/smart_add_item/smart_add_item.dart';
 import 'package:flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
 import 'package:datetime_picker_formfield/datetime_picker_formfield.dart';
@@ -14,23 +18,20 @@ import 'package:intl/intl.dart';
 import 'package:contacts_service/contacts_service.dart';
 import 'package:expense_manager/component/select_contact.dart';
 class AddItemPage extends StatefulWidget {
-  int id;
+  Transaction transaction;
 
-  AddItemPage({this.id : -1});
+  AddItemPage({this.transaction});
 
   @override
   State<StatefulWidget> createState() {
-    // TODO: implement createState
-    return _AddItemPage(this.id);
+    return _AddItemPage(this.transaction);
   }
 }
 
 class _AddItemPage extends State<AddItemPage> {
-  TextEditingController comments = TextEditingController();
-  TextEditingController amount = TextEditingController();
-  bool isEdit = false;
-  Transaction current;
+  Transaction newTransaction;
 
+<<<<<<< HEAD:expense_manager_ui/lib/pages/add_item_page/add_item.dart
   DateTime date = DateTime.now();
   Category category;
   Account account;
@@ -43,60 +44,20 @@ class _AddItemPage extends State<AddItemPage> {
     initData(id);
 
 
+=======
+  _AddItemPage(this.newTransaction) {
+    if (newTransaction == null) newTransaction = Transaction.defaultObject();
+>>>>>>> 71b09c5512961e663f826f6449eb5e9aa867b94f:expense_manager-ui/lib/pages/add_item_page/add_item.dart
   }
 
-  initData(int id) async {
+  save(Transaction current) async {
     var adapter = await DatabaseUtil.getAdapter();
     await adapter.connect();
-    CategoryBean categoryBean = CategoryBean(adapter);
-    categories = await categoryBean.getAll();
-    AccountBean accountBean = AccountBean(adapter);
-    accounts = await accountBean.getAll();
-    account = accounts[0];
 
-    if(id != -1){
-      isEdit = true;
-      TransactionBean transactionBean = new TransactionBean(adapter);
-      current = await transactionBean.find(id);
-      date = current.date;
-      amount.value = TextEditingValue(text: current.amount.toString());
-      comments.value = TextEditingValue(text: current.comments) ;
-      category = categories.firstWhere((category) => category.id == current.categoryId);
-      account = accounts.firstWhere((acc)=> acc.id == current.accountId);
-      print(current);
-      print(account);
-    }
-
-
-    await adapter.close();
-    Future<void>.delayed(new Duration(seconds: 1));
-    setState(() {});
-  }
-
-  save() async {
-    if (category == null || account == null) {
-      Flushbar(
-        titleText : Text("Error",style: TextStyle(color: Colors.deepOrange),),
-        message: "Category and Account has to be specified",
-        duration: Duration(seconds: 3),
-      )..show(context);
-      return;
-    }
-    var adapter = await DatabaseUtil.getAdapter();
-    await adapter.connect();
     TransactionBean transactionBean = TransactionBean(adapter);
-    if(current == null) current = new Transaction();
-    current.comments = comments.text;
-    current.date = this.date;
-    current.amount = double.parse(amount.text);
-    transactionBean.associateAccount(current, account);
-    transactionBean.associateCategory(current, category);
-//    print(date);
-//    print(transaction);
     await transactionBean.upsert(current);
 
-    await adapter.close();
-    Navigator.of(context).pop();
+    FlushDialog.flash(context, "Saved", "Transaction Persisted");
   }
 
 
@@ -104,6 +65,7 @@ class _AddItemPage extends State<AddItemPage> {
 
   @override
   Widget build(BuildContext context) {
+<<<<<<< HEAD:expense_manager_ui/lib/pages/add_item_page/add_item.dart
     return Screen(
       body: ListView(
         children: <Widget>[
@@ -247,6 +209,12 @@ class _AddItemPage extends State<AddItemPage> {
           )
         ],
       ),
+=======
+    return SmartAddItemPage(
+      newTransaction,
+      mainButtonText: "Save",
+      saveCallback: this.save,
+>>>>>>> 71b09c5512961e663f826f6449eb5e9aa867b94f:expense_manager-ui/lib/pages/add_item_page/add_item.dart
     );
   }
 }

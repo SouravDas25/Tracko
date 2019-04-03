@@ -1,11 +1,13 @@
 import 'package:expense_manager/Utils/CommonUtil.dart';
 import 'package:expense_manager/Utils/Database.dart';
+import 'package:expense_manager/Utils/enums.dart';
 import 'package:expense_manager/component/TransactionTile.dart';
 import 'package:expense_manager/component/multi_select/multi_select.dart';
 import 'package:expense_manager/models/account.dart';
+import 'package:expense_manager/models/transaction.dart';
 import 'package:flutter/material.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
-import 'package:sqflite/sqflite.dart';
+import 'package:sqflite/sqflite.dart' as Sqflite;
 
 class AccountsPage extends StatefulWidget {
   @override
@@ -16,12 +18,18 @@ class AccountsPage extends StatefulWidget {
 
 class _AccountsPage extends State<AccountsPage> {
   RefreshController refreshController = new RefreshController();
-  List<Account> accounts = new List(0);
-  List<dynamic> transactions = new List(0);
-  List<dynamic> selections = new List(0);
-  final GlobalKey<FormState> _formKey = new GlobalKey<FormState>();
+  List<Account> accounts = new List();
+  List<Transaction> transactions = new List();
+  List<dynamic> selections = new List();
+  double totalAmount = 0.0;
+  double incomeAmount = 0.0;
+  double expenseAmount = 0.0;
 
-  _AccountsPage() {
+  _AccountsPage();
+
+  @override
+  void initState() {
+    super.initState();
     initAccountData();
   }
 
@@ -31,35 +39,38 @@ class _AccountsPage extends State<AccountsPage> {
     AccountBean accountBean = new AccountBean(adapter);
     accounts = await accountBean.getAll();
     print(accounts);
-    await adapter.close();
+//    await adapter.close();
+    await initTransactionData();
+    Future<void>.delayed(Duration(milliseconds: 5));
     setState(() {
       refreshController.sendBack(true, RefreshStatus.completed);
     });
-    initTransactionData();
   }
 
-  void initTransactionData() async {
-    Database db = await DatabaseUtil.getRawDatabase();
-
-    String query = "SELECT t.*, c.name AS category_name from transactions t"
-        " JOIN categories c ON t.category_id = c.id ";
-
+  initTransactionData() async {
+    var adapter = await DatabaseUtil.getAdapter();
+    TransactionBean transactionBean = new TransactionBean(adapter);
+    transactions.clear();
     if (selections != null && selections.length > 0) {
-      String param = "";
+      int accountId;
       for (int i = 0; i < selections.length; i++) {
-        param += selections[i].toString();
-        if (i + 1 != selections.length) {
-          param += " ,";
-        }
+        accountId = int.parse(selections[i].toString());
+        List<Transaction> ts = await transactionBean.findByAccount(accountId);
+        transactions.addAll(ts);
       }
-      query += "WHERE t.account_id IN (" + param + ")";
     }
-    print(query);
-    transactions = (await db.rawQuery(query)).toList();
-//    print(transactions);
-    await db.close();
-    Future<void>.delayed(Duration(seconds: 1));
-    setState(() {});
+    else {
+      transactions = await transactionBean.getAll();
+    }
+    transactions.sort((a,b)=> b.date.compareTo(a.date));
+    totalAmount = incomeAmount = expenseAmount = 0;
+    transactions.forEach((Transaction element) {
+      if(element.transactionType == TransactionType.CREDIT)
+        incomeAmount += element.amount;
+      else
+        expenseAmount += element.amount;
+    });
+    totalAmount = incomeAmount - expenseAmount;
   }
 
   @override
@@ -98,11 +109,52 @@ class _AccountsPage extends State<AccountsPage> {
               }).toList(),
             ),
             Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Card(
+                child: ListView(
+                  primary: false,
+                  shrinkWrap: true,
+                  children: <Widget>[
+                    ListTile(
+                      trailing: Text(
+                        CommonUtil.toCurrency(incomeAmount),
+                        style: TextStyle(fontSize: 18.0,fontWeight: FontWeight.bold),
+                      ),
+                      title: Text(
+                        "Income",
+                        style: TextStyle(fontSize: 18.0),
+                      ),
+                    ),
+                    ListTile(
+                      trailing: Text(
+                        CommonUtil.toCurrency(expenseAmount),
+                        style: TextStyle(fontSize: 18.0,fontWeight: FontWeight.bold),
+                      ),
+                      title: Text(
+                        "Expense",
+                        style: TextStyle(fontSize: 18.0),
+                      ),
+                    ),
+                    ListTile(
+                      trailing: Text(
+                        CommonUtil.toCurrency(totalAmount),
+                        style: TextStyle(fontSize: 18.0,fontWeight: FontWeight.bold),
+                      ),
+                      title: Text(
+                        "Balance",
+                        style: TextStyle(fontSize: 18.0),
+                      ),
+                    )
+                  ],
+                ),
+              ),
+            ),
+            Padding(
               padding: EdgeInsets.symmetric(vertical: 10.0),
               child: ListView(
                 primary: false,
                 shrinkWrap: true,
-                children: transactions.map((dynamic transaction) {
+                children: transactions.map((Transaction transaction) {
                   return TransactionTile(transaction);
                 }).toList(),
               ),

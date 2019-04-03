@@ -19,8 +19,8 @@ dependencies:
   shared_preferences: "0.4.3"
   pin_entry_text_field : "^0.1.3"
   sqflite:
-  jaguar_orm: ^2.2.0
-  jaguar_query_sqflite: ^2.2.0
+  jaguar_orm: ^2.2.6
+  jaguar_query_sqflite: ^2.2.9
   datetime_picker_formfield: ^0.1.8
   pull_to_refresh: ^1.1.6
   timeago: ^2.0.10
@@ -29,8 +29,13 @@ dependencies:
   http: ^0.12.0+1
   flushbar: ^1.3.0
   sembast: ^1.15.1
+<<<<<<< HEAD:expense_manager_ui/pubspec.yaml
   contacts_service: ^0.2.4
   permission_handler: ^2.2.0
+=======
+  charts_flutter: ^0.6.0
+  flutter_spinkit: "^3.1.0"
+>>>>>>> 71b09c5512961e663f826f6449eb5e9aa867b94f:expense_manager-ui/pubspec.yaml
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
