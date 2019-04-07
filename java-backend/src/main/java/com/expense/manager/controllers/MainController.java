@@ -1,4 +1,4 @@
-package com.expense.manager;
+package com.expense.manager.controllers;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
