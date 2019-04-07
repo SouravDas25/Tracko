@@ -8,11 +8,12 @@
 		<version>2.1.3.RELEASE</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.sap</groupId>
+	<groupId>com.github.souravdas25</groupId>
 	<artifactId>expense_manager</artifactId>
 	<version>0.0.1</version>
 	<name>ExpenseManager</name>
-	<description>Demo project for Spring Boot</description>
+	<description>ExpenseManager project for Spring Boot</description>
+	<packaging>war</packaging>
 
 	<properties>
 		<java.version>1.8</java.version>
