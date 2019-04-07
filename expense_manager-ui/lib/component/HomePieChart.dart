@@ -1,5 +1,8 @@
 import 'package:charts_flutter/flutter.dart' as charts;
 import 'package:expense_manager/Utils/Database.dart';
+import 'package:expense_manager/Utils/enums.dart';
+import 'package:expense_manager/models/category.dart';
+import 'package:expense_manager/models/transaction.dart';
 import 'package:expense_manager/scratch/ChartUtil.dart';
 import 'package:flutter/material.dart';
 
@@ -16,27 +19,34 @@ class _CategoryChart extends State<CategoryChart> {
   @override
   void initState() {
     super.initState();
-    initData();
+    this.initData();
   }
 
   initData() async {
     seriesList = await _createData();
+//    print("apple " + seriesList.toString());
+    setState(() {});
   }
 
-  Future<List<charts.Series<Point, int>>> _createData() async {
+  Future<List<charts.Series<Entry, int>>> _createData() async {
     var adapter = await DatabaseUtil.getAdapter();
-    final data = [
-      new Point(0, 100),
-      new Point(1, 75),
-      new Point(2, 25),
-      new Point(3, 5),
-    ];
-
+    CategoryBean categoryBean = new CategoryBean(adapter);
+    TransactionBean transactionBean = new TransactionBean(adapter);
+    List<Category> categories = await categoryBean.getAll();
+    List<Entry> data = [];
+    for (Category category in categories) {
+      var tmp = await transactionBean.findByCategory(category.id);
+      tmp.retainWhere((element) => element.transactionType == TransactionType.DEBIT);
+      double amount = tmp.fold(0.0, (double previous,Transaction element) => previous + element.amount);
+      data.add(Entry(category.id, category.name, amount.toInt()));
+    }
+    data = data.reversed.toList();
     return [
-      new charts.Series<Point, int>(
+      new charts.Series<Entry, int>(
         id: 'Category Expenses',
-        domainFn: (Point point, _) => point.x,
-        measureFn: (Point point, _) => point.y,
+        domainFn: (Entry point, _) => point.key,
+        measureFn: (Entry point, _) => point.value,
+        labelAccessorFn: (Entry point, _) => point.label,
         data: data,
       )
     ];
@@ -44,23 +54,26 @@ class _CategoryChart extends State<CategoryChart> {
 
   @override
   Widget build(BuildContext context) {
-    if(seriesList == null){
+    if (seriesList == null) {
       return Container(
           width: double.infinity,
           height: 250,
           child: Center(
             widthFactor: 2.0,
             child: CircularProgressIndicator(),
-          )
-      );
+          ));
     }
     return Container(
+//        padding: EdgeInsets.all(8.0),
         width: double.infinity,
         height: 250,
         child: new charts.PieChart(seriesList,
             defaultRenderer: new charts.ArcRendererConfig(
                 arcWidth: 60,
-                arcRendererDecorators: [new charts.ArcLabelDecorator()]),
+                arcRendererDecorators: [
+                  new charts.ArcLabelDecorator(
+                      labelPosition: charts.ArcLabelPosition.auto)
+                ]),
             animate: true));
   }
 }

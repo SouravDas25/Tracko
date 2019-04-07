@@ -1,10 +1,11 @@
 
 
-class Point {
-  final int x;
-  final int y;
+class Entry {
+  final int key;
+  final int value;
+  final String label;
 
-  Point(this.x, this.y);
+  Entry(this.key,this.label, this.value);
 }
 
 class ChartUtil {

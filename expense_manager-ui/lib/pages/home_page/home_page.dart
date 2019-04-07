@@ -37,7 +37,7 @@ class _HomePageState extends State<HomePage>
     TransactionBean transactionBean = new TransactionBean(adapter);
     Find query = transactionBean.finder.limit(5).orderBy(transactionBean.date.name);
     transactions = await transactionBean.findMany(query);
-    print(transactions);
+//    print(transactions);
     totalAmount = await TransactionFacade.getCurrentAmount();
 //    await db.close();
     setState(() {
