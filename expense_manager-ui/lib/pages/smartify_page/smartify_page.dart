@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:expense_manager/Utils/Database.dart';
+import 'package:expense_manager/Utils/DestinationUtil.dart';
 import 'package:expense_manager/Utils/SmartUtil.dart';
 import 'package:expense_manager/Utils/enums.dart';
 import 'package:expense_manager/component/FLushDialog.dart';
@@ -161,7 +162,7 @@ class _SmartPage extends State<SmartPage> {
 }
 
 Future<Transaction> getApiData(SmsMessage message) async {
-  var url = "http://souravdas25.pythonanywhere.com/apis/";
+  var url = DestinationUtil.pythonBackend() + "apis/";
   Map<String,String> body = new Map();
   body['text'] = message.body;
   body['address'] = message.address;
