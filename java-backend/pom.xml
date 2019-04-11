@@ -91,20 +91,20 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-tomcat</artifactId>
-            <scope>compile</scope> <!-- Change this to provided for production -->
+            <scope>provided</scope> <!-- Change this to provided for production -->
         </dependency>
 
         <!-- Only for local build -->
-        <dependency> <!-- Remove this for production -->
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>1.7.25</version>
-        </dependency>
+<!--        <dependency> &lt;!&ndash; Remove this for production &ndash;&gt;-->
+<!--            <groupId>org.slf4j</groupId>-->
+<!--            <artifactId>slf4j-api</artifactId>-->
+<!--            <version>1.7.25</version>-->
+<!--        </dependency>-->
 
-        <dependency> <!-- Remove this for production -->
-            <artifactId>logback-classic</artifactId>
-            <groupId>ch.qos.logback</groupId>
-        </dependency>
+<!--        <dependency> &lt;!&ndash; Remove this for production &ndash;&gt;-->
+<!--            <artifactId>logback-classic</artifactId>-->
+<!--            <groupId>ch.qos.logback</groupId>-->
+<!--        </dependency>-->
 
     </dependencies>
 
