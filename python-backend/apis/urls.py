@@ -16,8 +16,9 @@ Including another URLconf
 from django.conf.urls import url
 from django.contrib import admin
 
-from . import views
+from . import views,endpoints
 
 urlpatterns = [
     url(r'^$', views.index),
+    url(r'^logo/$', endpoints.get_image),
 ]

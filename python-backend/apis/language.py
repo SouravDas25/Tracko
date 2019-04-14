@@ -39,7 +39,7 @@ def scanAmount(tag):
             Log.info(match)
             if match and len(match.groups()) > 1:
                 amt = match.groups()[1]
-                amounts.append(int(amt))
+                amounts.append(float(amt))
     return amounts
 
 
