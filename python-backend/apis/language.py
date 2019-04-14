@@ -128,7 +128,7 @@ class Log(object):
 
     @staticmethod
     def info(text):
-        print(text);
+        print(text)
 
 
 """

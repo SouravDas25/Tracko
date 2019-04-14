@@ -20,5 +20,5 @@ from . import views,endpoints
 
 urlpatterns = [
     url(r'^$', views.index),
-    url(r'^logo/$', endpoints.get_image),
+    url(r'^logo$', endpoints.get_image),
 ]
