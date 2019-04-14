@@ -25,7 +25,7 @@ class Entity(models.Model):
     logo = models.CharField(max_length=100)
     entity_type = models.IntegerField(choices=EntityType)
     data = models.CharField(max_length=250, default=None, blank=True, null=True)
-    category = models.ForeignKey(Category)
+    category = models.ForeignKey(Category,on_delete=models.CASCADE)
 
     def __str__(self):
         return self.name
