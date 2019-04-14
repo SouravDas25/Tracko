@@ -294,7 +294,10 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
               color: Theme.of(context).primaryColor,
               padding: EdgeInsets.all(20.0),
               onPressed: () {
-                select_contact();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => select_contact()),
+                );
               },
               textColor: Colors.white,
               child: Text("Split"),
