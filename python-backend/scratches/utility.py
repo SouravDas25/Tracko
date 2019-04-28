@@ -1,4 +1,3 @@
-
 from nltk.corpus import wordnet
 import datetime
 
@@ -7,9 +6,9 @@ import datetime
 # nlp = spacy.load("en_core_web_lg")
 
 
-
-
 # print(tags)
+from scratches.debit_credit_classifier import DClassifier
+
 
 def word_correlation(word1, word2):
     wordFromList1 = wordnet.synsets(word1, pos=wordnet.VERB)
@@ -47,27 +46,32 @@ def maxCorrelation(verb, CD):
     return max
 
 
-def scanTransactionType(tags):
-    verbs = []
-    for i in range(len(tags)):
-        pos = tags[i]
-        if pos[1].startswith("VB"):
-            verbs.append(pos[0])
-    maxDebitCorr = 0.0
-    maxCreditCorr = 0.0
-    for verb in verbs:
-        debitCor = maxCorrelation(verb, True)
-        creditCor = maxCorrelation(verb, False)
-        if debitCor > maxDebitCorr:
-            maxDebitCorr = debitCor
-        if creditCor > maxCreditCorr:
-            maxCreditCorr = creditCor
-    if maxDebitCorr > 0 and maxCreditCorr > 0:
-        if maxDebitCorr > maxCreditCorr:
-            return "Debit"
-        else:
-            return "Credit"
-    return None
+def scanTransactionType(sentence):
+    # verbs = []
+    # for i in range(len(tags)):
+    #     pos = tags[i]
+    #     if pos[1].startswith("VB"):
+    #         verbs.append(pos[0])
+    # maxDebitCorr = 0.0
+    # maxCreditCorr = 0.0
+    # for verb in verbs:
+    #     debitCor = maxCorrelation(verb, True)
+    #     creditCor = maxCorrelation(verb, False)
+    #     if debitCor > maxDebitCorr:
+    #         maxDebitCorr = debitCor
+    #     if creditCor > maxCreditCorr:
+    #         maxCreditCorr = creditCor
+    # if maxDebitCorr > 0 and maxCreditCorr > 0:
+    #     if maxDebitCorr > maxCreditCorr:
+    #         return "Debit"
+    #     else:
+    #         return "Credit"
+    # return None
+    model = DClassifier()
+    prediction = model.predict_label(sentence)
+    if prediction == 'NA':
+        return None
+    return prediction[0]
 
 
 def scanDates(dates):
@@ -103,6 +107,3 @@ class Log(object):
     @staticmethod
     def info(text):
         print(text)
-
-
-

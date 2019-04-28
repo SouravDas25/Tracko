@@ -4,16 +4,18 @@ from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 
 arr = ["Car was cleaned by Jack",
-	"Jack was cleaned by Car."]
+       "Jack was cleaned by Car."]
 arr1 = [
-	"Debited Rs 200 from a/c **9502 on 21-6-2013",
-	"Paid Rs 200 from a/c **9502 on 21-6-2013.",
-	"Rs.3000 deposited in HDFC account on 16-8-2019."
+    "Debited Rs 200 from a/c **9502 on 21-6-2013",
+    "Paid Rs 200 from a/c **9502 on 21-6-2013.",
+    "Rs.3000 deposited in HDFC account on 16-8-2019."
 ]
 
 target = [
-	0,0,1
+    0, 0, 1
 ]
+
+
 #
 # def count_vectorize(dataset):
 # 	# If you want to take into account just term frequencies:
@@ -50,27 +52,30 @@ target = [
 
 class Model(object):
 
-	def __init__(self):
-		self.vectorizer = TfidfVectorizer(ngram_range=(1, 3))
-		self.classifier = GaussianNB()
+    def __init__(self):
+        self.vectorizer = TfidfVectorizer(ngram_range=(1, 3))
+        self.classifier = GaussianNB()
 
-	def fit_data(self,dataset,target):
-		self.vectorizer.fit(dataset)
-		transformed = self.transform(dataset)
-		self.classifier.fit(transformed,target)
+    def fit_data(self, dataset, target):
+        self.vectorizer.fit(dataset)
+        transformed = self.transform(dataset)
+        self.classifier.fit(transformed, target)
 
-	def transform(self,data):
-		return self.vectorizer.transform(data).toarray()
+    def transform(self, data):
+        return self.vectorizer.transform(data).toarray()
 
-	def predict(self,dataset):
-		return self.classifier.predict(dataset)
+    def predict(self, dataset):
+        return self.classifier.predict(dataset)
 
-	def predit_score(self,dataset,target):
-		tran = self.transform(dataset)
-		# print("tran : ",tran)
-		pred = self.predict(tran)
-		print("GaussianNB accuracy : ", accuracy_score(target, pred, normalize=True))
+    def predit_score(self, dataset, target):
+        tran = self.transform(dataset)
+        # print("tran : ",tran)
+        pred = self.predict(tran)
+        print("GaussianNB accuracy : ", accuracy_score(target, pred, normalize=True))
+
 
 model = Model()
-model.fit_data(arr1,target)
-model.predit_score(["paid rs 520 on paytm to mr. prem"],[0])
+model.fit_data(arr1, target)
+model.predit_score(
+    ["Rs 144.00 debited from a/c **0915 on 14-03-19 to VPA upiswiggy@icici(UPI Ref No 907310835146). Not you? Call on "
+     "18002586161 to report"], [0])

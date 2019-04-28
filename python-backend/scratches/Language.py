@@ -3,12 +3,13 @@ import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 
-from utility import *
-from word_embedding import Embed
+from scratches.utility import *
+from scratches.word_embedding import Embed
 
 stops = set(stopwords.words("english"))
 
 lemma = nltk.stem.WordNetLemmatizer()
+stemmer = nltk.SnowballStemmer('english')
 
 """
     http://logo.clearbit.com/paytm.com
@@ -17,6 +18,9 @@ lemma = nltk.stem.WordNetLemmatizer()
 
 
 class Language(object):
+
+    def __init__(self):
+        pass
 
     def isValid(self):
         pass
@@ -27,10 +31,11 @@ class Language(object):
 
     def process(self, text):
         self.text = text
-        self.words = word_tokenize(text.strip())
+        self.words = word_tokenize(text.strip().lower())
         self.meaningful_words = [lemma.lemmatize(w) for w in self.words if not w in stops]
         Log.info(self.meaningful_words)
         self.tags = nltk.pos_tag(self.meaningful_words)
+        self.chunk = nltk.ne_chunk(self.tags)
         self.dates = datefinder.find_dates(text)
         # self.spacy_nlp = nlp(text)
         self.embeddings = Embed()
@@ -40,7 +45,7 @@ class Language(object):
         d = {}
         valid = True
         d['amounts'] = scanAmount(self.tags)
-        d['type'] = scanTransactionType(self.tags)
+        d['type'] = scanTransactionType(self.text)
         d['dates'] = scanDates(self.dates)
         d['comments'] = scanComments(self.tags)
         if len(d['amounts']) <= 0:
@@ -54,6 +59,8 @@ class Language(object):
     def print_data(self):
         print("words : ", self.words)
         print("meaningful words : ", self.meaningful_words)
+        print("tags : ", self.tags)
+        print("Entities : ", nltk.tree2conlltags(self.chunk))
 
 
 # print(word_correlation('debit','deduct'))
@@ -63,5 +70,5 @@ print(lang.process(
     "18002586161 to report").getDict())
 # printDates(lang.dates)
 lang.print_data()
-r = lang.embeddings.model().wv.similarity("paid","withdraw")
-print(r)
+# r = lang.embeddings.model().most_similar("paid")
+# print(r)
