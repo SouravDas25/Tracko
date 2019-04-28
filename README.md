@@ -13,4 +13,4 @@ Password : ExpenseManager1234
 
 Database tunneling command:
 
-neo open-db-tunnel -h vadbim2.nwtrial.od.sap.biz -u I353584 -a i353584trial --id hanamdc 
+neo open-db-tunnel -h hanatrial.ondemand.com -u i353584 -a i353584trial -i hanamdc -p <MainUserPassword>
