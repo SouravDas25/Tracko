@@ -7,6 +7,7 @@ from nltk.tokenize import word_tokenize
 from apis.models import Entity
 # import spacy
 import re
+from gensim.models import Word2Vec
 
 lemma = nltk.stem.WordNetLemmatizer()
 
@@ -128,7 +129,7 @@ class Log(object):
 
     @staticmethod
     def info(text):
-        print(text);
+        print(text)
 
 
 """
