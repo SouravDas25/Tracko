@@ -41,6 +41,7 @@ def sms_sentences(filename=None):
     return global_sentences, targets
 
 
+
 if __name__ == "__main__":
     s, t = sms_sentences()
     print(s, t)

@@ -68,10 +68,10 @@ def scanTransactionType(sentence):
     #         return "Credit"
     # return None
     model = DClassifier()
-    prediction = model.predict_label(sentence)
+    prediction = model.predict_label(sentence)[0]
     if prediction == 'NA':
         return None
-    return prediction[0]
+    return prediction
 
 
 def scanDates(dates):
