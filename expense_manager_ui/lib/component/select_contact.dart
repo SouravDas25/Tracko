@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 //
+// ignore: camel_case_types
 class select_contact extends StatefulWidget {
   createState() {
     return _select_contact();
@@ -33,6 +34,7 @@ class _select_contact extends State<select_contact> {
   Color floatingButtonColor;
   IconData icon;
   int contactSelect = 0;
+  bool _isButtonDisabled = true;
 
   @override
   void initState() {
@@ -72,8 +74,8 @@ class _select_contact extends State<select_contact> {
       if (!_isSelectedContactsView) {
         _uiCustomContacts =
             _allContacts.where((contact) => contact.isChecked == true).toList();
-        contactSelect++;
         _isSelectedContactsView = true;
+
         _restateFloatingButton(
           Text("Done").toString(),
           Icons.done,
@@ -82,7 +84,6 @@ class _select_contact extends State<select_contact> {
       } else {
         _uiCustomContacts = _allContacts;
         _isSelectedContactsView = false;
-        contactSelect--;
         _restateFloatingButton(
           Text("Select").toString(),
           Icons.done,
@@ -120,14 +121,27 @@ class _select_contact extends State<select_contact> {
             onChanged: (bool value) {
               setState(() {
                 c.isChecked = value;
+                if (c.isChecked == true) {
+                  contactSelect++;
+                } else
+                  contactSelect--;
+                if (contactSelect > 0)
+                  _isButtonDisabled = false;
+                else
+                  _isButtonDisabled = true;
               });
             }),
       );
     }
-
-    ;
+    FloatingActionButton fab;
+    if (!_isButtonDisabled) {
+      fab = FloatingActionButton(
+        onPressed: _onSubmit,
+        child: Icon(Icons.arrow_forward),
+      );
+    }
     return Scaffold(
-      appBar: MenuBar(),
+      appBar: AppBar(title: Text('$contactSelect')),
       body: ListView.builder(
         itemCount: _uiCustomContacts?.length,
         itemBuilder: (BuildContext context, int index) {
@@ -136,10 +150,7 @@ class _select_contact extends State<select_contact> {
           return _buildListTile(_contact, _phonesList);
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _onSubmit,
-        child: Icon(Icons.arrow_forward),
-      ),
+      floatingActionButton: fab,
     );
   }
 }
