@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:expense_manager/component/screen.dart';
 import 'package:expense_manager/pages/phone_login_page/otp_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-class PhoneLoginPage extends StatelessWidget {
+class PhoneLoginPage extends StatefulWidget {
+  @override
+  State<StatefulWidget> createState() {
+    return _PhoneLoginPage();
+  }
+}
 
+class _PhoneLoginPage extends State<PhoneLoginPage> {
   TextEditingController phoneNumberController = new TextEditingController();
 
   @override
@@ -35,7 +42,10 @@ class PhoneLoginPage extends StatelessWidget {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => OtpPage(phoneNumberController.text)),
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            OtpPage(phoneNumber: phoneNumberController.text),
+                      ),
                     );
                   },
                   padding: EdgeInsets.symmetric(vertical: 20.0),

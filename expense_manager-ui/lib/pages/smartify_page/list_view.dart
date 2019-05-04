@@ -1,4 +1,5 @@
 import 'package:expense_manager/Utils/CommonUtil.dart';
+import 'package:expense_manager/Utils/WidgetUtil.dart';
 import 'package:expense_manager/Utils/enums.dart';
 import 'package:expense_manager/models/transaction.dart';
 import 'package:expense_manager/pages/smart_add_item/smart_add_item.dart';
@@ -42,10 +43,7 @@ class SmartListView extends StatelessWidget {
               subtitle: Text(
                 CommonUtil.humanDate(transaction.date),
               ),
-              trailing: Text(
-                CommonUtil.toCurrency(transaction.amount),
-                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20),
-              ),
+              trailing:  WidgetUtil.transformAmount2TextWidget(transaction),
             ),
           ),
           delegate: new SlidableScrollDelegate(),

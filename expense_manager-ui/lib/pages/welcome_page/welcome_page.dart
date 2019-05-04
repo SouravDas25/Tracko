@@ -52,7 +52,7 @@ class _WelcomePage extends State<WelcomePage> {
         onPressed: () {
           Navigator.pushReplacementNamed(
             context,
-            "/phone_login",
+            "/set_up",
           );
         },
         padding: EdgeInsets.symmetric(vertical: 20.0),

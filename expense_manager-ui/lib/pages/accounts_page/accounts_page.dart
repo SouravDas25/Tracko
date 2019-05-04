@@ -64,7 +64,7 @@ class _AccountsPage extends State<AccountsPage> {
     } else {
       transactions = await transactionBean.getAll();
     }
-    print(transactions);
+//    print(transactions);
     transactions.sort((a, b) => b.date.compareTo(a.date));
     totalAmount = incomeAmount = expenseAmount = 0;
     transactions.forEach((Transaction element) {

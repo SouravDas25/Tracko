@@ -3,6 +3,7 @@ import 'package:expense_manager/Utils/Database.dart';
 import 'package:expense_manager/Utils/enums.dart';
 import 'package:expense_manager/component/AccountDialog.dart';
 import 'package:expense_manager/component/CategoryDialog.dart';
+import 'package:expense_manager/component/FLushDialog.dart';
 import 'package:expense_manager/component/screen.dart';
 import 'package:expense_manager/models/account.dart';
 import 'package:expense_manager/models/category.dart';
@@ -45,7 +46,11 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
 
   _SmartAddItemPage(Transaction transaction) {
     this.date = transaction.date;
-    this.amount.text = transaction.amount.toString();
+    if (transaction.amount == 0.0) {
+      this.amount.text = "";
+    } else {
+      this.amount.text = transaction.amount.toString();
+    }
     this.comments.text = transaction.comments;
     this.categoryId = transaction.categoryId;
     this.accountId = transaction.accountId;
@@ -72,30 +77,34 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
   }
 
   save() async {
-    if (categoryId == null || accountId == null) {
-      Flushbar(
-        titleText: Text(
-          "Error",
-          style: TextStyle(color: Colors.deepOrange),
-        ),
-        message: "Category and Account has to be specified",
-        duration: Duration(seconds: 3),
-      )..show(context);
-      return;
+    try {
+      if (categoryId == null || accountId == null) {
+        Flushbar(
+          titleText: Text(
+            "Error",
+            style: TextStyle(color: Colors.deepOrange),
+          ),
+          message: "Category and Account has to be specified",
+          duration: Duration(seconds: 3),
+        )..show(context);
+        return;
+      }
+      Transaction transaction = widget.transaction;
+      transaction.amount = double.parse(amount.text);
+      transaction.date = date;
+      transaction.name = name.text;
+      transaction.categoryId = categoryId;
+      transaction.accountId = this.accountId;
+      transaction.comments = comments.text;
+      transaction.logo = logo;
+      transaction.transactionType = transactionType;
+      if (widget.saveCallback != null) {
+        widget.saveCallback(transaction);
+      }
+      Navigator.of(context).pop();
+    } catch (exception) {
+      FlushDialog.flash(context, "Error", exception.toString());
     }
-    Transaction transaction = widget.transaction;
-    transaction.amount = double.parse(amount.text);
-    transaction.date = date;
-    transaction.name = name.text;
-    transaction.categoryId = categoryId;
-    transaction.accountId = this.accountId;
-    transaction.comments = comments.text;
-    transaction.logo = logo;
-    transaction.transactionType = transactionType;
-    if (widget.saveCallback != null) {
-      widget.saveCallback(transaction);
-    }
-    Navigator.of(context).pop();
   }
 
   void onRadioChange(int val) {

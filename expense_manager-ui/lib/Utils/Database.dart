@@ -65,10 +65,10 @@ class DatabaseUtil {
     await settingBean.createTable(ifNotExists: true);
     User user = await userBean.find(1);
 //    print(user);
-    if (user == null) {
-      user = User.make(1, "Sourav Das", "8100448204", "souravbumbadas25@gmail.com");
-      await userBean.insert(user);
-    }
+//    if (user == null) {
+//      user = User.make(1, "Sourav Das", "8100448204", "souravbumbadas25@gmail.com");
+//      await userBean.insert(user);
+//    }
     Account savingsAccount = await accountBean.find(1);
     if(savingsAccount == null){
       savingsAccount = Account.make(1, "Savings", 1);

@@ -1,4 +1,5 @@
 import 'package:expense_manager/Utils/CommonUtil.dart';
+import 'package:expense_manager/Utils/WidgetUtil.dart';
 import 'package:expense_manager/models/transaction.dart';
 import 'package:expense_manager/pages/add_item_page/add_item.dart';
 import 'package:expense_manager/pages/smart_add_item/smart_add_item.dart';
@@ -19,25 +20,19 @@ class TransactionTile extends StatelessWidget {
               borderRadius: BorderRadius.circular(4.0),
               side: new BorderSide(color: Colors.grey, width: 0.25)),
           child: ListTile(
-              leading: CircleAvatar(
-                backgroundColor: Colors.transparent,
-                backgroundImage: NetworkImage(transaction.logo),
-              ),
-              title: Text(
-                transaction.name,
-                style: TextStyle(fontSize: 20.0),
-              ),
-              subtitle: Text(
-                CommonUtil.humanDate(transaction.date),
-              ),
-              trailing: Text(
-                CommonUtil.toSign(transaction.transactionType) +
-                    CommonUtil.toCurrency(transaction.amount),
-                style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 20,
-                    color: CommonUtil.toTypeColor(transaction.transactionType)),
-              ))),
+            leading: CircleAvatar(
+              backgroundColor: Colors.transparent,
+              backgroundImage: NetworkImage(transaction.logo),
+            ),
+            title: Text(
+              transaction.name,
+              style: TextStyle(fontSize: 20.0),
+            ),
+            subtitle: Text(
+              CommonUtil.humanDate(transaction.date),
+            ),
+            trailing: WidgetUtil.transformAmount2TextWidget(transaction),
+          )),
       secondaryActions: <Widget>[
         Card(
           margin: EdgeInsets.symmetric(vertical: 10.0, horizontal: 5),
