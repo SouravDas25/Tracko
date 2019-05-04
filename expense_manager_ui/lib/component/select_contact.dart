@@ -36,12 +36,26 @@ class _select_contact extends State<select_contact> {
   int contactSelect = 0;
   bool _isButtonDisabled = true;
 
+  TextEditingController searchController = new TextEditingController();
+  String filter;
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     getContactsPermission();
     refreshContacts();
+    searchController.addListener(() {
+      setState(() {
+        filter = searchController.text;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
   }
 
   void getContactsPermission() async {
@@ -133,6 +147,7 @@ class _select_contact extends State<select_contact> {
             }),
       );
     }
+
     FloatingActionButton fab;
     if (!_isButtonDisabled) {
       fab = FloatingActionButton(
@@ -141,16 +156,29 @@ class _select_contact extends State<select_contact> {
       );
     }
     return Scaffold(
-      appBar: AppBar(title: Text('$contactSelect')),
-      body: ListView.builder(
-        itemCount: _uiCustomContacts?.length,
-        itemBuilder: (BuildContext context, int index) {
-          CustomContact _contact = _uiCustomContacts[index];
-          var _phonesList = _contact.contact.phones.toList();
-          return _buildListTile(_contact, _phonesList);
-        },
-      ),
-      floatingActionButton: fab,
-    );
+        appBar: AppBar(title: Text('$contactSelect')),
+        body: new Column(children: <Widget>[
+          new Padding(
+            padding: new EdgeInsets.all(8.0),
+            child: new TextField(
+              controller: searchController,
+              decoration: InputDecoration(
+                  hintText: 'Search Contacts',
+                  contentPadding: EdgeInsets.fromLTRB(20.0, 15.0, 20.0, 15.0),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(32.0))),
+            ),
+          ),
+          new Expanded(
+              child: new ListView.builder(
+            itemCount: _uiCustomContacts?.length,
+            itemBuilder: (BuildContext context, int index) {
+              CustomContact _contact = _uiCustomContacts[index];
+              var _phonesList = _contact.contact.phones.toList();
+              return _buildListTile(_contact, _phonesList);
+            },
+          )),
+        ]),
+        floatingActionButton: fab);
   }
 }
