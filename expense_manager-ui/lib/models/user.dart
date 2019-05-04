@@ -1,5 +1,3 @@
-
-
 import 'dart:async';
 
 import 'package:expense_manager/Utils/Database.dart';
@@ -19,13 +17,13 @@ class User {
   @PrimaryKey(auto: true)
   int id;
 
-  @Column(isNullable: false , length: 250)
+  @Column(isNullable: false, length: 250)
   String name;
 
-  @Column(isNullable: false , length: 10)
+  @Column(isNullable: false, length: 10)
   String phoneNo;
 
-  @Column(isNullable: true , length: 250)
+  @Column(isNullable: true, length: 250)
   String email;
 
   @HasMany(AccountBean)
@@ -52,15 +50,22 @@ class UserBean extends Bean<User> with _UserBean {
   @override
   CategoryBean get categoryBean => new CategoryBean(adapter);
 
+  static createCurrentUser(String phoneNo) {
+    User user = new User();
+    user.id = 1;
+    user.phoneNo = phoneNo;
+    UserBean(DatabaseUtil.getAdapter()).upsert(user);
+    return user;
+  }
+
   static Future<User> getCurrentUser({adapter}) async {
     User user;
-    if(adapter == null){
+    if (adapter == null) {
       adapter = await DatabaseUtil.getAdapter();
       await adapter.connect();
       user = await UserBean(adapter).find(1);
 //      await adapter.close();
-    }
-    else {
+    } else {
       user = await UserBean(adapter).find(1);
     }
     return user;

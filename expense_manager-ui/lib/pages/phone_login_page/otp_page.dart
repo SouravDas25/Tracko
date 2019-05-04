@@ -1,5 +1,7 @@
+import 'package:expense_manager/component/FLushDialog.dart';
 import 'package:expense_manager/component/PinWidget.dart';
 import 'package:expense_manager/component/screen.dart';
+import 'package:expense_manager/models/user.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -27,53 +29,84 @@ class _OtpPage extends State<OtpPage> {
     _sendCodeToPhoneNumber();
   }
 
+  redirectToSetUp() {
+    Navigator.pop(context);
+    Navigator.pushReplacementNamed(context, '/set_up');
+  }
+
   Future<void> _sendCodeToPhoneNumber() async {
-    final PhoneVerificationCompleted verificationCompleted =
-        (FirebaseUser user) {
-      print('Inside _sendCodeToPhoneNumber: signInWithPhoneNumber auto succeeded: $user');
-    };
+//    try {
+      final PhoneVerificationCompleted verificationCompleted =
+          (FirebaseUser user) {
+        print(
+            'Inside _sendCodeToPhoneNumber: signInWithPhoneNumber auto succeeded: $user');
+        UserBean.createCurrentUser(user.phoneNumber);
+        redirectToSetUp();
+      };
 
-    final PhoneVerificationFailed verificationFailed =
-        (AuthException authException) {
-      print('Phone number verification failed. Code: ${authException.code}. Message: ${authException.message}');
-    };
+      final PhoneVerificationFailed verificationFailed =
+          (AuthException authException) {
+        FlushDialog.flash(context, "Verification Failed",
+            'Phone number verification failed. Code: ${authException.code}. Message: ${authException.message}');
+      };
 
-    final PhoneCodeSent codeSent =
-        (String verificationId, [int forceResendingToken]) async {
-      this.verificationId = verificationId;
-      print("code sent to " + widget.phoneNumber);
-    };
+      final PhoneCodeSent codeSent =
+          (String verificationId, [int forceResendingToken]) async {
+        this.verificationId = verificationId;
+//    print("code sent to " + widget.phoneNumber);
+        FlushDialog.flash(context, "OTP Sent",
+            "Your One Time Password has been sent to you phone.");
+      };
 
-    final PhoneCodeAutoRetrievalTimeout codeAutoRetrievalTimeout =
-        (String verificationId) {
-      this.verificationId = verificationId;
-      print("time out");
-    };
+      final PhoneCodeAutoRetrievalTimeout codeAutoRetrievalTimeout =
+          (String verificationId) {
+        this.verificationId = verificationId;
+        print("time out");
+        FlushDialog.flash(
+            context, "Verification Timeout", "Your OTP retrival timeout.");
+      };
 
-    await FirebaseAuth.instance.verifyPhoneNumber(
-        phoneNumber: '+91' + widget.phoneNumber,
-        timeout: const Duration(seconds: 5),
-        verificationCompleted: verificationCompleted,
-        verificationFailed: verificationFailed,
-        codeSent: codeSent,
-        codeAutoRetrievalTimeout: codeAutoRetrievalTimeout);
+      print(FirebaseAuth.instance);
+      await FirebaseAuth.instance.verifyPhoneNumber(
+          phoneNumber: '+91' + widget.phoneNumber,
+          verificationCompleted: verificationCompleted,
+          timeout: const Duration(seconds: 5),
+          verificationFailed: verificationFailed,
+          codeSent: codeSent,
+          codeAutoRetrievalTimeout: codeAutoRetrievalTimeout);
+
+//    } catch (exception) {
+//      print(exception.toString());
+//      Navigator.pop(context);
+//      FlushDialog.flash(context, "Verification Failed", exception.toString());
+//    }
   }
 
   void _signInWithPhoneNumber() async {
-    final AuthCredential credential = PhoneAuthProvider.getCredential(
-      verificationId: this.verificationId,
-      smsCode: otpController.text,
-    );
-    final FirebaseUser user = await FirebaseAuth.instance.signInWithCredential(credential);
-    final FirebaseUser currentUser = await FirebaseAuth.instance.currentUser();
-    assert(user.uid == currentUser.uid);
-    String _message;
-    if (user != null) {
-      _message = 'Successfully signed in, uid: ' + user.uid;
-    } else {
-      _message = 'Sign in failed';
+    try {
+      final AuthCredential credential = PhoneAuthProvider.getCredential(
+        verificationId: this.verificationId,
+        smsCode: otpController.text,
+      );
+      final FirebaseUser user =
+          await FirebaseAuth.instance.signInWithCredential(credential);
+      final FirebaseUser currentUser =
+          await FirebaseAuth.instance.currentUser();
+      assert(user.uid == currentUser.uid);
+      String _message;
+      if (user != null) {
+        _message = 'Successfully signed in, uid: ' + user.uid;
+        redirectToSetUp();
+      } else {
+        _message = 'Sign in failed';
+        FlushDialog.flash(context, "Verification Failed",
+            "Not a correct OTP or Server Error.");
+      }
+      print(_message);
+    } catch (exception) {
+      Navigator.pop(context);
+      FlushDialog.flash(context, "Verification Failed", exception.toString());
     }
-    print(_message);
   }
 
   @override
@@ -129,12 +162,13 @@ class _OtpPage extends State<OtpPage> {
             },
           ),
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 100.0, vertical: 20.0),
+            padding: EdgeInsets.all(30.0),
             child: RaisedButton(
               color: Theme.of(context).primaryColor,
               textColor: Colors.white,
               onPressed: () {
                 this._signInWithPhoneNumber();
+//                redirectToSetUp();
               },
               padding: EdgeInsets.symmetric(vertical: 20.0),
               child: Text('Next'),

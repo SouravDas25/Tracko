@@ -22,6 +22,10 @@ class _setUpPage extends State<SetUpPage> {
     user.name = nameController.text;
     user.email = emailController.text;
     UserBean(adapter).update(user);
+    Navigator.pushReplacementNamed(
+      context,
+      "/home",
+    );
   }
 
   @override
@@ -42,7 +46,7 @@ class _setUpPage extends State<SetUpPage> {
                 controller: nameController,
                 keyboardType: TextInputType.text,
                 decoration: new InputDecoration(hintText: "Name"),
-                style: TextStyle(fontSize: 25.0),
+                style: TextStyle(fontSize: 20.0),
                 validator: (value) {
                   if (value.isEmpty) {
                     return 'Please enter some text';
@@ -56,7 +60,7 @@ class _setUpPage extends State<SetUpPage> {
                 controller: emailController,
                 keyboardType: TextInputType.emailAddress,
                 decoration: new InputDecoration(hintText: "Email Address"),
-                style: TextStyle(fontSize: 25.0),
+                style: TextStyle(fontSize: 20.0),
                 validator: (value) {
                   if (value.isEmpty) {
                     return 'Please enter some text';
@@ -75,10 +79,12 @@ class _setUpPage extends State<SetUpPage> {
                     // often want to call a server or save the information in a database
                     updateUser();
                   }
-
                 },
                 padding: EdgeInsets.symmetric(vertical: 20.0),
-                child: Text('Next'),
+                child: Text(
+                  'Next',
+                  style: TextStyle(fontSize: 20.0),
+                ),
               ),
             ),
           ],
