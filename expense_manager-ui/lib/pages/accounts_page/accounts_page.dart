@@ -2,6 +2,7 @@ import 'package:expense_manager/Utils/CommonUtil.dart';
 import 'package:expense_manager/Utils/Database.dart';
 import 'package:expense_manager/Utils/enums.dart';
 import 'package:expense_manager/component/TransactionTile.dart';
+import 'package:expense_manager/component/interfaces.dart';
 import 'package:expense_manager/component/multi_select/multi_select.dart';
 import 'package:expense_manager/models/account.dart';
 import 'package:expense_manager/models/transaction.dart';
@@ -16,7 +17,7 @@ class AccountsPage extends StatefulWidget {
   }
 }
 
-class _AccountsPage extends State<AccountsPage> {
+class _AccountsPage extends RefreshableState<AccountsPage> {
   RefreshController refreshController = new RefreshController();
   List<Account> accounts = new List();
   List<Transaction> transactions = new List();
@@ -30,10 +31,11 @@ class _AccountsPage extends State<AccountsPage> {
   @override
   void initState() {
     super.initState();
-    initAccountData();
+    refresh();
   }
 
-  void initAccountData() async {
+  @override
+  void refresh() async {
     var adapter = await DatabaseUtil.getAdapter();
     await adapter.connect();
     AccountBean accountBean = new AccountBean(adapter);
@@ -86,7 +88,7 @@ class _AccountsPage extends State<AccountsPage> {
         enablePullUp: false,
         onRefresh: (bool up) {
           if (up) {
-            initAccountData();
+            refresh();
           }
         },
         child: ListView(
@@ -174,7 +176,7 @@ class _AccountsPage extends State<AccountsPage> {
                 primary: false,
                 shrinkWrap: true,
                 children: transactions.map((Transaction transaction) {
-                  return TransactionTile(transaction);
+                  return TransactionTile(this,transaction);
                 }).toList(),
               ),
             ),

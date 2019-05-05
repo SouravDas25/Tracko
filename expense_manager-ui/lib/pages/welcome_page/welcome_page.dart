@@ -44,7 +44,9 @@ class _WelcomePage extends State<WelcomePage> {
     }
     Widget loaderOrButton;
     if (loading) {
-      loaderOrButton = Image.asset("assets/images/loader.gif",scale: 2.5,);
+      loaderOrButton = new Center(
+        child: new CircularProgressIndicator(),
+      );
     } else {
       loaderOrButton = new RaisedButton(
         color: Theme.of(context).primaryColor,
@@ -56,7 +58,9 @@ class _WelcomePage extends State<WelcomePage> {
           );
         },
         padding: EdgeInsets.symmetric(vertical: 20.0),
-        child: Text('Login'),
+        child: Text('Login',style: TextStyle(
+          fontSize: 18.0
+        ),),
       );
     }
     return Scaffold(
@@ -64,17 +68,28 @@ class _WelcomePage extends State<WelcomePage> {
         body: Padding(
           padding: const EdgeInsets.all(16.0),
           child: ListView(children: [
-            Image.asset("assets/images/login_img2.jpg"),
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.symmetric(horizontal : 30.0,vertical: 75.0),
+              child: Center(child: Image.asset("assets/images/expense-icon.png")),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(0.0),
               child: Text(
-                "Welcome to Expense Manager",
+                "Welcome to",
                 style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w600),
                 textAlign: TextAlign.center,
               ),
             ),
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 100.0, vertical: 0.0),
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                "Tracko",
+                style: TextStyle(fontSize: 30.0, fontWeight: FontWeight.w600),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 0.0, vertical: 20.0),
               child: loaderOrButton,
             ),
           ]),

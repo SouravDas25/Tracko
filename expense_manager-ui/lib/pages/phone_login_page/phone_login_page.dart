@@ -16,11 +16,18 @@ class _PhoneLoginPage extends State<PhoneLoginPage> {
   @override
   Widget build(BuildContext context) {
     return Screen(
+      titleName : "Verify Phone Number",
       body: Padding(
           padding: EdgeInsets.symmetric(horizontal: 20.0),
           child: ListView(
             children: <Widget>[
-              Image.asset("assets/images/phone_img.png"),
+              Padding(
+                padding: EdgeInsets.all(30.0),
+                child: Image.asset(
+                  "assets/images/phone_img.png",
+                  scale: 1,
+                ),
+              ),
               TextFormField(
                 maxLength: 10,
                 controller: phoneNumberController,
@@ -34,8 +41,7 @@ class _PhoneLoginPage extends State<PhoneLoginPage> {
                 },
               ),
               Padding(
-                padding:
-                    EdgeInsets.symmetric(horizontal: 100.0, vertical: 20.0),
+                padding: EdgeInsets.all(30.0),
                 child: RaisedButton(
                   color: Theme.of(context).primaryColor,
                   textColor: Colors.white,
@@ -49,7 +55,10 @@ class _PhoneLoginPage extends State<PhoneLoginPage> {
                     );
                   },
                   padding: EdgeInsets.symmetric(vertical: 20.0),
-                  child: Text('Verify'),
+                  child: Text(
+                    'Verify',
+                    style: TextStyle(fontSize: 20.0),
+                  ),
                 ),
               )
             ],

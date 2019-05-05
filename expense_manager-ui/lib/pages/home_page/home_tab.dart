@@ -76,7 +76,7 @@ class _HomeTab extends State<HomeTab> with SingleTickerProviderStateMixin {
             onPressed: () {},
           )
         ],
-        title: Text("Expense Manager"),
+        title: Text("Tracko"),
         centerTitle: true,
       ),
       body: TabBarView(controller: tabController, children: <Widget>[

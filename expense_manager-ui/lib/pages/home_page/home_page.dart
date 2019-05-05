@@ -3,6 +3,7 @@ import 'package:expense_manager/Utils/Database.dart';
 import 'package:expense_manager/component/HomePieChart.dart';
 import 'package:expense_manager/component/PaddedText.dart';
 import 'package:expense_manager/component/TransactionTile.dart';
+import 'package:expense_manager/component/interfaces.dart';
 import 'package:expense_manager/models/TransactionFacade.dart';
 import 'package:expense_manager/models/transaction.dart';
 import 'package:flutter/material.dart';
@@ -17,7 +18,7 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage>
+class _HomePageState extends RefreshableState<HomePage>
     with SingleTickerProviderStateMixin {
   List<Transaction> transactions = new List(0);
   bool refreshIndicator = true;
@@ -27,10 +28,11 @@ class _HomePageState extends State<HomePage>
   @override
   initState() {
     super.initState();
-    initData();
+    refresh();
   }
 
-  initData() async {
+  @override
+  void refresh() async {
 //    refreshController.sendBack(true, RefreshStatus.refreshing);
 
     var adapter = await DatabaseUtil.getAdapter();
@@ -53,7 +55,7 @@ class _HomePageState extends State<HomePage>
       enablePullUp: false,
       onRefresh: (bool up) {
         if (up) {
-          initData();
+          refresh();
         }
       },
       child: ListView(
@@ -87,11 +89,13 @@ class _HomePageState extends State<HomePage>
             primary: false,
             shrinkWrap: true,
             children: transactions.map((Transaction transaction) {
-              return TransactionTile(transaction);
+              return TransactionTile(this,transaction);
             }).toList(),
           ),
         ],
       ),
     );
   }
+
+
 }

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 
 class MenuBar extends AppBar {
+  var titleName;
 
-  MenuBar()
+  MenuBar({this.titleName})
       : super(
-            title: Text("Expense Manager"),
+            title: titleName != null ? Text(titleName) : Text("Tracko"),
             centerTitle: true);
 }

@@ -17,11 +17,12 @@ class _setUpPage extends State<SetUpPage> {
   final _formKey = GlobalKey<FormState>();
 
   updateUser() async {
-    var adapter = DatabaseUtil.getAdapter();
+    var adapter = await DatabaseUtil.getAdapter();
     User user = await UserBean.getCurrentUser();
+    print(user);
     user.name = nameController.text;
     user.email = emailController.text;
-    UserBean(adapter).update(user);
+    await UserBean(adapter).update(user);
     Navigator.pushReplacementNamed(
       context,
       "/home",

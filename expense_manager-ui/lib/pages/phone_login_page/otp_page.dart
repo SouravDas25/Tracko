@@ -29,19 +29,23 @@ class _OtpPage extends State<OtpPage> {
     _sendCodeToPhoneNumber();
   }
 
+  afterAuthentication(FirebaseUser user) {
+    UserBean.createCurrentUser(user.phoneNumber);
+    redirectToSetUp();
+  }
+
   redirectToSetUp() {
     Navigator.pop(context);
     Navigator.pushReplacementNamed(context, '/set_up');
   }
 
   Future<void> _sendCodeToPhoneNumber() async {
-//    try {
+    try {
       final PhoneVerificationCompleted verificationCompleted =
           (FirebaseUser user) {
         print(
             'Inside _sendCodeToPhoneNumber: signInWithPhoneNumber auto succeeded: $user');
-        UserBean.createCurrentUser(user.phoneNumber);
-        redirectToSetUp();
+        afterAuthentication(user);
       };
 
       final PhoneVerificationFailed verificationFailed =
@@ -66,7 +70,7 @@ class _OtpPage extends State<OtpPage> {
             context, "Verification Timeout", "Your OTP retrival timeout.");
       };
 
-      print(FirebaseAuth.instance);
+//      print(FirebaseAuth.instance);
       await FirebaseAuth.instance.verifyPhoneNumber(
           phoneNumber: '+91' + widget.phoneNumber,
           verificationCompleted: verificationCompleted,
@@ -74,12 +78,11 @@ class _OtpPage extends State<OtpPage> {
           verificationFailed: verificationFailed,
           codeSent: codeSent,
           codeAutoRetrievalTimeout: codeAutoRetrievalTimeout);
-
-//    } catch (exception) {
-//      print(exception.toString());
-//      Navigator.pop(context);
-//      FlushDialog.flash(context, "Verification Failed", exception.toString());
-//    }
+    } catch (exception) {
+      print(exception.toString());
+      Navigator.pop(context);
+      FlushDialog.flash(context, "Verification Failed", exception.toString());
+    }
   }
 
   void _signInWithPhoneNumber() async {
@@ -96,7 +99,7 @@ class _OtpPage extends State<OtpPage> {
       String _message;
       if (user != null) {
         _message = 'Successfully signed in, uid: ' + user.uid;
-        redirectToSetUp();
+        afterAuthentication(user);
       } else {
         _message = 'Sign in failed';
         FlushDialog.flash(context, "Verification Failed",
@@ -112,6 +115,7 @@ class _OtpPage extends State<OtpPage> {
   @override
   Widget build(BuildContext context) {
     return Screen(
+      titleName: "Verify OTP",
       body: ListView(
         children: <Widget>[
           Padding(
@@ -142,11 +146,14 @@ class _OtpPage extends State<OtpPage> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.only(top: 16.0),
-            child: Image(
-              image: AssetImage('assets/images/otp-icon.png'),
-              height: 120.0,
-              width: 120.0,
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 75.0),
+            child: Center(
+              child: Image(
+                image: AssetImage('assets/images/otp-icon.png'),
+                height: 120.0,
+                width: 120.0,
+              ),
             ),
           ),
           TextFormField(
@@ -171,7 +178,10 @@ class _OtpPage extends State<OtpPage> {
 //                redirectToSetUp();
               },
               padding: EdgeInsets.symmetric(vertical: 20.0),
-              child: Text('Next'),
+              child: Text(
+                'Next',
+                style: TextStyle(fontSize: 18.0),
+              ),
             ),
           )
         ],

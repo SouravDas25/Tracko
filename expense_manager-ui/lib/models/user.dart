@@ -50,11 +50,15 @@ class UserBean extends Bean<User> with _UserBean {
   @override
   CategoryBean get categoryBean => new CategoryBean(adapter);
 
-  static createCurrentUser(String phoneNo) {
+  static createCurrentUser(String phoneNo) async {
     User user = new User();
     user.id = 1;
+    user.name = "Default Name";
+    user.email = "default.email@please.add.com";
     user.phoneNo = phoneNo;
-    UserBean(DatabaseUtil.getAdapter()).upsert(user);
+    var adapter = await DatabaseUtil.getAdapter();
+    UserBean userBean = new UserBean(adapter);
+    await userBean.upsert(user);
     return user;
   }
 

@@ -109,6 +109,12 @@ class TransactionBean extends Bean<Transaction> with _TransactionBean {
   @override
   CategoryBean get categoryBean => _categoryBean;
 
+  static Future<int> delete(Transaction transaction) async {
+    var adapter = await DatabaseUtil.getAdapter();
+    TransactionBean transactionBean = new TransactionBean(adapter);
+    return await transactionBean.remove(transaction.id);
+  }
+
 //  preloadAllMappings(List<Transaction> transactions) async {
 //    for(int i =0;i<transactions.length;i++){
 //      transactions[i].category = await categoryBean.find(transactions[i].categoryId);
