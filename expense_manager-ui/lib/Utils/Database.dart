@@ -9,7 +9,6 @@ import 'package:sqflite/sqflite.dart';
 
 const String databaseName = "test.db";
 
-
 class DatabaseUtil {
   String databasePath;
   Database rawDatabase;
@@ -63,19 +62,25 @@ class DatabaseUtil {
     await categoryBean.createTable(ifNotExists: true);
     await transactionBean.createTable(ifNotExists: true);
     await settingBean.createTable(ifNotExists: true);
-    User user = await userBean.find(1);
-//    print(user);
-//    if (user == null) {
-//      user = User.make(1, "Sourav Das", "8100448204", "souravbumbadas25@gmail.com");
-//      await userBean.insert(user);
-//    }
+    bool addUser = true;
+
+    if (addUser) {
+      User user = await userBean.find(1);
+      print(user);
+      if (user == null) {
+        user = User.make(
+            1, "Sourav Das", "8100448204", "souravbumbadas25@gmail.com");
+        await userBean.insert(user);
+      }
+    }
+
     Account savingsAccount = await accountBean.find(1);
-    if(savingsAccount == null){
+    if (savingsAccount == null) {
       savingsAccount = Account.make(1, "Savings", 1);
       await accountBean.upsert(savingsAccount);
     }
     Category category = await categoryBean.find(1);
-    if(category == null){
+    if (category == null) {
       category = Category.make(1, "Not Categorised", 1);
       await categoryBean.upsert(category);
     }

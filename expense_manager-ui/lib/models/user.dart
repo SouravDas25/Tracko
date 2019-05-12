@@ -17,6 +17,9 @@ class User {
   @PrimaryKey(auto: true)
   int id;
 
+  @Column(isNullable: false, length: 512)
+  String profilePic;
+
   @Column(isNullable: false, length: 250)
   String name;
 
@@ -53,6 +56,7 @@ class UserBean extends Bean<User> with _UserBean {
   static createCurrentUser(String phoneNo) async {
     User user = new User();
     user.id = 1;
+    user.profilePic = null;
     user.name = "Default Name";
     user.email = "default.email@please.add.com";
     user.phoneNo = phoneNo;

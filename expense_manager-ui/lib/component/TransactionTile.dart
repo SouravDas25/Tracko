@@ -67,7 +67,7 @@ class TransactionTile extends StatelessWidget {
             subtitle: Text(
               CommonUtil.humanDate(transaction.date),
             ),
-            trailing: WidgetUtil.transformAmount2TextWidget(transaction),
+            trailing: WidgetUtil.transformTransaction2TextWidget(transaction),
           )),
       secondaryActions: <Widget>[
 //        Card(

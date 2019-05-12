@@ -34,9 +34,11 @@ class _SettingsPage extends State<SettingsPage> {
         Card(
           elevation: 0,
           child: ListTile(
-            leading: Icon(
-              Icons.account_circle,
-              size: 40.0,
+            leading: CircleAvatar(
+              radius: 20.0,
+              child: user == null || user.profilePic == null
+                  ? Image.asset("assets/images/user-avatar.png")
+                  : Image.network(user.profilePic),
             ),
             title: Padding(
               padding: EdgeInsets.symmetric(vertical: 5.0),
@@ -44,6 +46,7 @@ class _SettingsPage extends State<SettingsPage> {
                   style: TextStyle(fontSize: 20.0)),
             ),
             subtitle: Column(
+
               crossAxisAlignment: CrossAxisAlignment.stretch,
               textDirection: TextDirection.ltr,
               children: <Widget>[
