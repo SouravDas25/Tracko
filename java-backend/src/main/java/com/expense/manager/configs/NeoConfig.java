@@ -1,4 +1,4 @@
-package com.expense.manager;
+package com.expense.manager.configs;
 
 import java.sql.SQLException;
 

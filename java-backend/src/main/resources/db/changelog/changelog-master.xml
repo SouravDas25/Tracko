@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet author="Sourav Das" id="1">
+        <createTable tableName="users">
+            <column name="id" type="INTEGER" >
+                <constraints primaryKey="true"></constraints>
+            </column>
+            <column name="name" type="VARCHAR(250)"></column>
+
+        </createTable>
+
+    </changeSet>
+    <changeSet id="2" author="SD25">
+        <addColumn tableName="users">
+            <column name="phone_no" type="VARCHAR(15)"></column>
+            <column name="email" type="VARCHAR(256)"></column>
+            <column name="profile_pic" type="VARCHAR(256)"></column>
+            <column name="uuid" type="VARCHAR(256)"></column>
+        </addColumn>
+    </changeSet>
+    <changeSet id="3" author="SD25">
+        <addAutoIncrement tableName="users" columnName="id" columnDataType="INTEGER" ></addAutoIncrement>
+        <createTable tableName="groups">
+            <column name="id" type="INTEGER" autoIncrement="true">
+                <constraints primaryKey="true"></constraints>
+            </column>
+            <column name="name" type="VARCHAR(250)"></column>
+        </createTable>
+        <createTable tableName="user_groups">
+            <column name="user_id" type="INTEGER"></column>
+            <column name="group_id" type="INTEGER"></column>
+        </createTable>
+        <addForeignKeyConstraint baseColumnNames="user_id"
+                                 baseTableName="user_groups"
+                                 constraintName="fk_user_groups_user_id"
+                                 onDelete="NO ACTION"
+                                 onUpdate="NO ACTION"
+                                 referencedColumnNames="id"
+                                 referencedTableName="users"/>
+
+        <addForeignKeyConstraint baseColumnNames="group_id"
+                                 baseTableName="user_groups"
+                                 constraintName="fk_user_groups_group_id"
+                                 onDelete="NO ACTION"
+                                 onUpdate="NO ACTION"
+                                 referencedColumnNames="id"
+                                 referencedTableName="groups"/>
+    </changeSet>
+    <changeSet id="4" author="SD25">
+        <addColumn tableName="user_groups">
+            <column name="id" type="INTEGER" autoIncrement="true">
+                <constraints primaryKey="true"></constraints>
+            </column>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>
+
+        <!--<changeSet>-->
+        <!--TRUNCATE TABLE "SYSTEM"."DATABASECHANGELOGLOCK";-->
+        <!--ALTER TABLE "SYSTEM"."DATABASECHANGELOGLOCK" DROP (LOCKED);-->
+
+        <!--ALTER TABLE "SYSTEM"."DATABASECHANGELOGLOCK" ADD (LOCKED INTEGER);-->
+        <!--</changeSet>-->
