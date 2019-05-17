@@ -151,6 +151,9 @@
 		</profile>
 		<profile>
 			<id>heroku</id>
+            <properties>
+                <packaging.type>jar</packaging.type>
+            </properties>
 			<dependencies>
 				<dependency>
 					<groupId>org.postgresql</groupId>
