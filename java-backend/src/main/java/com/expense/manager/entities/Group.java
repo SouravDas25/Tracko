@@ -10,7 +10,7 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name = "groups")
-public class Groups implements Serializable {
+public class Group implements Serializable {
   private static final long serialVersionUID = 1L;
 
   @Id
@@ -39,7 +39,7 @@ public class Groups implements Serializable {
 
   @Override
   public String toString() {
-    return "Groups{" +
+    return "Group{" +
             "id=" + id +
             ", name='" + name + '\'' +
             '}';

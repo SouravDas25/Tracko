@@ -6,7 +6,7 @@
 
 
     <changeSet author="Sourav Das" id="1" >
-        <createTable tableName="users" schemaName="SYSTEM" tablespace="COLUMN" >
+        <createTable tableName="users" tablespace="COLUMN" >
             <column name="id" type="INTEGER" autoIncrement="true">
                 <constraints primaryKey="true"></constraints>
             </column>
@@ -19,7 +19,8 @@
 
     </changeSet>
     <changeSet id="2" author="SD25">
-        <createTable tableName="groups" tablespace="COLUMN" schemaName="SYSTEM">
+        <validCheckSum>ANY</validCheckSum>
+        <createTable tableName="group" tablespace="COLUMN" >
             <column name="id" type="INTEGER" autoIncrement="true">
                 <constraints primaryKey="true"></constraints>
             </column>
@@ -29,7 +30,7 @@
             <column name="user_id" type="INTEGER"></column>
             <column name="group_id" type="INTEGER"></column>
             <column name="id" type="INTEGER" autoIncrement="true">
-                <constraints primaryKey="true"></constraints>
+                <constraints primaryKey="true"/>
             </column>
         </createTable>
         <addForeignKeyConstraint baseColumnNames="user_id"
@@ -42,17 +43,25 @@
                                  baseTableName="user_groups"
                                  constraintName="fk_user_groups_group_id"
                                  referencedColumnNames="id"
-                                 referencedTableName="groups"/>
+                                 referencedTableName="group"/>
         <createTable tableName="chat_messages" tablespace="COLUMN">
             <column name="id" type="INTEGER" autoIncrement="true" >
-                <constraints primaryKey="true"></constraints>
+                <constraints primaryKey="true"/>
             </column>
-            <column name="group_id" type="INTEGER" ></column>
-            <column name="user_id" type="INTEGER"></column>
-            <column name="message" type="VARCHAR(512)" ></column>
-            <column name="create_at" type="TIMESTAMP" defaultValue="CURRENT_TIMESTAMP"></column>
-            <column name="read" type="INTEGER"></column>
+            <column name="group_id" type="INTEGER"/>
+            <column name="user_id" type="INTEGER"/>
+            <column name="message" type="VARCHAR(512)"/>
+            <column name="created_at" type="TIMESTAMP" defaultValue="NOW()" >
+                <constraints nullable="false"/>
+            </column>
+            <column name="read" type="INTEGER"/>
         </createTable>
+    </changeSet>
+    <changeSet id="3" author="SD">
+        <addUniqueConstraint tableName="users" columnNames="phone_no"/>
+    </changeSet>
+    <changeSet id="4" author="SD">
+        <renameColumn tableName="chat_messages" oldColumnName="read" newColumnName="is_read" columnDataType="INTEGER"/>
     </changeSet>
 </databaseChangeLog>
 

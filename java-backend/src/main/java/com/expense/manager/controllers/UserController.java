@@ -35,7 +35,7 @@ public class UserController {
     @RequestMapping(value = "/save")
     ResponseEntity<String> save(@RequestBody User user){
         usersRepository.save(user);
-        return ResponseEntity.ok(user.toString());
+        return ResponseEntity.ok(user.getId().toString());
     }
 
 
