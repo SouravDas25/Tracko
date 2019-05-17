@@ -152,6 +152,10 @@
 		<profile>
 			<id>heroku</id>
 			<dependencies>
+				<dependency>
+					<groupId>org.postgresql</groupId>
+					<artifactId>postgresql</artifactId>
+				</dependency>
 			</dependencies>
 		</profile>
 		<!-- CF profile -->
