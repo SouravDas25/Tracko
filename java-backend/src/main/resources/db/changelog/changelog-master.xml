@@ -6,7 +6,7 @@
 
 
     <changeSet author="Sourav Das" id="1" >
-        <createTable tableName="users" tablespace="COLUMN" >
+        <createTable tableName="users"  >
             <column name="id" type="INTEGER" autoIncrement="true">
                 <constraints primaryKey="true"></constraints>
             </column>
@@ -20,13 +20,13 @@
     </changeSet>
     <changeSet id="2" author="SD25">
         <validCheckSum>ANY</validCheckSum>
-        <createTable tableName="group" tablespace="COLUMN" >
+        <createTable tableName="group" >
             <column name="id" type="INTEGER" autoIncrement="true">
                 <constraints primaryKey="true"></constraints>
             </column>
             <column name="name" type="VARCHAR(250)"></column>
         </createTable>
-        <createTable tableName="user_groups" tablespace="COLUMN">
+        <createTable tableName="user_groups" >
             <column name="user_id" type="INTEGER"></column>
             <column name="group_id" type="INTEGER"></column>
             <column name="id" type="INTEGER" autoIncrement="true">
@@ -44,7 +44,7 @@
                                  constraintName="fk_user_groups_group_id"
                                  referencedColumnNames="id"
                                  referencedTableName="group"/>
-        <createTable tableName="chat_messages" tablespace="COLUMN">
+        <createTable tableName="chat_messages" >
             <column name="id" type="INTEGER" autoIncrement="true" >
                 <constraints primaryKey="true"/>
             </column>
