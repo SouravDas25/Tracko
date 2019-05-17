@@ -4,58 +4,55 @@
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
-    <changeSet author="Sourav Das" id="1">
-        <createTable tableName="users">
-            <column name="id" type="INTEGER" >
+
+    <changeSet author="Sourav Das" id="1" >
+        <createTable tableName="users" schemaName="SYSTEM" tablespace="COLUMN" >
+            <column name="id" type="INTEGER" autoIncrement="true">
                 <constraints primaryKey="true"></constraints>
             </column>
             <column name="name" type="VARCHAR(250)"></column>
-
-        </createTable>
-
-    </changeSet>
-    <changeSet id="2" author="SD25">
-        <addColumn tableName="users">
             <column name="phone_no" type="VARCHAR(15)"></column>
             <column name="email" type="VARCHAR(256)"></column>
             <column name="profile_pic" type="VARCHAR(256)"></column>
             <column name="uuid" type="VARCHAR(256)"></column>
-        </addColumn>
+        </createTable>
+
     </changeSet>
-    <changeSet id="3" author="SD25">
-        <addAutoIncrement tableName="users" columnName="id" columnDataType="INTEGER" ></addAutoIncrement>
-        <createTable tableName="groups">
+    <changeSet id="2" author="SD25">
+        <createTable tableName="groups" tablespace="COLUMN" schemaName="SYSTEM">
             <column name="id" type="INTEGER" autoIncrement="true">
                 <constraints primaryKey="true"></constraints>
             </column>
             <column name="name" type="VARCHAR(250)"></column>
         </createTable>
-        <createTable tableName="user_groups">
+        <createTable tableName="user_groups" tablespace="COLUMN">
             <column name="user_id" type="INTEGER"></column>
             <column name="group_id" type="INTEGER"></column>
+            <column name="id" type="INTEGER" autoIncrement="true">
+                <constraints primaryKey="true"></constraints>
+            </column>
         </createTable>
         <addForeignKeyConstraint baseColumnNames="user_id"
                                  baseTableName="user_groups"
                                  constraintName="fk_user_groups_user_id"
-                                 onDelete="NO ACTION"
-                                 onUpdate="NO ACTION"
                                  referencedColumnNames="id"
                                  referencedTableName="users"/>
 
         <addForeignKeyConstraint baseColumnNames="group_id"
                                  baseTableName="user_groups"
                                  constraintName="fk_user_groups_group_id"
-                                 onDelete="NO ACTION"
-                                 onUpdate="NO ACTION"
                                  referencedColumnNames="id"
                                  referencedTableName="groups"/>
-    </changeSet>
-    <changeSet id="4" author="SD25">
-        <addColumn tableName="user_groups">
-            <column name="id" type="INTEGER" autoIncrement="true">
+        <createTable tableName="chat_messages" tablespace="COLUMN">
+            <column name="id" type="INTEGER" autoIncrement="true" >
                 <constraints primaryKey="true"></constraints>
             </column>
-        </addColumn>
+            <column name="group_id" type="INTEGER" ></column>
+            <column name="user_id" type="INTEGER"></column>
+            <column name="message" type="VARCHAR(512)" ></column>
+            <column name="create_at" type="TIMESTAMP" defaultValue="CURRENT_TIMESTAMP"></column>
+            <column name="read" type="INTEGER"></column>
+        </createTable>
     </changeSet>
 </databaseChangeLog>
 
