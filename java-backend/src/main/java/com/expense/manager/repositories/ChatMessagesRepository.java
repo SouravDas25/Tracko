@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface ChatMessagesRepository extends JpaRepository<ChatMessage, Integer>, JpaSpecificationExecutor<ChatMessage> {
 
-    @Query(value = "SELECT * FROM chat_messages cm WHERE cm.group_id = ?1 AND cm.id <= ?2  LIMIT 100;", nativeQuery = true)
+    @Query(value = "SELECT * FROM chat_messages cm WHERE cm.group_id = ?1 AND cm.id < ?2  LIMIT 100;", nativeQuery = true)
     List<ChatMessage> retrieveMessages(Integer groupId, Integer id);
 
 
