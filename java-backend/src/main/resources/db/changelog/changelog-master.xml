@@ -43,7 +43,7 @@
                                  baseTableName="user_groups"
                                  constraintName="fk_user_groups_group_id"
                                  referencedColumnNames="id"
-                                 referencedTableName="group"/>
+                                 referencedTableName="groups"/>
         <createTable tableName="chat_messages" >
             <column name="id" type="INTEGER" autoIncrement="true" >
                 <constraints primaryKey="true"/>
