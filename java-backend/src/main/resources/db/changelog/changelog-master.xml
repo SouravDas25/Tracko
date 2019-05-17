@@ -20,7 +20,7 @@
     </changeSet>
     <changeSet id="2" author="SD25">
         <validCheckSum>ANY</validCheckSum>
-        <createTable tableName="group" >
+        <createTable tableName="groups" >
             <column name="id" type="INTEGER" autoIncrement="true">
                 <constraints primaryKey="true"></constraints>
             </column>
