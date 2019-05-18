@@ -6,3 +6,4 @@ from django.apps import AppConfig
 
 class ApisConfig(AppConfig):
     name = 'apis'
+    app_label = 'apis_label'

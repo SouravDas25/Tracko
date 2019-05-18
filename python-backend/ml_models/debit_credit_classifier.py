@@ -1,12 +1,12 @@
+
+import pathlib
 import pickle
 import numpy as np
 from sklearn import preprocessing
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import accuracy_score
-from sklearn.naive_bayes import GaussianNB
+from sklearn.svm import LinearSVC
 from sklearn.model_selection import train_test_split
-
-import load_data
 
 
 def load():
@@ -15,14 +15,14 @@ def load():
             DClassifier.const_model = pickle.load(file)
     except FileNotFoundError:
         DClassifier.const_model = {
-            "classifier": GaussianNB(),
+            "classifier": LinearSVC(),
             "vectorized": TfidfVectorizer(ngram_range=(1, 3)),
             "label_encoder": preprocessing.LabelEncoder(),
         }
 
 
 class DClassifier(object):
-    model_filename = 'dc-model.mdl'
+    model_filename = pathlib.Path(__file__).parent / 'dc-model.mdl'
     const_model = None
 
     def __init__(self):
@@ -71,18 +71,23 @@ class DClassifier(object):
         # print("tran : ",tran)
         pred = self.predict(tran)
         t = self.transform_label(target)
-        print("GaussianNB accuracy : ", accuracy_score(t, pred, normalize=True))
+        print("LinearSVC accuracy : ", accuracy_score(t, pred, normalize=True))
 
 
 if __name__ == "__main__":
+    import scratches.load_data as load_data
+
     dataset, target = load_data.sms_sentences()
     dataset = np.array(dataset)
+    # X_train = ['you have won Rs 350 dollars.']
+    # y_train = ['NA']
     X_train, X_test, y_train, y_test = train_test_split(dataset, target, test_size=0.33, random_state=42)
     print(dataset)
     print(target)
     model = DClassifier()
-    # model.fit(X_train, y_train)
-    test = "paid rs 30 to sourav."
+    model.fit(X_train, y_train)
+    test = "you have won Rs 350 dollars."
     print(model.predict_label(test))
     model.predit_score(X_test, y_test)
     # model.save()
+    # print(__file__)

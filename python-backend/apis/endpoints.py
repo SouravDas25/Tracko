@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 from django.http import JsonResponse, HttpResponse
 
-from services import LogoService
+from apis.services import LogoService
 
 
 def get_image(request):

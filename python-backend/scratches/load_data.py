@@ -1,3 +1,6 @@
+import os
+import pathlib
+
 import nltk
 import pandas as pd
 from nltk import word_tokenize
@@ -25,7 +28,7 @@ def sms_words(filename):
 
 def sms_sentences(filename=None):
     if filename is None:
-        filename = 'sms-data.xls'
+        filename = pathlib.Path(__file__).parent / 'sms-data.xls'
     global_sentences = []
     targets = []
     excel_dataframe = pd.read_excel(filename, sheet_name='Sheet1')
@@ -39,7 +42,6 @@ def sms_sentences(filename=None):
             global_sentences.append(body.strip().lower())
             targets.append("NA")
     return global_sentences, targets
-
 
 
 if __name__ == "__main__":
