@@ -15,6 +15,7 @@ class CategoryChart extends StatefulWidget {
 
 class _CategoryChart extends State<CategoryChart> {
   List<charts.Series> seriesList;
+  List<Entry> data = [];
 
   @override
   void initState() {
@@ -33,14 +34,19 @@ class _CategoryChart extends State<CategoryChart> {
     CategoryBean categoryBean = new CategoryBean(adapter);
     TransactionBean transactionBean = new TransactionBean(adapter);
     List<Category> categories = await categoryBean.getAll();
-    List<Entry> data = [];
     for (Category category in categories) {
       var tmp = await transactionBean.findByCategory(category.id);
-      tmp.retainWhere((element) => element.transactionType == TransactionType.DEBIT);
-      double amount = tmp.fold(0.0, (double previous,Transaction element) => previous + element.amount);
-      data.add(Entry(category.id, category.name, amount.toInt()));
+      tmp.retainWhere(
+          (element) => element.transactionType == TransactionType.DEBIT);
+      double amount = tmp.fold(0.0,
+          (double previous, Transaction element) => previous + element.amount);
+//      print("amount : "+amount.toString());
+      if (amount > 0.0) {
+        data.add(Entry(category.id, category.name, amount.toInt()));
+      }
     }
     data = data.reversed.toList();
+//    print("data : " + (data.length.toString()));
     return [
       new charts.Series<Entry, int>(
         id: 'Category Expenses',
@@ -61,6 +67,15 @@ class _CategoryChart extends State<CategoryChart> {
           child: Center(
             widthFactor: 2.0,
             child: CircularProgressIndicator(),
+          ));
+    }
+//    print(seriesList.length);
+    if (data.isEmpty) {
+      return Container(
+          width: double.infinity,
+          height: 250,
+          child: Center(
+            child: Text("No Data Available"),
           ));
     }
     return Container(
