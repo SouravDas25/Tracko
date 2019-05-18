@@ -1,13 +1,15 @@
 import nltk
 from nltk.corpus import stopwords
 from nltk.corpus import wordnet
-import datefinder
+# import datefinder
 import datetime
 from nltk.tokenize import word_tokenize
 from apis.models import Entity
 # import spacy
 import re
 from gensim.models import Word2Vec
+
+from ml_models.debit_credit_classifier import DClassifier
 
 lemma = nltk.stem.WordNetLemmatizer()
 
@@ -58,27 +60,32 @@ def maxCorrelation(verb, CD):
     return max
 
 
-def scanTransactionType(tags):
-    verbs = []
-    for i in range(len(tags)):
-        pos = tags[i]
-        if pos[1].startswith("VB"):
-            verbs.append(pos[0])
-    max_debit_corr = 0.0
-    max_credit_corr = 0.0
-    for verb in verbs:
-        debit_cor = maxCorrelation(verb, True)
-        credit_cor = maxCorrelation(verb, False)
-        if debit_cor > max_debit_corr:
-            max_debit_corr = debit_cor
-        if credit_cor > max_credit_corr:
-            max_credit_corr = credit_cor
-    if max_debit_corr > 0 and max_credit_corr > 0:
-        if max_debit_corr > max_credit_corr:
-            return "Debit"
-        else:
-            return "Credit"
-    return None
+def scanTransactionType(sentence):
+    # verbs = []
+    # for i in range(len(tags)):
+    #     pos = tags[i]
+    #     if pos[1].startswith("VB"):
+    #         verbs.append(pos[0])
+    # max_debit_corr = 0.0
+    # max_credit_corr = 0.0
+    # for verb in verbs:
+    #     debit_cor = maxCorrelation(verb, True)
+    #     credit_cor = maxCorrelation(verb, False)
+    #     if debit_cor > max_debit_corr:
+    #         max_debit_corr = debit_cor
+    #     if credit_cor > max_credit_corr:
+    #         max_credit_corr = credit_cor
+    # if max_debit_corr > 0 and max_credit_corr > 0:
+    #     if max_debit_corr > max_credit_corr:
+    #         return "Debit"
+    #     else:
+    #         return "Credit"
+    # return None
+    model = DClassifier()
+    prediction = model.predict_label(sentence)[0]
+    if prediction == 'NA':
+        return None
+    return prediction
 
 
 def scanDates(dates):
@@ -158,14 +165,14 @@ class Language(object):
         Log.info(self.meaningful_words)
         self.tags = nltk.pos_tag(self.meaningful_words)
         Log.info(self.tags)
-        self.dates = datefinder.find_dates(text)
+        # self.dates = datefinder.find_dates(text)
         Log.info(self.dates)
 
     def getDict(self):
         d = {}
         valid = True
         d['amounts'] = scanAmount(self.tags)
-        d['type'] = scanTransactionType(self.tags)
+        d['type'] = scanTransactionType(self.text)
         # d['dates'] = scanDates(self.dates)
         d['comments'] = scanComments(self.tags)
         d['entity'] = scanCategry(self.tags)

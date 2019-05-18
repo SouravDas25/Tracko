@@ -7,7 +7,7 @@ import datetime
 
 
 # print(tags)
-from scratches.debit_credit_classifier import DClassifier
+from ml_models.debit_credit_classifier import DClassifier
 
 
 def word_correlation(word1, word2):

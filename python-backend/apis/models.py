@@ -26,7 +26,7 @@ class Entity(models.Model):
     logo = models.CharField(max_length=100)
     entity_type = models.IntegerField(choices=EntityType)
     data = models.CharField(max_length=250, default=None, blank=True, null=True)
-    category = models.ForeignKey(Category)
+    category = models.ForeignKey(Category, on_delete=models.DO_NOTHING)
 
     def __str__(self):
         return self.name
@@ -41,7 +41,7 @@ class Entity(models.Model):
 class Tag(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100)
-    entity = models.ForeignKey(Entity)
+    entity = models.ForeignKey(Entity, on_delete=models.DO_NOTHING)
 
     def __str__(self):
         return self.name, self.entity.name
