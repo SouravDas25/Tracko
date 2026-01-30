@@ -1,0 +1,69 @@
+import 'package:Tracko/Utils/CommonUtil.dart';
+import 'package:Tracko/Utils/WidgetUtil.dart';
+import 'package:Tracko/Utils/enums.dart';
+import 'package:Tracko/component/AsynLoadState.dart';
+import 'package:Tracko/controllers/SplitController.dart';
+import 'package:Tracko/controllers/UserController.dart';
+import 'package:Tracko/models/chats.dart';
+import 'package:Tracko/models/user.dart';
+import 'package:Tracko/pages/user_split_view/SplitByUser.dart';
+import 'package:Tracko/services/SessionService.dart';
+import 'package:flutter/material.dart';
+
+class UserListTile extends StatefulWidget {
+  final Chat chat;
+
+  UserListTile(this.chat);
+
+  @override
+  State<StatefulWidget> createState() {
+    return _ChatTile();
+  }
+}
+
+class _ChatTile extends AsyncLoadState<UserListTile> {
+  double sumAmount = 0.0;
+  late User otherUser, currentUser;
+
+  @override
+  asyncLoad() async {
+    this.currentUser = SessionService.currentUser();
+    this.otherUser = await UserController.findById(widget.chat.userId);
+    this.sumAmount = await SplitController.getDueAmount(this.otherUser.id ?? 0);
+    this.loadCompleteView();
+  }
+
+  @override
+  Widget fallbackWidget(BuildContext context) {
+    return Card(
+      child: ListTile(title: Text("No Chat Data Available")),
+    );
+  }
+
+  @override
+  Widget completeWidget(BuildContext context) {
+    return Card(
+      child: ListTile(
+        onTap: () {
+          Navigator.of(context).push(MaterialPageRoute(
+              builder: (context) =>
+                  SplitByUser(
+                      this.otherUser, widget.chat, this.currentUser)));
+        },
+        title: Text(
+          this.otherUser.name,
+          style: TextStyle(fontSize: 22.0),
+        ),
+        subtitle: Text(CommonUtil.humanDate(DateTime.now())),
+        trailing: WidgetUtil.transformAmount2TextWidget(
+            TransactionType.DEBIT, this.sumAmount,
+            addSign: false),
+        leading: CircleAvatar(
+          radius: 30.0,
+          child: Image.asset("assets/images/splitavatar.png"),
+        ),
+        contentPadding: EdgeInsets.all(8.0),
+      ),
+    );
+  }
+}
