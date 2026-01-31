@@ -1,7 +1,7 @@
 databaseChangeLog:
-  - changeSet:
-      id: 000-master-init
-      author: cascade
-      changes:
-        - include:
-            file: db/changelog/001-initial-schema.yaml
+  - include:
+      file: db/changelog/001-initial-schema.yaml
+  - include:
+      file: db/changelog/002-add-timestamp-defaults.yaml
+  - include:
+      file: db/changelog/003-add-missing-tables.yaml

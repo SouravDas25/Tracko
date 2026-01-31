@@ -10,113 +10,103 @@ import java.util.Date;
 
 @Entity
 @Table(name = "splits")
-public class Split extends AbstractBaseEntity {
+public class Split {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    private Long id;
 
     @NotNull
-    @Column(name = "source_user_id")
-    private String sourceUserId;
+    @Column(name = "transaction_id")
+    private Long transactionId;
 
     @NotNull
-    @Column(name = "due_user_id")
-    private String dueUserId;
+    @Column(name = "user_id")
+    private String userId;
 
-    @JsonIgnore
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "source_user_id", insertable = false, updatable = false)
-    private User sourceUser;
+    @NotNull
+    @Column(name = "amount")
+    private Double amount;
 
-    @JsonIgnore
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "due_user_id", insertable = false, updatable = false)
-    private User dueUser;
-
-    @Column(name = "split_amount")
-    private Double splitAmount;
-
-    @Column(name = "settled_amount")
-    private Double settledAmount;
-
-    @Column(name = "transaction_amount")
-    @Min(value = 0)
-    private Double transactionAmount;
-
-    @Column(name = "transaction_name")
-    private String transactionName;
-
-    @JsonFormat(pattern = "dd-MM-yyyy")
     @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "created_at", nullable = false, updatable = false, insertable = false)
-    private Date created_at;
+    @Column(name = "settled_at")
+    private Date settledAt;
 
-    public String getSourceUserId() {
-        return sourceUserId;
+    @Column(name = "is_settled")
+    private Integer isSettled = 0;
+
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "transaction_id", insertable = false, updatable = false)
+    private Transaction transaction;
+
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    private User user;
+
+    public Long getId() {
+        return id;
     }
 
-    public void setSourceUserId(String sourceUserId) {
-        this.sourceUserId = sourceUserId;
+    public void setId(Long id) {
+        this.id = id;
     }
 
-    public String getDueUserId() {
-        return dueUserId;
+    public Long getTransactionId() {
+        return transactionId;
     }
 
-    public void setDueUserId(String dueUserId) {
-        this.dueUserId = dueUserId;
+    public void setTransactionId(Long transactionId) {
+        this.transactionId = transactionId;
     }
 
-    public User getSourceUser() {
-        return sourceUser;
+    public String getUserId() {
+        return userId;
     }
 
-    public void setSourceUser(User sourceUser) {
-        this.sourceUser = sourceUser;
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 
-    public User getDueUser() {
-        return dueUser;
+    public Double getAmount() {
+        return amount;
     }
 
-    public void setDueUser(User dueUser) {
-        this.dueUser = dueUser;
+    public void setAmount(Double amount) {
+        this.amount = amount;
     }
 
-    public Double getSplitAmount() {
-        return splitAmount;
+    public Date getSettledAt() {
+        return settledAt;
     }
 
-    public void setSplitAmount(Double splitAmount) {
-        this.splitAmount = splitAmount;
+    public void setSettledAt(Date settledAt) {
+        this.settledAt = settledAt;
     }
 
-    public Double getSettledAmount() {
-        return settledAmount;
+    public Integer getIsSettled() {
+        return isSettled;
     }
 
-    public void setSettledAmount(Double settledAmount) {
-        this.settledAmount = settledAmount;
+    public void setIsSettled(Integer isSettled) {
+        this.isSettled = isSettled;
     }
 
-    public Double getTransactionAmount() {
-        return transactionAmount;
+    public Transaction getTransaction() {
+        return transaction;
     }
 
-    public void setTransactionAmount(Double transactionAmount) {
-        this.transactionAmount = transactionAmount;
+    public void setTransaction(Transaction transaction) {
+        this.transaction = transaction;
     }
 
-    public String getTransactionName() {
-        return transactionName;
+    public User getUser() {
+        return user;
     }
 
-    public void setTransactionName(String transactionName) {
-        this.transactionName = transactionName;
-    }
-
-    public Date getCreated_at() {
-        return created_at;
-    }
-
-    public void setCreated_at(Date created_at) {
-        this.created_at = created_at;
+    public void setUser(User user) {
+        this.user = user;
     }
 }

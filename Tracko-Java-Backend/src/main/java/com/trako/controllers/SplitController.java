@@ -1,9 +1,6 @@
 package com.trako.controllers;
 
-import com.trako.models.request.SplitSaveRequest;
-import com.trako.models.request.SplitSettleRequest;
-import com.trako.models.responses.SplitResponse;
-import com.trako.models.responses.SplitUserResponse;
+import com.trako.entities.Split;
 import com.trako.services.SplitService;
 import com.trako.util.Response;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,38 +11,58 @@ import jakarta.validation.Valid;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/split")
+@RequestMapping("/api/splits")
 public class SplitController {
 
     @Autowired
-    SplitService splitService;
+    private SplitService splitService;
 
-    @GetMapping({"", "/"})
-    private ResponseEntity<?> index() {
-        List<SplitUserResponse> index = splitService.findAllSplits();
-        return Response.ok(index);
+    @GetMapping
+    public ResponseEntity<?> getAll() {
+        List<Split> splits = splitService.findAll();
+        return Response.ok(splits);
     }
 
-    @GetMapping("/{userId}")
-    private ResponseEntity<?> show(@PathVariable String userId) {
-        List<SplitResponse> show = splitService.findAllSplitsByUser(userId);
-        return Response.ok(show);
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getById(@PathVariable Long id) {
+        return splitService.findById(id)
+                .map(Response::ok)
+                .orElse(Response.notFound("Split not found"));
+    }
+
+    @GetMapping("/transaction/{transactionId}")
+    public ResponseEntity<?> getByTransactionId(@PathVariable Long transactionId) {
+        List<Split> splits = splitService.findByTransactionId(transactionId);
+        return Response.ok(splits);
+    }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<?> getByUserId(@PathVariable String userId) {
+        List<Split> splits = splitService.findByUserId(userId);
+        return Response.ok(splits);
+    }
+
+    @GetMapping("/user/{userId}/unsettled")
+    public ResponseEntity<?> getUnsettledByUserId(@PathVariable String userId) {
+        List<Split> splits = splitService.findUnsettledByUserId(userId);
+        return Response.ok(splits);
+    }
+
+    @PostMapping
+    public ResponseEntity<?> create(@Valid @RequestBody Split split) {
+        Split saved = splitService.save(split);
+        return Response.ok(saved, "Split created successfully");
     }
 
     @PatchMapping("/settle/{splitId}")
-    private ResponseEntity<?> settle(@PathVariable String splitId, @Valid @RequestBody SplitSettleRequest settleRequest) {
-        splitService.settleSplit(splitId, settleRequest.getAmount());
-        return Response.ok("SUCCESS");
+    public ResponseEntity<?> settle(@PathVariable Long splitId) {
+        splitService.settleSplit(splitId);
+        return Response.ok("Split settled successfully");
     }
 
-    @PostMapping({"", "/"})
-    public ResponseEntity<?> save(@Valid @RequestBody List<SplitSaveRequest> splitSaveRequestList) {
-        try {
-            splitService.save(splitSaveRequestList);
-        } catch (Exception e) {
-            return Response.badRequest("User id not found.");
-        }
-        return Response.ok("SUCCESS");
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> delete(@PathVariable Long id) {
+        splitService.delete(id);
+        return Response.ok("Split deleted successfully");
     }
-
 }

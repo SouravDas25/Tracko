@@ -5,6 +5,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
@@ -29,8 +32,21 @@ public class User extends AbstractBaseEntity {
     @Column(name = "firebase_uuid")
     private String firebase_uuid;
 
+    @Column(name = "global_id", length = 64, unique = true)
+    private String globalId;
+
     @Column(name = "is_shadow")
     private Integer isShadow;
+
+    @CreationTimestamp
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "created_at", updatable = false)
+    private Date createdAt;
+
+    @UpdateTimestamp
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "updated_at")
+    private Date updatedAt;
 
     @JsonIgnore
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
@@ -85,6 +101,14 @@ public class User extends AbstractBaseEntity {
 
     public void setFirebase_uuid(String firebase_uuid) {
         this.firebase_uuid = firebase_uuid;
+    }
+
+    public String getGlobalId() {
+        return globalId;
+    }
+
+    public void setGlobalId(String globalId) {
+        this.globalId = globalId;
     }
 
     public Set<UserChatGroup> getGroups() {
