@@ -1,50 +1,40 @@
-import 'package:Tracko/Utils/DatabaseUtil.dart';
-import 'package:Tracko/Utils/ServerUtil.dart';
-import 'package:Tracko/controllers/SplitController.dart';
-import 'package:Tracko/dtos/TrackoContact.dart';
-import 'package:Tracko/models/user.dart';
+import 'package:tracko/controllers/SplitController.dart';
+import 'package:tracko/dtos/TrackoContact.dart';
+import 'package:tracko/models/user.dart';
+import 'package:tracko/repositories/user_repository.dart';
 
 class UserController {
   static Future<int> saveUser(User user, {bool isShadow = false}) async {
-    if (user.globalId == null) {
-      String globalId = await ServerUtil.getGlobalAccountId(user.phoneNo) ?? '';
-      if (globalId.isEmpty) {
-        globalId = await ServerUtil.createGlobalAccount(user) ?? '';
-      } else {
-        await ServerUtil.updateGlobalUser(user, isShadow: isShadow);
-      }
-      user.globalId = globalId;
-    }
-    if (user.globalId == null) {
+    final userRepo = UserRepository();
+    
+    // Save user via backend API
+    String globalId = await userRepo.save(user, isShadow: isShadow);
+    user.globalId = globalId;
+    
+    if (user.globalId == null || user.globalId!.isEmpty) {
       throw Exception("Failed to add user ${user.phoneNo}.");
     }
-    var adapter = await DatabaseUtil.getAdapter();
-    await adapter.connect();
-    user.id = await UserBean(adapter).upsert(user);
+    
+    // Parse ID from globalId
+    user.id = int.tryParse(globalId);
     return user.id ?? 0;
   }
 
   static Future<User> findByPhoneNumber(String phoneNo) async {
-    var adapter = await DatabaseUtil.getAdapter();
-    await adapter.connect();
-    UserBean userBean = UserBean(adapter);
-    User? user = await userBean.findOneWhere(userBean.phoneNo.eq(phoneNo));
+    final userRepo = UserRepository();
+    User? user = await userRepo.getByPhoneNumber(phoneNo);
     return user ?? User();
   }
 
   static Future<User> findById(int userId) async {
-    var adapter = await DatabaseUtil.getAdapter();
-    await adapter.connect();
-    UserBean userBean = UserBean(adapter);
-    User? user = await userBean.find(userId);
+    final userRepo = UserRepository();
+    User? user = await userRepo.getById(userId.toString());
     return user ?? User();
   }
 
   static getAllUsers() async {
-    var adapter = await DatabaseUtil.getAdapter();
-    await adapter.connect();
-    UserBean userBean = UserBean(adapter);
-    return userBean.getAll();
+    final userRepo = UserRepository();
+    return await userRepo.getAll();
   }
 
   static Future<List<User>> getFrequentSplitters() async {
@@ -69,10 +59,9 @@ class UserController {
   }
 
   static Future<int> removeById(int id) async {
-    var adapter = await DatabaseUtil.getAdapter();
-    await adapter.connect();
-    UserBean userBean = new UserBean(adapter);
-    await userBean.remove(id);
+    // Note: Backend doesn't have delete user endpoint yet
+    // This would need to be added to backend UserController
+    // For now, return the id (no-op)
     return id;
   }
 }

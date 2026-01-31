@@ -1,43 +1,35 @@
-import 'package:Tracko/Utils/DatabaseUtil.dart';
-import 'package:Tracko/Utils/enums.dart';
-import 'package:Tracko/exceptions/CategoryIsUsedByTransactionExceptions.dart';
-import 'package:Tracko/models/category.dart';
-import 'package:Tracko/models/transaction.dart';
-import 'package:Tracko/scratch/ChartUtil.dart';
+import 'package:tracko/Utils/enums.dart';
+import 'package:tracko/exceptions/CategoryIsUsedByTransactionExceptions.dart';
+import 'package:tracko/models/category.dart';
+import 'package:tracko/models/transaction.dart';
+import 'package:tracko/scratch/ChartUtil.dart';
+import 'package:tracko/repositories/category_repository.dart';
+import 'package:dio/dio.dart';
 
 class CategoryController {
   static Future<List<Category>> getAllCategories() async {
-    var adapter = await DatabaseUtil.getAdapter();
-    await adapter.connect();
-    return await CategoryBean(adapter).getAll();
+    final repo = CategoryRepository();
+    return await repo.getAll();
   }
 
   static Future<Category> findById(int id) async {
-    var adapter = await DatabaseUtil.getAdapter();
-    await adapter.connect();
-    return await CategoryBean(adapter).find(id);
+    final repo = CategoryRepository();
+    return await repo.getById(id);
   }
 
   static Future<Category> getDefaultCategory() async {
-    var adapter = await DatabaseUtil.getAdapter();
-    await adapter.connect();
-    return await CategoryBean(adapter).find(1);
+    final repo = CategoryRepository();
+    return await repo.getById(1);
   }
 
   static Future<List<ChartEntry>> getPieChartData() async {
     List<ChartEntry> data = [];
 //    print("create Data Called.");
-    var adapter = await DatabaseUtil.getAdapter();
-    CategoryBean categoryBean = new CategoryBean(adapter);
-    TransactionBean transactionBean = new TransactionBean(adapter);
-    List<Category> categories = await categoryBean.getAll();
+    final repo = CategoryRepository();
+    List<Category> categories = await repo.getAll();
     for (Category category in categories) {
-      var tmp = await transactionBean.findByCategory(category.id ?? 0);
-      tmp.retainWhere(
-              (element) => element.transactionType == TransactionType.DEBIT);
-      double amount = tmp.fold(0.0,
-              (double previous, Transaction element) =>
-          previous + element.amount);
+      // TODO: Replace with backend totals when Transaction repository is added
+      double amount = 0.0;
 //      print("amount : "+amount.toString());
       if (amount > 0.0) {
         data.add(ChartEntry(category.id ?? 0, category.name, amount.toInt()));
@@ -49,34 +41,20 @@ class CategoryController {
   }
 
   static deleteCategory(int id) async {
-    var adapter = await DatabaseUtil.getAdapter();
-    await adapter.connect();
-    CategoryBean categoryBean = CategoryBean(adapter);
-    TransactionBean transactionBean = TransactionBean(adapter);
-    List<Transaction> transactions = await transactionBean.findByCategory(id);
-    if (transactions.length > 0) {
-      throw CategoryIsUsedByTransactionExceptions();
+    final repo = CategoryRepository();
+    try {
+      await repo.delete(id);
+    } on DioException catch (e) {
+      final status = e.response?.statusCode ?? 0;
+      if (status == 400 || status == 409) {
+        throw CategoryIsUsedByTransactionExceptions();
+      }
+      rethrow;
     }
-    await categoryBean.remove(id);
   }
 
   static Future<Category> findOrCreateByName(String name) async {
-    var adapter = await DatabaseUtil.getAdapter();
-    await adapter.connect();
-    CategoryBean categoryBean = new CategoryBean(adapter);
-    List<Category> categories = await categoryBean.getAll();
-    Category? category;
-    for (Category cat in categories) {
-      if (cat.name.toLowerCase().compareTo(name.toLowerCase()) == 0) {
-        category = cat;
-      }
-    }
-    if (category == null || category.id == null) {
-      category = new Category();
-      category.name = name;
-      category.userId = 1;
-      category.id = await categoryBean.insert(category);
-    }
-    return category;
+    final repo = CategoryRepository();
+    return await repo.findOrCreateByName(name);
   }
 }

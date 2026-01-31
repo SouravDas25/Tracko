@@ -1,4 +1,4 @@
-import 'package:Tracko/Utils/enums.dart';
+import 'package:tracko/Utils/enums.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';

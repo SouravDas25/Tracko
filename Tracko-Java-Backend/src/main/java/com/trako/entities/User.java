@@ -29,8 +29,8 @@ public class User extends AbstractBaseEntity {
     @Column(name = "profile_pic")
     private String profilePic;
 
-    @Column(name = "firebase_uuid")
-    private String firebase_uuid;
+    @Column(name = "fire_base_id")
+    private String fireBaseId;
 
     @Column(name = "global_id", length = 64, unique = true)
     private String globalId;
@@ -95,12 +95,12 @@ public class User extends AbstractBaseEntity {
         this.profilePic = profilePic;
     }
 
-    public String getFirebase_uuid() {
-        return firebase_uuid;
+    public String getFireBaseId() {
+        return fireBaseId;
     }
 
-    public void setFirebase_uuid(String firebase_uuid) {
-        this.firebase_uuid = firebase_uuid;
+    public void setFireBaseId(String fireBaseId) {
+        this.fireBaseId = fireBaseId;
     }
 
     public String getGlobalId() {
@@ -147,7 +147,7 @@ public class User extends AbstractBaseEntity {
                 ", phoneNo='" + phoneNo + '\'' +
                 ", email='" + email + '\'' +
                 ", profilePic='" + profilePic + '\'' +
-                ", firebase_uuid='" + firebase_uuid + '\'' +
+                ", fireBaseId='" + fireBaseId + '\'' +
                 '}';
     }
 

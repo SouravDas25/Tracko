@@ -1,16 +1,14 @@
-import 'package:Tracko/Utils/CommonUtil.dart';
-import 'package:Tracko/Utils/ConstantUtil.dart';
-import 'package:Tracko/Utils/DatabaseUtil.dart';
-import 'package:Tracko/Utils/SettingUtil.dart';
-import 'package:Tracko/component/DeleteDialog.dart';
-import 'package:Tracko/component/LoadingDialog.dart';
-import 'package:Tracko/component/PaddedText.dart';
-import 'package:Tracko/component/month_picker_dialog.dart';
-import 'package:Tracko/models/user.dart';
-import 'package:Tracko/pages/account_page/AccountPage.dart';
-import 'package:Tracko/pages/category_page/category_page.dart';
-import 'package:Tracko/services/BackupService.dart';
-import 'package:Tracko/services/SessionService.dart';
+import 'package:tracko/Utils/CommonUtil.dart';
+import 'package:tracko/Utils/ConstantUtil.dart';
+import 'package:tracko/Utils/SettingUtil.dart';
+import 'package:tracko/component/DeleteDialog.dart';
+import 'package:tracko/component/LoadingDialog.dart';
+import 'package:tracko/component/PaddedText.dart';
+import 'package:tracko/component/month_picker_dialog.dart';
+import 'package:tracko/models/user.dart';
+import 'package:tracko/pages/account_page/AccountPage.dart';
+import 'package:tracko/pages/category_page/category_page.dart';
+import 'package:tracko/services/SessionService.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' as DateFormatter;
 
@@ -24,38 +22,16 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPage extends State<SettingsPage> {
   late User user;
   DateTime month = SettingUtil.currentMonth;
-  bool isAutoBackedEnabled = false;
-  DateTime lastBackedUp = DateTime.now();
 
   _SettingsPage() {
     initData();
   }
 
   void initData() async {
-    var adapter = await DatabaseUtil.getAdapter();
-    await adapter.connect();
     user = SessionService.currentUser();
-    isAutoBackedEnabled = await SettingUtil.isAutoBackUpEnabled();
-    lastBackedUp = await SettingUtil.getLastBackedUpTime() ?? DateTime.now();
 //    await adapter.close();
 //    Future<void>.delayed(Duration(seconds: 1));
     if (this.mounted) setState(() {});
-  }
-
-  void _showLoaderForBackup() async {
-    LoadingDialog.show(context);
-    await BackupService.backupDatabase(user.phoneNo);
-    LoadingDialog.hide(context);
-  }
-
-  void _showDeleteBackupDialog() {
-    DeleteDialog.show(
-        context: context,
-        title: "Delete Backup",
-        message: "Are sure you want to delete your backup forever ?",
-        deleteCallback: () {
-          BackupService.deleteBackUp(user.phoneNo);
-        });
   }
 
   void _showResetDatabaseDialog() {
@@ -64,7 +40,7 @@ class _SettingsPage extends State<SettingsPage> {
         title: "Reset Database",
         message: "Are sure you want to delete all your transaction ?",
         deleteCallback: () async {
-          await DatabaseUtil.reset();
+          await SessionService.logout();
           await _logout();
         });
   }
@@ -105,47 +81,6 @@ class _SettingsPage extends State<SettingsPage> {
               ],
             ),
             trailing: Text(ConstantUtil.version),
-          ),
-        ),
-        PaddedText(
-          "BACKUP SETTINGS",
-          horizontal: 10.0,
-          vertical: 10.0,
-        ),
-        Card(
-          margin: EdgeInsets.all(0),
-          elevation: 0,
-          child: ListTile(
-            leading: Icon(Icons.backup, size: 30.0),
-            title: Text("Auto Backup", style: TextStyle(fontSize: 20.0)),
-            subtitle: Text(
-                "Last backed up: ${lastBackedUp == null ? "Never" : CommonUtil
-                    .humanDate(lastBackedUp)}"),
-            trailing: Switch(
-                value: isAutoBackedEnabled,
-                onChanged: (val) {
-                  SettingUtil.updateAutoBackup(val);
-                }),
-          ),
-        ),
-        Card(
-          margin: EdgeInsets.all(0),
-          elevation: 0,
-          child: ListTile(
-            leading: Icon(Icons.file_upload, size: 30.0),
-            title: Text("Backup Now", style: TextStyle(fontSize: 20.0)),
-            trailing: Icon(Icons.arrow_forward_ios),
-            onTap: _showLoaderForBackup,
-          ),
-        ),
-        Card(
-          margin: EdgeInsets.all(0),
-          elevation: 0,
-          child: ListTile(
-            leading: Icon(Icons.delete_forever, size: 30.0),
-            title: Text("Delete Backup", style: TextStyle(fontSize: 20.0)),
-            trailing: Icon(Icons.arrow_forward_ios),
-            onTap: _showDeleteBackupDialog,
           ),
         ),
         PaddedText(

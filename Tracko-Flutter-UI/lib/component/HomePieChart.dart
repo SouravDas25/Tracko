@@ -1,4 +1,4 @@
-import 'package:Tracko/scratch/ChartUtil.dart';
+import 'package:tracko/scratch/ChartUtil.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';

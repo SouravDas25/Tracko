@@ -1,7 +1,7 @@
-import 'package:Tracko/component/interfaces.dart';
-import 'package:Tracko/controllers/ChatController.dart';
-import 'package:Tracko/models/chats.dart';
-import 'package:Tracko/pages/split_page/UserListTile.dart';
+import 'package:tracko/component/interfaces.dart';
+import 'package:tracko/controllers/ChatController.dart';
+import 'package:tracko/models/chats.dart';
+import 'package:tracko/pages/split_page/UserListTile.dart';
 import 'package:flutter/material.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 

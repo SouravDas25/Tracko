@@ -1,7 +1,7 @@
-import 'package:Tracko/Utils/DatabaseUtil.dart';
-import 'package:Tracko/models/category.dart';
-import 'package:Tracko/models/user.dart';
-import 'package:Tracko/services/SessionService.dart';
+import 'package:tracko/models/category.dart';
+import 'package:tracko/models/user.dart';
+import 'package:tracko/repositories/category_repository.dart';
+import 'package:tracko/services/SessionService.dart';
 import 'package:flutter/material.dart';
 
 // ignore: must_be_immutable
@@ -27,21 +27,16 @@ class CategoryDialog extends StatelessWidget {
         .length <= 0) {
       return;
     }
-    var adapter = await DatabaseUtil.getAdapter();
-    await adapter.connect();
-    // TODO: Reimplement with raw SQL after jaguar_orm removal
-    // CategoryBean categoryBean = CategoryBean(adapter);
     Category category = this.category ?? Category();
     category.name = name;
     User user = SessionService.currentUser();
-    // categoryBean.associateUser(category, user);
     category.userId = user.id;
-    // await categoryBean.upsert(category);
-    // Stub: Insert or update category using raw SQL
+    final repo = CategoryRepository();
     if (category.id == null) {
-      await adapter.rawInsert('INSERT INTO categories (name, userId) VALUES (?, ?)', [category.name, category.userId]);
+      final created = await repo.create(category.name);
+      category.id = created.id;
     } else {
-      await adapter.rawUpdate('UPDATE categories SET name = ? WHERE id = ?', [category.name, category.id]);
+      await repo.update(category.id!, category.name);
     }
     print(category);
 //    await adapter.close();

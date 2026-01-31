@@ -1,7 +1,5 @@
 // Lightweight ORM stubs to replace jaguar_orm for build-time compatibility
-// Provides minimal functionality used by controllers via sqflite.
-
-import 'package:sqflite/sqflite.dart';
+// Provides minimal functionality used by controllers.
 
 // Annotation stubs
 class GenBean {
@@ -35,12 +33,12 @@ class IgnoreColumn {
 
 // Adapter wrapper around sqflite Database
 class Adapter {
-  final Database db;
+  final dynamic db;
   Adapter(this.db);
 
   static Future<Adapter> ensure(dynamic adapter) async {
     if (adapter is Adapter) return adapter;
-    if (adapter is Database) return Adapter(adapter);
+    if (adapter != null) return Adapter(adapter);
     throw ArgumentError('Unsupported adapter type: ${adapter.runtimeType}');
   }
 }

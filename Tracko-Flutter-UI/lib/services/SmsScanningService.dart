@@ -1,11 +1,12 @@
-import 'package:Tracko/Utils/CommonUtil.dart';
-import 'package:Tracko/Utils/ConstantUtil.dart';
-import 'package:Tracko/Utils/LocalNotificationUtil.dart';
-import 'package:Tracko/Utils/ServerUtil.dart';
-import 'package:Tracko/Utils/SettingUtil.dart';
-import 'package:Tracko/controllers/SmsController.dart';
-import 'package:Tracko/controllers/TransactionController.dart';
-import 'package:Tracko/models/transaction.dart';
+import 'package:tracko/Utils/CommonUtil.dart';
+import 'package:tracko/Utils/ConstantUtil.dart';
+import 'package:tracko/Utils/LocalNotificationUtil.dart';
+import 'package:tracko/Utils/ServerUtil.dart';
+import 'package:tracko/Utils/SettingUtil.dart';
+import 'package:tracko/controllers/SmsController.dart';
+import 'package:tracko/controllers/TransactionController.dart';
+import 'package:tracko/models/transaction.dart';
+import 'package:flutter/foundation.dart';
 
 enum ScanningStatus { NOT_RUNNING, RUNNING, COMPLETED }
 
@@ -130,6 +131,10 @@ class SmsScanningService {
   }
 
   static Future<int> scan({Function? callback}) async {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
+      SmsScanningService.reset();
+      return 0;
+    }
     if (status == ScanningStatus.RUNNING) {
       throw Exception("Service already Running");
     }

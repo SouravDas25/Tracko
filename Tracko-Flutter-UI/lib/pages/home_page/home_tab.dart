@@ -1,14 +1,12 @@
-import 'package:Tracko/Utils/SettingUtil.dart';
-import 'package:Tracko/Utils/WidgetUtil.dart';
-import 'package:Tracko/controllers/AutoScanMsgController.dart';
-import 'package:Tracko/pages/home_page/home_page.dart';
-import 'package:Tracko/pages/settings_page/settings_page.dart';
-import 'package:Tracko/pages/smartify_page/smartify_page.dart';
-import 'package:Tracko/pages/split_page/SplitPage.dart';
-import 'package:Tracko/pages/transaction_list_page/transaction_list_page.dart';
-import 'package:Tracko/services/BackupService.dart';
-import 'package:Tracko/services/SessionService.dart';
+import 'package:tracko/Utils/SettingUtil.dart';
+import 'package:tracko/Utils/WidgetUtil.dart';
+import 'package:tracko/pages/home_page/home_page.dart';
+import 'package:tracko/pages/settings_page/settings_page.dart';
+import 'package:tracko/pages/smartify_page/smartify_page.dart';
+import 'package:tracko/pages/split_page/SplitPage.dart';
+import 'package:tracko/pages/transaction_list_page/transaction_list_page.dart';
 import 'package:bottom_navy_bar/bottom_navy_bar.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -37,12 +35,7 @@ class _HomeTab extends State<HomeTab> with SingleTickerProviderStateMixin {
   }
 
   afterLoggingIn() {
-    AutoScanMsgController.giveNotificationIfNewMessages(tabController);
     WidgetUtil.setHomeTab(this);
-    BackupService.backupDatabaseIfRequired(
-        SessionService
-            .currentUser()
-            .phoneNo);
   }
 
   @override

@@ -1,17 +1,16 @@
 import 'dart:math';
 
-import 'package:Tracko/Utils/JsonStore.dart';
-import 'package:Tracko/Utils/migrations/migrations.dart';
-import 'package:Tracko/controllers/TransactionController.dart';
-import 'package:Tracko/models/account.dart';
-import 'package:Tracko/models/category.dart';
-import 'package:Tracko/models/chats.dart';
-import 'package:Tracko/models/split.dart';
-import 'package:Tracko/models/transaction.dart';
-import 'package:Tracko/models/user.dart';
+import 'package:tracko/Utils/JsonStore.dart';
+import 'package:tracko/Utils/migrations/migrations.dart';
+import 'package:tracko/controllers/TransactionController.dart';
+import 'package:tracko/models/account.dart';
+import 'package:tracko/models/category.dart';
+import 'package:tracko/models/chats.dart';
+import 'package:tracko/models/split.dart';
+import 'package:tracko/models/transaction.dart';
+import 'package:tracko/models/user.dart';
 // // import 'package:jaguar_query_sqflite/jaguar_query_sqflite.dart'; // Removed - migrating to plain sqflite // TODO: Replace with plain sqflite DAOs
 import 'package:path/path.dart' as path;
-import 'package:sqflite/sqflite.dart';
 
 import 'migrations/migration_control.dart';
 
@@ -19,7 +18,7 @@ const String databaseName = "test.db";
 
 class DatabaseUtil {
   String? databasePath;
-  Database? rawDatabase;
+  dynamic rawDatabase;
 
   DatabaseUtil();
 
@@ -31,20 +30,17 @@ class DatabaseUtil {
 
   static Future<String> fetchDatabasePath() async {
     if (_instance.databasePath == null) {
-      String dbPath = await getDatabasesPath();
-      _instance.databasePath = path.join(dbPath, databaseName);
+      _instance.databasePath = path.join('', databaseName);
     }
     return _instance.databasePath ?? '';
   }
 
   static _connect() async {
-    String dbPath = await fetchDatabasePath();
-    _instance.rawDatabase = await MigrationControl.createVersionControlDB(
-        dbPath, Migrations.migrations);
+    return null;
   }
 
   static closeDatabase() async {
-    return await _instance.rawDatabase?.close();
+    return null;
   }
 
   static getRawDatabase() async {
@@ -54,7 +50,7 @@ class DatabaseUtil {
     return _instance.rawDatabase;
   }
 
-  static getAdapter({Database? database}) async {
+  static getAdapter({dynamic database}) async {
     // TODO: Replace with proper DAO pattern. For now, return raw Database.
     if (database != null) {
       return database;
@@ -71,16 +67,14 @@ class DatabaseUtil {
   }
 
   static reset() async {
-    var adapter = await DatabaseUtil.getAdapter();
-    // TODO: Implement table clearing with raw SQL
     await JsonStore.deleteAll();
-    await seedTables(adapter);
+    // Local DB disabled: nothing else to reset.
   }
 
   static seedTables(dynamic adapter) async {
     // TODO: Implement seeding with raw SQL INSERT statements
     // For now, skip seeding to allow app to compile and run
-    Database? db = adapter is Database ? adapter : _instance.rawDatabase;
+    dynamic db = adapter ?? _instance.rawDatabase;
     if (db == null) return;
     
     // Check if accounts table has data
@@ -111,7 +105,7 @@ class DatabaseUtil {
   }
 
   static void runQuery(String query) async {
-    Database? db = await DatabaseUtil.getRawDatabase();
+    final db = await DatabaseUtil.getRawDatabase();
     await db?.execute(query);
   }
 

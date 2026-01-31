@@ -233,4 +233,140 @@ public class TransactionIntegrationTest {
         mockMvc.perform(get("/api/transactions/" + saved.getId()))
                 .andExpect(status().isNotFound());
     }
+
+    @Test
+    public void testGetSummary() throws Exception {
+        // Create income transaction
+        Transaction income = new Transaction();
+        income.setTransactionType(2); // CREDIT = income
+        income.setName("Salary");
+        income.setAmount(1000.00);
+        income.setDate(new Date());
+        income.setAccountId(testAccount.getId());
+        income.setCategoryId(testCategory.getId());
+        income.setIsCountable(1);
+        transactionRepository.save(income);
+
+        // Create expense transaction
+        Transaction expense = new Transaction();
+        expense.setTransactionType(1); // DEBIT = expense
+        expense.setName("Groceries");
+        expense.setAmount(200.00);
+        expense.setDate(new Date());
+        expense.setAccountId(testAccount.getId());
+        expense.setCategoryId(testCategory.getId());
+        expense.setIsCountable(1);
+        transactionRepository.save(expense);
+
+        // Create non-countable transaction (should be excluded)
+        Transaction nonCountable = new Transaction();
+        nonCountable.setTransactionType(1); // DEBIT = expense
+        nonCountable.setName("Transfer");
+        nonCountable.setAmount(50.00);
+        nonCountable.setDate(new Date());
+        nonCountable.setAccountId(testAccount.getId());
+        nonCountable.setCategoryId(testCategory.getId());
+        nonCountable.setIsCountable(0);
+        transactionRepository.save(nonCountable);
+
+        mockMvc.perform(get("/api/transactions/user/" + testUser.getId() + "/summary")
+                .param("startDate", "2020-01-01")
+                .param("endDate", "2030-12-31"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.totalIncome").value(1000.00))
+                .andExpect(jsonPath("$.result.totalExpense").value(200.00))
+                .andExpect(jsonPath("$.result.netTotal").value(800.00))
+                .andExpect(jsonPath("$.result.transactionCount").value(2));
+    }
+
+    @Test
+    public void testGetTotalIncome() throws Exception {
+        Transaction income1 = new Transaction();
+        income1.setTransactionType(2); // CREDIT = income
+        income1.setName("Salary");
+        income1.setAmount(1000.00);
+        income1.setDate(new Date());
+        income1.setAccountId(testAccount.getId());
+        income1.setCategoryId(testCategory.getId());
+        income1.setIsCountable(1);
+        transactionRepository.save(income1);
+
+        Transaction income2 = new Transaction();
+        income2.setTransactionType(2); // CREDIT = income
+        income2.setName("Bonus");
+        income2.setAmount(500.00);
+        income2.setDate(new Date());
+        income2.setAccountId(testAccount.getId());
+        income2.setCategoryId(testCategory.getId());
+        income2.setIsCountable(1);
+        transactionRepository.save(income2);
+
+        mockMvc.perform(get("/api/transactions/user/" + testUser.getId() + "/total-income")
+                .param("startDate", "2020-01-01")
+                .param("endDate", "2030-12-31"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result").value(1500.00));
+    }
+
+    @Test
+    public void testGetTotalExpense() throws Exception {
+        Transaction expense1 = new Transaction();
+        expense1.setTransactionType(1); // DEBIT = expense
+        expense1.setName("Groceries");
+        expense1.setAmount(200.00);
+        expense1.setDate(new Date());
+        expense1.setAccountId(testAccount.getId());
+        expense1.setCategoryId(testCategory.getId());
+        expense1.setIsCountable(1);
+        transactionRepository.save(expense1);
+
+        Transaction expense2 = new Transaction();
+        expense2.setTransactionType(1); // DEBIT = expense
+        expense2.setName("Utilities");
+        expense2.setAmount(150.00);
+        expense2.setDate(new Date());
+        expense2.setAccountId(testAccount.getId());
+        expense2.setCategoryId(testCategory.getId());
+        expense2.setIsCountable(1);
+        transactionRepository.save(expense2);
+
+        mockMvc.perform(get("/api/transactions/user/" + testUser.getId() + "/total-expense")
+                .param("startDate", "2020-01-01")
+                .param("endDate", "2030-12-31"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result").value(350.00));
+    }
+
+    @Test
+    public void testGetSummaryExcludesNonCountable() throws Exception {
+        // Only non-countable transactions
+        Transaction nonCountable1 = new Transaction();
+        nonCountable1.setTransactionType(2); // CREDIT = income
+        nonCountable1.setName("Transfer In");
+        nonCountable1.setAmount(500.00);
+        nonCountable1.setDate(new Date());
+        nonCountable1.setAccountId(testAccount.getId());
+        nonCountable1.setCategoryId(testCategory.getId());
+        nonCountable1.setIsCountable(0);
+        transactionRepository.save(nonCountable1);
+
+        Transaction nonCountable2 = new Transaction();
+        nonCountable2.setTransactionType(1); // DEBIT = expense
+        nonCountable2.setName("Transfer Out");
+        nonCountable2.setAmount(300.00);
+        nonCountable2.setDate(new Date());
+        nonCountable2.setAccountId(testAccount.getId());
+        nonCountable2.setCategoryId(testCategory.getId());
+        nonCountable2.setIsCountable(0);
+        transactionRepository.save(nonCountable2);
+
+        mockMvc.perform(get("/api/transactions/user/" + testUser.getId() + "/summary")
+                .param("startDate", "2020-01-01")
+                .param("endDate", "2030-12-31"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.totalIncome").value(0.00))
+                .andExpect(jsonPath("$.result.totalExpense").value(0.00))
+                .andExpect(jsonPath("$.result.netTotal").value(0.00))
+                .andExpect(jsonPath("$.result.transactionCount").value(0));
+    }
 }

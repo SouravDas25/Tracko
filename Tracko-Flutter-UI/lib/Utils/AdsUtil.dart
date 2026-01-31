@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:Tracko/Utils/WidgetUtil.dart';
+import 'package:tracko/Utils/WidgetUtil.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 class AdsUtil {

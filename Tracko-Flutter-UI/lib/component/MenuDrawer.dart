@@ -1,5 +1,5 @@
-import 'package:Tracko/models/user.dart';
-import 'package:Tracko/services/SessionService.dart';
+import 'package:tracko/models/user.dart';
+import 'package:tracko/services/SessionService.dart';
 import 'package:flutter/material.dart';
 
 class MenuDrawer extends StatelessWidget {

@@ -1,11 +1,10 @@
 import 'dart:async';
 
-import 'package:Tracko/models/account.dart';
-import 'package:Tracko/models/category.dart';
-import 'package:Tracko/models/chats.dart';
-import 'package:Tracko/models/split.dart';
-import 'package:Tracko/orm_stub.dart';
-import 'package:sqflite/sqflite.dart';
+import 'package:tracko/models/account.dart';
+import 'package:tracko/models/category.dart';
+import 'package:tracko/models/chats.dart';
+import 'package:tracko/models/split.dart';
+import 'package:tracko/orm_stub.dart';
 // import 'package:jaguar_orm/jaguar_orm.dart'; // Removed - migrating to plain sqflite
 // import 'package:jaguar_query/jaguar_query.dart'; // Removed - migrating to plain sqflite
 
@@ -38,7 +37,7 @@ class User {
 @GenBean()
 class UserBean extends Bean<User> {
   UserBean(dynamic adapter)
-      : super(adapter is Adapter ? adapter : Adapter(adapter as Database));
+      : super(adapter is Adapter ? adapter : Adapter(adapter));
 
   final String tableName = 'users';
 

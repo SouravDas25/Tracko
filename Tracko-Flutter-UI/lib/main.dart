@@ -1,11 +1,11 @@
-import 'package:Tracko/Init.dart';
-import 'package:Tracko/pages/route.dart';
-import 'package:Tracko/pages/welcome_page/welcome_page.dart';
+import 'package:tracko/Init.dart';
+import 'package:tracko/pages/route.dart';
+import 'package:tracko/pages/welcome_page/welcome_page.dart';
 import 'package:flutter/material.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await InitializeApp.init();
+  await InitializeApp.initialize();
   runApp(MyApp());
 }
 

@@ -1,4 +1,4 @@
-import 'package:Tracko/Utils/CommonUtil.dart';
+import 'package:tracko/Utils/CommonUtil.dart';
 import 'package:flutter/material.dart';
 
 class ChatMessageTile extends StatelessWidget {

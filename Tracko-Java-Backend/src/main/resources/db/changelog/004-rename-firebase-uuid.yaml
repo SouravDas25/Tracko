@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-rename-firebase-uuid-to-fire-base-id
+      author: cascade
+      changes:
+        - renameColumn:
+            tableName: users
+            oldColumnName: firebase_uuid
+            newColumnName: fire_base_id
+            columnDataType: varchar(128)

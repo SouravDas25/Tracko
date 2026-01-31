@@ -1,18 +1,24 @@
 import 'dart:convert' as convert;
 
-import 'package:Tracko/Utils/DestinationUtil.dart';
-import 'package:Tracko/controllers/TransactionController.dart';
-import 'package:Tracko/dtos/ChatGroups.dart';
-import 'package:Tracko/dtos/ChatMessagesResponses.dart';
-import 'package:Tracko/dtos/GlobalAccountResponse.dart';
-import 'package:Tracko/models/transaction.dart';
-import 'package:Tracko/models/user.dart';
+import 'package:tracko/Utils/DestinationUtil.dart';
+import 'package:tracko/controllers/TransactionController.dart';
+import 'package:tracko/dtos/ChatGroups.dart';
+import 'package:tracko/dtos/ChatMessagesResponses.dart';
+import 'package:tracko/dtos/GlobalAccountResponse.dart';
+import 'package:tracko/models/transaction.dart';
+import 'package:tracko/models/user.dart';
 import 'package:http/http.dart' as http;
 
 class ServerUtil {
   static String? authJwtToken;
 
-  static get authHeader => {"Authorization": "Bearer $authJwtToken"};
+  static get authHeader {
+    final token = authJwtToken;
+    if (token == null || token.isEmpty) {
+      return <String, String>{};
+    }
+    return <String, String>{"Authorization": "Bearer $token"};
+  }
 
   static Future<String?> getGlobalAccountId(String phoneNumber) async {
     GlobalAccountResponse? user = await getGlobalAccount(phoneNumber);
@@ -23,7 +29,7 @@ class ServerUtil {
   }
 
   static Future<String?> getAuthToken(User user) async {
-    var url = Uri.parse(DestinationUtil.javaBackend() + "/api/oauth/token");
+    var url = Uri.parse(DestinationUtil.javaBackend() + "api/oauth/token");
     var headers = {"Content-Type": "application/json"};
     var body = {"phoneNo": user.phoneNo, "firebaseUuid": user.fireBaseId};
     String data = convert.jsonEncode(body);
@@ -71,7 +77,7 @@ class ServerUtil {
   static Future<GlobalAccountResponse?> getGlobalAccount(
       String phoneNumber) async {
     var url = Uri.parse(DestinationUtil.javaBackend() +
-        "/api/user/byPhoneNo?phone_no=" +
+        "api/user/byPhoneNo?phone_no=" +
         Uri.encodeQueryComponent(phoneNumber));
     var response = await http.get(url, headers: authHeader);
     if (response.statusCode == 200) {
@@ -180,7 +186,7 @@ class ServerUtil {
 
   static Future<bool> sendMessage(String currentUserGlobalId, String groupId,
       String message) async {
-    var url = Uri.parse(DestinationUtil.javaBackend() + "/api/chat/send");
+    var url = Uri.parse(DestinationUtil.javaBackend() + "api/chat/send");
     var requestBody = {
       "sender": currentUserGlobalId,
       "chatGroupAddress": groupId,
@@ -200,7 +206,7 @@ class ServerUtil {
 
   static Future<bool> updateGlobalUser(User user,
       {bool isShadow = false}) async {
-    var url = Uri.parse(DestinationUtil.javaBackend() + "/api/user/save");
+    var url = Uri.parse(DestinationUtil.javaBackend() + "api/user/save");
     var requestBody = {
       "id": user.globalId,
       "name": user.name,

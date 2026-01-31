@@ -47,13 +47,13 @@ public class SessionController {
 
     @PostMapping(value = "/api/signUp")
     ResponseEntity<?> signUp(@RequestBody UserSaveRequest userSaveRequest) {
-        if (userSaveRequest.getFirebase_uuid() == null || userSaveRequest.getFirebase_uuid().isEmpty())
+        if (userSaveRequest.getFireBaseId() == null || userSaveRequest.getFireBaseId().isEmpty())
             return Response.unauthorized();
         String id = userService.save(userSaveRequest);
         if (id == null)
             Response.badRequest("Phone Number Incorrect");
         log.info("User Saved : {}", id);
-        String jwtToken = userService.generateToken(userSaveRequest.getPhoneNo(), userSaveRequest.getFirebase_uuid());
+        String jwtToken = userService.generateToken(userSaveRequest.getPhoneNo(), userSaveRequest.getFireBaseId());
         HttpHeaders responseHeaders = new HttpHeaders();
         responseHeaders.set("Jwt-Token", jwtToken);
         return Response.ok(id, "User Saved Successfully.", responseHeaders);

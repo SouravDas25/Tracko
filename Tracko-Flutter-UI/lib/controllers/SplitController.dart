@@ -1,85 +1,77 @@
-import 'package:Tracko/Utils/DatabaseUtil.dart';
-import 'package:Tracko/Utils/SettingUtil.dart';
-import 'package:Tracko/models/category.dart';
-import 'package:Tracko/models/split.dart';
-import 'package:Tracko/models/transaction.dart';
-// import 'package:jaguar_orm/jaguar_orm.dart'; // Removed - migrating to plain sqflite
-import 'package:sqflite/sqlite_api.dart' as sqlite;
+import 'package:tracko/Utils/SettingUtil.dart';
+import 'package:tracko/models/split.dart';
+import 'package:tracko/repositories/split_repository.dart';
+import 'package:tracko/repositories/transaction_repository.dart';
+import 'package:tracko/controllers/CategoryController.dart';
 
 class SplitController {
   static Future<double> getDueAmount(int userId) async {
-    var adapter = await DatabaseUtil.getAdapter();
-    await adapter.connect();
-    SplitBean splitBean = new SplitBean(adapter);
-    var find = splitBean.finder
-        .eq(splitBean.userId.name, userId)
-        .eq(splitBean.isSettled.name, 0);
-    List<Split> splits = await splitBean.findMany(find);
+    final splitRepo = SplitRepository();
+    final userIdStr = userId.toString();
+    List<Split> splits = await splitRepo.getByUserId(userIdStr);
+    
+    // Filter unsettled splits
+    splits = splits.where((s) => s.isSettled == 0).toList();
 
-    double amount =
-        splits.fold(0.0, (value, element) => value + element.amount);
-
+    double amount = splits.fold(0.0, (value, element) => value + element.amount);
     return amount;
   }
 
   static Future<List<Split>> findByUserId(int userId,
       {bool preload = true}) async {
-    sqlite.Database db = await DatabaseUtil.getRawDatabase();
-    var adapter = await DatabaseUtil.getAdapter();
-    await adapter.connect();
-    SplitBean splitBean = new SplitBean(adapter);
-    TransactionBean transactionBean = new TransactionBean(adapter);
-    CategoryBean categoryBean = new CategoryBean(adapter);
-
+    final splitRepo = SplitRepository();
+    final txRepo = TransactionRepository();
+    final userIdStr = userId.toString();
+    
     DateTime month = SettingUtil.currentMonth;
     DateTime nextMonth = SettingUtil.nextMonth;
 
-    String sql = """
-      SELECT s.${splitBean.id.name}, 
-             s.${splitBean.isSettled.name},
-             s.${splitBean.transactionId.name}, 
-             s.${splitBean.amount.name}, 
-             s.${splitBean.userId.name}
-      FROM ${splitBean.tableName} s
-      JOIN ${transactionBean.tableName} t 
-      ON s.${splitBean.transactionId.name} = t.${transactionBean.id.name}
-      WHERE   (
-          (
-              t.${transactionBean.date.name} >= Datetime('$month') 
-              AND t.${transactionBean.date.name} < Datetime('$nextMonth') 
-          ) 
-          OR s.${splitBean.isSettled.name} = 0 
-          OR s.${splitBean.settledAt.name} >= Datetime('$month')
-      ) 
-      AND s.${splitBean.userId.name} = $userId 
-      GROUP BY s.${splitBean.id.name} 
-      ORDER BY t.${transactionBean.date.name}
-    """;
-
-    print(sql);
-    List<dynamic> tmp = (await db.rawQuery(sql)).toList();
-
+    // Get all splits for user
+    List<Split> splits = await splitRepo.getByUserId(userIdStr);
+    
     List<Split> returningSplit = [];
-    for (var splitVar in tmp) {
-      Split split = splitBean.fromMap(splitVar);
-      split.transaction = await transactionBean.find(split.transactionId);
-      if (split.transaction == null) {
-        continue;
+    for (Split split in splits) {
+      // Get transaction for this split
+      if (split.transactionId == null) continue;
+      
+      try {
+        split.transaction = await txRepo.getById(split.transactionId!);
+      } catch (e) {
+        continue; // Skip if transaction not found
       }
-      if (preload && split.transaction != null) {
-        split.transaction!.category =
-        await categoryBean.find(split.transactionId);
+      
+      if (split.transaction == null) continue;
+      
+      // Filter: include if transaction in current month OR split is unsettled OR settled this month
+      bool inCurrentMonth = split.transaction!.date.isAfter(month) && 
+                           split.transaction!.date.isBefore(nextMonth);
+      bool isUnsettled = split.isSettled == 0;
+      bool settledThisMonth = split.settledAt != null && 
+                             split.settledAt!.isAfter(month) && 
+                             split.settledAt!.isBefore(nextMonth);
+      
+      if (inCurrentMonth || isUnsettled || settledThisMonth) {
+        // Preload category if requested
+        if (preload && split.transaction != null) {
+          split.transaction!.category = 
+              await CategoryController.findById(split.transaction!.categoryId);
+        }
+        returningSplit.add(split);
       }
-      returningSplit.add(split);
     }
+    
+    // Sort by transaction date
+    returningSplit.sort((a, b) => 
+        (a.transaction?.date ?? DateTime.now()).compareTo(b.transaction?.date ?? DateTime.now()));
+    
     return returningSplit;
   }
 
   static Future<int> settleAll(int userId) async {
-    var adapter = await DatabaseUtil.getAdapter();
-    await adapter.connect();
-    SplitBean splitBean = new SplitBean(adapter);
-    List<Split> splitList = await splitBean.findByUser(userId);
+    final splitRepo = SplitRepository();
+    final userIdStr = userId.toString();
+    List<Split> splitList = await splitRepo.getByUserId(userIdStr);
+    
     for (Split split in splitList) {
       await settleSplit(split);
     }
@@ -87,26 +79,34 @@ class SplitController {
   }
 
   static Future<int> settleSplit(Split split, {int? settleTo}) async {
-    var adapter = await DatabaseUtil.getAdapter();
-    await adapter.connect();
-    SplitBean splitBean = new SplitBean(adapter);
-    Split? s = await splitBean.find(split.id);
-    if (s == null) return 0;
-    if (settleTo != null) {
-      s.isSettled = settleTo;
-    } else {
-      s.isSettled = s.isSettled == 1 ? 0 : 1;
+    final splitRepo = SplitRepository();
+    if (split.id == null) return 0;
+    
+    // Use settle endpoint if available, otherwise update manually
+    try {
+      await splitRepo.settle(split.id!);
+      return 1;
+    } catch (e) {
+      // Fallback: manual update
+      if (settleTo != null) {
+        split.isSettled = settleTo;
+      } else {
+        split.isSettled = split.isSettled == 1 ? 0 : 1;
+      }
+      if (split.isSettled == 1) split.settledAt = DateTime.now();
+      await splitRepo.update(split.id!, split);
+      return split.isSettled;
     }
-    if (s.isSettled == 1) s.settledAt = DateTime.now();
-    await splitBean.update(s);
-    return s.isSettled;
   }
 
   static removeByTransactionId(int transactionId) async {
-    var adapter = await DatabaseUtil.getAdapter();
-    await adapter.connect();
-    SplitBean splitBean = new SplitBean(adapter);
-    await splitBean.removeByTransaction(transactionId);
-//    print(await splitBean.findByTransaction(transactionId));
+    final splitRepo = SplitRepository();
+    List<Split> splits = await splitRepo.getByTransactionId(transactionId);
+    
+    for (Split split in splits) {
+      if (split.id != null) {
+        await splitRepo.delete(split.id!);
+      }
+    }
   }
 }

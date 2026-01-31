@@ -1,10 +1,10 @@
 import 'dart:async';
 
-import 'package:Tracko/Utils/ServerUtil.dart';
-import 'package:Tracko/component/AsynLoadState.dart';
-import 'package:Tracko/component/ChatMessageTile.dart';
-import 'package:Tracko/models/chats.dart';
-import 'package:Tracko/models/user.dart';
+import 'package:tracko/Utils/ServerUtil.dart';
+import 'package:tracko/component/AsynLoadState.dart';
+import 'package:tracko/component/ChatMessageTile.dart';
+import 'package:tracko/models/chats.dart';
+import 'package:tracko/models/user.dart';
 import 'package:flutter/material.dart';
 
 class ChatView extends StatefulWidget {
@@ -24,7 +24,7 @@ class _ChatList extends AsyncLoadState<ChatView> {
   final TextEditingController _chatController = new TextEditingController();
   List<dynamic> _messages = <dynamic>[];
   ScrollController scrollController = ScrollController();
-  Timer timer;
+  Timer? timer;
 
   @override
   void initState() {
@@ -44,7 +44,7 @@ class _ChatList extends AsyncLoadState<ChatView> {
 
   @override
   void dispose() {
-    this.timer.cancel();
+    this.timer?.cancel();
     super.dispose();
   }
 
@@ -57,9 +57,11 @@ class _ChatList extends AsyncLoadState<ChatView> {
 
   loadMessages() async {
     try {
-      var m = await ServerUtil.getChatMessages(widget.currentChat.chatGroupId);
-      if (m.length != _messages.length) {
-        _messages = m;
+      final m = await ServerUtil.getChatMessages(
+          widget.currentChat.chatGroupId, widget.currentUser.globalId);
+      final newMessages = List<dynamic>.from(m ?? const []);
+      if (newMessages.length != _messages.length) {
+        _messages = newMessages;
         setState(() {});
         scrollList();
       }

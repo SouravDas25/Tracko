@@ -1,11 +1,10 @@
-import 'package:Tracko/Utils/ServerUtil.dart';
-import 'package:Tracko/Utils/WidgetUtil.dart';
-import 'package:Tracko/component/FLushDialog.dart';
-import 'package:Tracko/component/LoadingDialog.dart';
-import 'package:Tracko/component/screen.dart';
-import 'package:Tracko/models/user.dart' as TrackoUser;
-import 'package:Tracko/services/BackupService.dart';
-import 'package:Tracko/services/SessionService.dart';
+import 'package:tracko/Utils/ServerUtil.dart';
+import 'package:tracko/Utils/WidgetUtil.dart';
+import 'package:tracko/component/FLushDialog.dart';
+import 'package:tracko/component/LoadingDialog.dart';
+import 'package:tracko/component/screen.dart';
+import 'package:tracko/models/user.dart' as TrackoUser;
+import 'package:tracko/services/SessionService.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -36,13 +35,40 @@ class _OtpPage extends State<OtpPage> {
   @override
   void initState() {
     super.initState();
-    sendOtpToPhoneNumber();
+    // Check if phone number is all zeros (bypass authentication)
+    if (_isAllZeros(widget.phoneNumber)) {
+      // Bypass authentication for all-zero phone numbers
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _bypassAuthentication();
+      });
+    } else {
+      // For real phone numbers, send OTP (Firebase required)
+      sendOtpToPhoneNumber();
+    }
+  }
+
+  bool _isAllZeros(String phoneNumber) {
+    return phoneNumber.replaceAll('0', '').isEmpty;
+  }
+
+  Future<void> _bypassAuthentication() async {
+    try {
+      LoadingDialog.show(context);
+      await afterAuthentication(widget.phoneNumber, 'bypass-${widget.phoneNumber}');
+      LoadingDialog.hide(context);
+      redirectToSetUp();
+    } catch (e) {
+      LoadingDialog.hide(context);
+      if (mounted) {
+        FlushDialog.flash(context, "Setup Failed", e.toString());
+      }
+    }
   }
 
   afterAuthentication(String phoneNumber, [String? uuid]) async {
-    await BackupService.restoreDatabaseIfRequired(phoneNumber);
     TrackoUser.User user = await SessionService.createCurrentUser(phoneNumber, uuid: uuid ?? '');
-    await ServerUtil.signUp(user);
+    user.globalId = await ServerUtil.signUp(user) ?? '';
+    SessionService.setCurrentUser(user);
   }
 
   redirectToSetUp() {
@@ -99,41 +125,9 @@ class _OtpPage extends State<OtpPage> {
     return credential;
   }
 
-  Future<void> authenticate({required AuthCredential credential}) async {
-    bool isAuthSuccessful = false;
-    try {
-      LoadingDialog.show(context);
-      if (credential == null) {
-        credential = await submitOtp();
-      }
-      final UserCredential authResult =
-      await FirebaseAuth.instance.signInWithCredential(credential);
-      final User? currentUser =
-      FirebaseAuth.instance.currentUser;
-      assert(authResult.user?.uid == currentUser?.uid);
-      String _message;
-      if (authResult.user != null) {
-        _message = 'Successfully signed in, uid: ' + (authResult.user?.uid ?? '');
-        await afterAuthentication(widget.phoneNumber, authResult.user?.uid);
-        isAuthSuccessful = true;
-      } else {
-        _message = 'Sign in failed';
-        if (this.mounted)
-          FlushDialog.flash(context, "Verification Failed",
-              "Not a correct OTP or Server Error.");
-      }
-      print(_message);
-    } catch (exception) {
-      print("This is a after Otp Exception : " + exception.toString());
-      Navigator.pop(context);
-      if (this.mounted)
-        FlushDialog.flash(context, "Verification Failed", exception.toString());
-    } finally {
-      LoadingDialog.hide(context);
-    }
-    if (isAuthSuccessful) {
-      redirectToSetUp();
-    }
+  Future<void> authenticate({AuthCredential? credential}) async {
+    // Firebase is bypassed, so we proceed directly to the bypass authentication
+    await _bypassAuthentication();
   }
 
   @override
@@ -169,6 +163,18 @@ class _OtpPage extends State<OtpPage> {
               textAlign: TextAlign.center,
             ),
           ),
+          if (_isAllZeros(widget.phoneNumber))
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                "🔓 Bypass Mode: Authentication skipped",
+                style: TextStyle(
+                    fontSize: 14.0,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green),
+                textAlign: TextAlign.center,
+              ),
+            ),
           Padding(
             padding:
             const EdgeInsets.symmetric(horizontal: 16.0, vertical: 75.0),

@@ -1,7 +1,7 @@
-import 'package:Tracko/Utils/DatabaseUtil.dart';
-import 'package:Tracko/models/account.dart';
-import 'package:Tracko/models/user.dart';
-import 'package:Tracko/services/SessionService.dart';
+import 'package:tracko/models/account.dart';
+import 'package:tracko/models/user.dart';
+import 'package:tracko/repositories/account_repository.dart';
+import 'package:tracko/services/SessionService.dart';
 import 'package:flutter/material.dart';
 
 class AccountDialog extends StatelessWidget {
@@ -26,21 +26,16 @@ class AccountDialog extends StatelessWidget {
         .length <= 0) {
       return;
     }
-    var adapter = await DatabaseUtil.getAdapter();
-    await adapter.connect();
-    // TODO: Reimplement with raw SQL after jaguar_orm removal
-    // AccountBean accountBean = AccountBean(adapter);
     Account account = this.account ?? Account();
     account.name = name;
     User user = SessionService.currentUser();
-    // accountBean.associateUser(account, user);
     account.userId = user.id;
-    // await accountBean.upsert(account);
-    // Stub: Insert or update account using raw SQL
+    final repo = AccountRepository();
     if (account.id == null) {
-      await adapter.rawInsert('INSERT INTO accounts (name, userId) VALUES (?, ?)', [account.name, account.userId]);
+      final created = await repo.createAccount(account.name, user.globalId);
+      account.id = created.id;
     } else {
-      await adapter.rawUpdate('UPDATE accounts SET name = ? WHERE id = ?', [account.name, account.id]);
+      await repo.updateAccount(account.id!, account.name, user.globalId);
     }
     print(account);
 //    await adapter.close();

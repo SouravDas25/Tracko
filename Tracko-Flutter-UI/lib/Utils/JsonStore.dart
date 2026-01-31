@@ -1,31 +1,28 @@
-import 'package:Tracko/Utils/DatabaseUtil.dart';
-import 'package:sqflite/sqflite.dart';
+import 'dart:convert';
+import 'package:tracko/models/json_store.dart';
+import 'package:tracko/repositories/json_store_repository.dart';
 
 class JsonStore {
+  static final _repo = JsonStoreRepository();
+
   static Future<bool?> has(String key) async {
-    var obj = await get(key);
-    return obj != null ? true : false;
+    final obj = await get(key);
+    return obj != null;
   }
 
   static Future<String?> get(String key) async {
-    Database database = await DatabaseUtil.getRawDatabase();
-    List<dynamic> result = await database
-        .rawQuery("SELECT value FROM json_store WHERE name = '$key';");
-    if (result.length > 0) return result.first['value'];
-    return null;
+    final item = await _repo.getByName(key);
+    return item?.value;
   }
 
   static put(String key, String value) async {
-    Database database = await DatabaseUtil.getRawDatabase();
-    await database.execute("""
-        INSERT OR REPLACE INTO json_store(name, value) VALUES('$key','$value');
-        """);
+    await _repo.save(JsonStoreModel(name: key, value: value));
   }
 
   static deleteAll() async {
-    Database database = await DatabaseUtil.getRawDatabase();
-    await database.execute("""
-        DELETE FROM json_store WHERE 1;
-        """);
+    final all = await _repo.getAll();
+    for (final item in all) {
+      await _repo.delete(item.name);
+    }
   }
 }

@@ -1,9 +1,9 @@
-import 'package:Tracko/Utils/CommonUtil.dart';
-import 'package:Tracko/Utils/WidgetUtil.dart';
-import 'package:Tracko/component/FLushDialog.dart';
-import 'package:Tracko/component/menu_bar.dart' as custom;
-import 'package:Tracko/models/user.dart';
-import 'package:Tracko/services/SessionService.dart';
+import 'package:tracko/Utils/CommonUtil.dart';
+import 'package:tracko/Utils/WidgetUtil.dart';
+import 'package:tracko/component/FLushDialog.dart';
+import 'package:tracko/component/menu_bar.dart' as custom;
+import 'package:tracko/models/user.dart';
+import 'package:tracko/services/SessionService.dart';
 import 'package:flutter/material.dart';
 
 class WelcomePage extends StatefulWidget {
@@ -22,7 +22,7 @@ class _WelcomePage extends State<WelcomePage> {
   initState() {
     super.initState();
     this.loadData();
-    this.getPermissions();
+    // this.getPermissions();
   }
 
   void getPermissions() async {
@@ -76,6 +76,9 @@ class _WelcomePage extends State<WelcomePage> {
             padding: EdgeInsets.symmetric(vertical: 20.0),
           ),
           onPressed: () {
+            setState(() {
+              isUserValid = true; // Prevent re-check
+            });
             Navigator.pushReplacementNamed(
               context,
               "/phone_login",

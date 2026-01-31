@@ -1,6 +1,6 @@
-import 'package:Tracko/Utils/ServerUtil.dart';
-import 'package:Tracko/dtos/GlobalAccountResponse.dart';
-import 'package:Tracko/models/user.dart';
+import 'package:tracko/Utils/ServerUtil.dart';
+import 'package:tracko/dtos/GlobalAccountResponse.dart';
+import 'package:tracko/models/user.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

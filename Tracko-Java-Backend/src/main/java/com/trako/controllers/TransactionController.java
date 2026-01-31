@@ -2,6 +2,7 @@ package com.trako.controllers;
 
 import com.trako.entities.Transaction;
 import com.trako.services.TransactionService;
+import com.trako.dtos.TransactionSummaryDTO;
 import com.trako.util.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -76,5 +77,32 @@ public class TransactionController {
     public ResponseEntity<?> delete(@PathVariable Long id) {
         transactionService.delete(id);
         return Response.ok("Transaction deleted successfully");
+    }
+
+    @GetMapping("/user/{userId}/summary")
+    public ResponseEntity<?> getSummary(
+            @PathVariable String userId,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate) {
+        TransactionSummaryDTO summary = transactionService.getSummary(userId, startDate, endDate);
+        return Response.ok(summary);
+    }
+
+    @GetMapping("/user/{userId}/total-income")
+    public ResponseEntity<?> getTotalIncome(
+            @PathVariable String userId,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate) {
+        Double totalIncome = transactionService.getTotalIncome(userId, startDate, endDate);
+        return Response.ok(totalIncome);
+    }
+
+    @GetMapping("/user/{userId}/total-expense")
+    public ResponseEntity<?> getTotalExpense(
+            @PathVariable String userId,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate) {
+        Double totalExpense = transactionService.getTotalExpense(userId, startDate, endDate);
+        return Response.ok(totalExpense);
     }
 }

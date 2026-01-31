@@ -1,12 +1,11 @@
 import 'dart:async';
 
-import 'package:Tracko/Utils/enums.dart';
-import 'package:Tracko/dtos/TrackoContact.dart';
-import 'package:Tracko/models/account.dart';
-import 'package:Tracko/models/category.dart';
-import 'package:Tracko/models/split.dart';
-import 'package:Tracko/orm_stub.dart';
-import 'package:sqflite/sqflite.dart';
+import 'package:tracko/Utils/enums.dart';
+import 'package:tracko/dtos/TrackoContact.dart';
+import 'package:tracko/models/account.dart';
+import 'package:tracko/models/category.dart';
+import 'package:tracko/models/split.dart';
+import 'package:tracko/orm_stub.dart';
 // import 'package:jaguar_orm/jaguar_orm.dart'; // Removed - migrating to plain sqflite
 // import 'package:jaguar_query/jaguar_query.dart'; // Removed - migrating to plain sqflite
 // import 'package:jaguar_query_sqflite/jaguar_query_sqflite.dart'; // Removed - migrating to plain sqflite
@@ -56,7 +55,7 @@ class TransactionBean extends Bean<Transaction> {
   final String tableName = 'transactions';
 
   TransactionBean(dynamic adapter)
-      : super(adapter is Adapter ? adapter : Adapter(adapter as Database));
+      : super(adapter is Adapter ? adapter : Adapter(adapter));
 
   @override
   AccountBean get accountBean => AccountBean(adapter);

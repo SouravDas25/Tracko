@@ -1,15 +1,16 @@
-import 'package:Tracko/Utils/AdsUtil.dart';
-import 'package:Tracko/Utils/CommonUtil.dart';
-import 'package:Tracko/Utils/SettingUtil.dart';
-import 'package:Tracko/component/HomePieChart.dart';
-import 'package:Tracko/component/PaddedText.dart';
-import 'package:Tracko/component/TransactionTile.dart';
-import 'package:Tracko/component/interfaces.dart';
-import 'package:Tracko/controllers/CategoryController.dart';
-import 'package:Tracko/controllers/TransactionController.dart';
-import 'package:Tracko/models/transaction.dart';
-import 'package:Tracko/scratch/ChartUtil.dart';
+import 'package:tracko/Utils/AdsUtil.dart';
+import 'package:tracko/Utils/CommonUtil.dart';
+import 'package:tracko/Utils/SettingUtil.dart';
+import 'package:tracko/component/HomePieChart.dart';
+import 'package:tracko/component/PaddedText.dart';
+import 'package:tracko/component/TransactionTile.dart';
+import 'package:tracko/component/interfaces.dart';
+import 'package:tracko/controllers/CategoryController.dart';
+import 'package:tracko/controllers/TransactionController.dart';
+import 'package:tracko/models/transaction.dart';
+import 'package:tracko/scratch/ChartUtil.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' as DateFormatter;
 import "package:pull_to_refresh/pull_to_refresh.dart";
@@ -34,7 +35,9 @@ class _HomePageState extends RefreshableState<HomePage>
   @override
   void initState() {
     super.initState();
-    _loadBannerAd();
+    if (!kIsWeb) {
+      _loadBannerAd();
+    }
   }
 
   void _loadBannerAd() {
@@ -136,7 +139,7 @@ class _HomePageState extends RefreshableState<HomePage>
               itemCount: transactions.length,
               itemBuilder: (BuildContext context, int index) {
                 Transaction transaction = transactions[index];
-                if (index != 0 && index % 3 == 0 && _bannerAd != null) {
+                if (!kIsWeb && index != 0 && index % 3 == 0 && _bannerAd != null) {
                   return Column(
                     children: <Widget>[
                       Container(

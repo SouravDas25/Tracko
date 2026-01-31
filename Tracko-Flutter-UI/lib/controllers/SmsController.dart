@@ -1,6 +1,6 @@
-import 'package:Tracko/Utils/ConstantUtil.dart';
-import 'package:Tracko/Utils/JsonStore.dart';
-import 'package:Tracko/Utils/WidgetUtil.dart';
+import 'package:tracko/Utils/ConstantUtil.dart';
+import 'package:tracko/Utils/JsonStore.dart';
+import 'package:tracko/Utils/WidgetUtil.dart';
 
 class SmsController {
   static setSmsCheckpoint(dynamic msg) async {

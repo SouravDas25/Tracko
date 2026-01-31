@@ -1,7 +1,7 @@
-import 'package:Tracko/component/FLushDialog.dart';
-import 'package:Tracko/controllers/TransactionController.dart';
-import 'package:Tracko/models/transaction.dart';
-import 'package:Tracko/pages/smart_add_item/smart_add_item.dart';
+import 'package:tracko/component/FLushDialog.dart';
+import 'package:tracko/controllers/TransactionController.dart';
+import 'package:tracko/models/transaction.dart';
+import 'package:tracko/pages/smart_add_item/smart_add_item.dart';
 import 'package:flutter/material.dart';
 
 class AddItemPage extends StatefulWidget {

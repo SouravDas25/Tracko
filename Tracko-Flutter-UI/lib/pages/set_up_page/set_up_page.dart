@@ -1,12 +1,11 @@
-import 'package:Tracko/Utils/DatabaseUtil.dart';
-import 'package:Tracko/Utils/ServerUtil.dart';
-import 'package:Tracko/Utils/WidgetUtil.dart';
-import 'package:Tracko/component/LoadingDialog.dart';
-import 'package:Tracko/component/screen.dart';
-import 'package:Tracko/controllers/UserController.dart';
-import 'package:Tracko/dtos/GlobalAccountResponse.dart';
-import 'package:Tracko/models/user.dart';
-import 'package:Tracko/services/SessionService.dart';
+import 'package:tracko/Utils/ServerUtil.dart';
+import 'package:tracko/Utils/WidgetUtil.dart';
+import 'package:tracko/component/LoadingDialog.dart';
+import 'package:tracko/component/screen.dart';
+import 'package:tracko/controllers/UserController.dart';
+import 'package:tracko/dtos/GlobalAccountResponse.dart';
+import 'package:tracko/models/user.dart';
+import 'package:tracko/services/SessionService.dart';
 import 'package:flutter/material.dart';
 
 class SetUpPage extends StatefulWidget {
@@ -54,39 +53,44 @@ class _setUpPage extends State<SetUpPage> {
   updateUser() async {
     try {
       LoadingDialog.show(context);
-      var adapter = await DatabaseUtil.getAdapter();
-      await adapter.connect();
-      User user = await SessionService.getCurrentUser(adapter: adapter);
+      
+      // Get current user from session
+      User user = await SessionService.getCurrentUser();
+      
       print(user);
       user.name = nameController.text;
       user.email = emailController.text;
-//    int globalId = await ServerUtil.getGlobalAccountId(user.phoneNo);
+      
       String globalId = this.globalAccountId;
-      if (globalId == null) {
+      if (globalId == null || globalId.isEmpty) {
+        // Create new global account via backend
         globalId = await ServerUtil.createGlobalAccount(user) ?? '';
-        if (globalId == null) {
-          await UserController.removeById(1);
-          Navigator.pushReplacementNamed(
-            context,
-            "/welcome",
-          );
+        if (globalId == null || globalId.isEmpty) {
+          LoadingDialog.hide(context);
+          WidgetUtil.toast("Failed to create account. Please try again.");
+          Navigator.pushReplacementNamed(context, "/welcome");
+          return;
         }
         user.globalId = globalId;
       } else {
+        // Update existing global account via backend
         user.globalId = globalId;
         await ServerUtil.updateGlobalUser(user);
       }
-      await UserController.saveUser(user); // local update
-      user = await SessionService.getCurrentUser();
+      
+      // Save user via backend repository
+      await UserController.saveUser(user);
+      
+      // Update session
+      SessionService.setCurrentUser(user);
 
       print(user);
       LoadingDialog.hide(context);
-      Navigator.pushReplacementNamed(
-        context,
-        "/home",
-      );
+      Navigator.pushReplacementNamed(context, "/home");
     } catch (e) {
       print("sign-in failed in set-up page: ${e.toString()}");
+      LoadingDialog.hide(context);
+      WidgetUtil.toast("Setup failed: ${e.toString()}");
     }
   }
 
@@ -116,95 +120,97 @@ class _setUpPage extends State<SetUpPage> {
     return Screen(
       body: Form(
         key: _formKey,
-        child: ListView(
-          children: <Widget>[
-            CircleAvatar(
-              radius: 100.0,
-              child: Image.asset('assets/images/user-avatar.png'),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: Row(
-                children: <Widget>[
-                  Flexible(
-                    flex: 9,
-                    child: TextFormField(
-                      controller: nameController,
-                      keyboardType: TextInputType.text,
-                      decoration: new InputDecoration(hintText: "Name"),
-                      style: TextStyle(fontSize: 20.0),
-                      validator: (value) {
-                        if (value?.isEmpty ?? true) {
-                          return 'Please enter some text';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                  Flexible(
-                    flex: 1,
-                    child: Center(
-                      child: initLabel == 1
-                          ? Icon(Icons.check)
-                          : Icon(Icons.clear),
-                    ),
-                  )
-                ],
+        child: SingleChildScrollView(
+          child: Column(
+            children: <Widget>[
+              CircleAvatar(
+                radius: 100.0,
+                child: Image.asset('assets/images/user-avatar.png'),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: Row(
-                children: <Widget>[
-                  Flexible(
-                    flex: 9,
-                    child: TextFormField(
-                      controller: emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration:
-                      new InputDecoration(hintText: "Email Address"),
-                      style: TextStyle(fontSize: 20.0),
-                      validator: (value) {
-                        if (value?.isEmpty ?? true) {
-                          return 'Please enter some text';
-                        }
-                        return null;
-                      },
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Row(
+                  children: <Widget>[
+                    Flexible(
+                      flex: 9,
+                      child: TextFormField(
+                        controller: nameController,
+                        keyboardType: TextInputType.text,
+                        decoration: new InputDecoration(hintText: "Name"),
+                        style: TextStyle(fontSize: 20.0),
+                        validator: (value) {
+                          if (value?.isEmpty ?? true) {
+                            return 'Please enter some text';
+                          }
+                          return null;
+                        },
+                      ),
                     ),
-                  ),
-                  Flexible(
-                    flex: 1,
-                    child: Center(
-                      child: initLabel == 1
-                          ? Icon(Icons.check)
-                          : Icon(Icons.clear),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(30.0),
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.teal,
-                  foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(vertical: 20.0),
-                ),
-                onPressed: () {
-                  if (_formKey.currentState?.validate() ?? false) {
-                    // If the form is valid, display a snackbar. In the real world, you'd
-                    // often want to call a server or save the information in a database
-                    updateUser();
-                  }
-                },
-                child: Text(
-                  'Next',
-                  style: TextStyle(fontSize: 20.0),
+                    Flexible(
+                      flex: 1,
+                      child: Center(
+                        child: initLabel == 1
+                            ? Icon(Icons.check)
+                            : Icon(Icons.clear),
+                      ),
+                    )
+                  ],
                 ),
               ),
-            ),
-          ],
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Row(
+                  children: <Widget>[
+                    Flexible(
+                      flex: 9,
+                      child: TextFormField(
+                        controller: emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        decoration:
+                        new InputDecoration(hintText: "Email Address"),
+                        style: TextStyle(fontSize: 20.0),
+                        validator: (value) {
+                          if (value?.isEmpty ?? true) {
+                            return 'Please enter some text';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                    Flexible(
+                      flex: 1,
+                      child: Center(
+                        child: initLabel == 1
+                            ? Icon(Icons.check)
+                            : Icon(Icons.clear),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(30.0),
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.teal,
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(vertical: 20.0),
+                  ),
+                  onPressed: () {
+                    if (_formKey.currentState?.validate() ?? false) {
+                      // If the form is valid, display a snackbar. In the real world, you'd
+                      // often want to call a server or save the information in a database
+                      updateUser();
+                    }
+                  },
+                  child: Text(
+                    'Next',
+                    style: TextStyle(fontSize: 20.0),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

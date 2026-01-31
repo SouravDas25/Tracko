@@ -1,13 +1,13 @@
-import 'package:Tracko/Utils/CommonUtil.dart';
-import 'package:Tracko/Utils/WidgetUtil.dart';
-import 'package:Tracko/Utils/enums.dart';
-import 'package:Tracko/component/AsynLoadState.dart';
-import 'package:Tracko/controllers/SplitController.dart';
-import 'package:Tracko/controllers/UserController.dart';
-import 'package:Tracko/models/chats.dart';
-import 'package:Tracko/models/user.dart';
-import 'package:Tracko/pages/user_split_view/SplitByUser.dart';
-import 'package:Tracko/services/SessionService.dart';
+import 'package:tracko/Utils/CommonUtil.dart';
+import 'package:tracko/Utils/WidgetUtil.dart';
+import 'package:tracko/Utils/enums.dart';
+import 'package:tracko/component/AsynLoadState.dart';
+import 'package:tracko/controllers/SplitController.dart';
+import 'package:tracko/controllers/UserController.dart';
+import 'package:tracko/models/chats.dart';
+import 'package:tracko/models/user.dart';
+import 'package:tracko/pages/user_split_view/SplitByUser.dart';
+import 'package:tracko/services/SessionService.dart';
 import 'package:flutter/material.dart';
 
 class UserListTile extends StatefulWidget {

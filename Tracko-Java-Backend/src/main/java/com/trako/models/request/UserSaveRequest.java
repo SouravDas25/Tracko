@@ -17,7 +17,7 @@ public class UserSaveRequest {
 
     @NotNull
     @JsonProperty("uuid")
-    private String firebase_uuid;
+    private String fireBaseId;
 
     private Integer isShadow;
 
@@ -53,12 +53,12 @@ public class UserSaveRequest {
         this.profilePic = profilePic;
     }
 
-    public String getFirebase_uuid() {
-        return firebase_uuid;
+    public String getFireBaseId() {
+        return fireBaseId;
     }
 
-    public void setFirebase_uuid(String firebase_uuid) {
-        this.firebase_uuid = firebase_uuid;
+    public void setFireBaseId(String fireBaseId) {
+        this.fireBaseId = fireBaseId;
     }
 
     public Integer getIsShadow() {
@@ -80,7 +80,7 @@ public class UserSaveRequest {
                 ", phoneNo='" + phoneNo + '\'' +
                 ", email='" + email + '\'' +
                 ", profilePic='" + profilePic + '\'' +
-                ", firebase_uuid='" + firebase_uuid + '\'' +
+                ", fireBaseId='" + fireBaseId + '\'' +
                 '}';
     }
 }

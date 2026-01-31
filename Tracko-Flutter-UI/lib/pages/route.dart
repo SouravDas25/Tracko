@@ -1,9 +1,9 @@
-import 'package:Tracko/pages/add_item_page/add_item.dart';
-import 'package:Tracko/pages/home_page/home_tab.dart';
-import 'package:Tracko/pages/login_page/login_page.dart';
-import 'package:Tracko/pages/phone_login_page/phone_login_page.dart';
-import 'package:Tracko/pages/set_up_page/set_up_page.dart';
-import 'package:Tracko/pages/welcome_page/welcome_page.dart';
+import 'package:tracko/pages/add_item_page/add_item.dart';
+import 'package:tracko/pages/home_page/home_tab.dart';
+import 'package:tracko/pages/login_page/login_page.dart';
+import 'package:tracko/pages/phone_login_page/phone_login_page.dart';
+import 'package:tracko/pages/set_up_page/set_up_page.dart';
+import 'package:tracko/pages/welcome_page/welcome_page.dart';
 import 'package:flutter/material.dart';
 
 class Routes {

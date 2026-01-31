@@ -4,6 +4,8 @@ import com.trako.services.JwtUserDetailsService;
 import com.trako.services.UserService;
 import com.trako.util.JwtTokenUtil;
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.MalformedJwtException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -31,6 +33,11 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     private JwtUserDetailsService jwtUserDetailsService;
 
     @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return "OPTIONS".equalsIgnoreCase(request.getMethod());
+    }
+
+    @Override
     protected void doFilterInternal(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, FilterChain filterChain) throws ServletException, IOException {
 
         final String requestTokenHeader = httpServletRequest.getHeader("Authorization");
@@ -41,15 +48,19 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         // only the Token
         if (requestTokenHeader != null && requestTokenHeader.startsWith("Bearer ")) {
             jwtToken = requestTokenHeader.substring(7);
+            if (jwtToken == null || jwtToken.isBlank()) {
+                filterChain.doFilter(httpServletRequest, httpServletResponse);
+                return;
+            }
             try {
                 username = jwtTokenUtil.getUserNameFromToken(jwtToken);
             } catch (IllegalArgumentException e) {
                 logger.warn("Unable to get JWT Token");
             } catch (ExpiredJwtException e) {
                 logger.warn("JWT Token has expired");
+            } catch (MalformedJwtException | JwtException e) {
+                logger.warn("Invalid JWT Token");
             }
-        } else {
-            logger.warn("JWT Token does not begin with Bearer String");
         }
 
         // Once we get the token validate it.

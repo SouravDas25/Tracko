@@ -1,4 +1,4 @@
-import 'package:Tracko/dtos/GlobalAccountResponse.dart';
+import 'package:tracko/dtos/GlobalAccountResponse.dart';
 
 class ChatGroupResponse {
   late String id;

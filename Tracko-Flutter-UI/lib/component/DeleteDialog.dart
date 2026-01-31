@@ -1,4 +1,4 @@
-import 'package:Tracko/Utils/WidgetUtil.dart';
+import 'package:tracko/Utils/WidgetUtil.dart';
 import 'package:flutter/material.dart';
 
 class DeleteDialog {

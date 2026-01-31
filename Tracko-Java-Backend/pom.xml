@@ -22,6 +22,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>17</java.version>
+        <packaging.type>jar</packaging.type>
         <m2eclipse.wtp.contextRoot>/</m2eclipse.wtp.contextRoot>
 
         <com.sap.hana.cloud-version>1.0.4.RELEASE</com.sap.hana.cloud-version>
@@ -43,11 +44,11 @@
 
     <dependencies>
         <!-- developer tools for hot code-replacement etc. -->
-        <!--		<dependency>-->
-        <!--			<groupId>org.springframework.boot</groupId>-->
-        <!--			<artifactId>spring-boot-devtools</artifactId>-->
-        <!--			<optional>true</optional>-->
-        <!--		</dependency>-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <optional>true</optional>
+        </dependency>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -181,100 +182,27 @@
 
     <profiles>
         <profile>
-            <id>local</id>
-            <properties>
-                <packaging.type>jar</packaging.type>
-                <spring.profiles.active>dev,standalone</spring.profiles.active>
-            </properties>
-            <dependencies>
-                <dependency>
-                    <groupId>org.postgresql</groupId>
-                    <artifactId>postgresql</artifactId>
-                    <version>42.7.3</version>
-                </dependency>
-                <dependency>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-starter-logging</artifactId>
-                </dependency>
-
-            </dependencies>
-        </profile>
-        <profile>
-            <id>heroku</id>
-            <properties>
-                <packaging.type>jar</packaging.type>
-                <spring.profiles.active>heroku</spring.profiles.active>
-            </properties>
-            <dependencies>
-                <dependency>
-                    <groupId>org.postgresql</groupId>
-                    <artifactId>postgresql</artifactId>
-                    <version>42.7.3</version>
-                </dependency>
-            </dependencies>
-        </profile>
-        <!-- CF profile -->
-        <profile>
-            <id>cf</id>
+            <id>dev</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <packaging.type>jar</packaging.type>
-                <spring.profiles.active>cf</spring.profiles.active>
+                <spring.profiles.active>dev</spring.profiles.active>
             </properties>
-            <dependencies>
-                <dependency>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-starter-logging</artifactId>
-                </dependency>
-                <!--				<dependency>-->
-                <!--					<groupId>org.apache.derby</groupId>-->
-                <!--					<artifactId>derby</artifactId>-->
-                <!--					<scope>runtime</scope>-->
-                <!--				</dependency>-->
-            </dependencies>
         </profile>
-
         <profile>
-            <id>neo</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
+            <id>prod</id>
             <properties>
-                <packaging.type>war</packaging.type>
-                <spring.profiles.active>neo</spring.profiles.active>
+                <spring.profiles.active>prod</spring.profiles.active>
             </properties>
             <dependencies>
                 <dependency>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-api</artifactId>
-                    <scope>provided</scope>
-                </dependency>
-                <dependency>
-                    <groupId>ch.qos.logback</groupId>
-                    <artifactId>logback-classic</artifactId>
-                    <scope>provided</scope>
-                </dependency>
-                <dependency>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-starter-tomcat</artifactId>
-                    <scope>provided</scope>
-                </dependency>
-                <dependency>
-                    <groupId>org.apache.tomcat</groupId>
-                    <artifactId>tomcat-jdbc</artifactId>
-                    <scope>provided</scope>
-                </dependency>
-                <!-- https://mvnrepository.com/artifact/org.liquibase/liquibase-core -->
-                <dependency>
-                    <groupId>com.sap.db.jdbc</groupId>
-                    <artifactId>ngdbc</artifactId>
-                    <version>2.1.1</version>
+                    <groupId>org.postgresql</groupId>
+                    <artifactId>postgresql</artifactId>
+                    <version>42.7.3</version>
                 </dependency>
             </dependencies>
         </profile>
-
     </profiles>
 
     <build>

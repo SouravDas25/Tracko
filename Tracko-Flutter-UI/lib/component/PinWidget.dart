@@ -1,5 +1,5 @@
-import 'package:Tracko/component/NumberPad.dart';
-import 'package:Tracko/component/screen.dart';
+import 'package:tracko/component/NumberPad.dart';
+import 'package:tracko/component/screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -19,7 +19,7 @@ class PinWidget extends StatefulWidget {
 
 class _PinState extends State<PinWidget> {
   final int length;
-  List<TextEditingController> controllers = new List<TextEditingController>();
+  List<TextEditingController> controllers = <TextEditingController>[];
   int count = 0;
 
   _PinState(this.length) : super() {

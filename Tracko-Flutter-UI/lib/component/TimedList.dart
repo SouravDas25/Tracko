@@ -1,5 +1,5 @@
-import 'package:Tracko/Utils/CommonUtil.dart';
-import 'package:Tracko/component/PaddedText.dart';
+import 'package:tracko/Utils/CommonUtil.dart';
+import 'package:tracko/component/PaddedText.dart';
 import 'package:flutter/material.dart';
 
 typedef TimeFieldExtractor = DateTime Function(int index);

@@ -22,6 +22,6 @@ public class JwtUserDetailsService implements UserDetailsService {
         if (byPhoneNo == null) {
             throw new UsernameNotFoundException("User not found in DB.");
         }
-        return new User(byPhoneNo.getPhoneNo(), byPhoneNo.getFirebase_uuid(), new ArrayList<>());
+        return new User(byPhoneNo.getPhoneNo(), byPhoneNo.getFireBaseId(), new ArrayList<>());
     }
 }

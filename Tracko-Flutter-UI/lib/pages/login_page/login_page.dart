@@ -1,4 +1,4 @@
-import 'package:Tracko/component/menu_bar.dart' as TrackoMenuBar;
+import 'package:tracko/component/menu_bar.dart' as TrackoMenuBar;
 import 'package:flutter/material.dart';
 
 class LoginPage extends StatelessWidget {

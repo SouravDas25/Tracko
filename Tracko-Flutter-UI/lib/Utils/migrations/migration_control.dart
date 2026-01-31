@@ -1,5 +1,3 @@
-import 'package:sqflite/sqflite.dart';
-
 class Migration {
   late int version;
   late String migrationSQL;
@@ -19,17 +17,8 @@ class MigrationControl {
   static List<Migration> migrations = [];
 
   static createVersionControlDB(String path, List<Migration> migrations) async {
-    int currentVersion = getLatestVersionFromMigrations(migrations);
     MigrationControl.migrations = migrations;
-    Database database = await (openDatabase(path));
-    int oldVersion = await database.getVersion();
-    print("Db version : $oldVersion => $currentVersion");
-    if (oldVersion == 0) {
-      await onCreate(database, currentVersion);
-    } else {
-      await onUpdate(database, oldVersion, currentVersion);
-    }
-    return database;
+    return null;
   }
 
   static int getLatestVersionFromMigrations(List<Migration> migrations) {
@@ -40,37 +29,9 @@ class MigrationControl {
     return max;
   }
 
-  static onCreate(Database database, int version) async {
-    await migrateAll(database, 0, version);
-  }
+  static onCreate(dynamic database, int version) async {}
 
-  static onUpdate(Database database, int oldVersion, int newVersion) async {
-    await migrateAll(database, oldVersion, newVersion);
-  }
+  static onUpdate(dynamic database, int oldVersion, int newVersion) async {}
 
-  static migrateAll(Database database, int oldVersion, int newVersion) async {
-    print("Starting DB migration");
-    for (int i = oldVersion + 1; i <= newVersion; i++) {
-      Batch batch = database.batch();
-      for (Migration migration in MigrationControl.migrations) {
-        if (migration.version == i) {
-          String sql = migration.migrationSQL;
-          List<String> statements = sql.split(";");
-          for (String statement in statements) {
-            if (statement
-                .trim()
-                .length > 0) {
-              print("Executing Statement : $statement");
-              batch.execute(statement);
-            }
-          }
-          print("Migration Executed Succussfully.");
-        }
-      }
-      await batch.commit();
-      await database.setVersion(i);
-      print("Migration to version $i complete.");
-    }
-    print("Finishing DB migration");
-  }
+  static migrateAll(dynamic database, int oldVersion, int newVersion) async {}
 }

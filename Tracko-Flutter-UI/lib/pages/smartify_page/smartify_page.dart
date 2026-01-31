@@ -1,9 +1,6 @@
-import 'package:Tracko/component/FLushDialog.dart';
-import 'package:Tracko/controllers/SmsController.dart';
-import 'package:Tracko/controllers/TransactionController.dart';
-import 'package:Tracko/models/transaction.dart';
-import 'package:Tracko/pages/smartify_page/smartify_list_view.dart';
-import 'package:Tracko/services/SmsScanningService.dart';
+import 'package:tracko/component/FLushDialog.dart';
+import 'package:tracko/controllers/TransactionController.dart';
+import 'package:tracko/models/transaction.dart';
 import 'package:flutter/material.dart';
 
 /*
@@ -11,8 +8,7 @@ import 'package:flutter/material.dart';
 * */
 
 class SmartPage extends StatefulWidget {
-  List<Transaction> get foundTransactions =>
-      SmsScanningService.possibleTransactions;
+  List<Transaction> get foundTransactions => <Transaction>[];
 
   SmartPage();
 
@@ -35,56 +31,27 @@ class SmartifyState extends State<SmartPage> {
   }
 
   void cancel() {
-    SmsScanningService.stopScan();
     setState(() {});
   }
 
   void initData() async {
-    try {
-      bool isNewMsg = await SmsController.isNewSmsPresent();
-      if (!isNewMsg) {
-        FlushDialog.flash(
-            context, "Process Completed", "No new sms found in the device.");
-      } else {
-        SmsScanningService.scan(callback: onUpdate).then((value) => onUpdate(value));
-      }
-    } catch (e) {
-      print(e);
-      if (this.mounted) {
-        FlushDialog.flash(context, "Permission Denied",
-            "You have to grant sms permission to use this feature.");
-      }
-    }
-    setState(() {});
+    FlushDialog.flash(
+        context, "Unsupported", "SMS scanning has been disabled.");
   }
 
   void deleteSingle(int index) {
     Transaction transaction = widget.foundTransactions[index];
     TransactionController.deleteById(transaction.id ?? 0);
     widget.foundTransactions.removeAt(index);
-    if (widget.foundTransactions.length <= 0) {
-      SmsScanningService.reset();
-    }
     setState(() {});
   }
 
   void complete() async {
-    SmsScanningService.reset();
     setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    if (SmsScanningService.status == ScanningStatus.RUNNING ||
-        SmsScanningService.status == ScanningStatus.COMPLETED) {
-      return SmartListView(
-        widget.foundTransactions,
-        this,
-        deleteSingle: this.deleteSingle,
-        complete: this.complete,
-        cancel: this.cancel,
-      );
-    }
     return ListView(
       children: <Widget>[
         Padding(
@@ -106,7 +73,7 @@ class SmartifyState extends State<SmartPage> {
               initData();
             },
             child: Text(
-              "SCAN",
+              "SCAN (DISABLED)",
               style: TextStyle(fontSize: 22.0),
             ),
           ),

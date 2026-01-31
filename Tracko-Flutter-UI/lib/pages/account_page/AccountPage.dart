@@ -1,10 +1,10 @@
-import 'package:Tracko/Utils/WidgetUtil.dart';
-import 'package:Tracko/component/AccountDialog.dart';
-import 'package:Tracko/component/AsynLoadState.dart';
-import 'package:Tracko/component/FLushDialog.dart';
-import 'package:Tracko/component/screen.dart';
-import 'package:Tracko/controllers/AccountController.dart';
-import 'package:Tracko/models/account.dart';
+import 'package:tracko/Utils/WidgetUtil.dart';
+import 'package:tracko/component/AccountDialog.dart';
+import 'package:tracko/component/AsynLoadState.dart';
+import 'package:tracko/component/FLushDialog.dart';
+import 'package:tracko/component/screen.dart';
+import 'package:tracko/controllers/AccountController.dart';
+import 'package:tracko/models/account.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 

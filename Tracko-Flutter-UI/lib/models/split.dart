@@ -1,7 +1,6 @@
-import 'package:Tracko/models/transaction.dart';
-import 'package:Tracko/models/user.dart';
-import 'package:Tracko/orm_stub.dart';
-import 'package:sqflite/sqflite.dart' hide Transaction;
+import 'package:tracko/models/transaction.dart';
+import 'package:tracko/models/user.dart';
+import 'package:tracko/orm_stub.dart';
 // import 'package:jaguar_orm/jaguar_orm.dart'; // Removed - migrating to plain sqflite
 
 // ORM code generation removed
@@ -26,7 +25,7 @@ class Split {
 @GenBean()
 class SplitBean extends Bean<Split> {
   SplitBean(dynamic adapter)
-      : super(adapter is Adapter ? adapter : Adapter(adapter as Database));
+      : super(adapter is Adapter ? adapter : Adapter(adapter));
 
   final String tableName = 'splits';
 

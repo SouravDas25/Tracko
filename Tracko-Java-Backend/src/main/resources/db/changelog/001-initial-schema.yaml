@@ -11,7 +11,7 @@ databaseChangeLog:
               - column: { name: phone_no, type: varchar(32) }
               - column: { name: email, type: varchar(255) }
               - column: { name: profile_pic, type: varchar(512) }
-              - column: { name: firebase_uuid, type: varchar(128) }
+              - column: { name: fire_base_id, type: varchar(128) }
               - column: { name: is_shadow, type: int }
         - addUniqueConstraint:
             tableName: users
@@ -90,9 +90,9 @@ databaseChangeLog:
               - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
               - column: { name: source_user_id, type: varchar(36), constraints: { nullable: false } }
               - column: { name: due_user_id, type: varchar(36), constraints: { nullable: false } }
-              - column: { name: split_amount, type: numeric(12,2) }
-              - column: { name: settled_amount, type: numeric(12,2) }
-              - column: { name: transaction_amount, type: numeric(12,2) }
+              - column: { name: split_amount, type: "numeric(12,2)" }
+              - column: { name: settled_amount, type: "numeric(12,2)" }
+              - column: { name: transaction_amount, type: "numeric(12,2)" }
               - column: { name: transaction_name, type: varchar(255) }
               - column: { name: created_at, type: timestamp }
         - addForeignKeyConstraint:

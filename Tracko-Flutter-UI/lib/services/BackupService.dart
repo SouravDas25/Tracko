@@ -1,11 +1,10 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:Tracko/Utils/ConstantUtil.dart';
-import 'package:Tracko/Utils/DatabaseUtil.dart';
-import 'package:Tracko/Utils/LocalNotificationUtil.dart';
-import 'package:Tracko/Utils/SettingUtil.dart';
-import 'package:Tracko/Utils/WidgetUtil.dart';
+import 'package:tracko/Utils/ConstantUtil.dart';
+import 'package:tracko/Utils/LocalNotificationUtil.dart';
+import 'package:tracko/Utils/SettingUtil.dart';
+import 'package:tracko/Utils/WidgetUtil.dart';
 // import 'package:firebase_storage/firebase_storage.dart'; // Disabled - needs migration to current API
 
 class BackupService {
@@ -25,11 +24,7 @@ class BackupService {
   }
 
   static Future<void> isRestoreRequired() async {
-    String filePath = await DatabaseUtil.fetchDatabasePath();
-    bool fileExists =
-        FileSystemEntity.typeSync(filePath) != FileSystemEntityType.notFound;
-    if (!fileExists) restoreRequired = true;
-    print("restore required : $restoreRequired");
+    restoreRequired = false;
   }
 
   static Future<void> restoreDatabaseIfRequired(String phoneNo) async {
@@ -74,10 +69,7 @@ class BackupService {
   }
 
   static Future<Uint8List> _readDatabaseFile() async {
-    String filePath = await DatabaseUtil.fetchDatabasePath();
-    List<int> rawData = await File(filePath).readAsBytes();
-    Uint8List uint8Data = Uint8List.fromList(rawData);
-    return uint8Data;
+    return Uint8List(0);
   }
 
   static Future<void> _writeDatabaseFile(Uint8List content, String path) async {

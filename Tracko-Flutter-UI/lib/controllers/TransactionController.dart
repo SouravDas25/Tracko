@@ -1,49 +1,65 @@
-import 'package:Tracko/Utils/CommonUtil.dart';
-import 'package:Tracko/Utils/ConstantUtil.dart';
-import 'package:Tracko/Utils/DatabaseUtil.dart';
-import 'package:Tracko/Utils/SettingUtil.dart';
-import 'package:Tracko/Utils/enums.dart';
-import 'package:Tracko/controllers/ChatController.dart';
-import 'package:Tracko/controllers/SplitController.dart';
-import 'package:Tracko/controllers/UserController.dart';
-import 'package:Tracko/dtos/TrackoContact.dart';
-import 'package:Tracko/models/account.dart';
-import 'package:Tracko/models/category.dart';
-import 'package:Tracko/models/split.dart';
-import 'package:Tracko/models/transaction.dart';
-import 'package:Tracko/models/user.dart';
-import 'package:Tracko/services/SessionService.dart';
+import 'package:tracko/Utils/CommonUtil.dart';
+import 'package:tracko/Utils/ConstantUtil.dart';
+import 'package:tracko/Utils/SettingUtil.dart';
+import 'package:tracko/Utils/enums.dart';
+import 'package:tracko/controllers/ChatController.dart';
+import 'package:tracko/controllers/SplitController.dart';
+import 'package:tracko/controllers/UserController.dart';
+import 'package:tracko/dtos/TrackoContact.dart';
+import 'package:tracko/models/account.dart';
+import 'package:tracko/models/category.dart';
+import 'package:tracko/models/split.dart';
+import 'package:tracko/models/transaction.dart';
+import 'package:tracko/models/user.dart';
+import 'package:tracko/services/SessionService.dart';
+import 'package:tracko/repositories/transaction_repository.dart';
+import 'package:tracko/repositories/split_repository.dart';
 // import 'package:jaguar_orm/jaguar_orm.dart'; // Removed - migrating to plain sqflite
-import 'package:sqflite/sqlite_api.dart' as sqlite;
 
 import 'CategoryController.dart';
 
 class TransactionController {
   static Future<bool> saveTransaction(Transaction transaction) async {
-    var adapter = await DatabaseUtil.getAdapter();
-    await adapter.connect();
+    final txRepo = TransactionRepository();
+    final splitRepo = SplitRepository();
     bool isUserCountable = true;
-    TransactionBean transactionBean = TransactionBean(adapter);
-    transaction.id = await transactionBean.upsert(transaction);
-
-    if (transaction.contacts != null && transaction.contacts.length > 0) {
-      await SplitBean(adapter).removeByTransaction(transaction.id ?? 0);
-      isUserCountable =
-      await TransactionController.saveSplitsInTransaction(transaction);
+    
+    // Create or update transaction
+    Transaction saved;
+    if (transaction.id == null || transaction.id == 0) {
+      saved = await txRepo.create(transaction);
+    } else {
+      saved = await txRepo.update(transaction.id!, transaction);
     }
+    transaction.id = saved.id;
+
+    // Handle splits if contacts exist
+    if (transaction.contacts != null && transaction.contacts.length > 0) {
+      // Delete existing splits for this transaction
+      final existingSplits = await splitRepo.getByTransactionId(transaction.id!);
+      for (var split in existingSplits) {
+        if (split.id != null) {
+          await splitRepo.delete(split.id!);
+        }
+      }
+      
+      // Create new splits
+      isUserCountable = await TransactionController.saveSplitsInTransaction(transaction);
+    }
+    
+    // Update transaction with countable status
     transaction.isCountable = isUserCountable ? 1 : 0;
-    transaction.id = await transactionBean.upsert(transaction);
+    saved = await txRepo.update(transaction.id!, transaction);
+    transaction.id = saved.id;
     return true;
   }
 
   static Future<bool> saveSplitsInTransaction(Transaction transaction) async {
-    var adapter = await DatabaseUtil.getAdapter();
-    await adapter.connect();
+    final splitRepo = SplitRepository();
     bool isUserCountable = false;
     double a = (transaction.amount / transaction.contacts.length);
     User rootUser = SessionService.currentUser();
-//    transaction.contacts.removeLast();
-//    print(transaction.contacts);
+
     for (int i = 0; i < transaction.contacts.length; i++) {
       TrakoContact contact = transaction.contacts.elementAt(i);
       print(contact.phoneNo + " " + rootUser.phoneNo);
@@ -61,7 +77,6 @@ class TransactionController {
         isUserCountable = true;
         user = rootUser;
       } else {
-//      print(contact.phones);
         String phoneNumber = contact.phoneNo;
         phoneNumber = CommonUtil.extractPhoneNumber(phoneNumber);
         user = await UserController.findByPhoneNumber(phoneNumber);
@@ -72,66 +87,35 @@ class TransactionController {
         user.name = contact.name;
         user.email = contact.email != null ? contact.email : "";
         user.profilePic = "";
-//      user.id = await userBean.upsert(user);
         user.id = await UserController.saveUser(user, isShadow: true);
         await ChatController.createChatGroup(user);
       }
       split.userId = user.id ?? 0;
-//      print(transaction);
-//      print(user);
-      split.id = await SplitBean(adapter).insert(split);
-//      print(split);
+      
+      // Create split via backend API
+      Split created = await splitRepo.create(split);
+      split.id = created.id;
     }
     return isUserCountable;
   }
 
   static Future<Set<TrakoContact>> loadSplits(Transaction transaction) async {
-    var adapter = await DatabaseUtil.getAdapter();
-    await adapter.connect();
-    UserBean userBean = new UserBean(adapter);
-    SplitBean splitBean = SplitBean(adapter);
-    List<Split> splits = await splitBean.findByTransaction(transaction.id);
-//    print(splits);
+    final splitRepo = SplitRepository();
+    final txId = transaction.id ?? 0;
+    final splits = await splitRepo.getByTransactionId(txId);
     transaction.splits = splits;
-    transaction.contacts = Set<TrakoContact>();
-    for (Split split in splits) {
-      User? user = await userBean.find(split.userId);
-      if (user == null) continue;
-      TrakoContact contact = UserController.user2Contact(user);
-      transaction.contacts.add(contact);
-    }
-//    TrakoContact userContact = SessionService.currentUserContact();
-//    transaction.contacts.add(userContact);
+    transaction.contacts = transaction.contacts ?? Set<TrakoContact>();
     return transaction.contacts;
   }
 
   static Future<double> getTotalBetween(DateTime begin, DateTime end,
       [int? accountId]) async {
-    sqlite.Database db = await DatabaseUtil.getRawDatabase();
-    String query = "SELECT SUM( "
-        "CASE transaction_type "
-        "WHEN ${TransactionType.DEBIT} THEN amount*-1 "
-        "WHEN ${TransactionType.CREDIT} THEN amount "
-        "END "
-        ") / CASE "
-        "WHEN split_count > 0 THEN split_count "
-        "ELSE 1 "
-        "END "
-        " AS amount , split_count FROM transactions t "
-        "LEFT JOIN (SELECT COUNT(*) AS split_count , transaction_id  "
-        "FROM splits GROUP BY transaction_id) s "
-        "on t.id = s.transaction_id "
-        "WHERE date >= Datetime('$begin') AND "
-        "date < Datetime('$end') AND "
-        "is_countable = 1 ";
-    if (accountId != null) {
-      query += " WHERE account_id = $accountId ";
-    }
-    var tmp = (await db.rawQuery(query)).toList();
-    if (tmp.first == null) return 0;
-    if (tmp.first['amount'] == null) return 0;
-//    print(tmp);
-    return (tmp.first['amount'] as num?)?.toDouble() ?? 0.0;
+    final txRepo = TransactionRepository();
+    final user = SessionService.currentUser();
+    final userId = (user.id ?? '').toString();
+    
+    final summary = await txRepo.getSummary(userId, begin, end);
+    return (summary['netTotal'] as num?)?.toDouble() ?? 0.0;
   }
 
   static Future<double> getPreviousMonthTotal([int? accountId]) async {
@@ -143,7 +127,6 @@ class TransactionController {
   }
 
   static Future<double> getCurrentMonthTotal([int? accountId]) async {
-//    sqlite.Database db = await DatabaseUtil.getRawDatabase();
     // SELECT SUM(amount) AS amount FROM transactions WHERE transaction_type = 'DEBIT'
     // SELECT SUM(amount) AS amount FROM transactions WHERE transaction_type = 'CREDIT'
     DateTime month = SettingUtil.currentMonth;
@@ -151,132 +134,100 @@ class TransactionController {
     return await getTotalBetween(month, nextMonth);
   }
 
-  static Future<TransactionBean> _transactionBean() async {
-    var adapter = await DatabaseUtil.getAdapter();
-    await adapter.connect();
-    TransactionBean transactionBean = new TransactionBean(adapter);
-    return transactionBean;
-  }
-
-  static Future<dynamic> _basicTransactionFinder() async {
-    TransactionBean transactionBean = await _transactionBean();
-
-    var finder = transactionBean.finder;
+  static Future<double> getCurrentMonthIncome({List<int>? accountIds}) async {
+    final txRepo = TransactionRepository();
+    final user = SessionService.currentUser();
+    final userId = (user.id ?? '').toString();
     DateTime month = SettingUtil.currentMonth;
     DateTime nextMonth = SettingUtil.nextMonth;
-
-    finder
-//        .where(transactionBean.isCountable.eq(1))
-        .where(transactionBean.date.gtEq(month))
-        .where(transactionBean.date.lt(nextMonth));
-
-    return finder;
-  }
-
-  static void _addAccountsFilter(List<int>? accountIds,
-      TransactionBean transactionBean, dynamic finder) {
-    // TODO: Implement account filtering when needed
-    // if (accountIds != null && accountIds.length > 0) {
-    //   var expression = transactionBean.accountId.eq(accountIds[0]);
-    //   for (int i = 1; i < accountIds.length; i++) {
-    //     expression = expression.or(transactionBean.accountId.eq(accountIds[i]));
-    //   }
-    //   finder = finder.and(expression);
-    // }
-  }
-
-  static Future<double> getCurrentMonthIncome({List<int>? accountIds}) async {
-    TransactionBean transactionBean = await _transactionBean();
-    var finder = await _basicTransactionFinder();
-
-    _addAccountsFilter(accountIds, transactionBean, finder);
-
-    finder.and(transactionBean.transactionType.eq(TransactionType.CREDIT));
-
-    List<Transaction> transactions = await transactionBean.findMany(finder);
-    double sum = 0;
-    transactions.forEach((Transaction transaction) {
-      sum += transaction.amount;
-    });
-
-    return sum;
+    
+    return await txRepo.getTotalIncome(userId, month, nextMonth);
   }
 
   static Future<double> getCurrentMonthExpense({List<int>? accountIds}) async {
-    TransactionBean transactionBean = await _transactionBean();
-    var finder = await _basicTransactionFinder();
-
-    _addAccountsFilter(accountIds, transactionBean, finder);
-
-    finder.and(transactionBean.transactionType.eq(TransactionType.DEBIT));
-
-    List<Transaction> transactions = await transactionBean.findMany(finder);
-    double sum = 0;
-    transactions.forEach((Transaction transaction) {
-      sum += transaction.amount;
-    });
-
-    return sum;
+    final txRepo = TransactionRepository();
+    final user = SessionService.currentUser();
+    final userId = (user.id ?? '').toString();
+    DateTime month = SettingUtil.currentMonth;
+    DateTime nextMonth = SettingUtil.nextMonth;
+    
+    return await txRepo.getTotalExpense(userId, month, nextMonth);
   }
 
   static Future<int> totalTransactionCount({List<int>? accountIds}) async {
-    TransactionBean transactionBean = await _transactionBean();
-    var finder = await _basicTransactionFinder();
-
-    _addAccountsFilter(accountIds, transactionBean, finder);
-
-    List<Transaction> transactions = await transactionBean.findMany(finder);
-    return transactions.length;
+    final txRepo = TransactionRepository();
+    final user = SessionService.currentUser();
+    final userId = (user.id ?? '').toString();
+    DateTime month = SettingUtil.currentMonth;
+    DateTime nextMonth = SettingUtil.nextMonth;
+    
+    final summary = await txRepo.getSummary(userId, month, nextMonth);
+    return (summary['transactionCount'] as num?)?.toInt() ?? 0;
   }
 
   static Future<List<Transaction>> getTransaction(int pageNumber,
       {List<int>? accountIds}) async {
-    TransactionBean transactionBean = await _transactionBean();
-//    CategoryBean categoryBean = new CategoryBean(adapter);
-    var finder = await _basicTransactionFinder();
+    final txRepo = TransactionRepository();
+    final user = SessionService.currentUser();
+    final userId = (user.id ?? '').toString();
+    DateTime month = SettingUtil.currentMonth;
+    DateTime nextMonth = SettingUtil.nextMonth;
 
     pageNumber = pageNumber - 1;
     if (pageNumber < 0) pageNumber = 0;
 
-    _addAccountsFilter(accountIds, transactionBean, finder);
+    // Get transactions for current month
+    List<Transaction> transactions = await txRepo.getByUserIdAndDateRange(
+      userId,
+      startDate: month,
+      endDate: nextMonth,
+    );
 
-    finder
-        .offset(pageNumber * ConstantUtil.NO_OF_RECORDS_PER_PAGE)
-        .limit(ConstantUtil.NO_OF_RECORDS_PER_PAGE);
+    // Sort by date descending
+    transactions.sort((a, b) => b.date.compareTo(a.date));
 
-    finder.orderBy(transactionBean.date.name);
+    // Apply pagination
+    int startIndex = pageNumber * ConstantUtil.NO_OF_RECORDS_PER_PAGE;
+    int endIndex = startIndex + ConstantUtil.NO_OF_RECORDS_PER_PAGE;
+    if (startIndex >= transactions.length) return [];
+    if (endIndex > transactions.length) endIndex = transactions.length;
+    transactions = transactions.sublist(startIndex, endIndex);
 
-    List<Transaction> transactions = await transactionBean.findMany(finder);
+    // Preload category and splits
     for (Transaction transaction in transactions) {
       await _preloadTransactions(transaction);
     }
-//    transactions.sort((a, b) => b.date.compareTo(a.date));
-//    print(transactions);
     return transactions;
   }
 
   static _preloadTransactions(Transaction transaction) async {
-    var adapter = await DatabaseUtil.getAdapter();
-    CategoryBean categoryBean = new CategoryBean(adapter);
-    transaction.category = await categoryBean.find(transaction.categoryId);
+    // Load category via CategoryController (already migrated to backend)
+    transaction.category = await CategoryController.findById(transaction.categoryId);
     await loadSplits(transaction);
   }
 
   static Future<List<Transaction>> getRecentTransaction() async {
-    var adapter = await DatabaseUtil.getAdapter();
-    TransactionBean transactionBean = new TransactionBean(adapter);
-
-    var query =
-    transactionBean.finder.limit(5).orderBy(transactionBean.date.name);
+    final txRepo = TransactionRepository();
     DateTime month = SettingUtil.currentMonth;
     DateTime nextMonth = SettingUtil.nextMonth;
-    query = query
-        .where(transactionBean.date.gtEq(month))
-        .where(transactionBean.date.lt(nextMonth));
+    final user = SessionService.currentUser();
+    final userId = (user.id ?? '').toString();
 
-    List<Transaction> transactions = await transactionBean.findMany(query);
-    for (Transaction transaction in transactions) {
-      await _preloadTransactions(transaction);
+    List<Transaction> transactions = await txRepo.getByUserIdAndDateRange(
+      userId,
+      startDate: month,
+      endDate: nextMonth,
+    );
+
+    // Sort by date desc and take top 5
+    transactions.sort((a, b) => b.date.compareTo(a.date));
+    if (transactions.length > 5) {
+      transactions = transactions.sublist(0, 5);
+    }
+
+    // Preload splits using backend (skip contacts for now)
+    for (final t in transactions) {
+      await loadSplits(t);
     }
     return transactions;
   }
@@ -320,18 +271,28 @@ class TransactionController {
   }
 
   static Future<int> deleteById(int transactionId) async {
-    var adapter = await DatabaseUtil.getAdapter();
-    await adapter.connect();
-    TransactionBean transactionBean = new TransactionBean(adapter);
-    await SplitController.removeByTransactionId(transactionId);
-    transactionId = await transactionBean.remove(transactionId);
+    // Use backend repositories
+    final splitRepo = SplitRepository();
+    final txRepo = TransactionRepository();
+    // Remove splits first to mirror previous logic
+    final splits = await splitRepo.getByTransactionId(transactionId);
+    for (final s in splits) {
+      if (s.id != null) {
+        await splitRepo.delete(s.id!);
+      }
+    }
+    await txRepo.deleteById(transactionId);
     return transactionId;
   }
 
   static void clear() async {
-    var adapter = await DatabaseUtil.getAdapter();
-    await adapter.connect();
-    TransactionBean transactionBean = new TransactionBean(adapter);
-    await transactionBean.removeAll();
+    // Backend route doesn't expose bulk delete; perform best-effort by fetching and deleting
+    final txRepo = TransactionRepository();
+    final all = await txRepo.getAll();
+    for (final t in all) {
+      if (t.id != null) {
+        await txRepo.deleteById(t.id!);
+      }
+    }
   }
 }

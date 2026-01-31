@@ -1,5 +1,5 @@
-import 'package:Tracko/component/screen.dart';
-import 'package:Tracko/pages/phone_login_page/otp_page.dart';
+import 'package:tracko/component/screen.dart';
+import 'package:tracko/pages/phone_login_page/otp_page.dart';
 import 'package:flutter/material.dart';
 
 class PhoneLoginPage extends StatefulWidget {
