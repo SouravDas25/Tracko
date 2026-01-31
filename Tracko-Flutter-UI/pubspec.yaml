@@ -28,7 +28,6 @@ dependencies:
   firebase_auth: ^5.3.3
   firebase_core: ^3.8.0
   firebase_storage: ^12.3.8
-  # contacts_service: ^0.6.3  # TODO: Replace with AGP 8+ compatible alternative
   permission_handler: ^11.3.1
   flutter_masked_text2: ^0.9.1
   flutter_local_notifications: ^17.2.3

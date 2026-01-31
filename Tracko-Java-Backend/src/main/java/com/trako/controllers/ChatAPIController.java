@@ -9,7 +9,6 @@ import com.trako.models.request.SendMessageRequest;
 import com.trako.models.responses.GetGroupsResponse;
 import com.trako.services.ChatService;
 import com.trako.util.Response;
-import org.hibernate.validator.constraints.SafeHtml;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,7 +53,7 @@ public class ChatAPIController {
 
 
     @RequestMapping(value = "/messages", method = {RequestMethod.GET, RequestMethod.POST})
-    ResponseEntity<?> sendMesssage(@SafeHtml @RequestBody RetriveMessageRequest retriveMessageRequest) {
+    ResponseEntity<?> sendMesssage(@RequestBody RetriveMessageRequest retriveMessageRequest) {
         List<ChatMessage> chatMessages = chatService.getChatMessages(retriveMessageRequest);
         return Response.ok(chatMessages);
     }

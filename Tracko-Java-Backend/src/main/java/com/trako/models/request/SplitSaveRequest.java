@@ -3,9 +3,8 @@ package com.trako.models.request;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import javax.persistence.Column;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import java.util.Date;
 
 public class SplitSaveRequest {
@@ -22,7 +21,6 @@ public class SplitSaveRequest {
     @Min(value = 0)
     private Double transactionAmount;
 
-    @Column(name = "transaction_name")
     private String transactionName;
 
     @JsonFormat(pattern = "dd-MM-yyyy")

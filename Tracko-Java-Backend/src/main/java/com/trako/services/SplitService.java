@@ -12,7 +12,7 @@ import com.trako.util.CommonUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.transaction.Transactional;
+import jakarta.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,7 +33,7 @@ public class SplitService {
         List<String> dueUserIds = splitRepository.findAllDueUserId(source.getId());
         List<SplitUserResponse> users = new ArrayList<>();
         for (String dueUserId : dueUserIds) {
-            User dueUser = usersRepository.findOne(dueUserId);
+            User dueUser = usersRepository.findById(dueUserId).orElse(null);
             if (dueUser == null) {
                 continue;
             }
@@ -68,7 +68,7 @@ public class SplitService {
 
     public Split save(SplitSaveRequest splitSaveRequest) {
         Split split = CommonUtil.mapModel(splitSaveRequest, Split.class);
-        User dueUser = usersRepository.findOne(split.getDueUserId());
+        User dueUser = usersRepository.findById(split.getDueUserId()).orElse(null);
         User sourceUser = commonHelper.loggedInUser();
         split.setSourceUser(sourceUser);
         split.setSourceUserId(sourceUser.getId());

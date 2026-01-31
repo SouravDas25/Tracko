@@ -2,7 +2,7 @@ package com.trako.models.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 
 public class UserSaveRequest {
 

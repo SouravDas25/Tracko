@@ -4,7 +4,6 @@ import com.trako.entities.User;
 import com.trako.models.request.UserSaveRequest;
 import com.trako.services.UserService;
 import com.trako.util.Response;
-import org.hibernate.validator.constraints.SafeHtml;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,7 +39,7 @@ public class UserController {
     }
 
     @PostMapping(value = "/save")
-    ResponseEntity<?> save(@SafeHtml @RequestBody UserSaveRequest userSaveRequest) {
+    ResponseEntity<?> save(@RequestBody UserSaveRequest userSaveRequest) {
         String id = userService.save(userSaveRequest);
         if (id == null)
             Response.badRequest("Phone Number Incorrect");

@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.transaction.Transactional;
+import jakarta.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -93,8 +93,8 @@ public class ChatService {
     }
 
     public boolean sendMessage(String userId, String groupId, String message) throws NotFoundException {
-        User user = usersRepository.findOne(userId);
-        ChatGroup chatGroup = groupsRepository.findOne(groupId);
+        User user = usersRepository.findById(userId).orElse(null);
+        ChatGroup chatGroup = groupsRepository.findById(groupId).orElse(null);
         if (user == null || chatGroup == null) {
             throw new NotFoundException();
         }

@@ -49,7 +49,7 @@ public class UserService {
         if (id == null) {
             return usersRepository.findAll();
         }
-        return Collections.singletonList(usersRepository.findOne(id));
+        return Collections.singletonList(usersRepository.findById(id).orElse(null));
     }
 
     public User findByPhoneNo(String phoneNo) {

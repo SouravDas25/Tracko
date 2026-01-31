@@ -6,7 +6,6 @@ import com.trako.models.responses.JwtResponse;
 import com.trako.services.UserService;
 import com.trako.util.JwtTokenUtil;
 import com.trako.util.Response;
-import org.hibernate.validator.constraints.SafeHtml;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,7 +46,7 @@ public class SessionController {
     }
 
     @PostMapping(value = "/api/signUp")
-    ResponseEntity<?> signUp(@SafeHtml @RequestBody UserSaveRequest userSaveRequest) {
+    ResponseEntity<?> signUp(@RequestBody UserSaveRequest userSaveRequest) {
         if (userSaveRequest.getFirebase_uuid() == null || userSaveRequest.getFirebase_uuid().isEmpty())
             return Response.unauthorized();
         String id = userService.save(userSaveRequest);

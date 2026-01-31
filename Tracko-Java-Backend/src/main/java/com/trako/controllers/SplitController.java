@@ -6,12 +6,11 @@ import com.trako.models.responses.SplitResponse;
 import com.trako.models.responses.SplitUserResponse;
 import com.trako.services.SplitService;
 import com.trako.util.Response;
-import org.hibernate.validator.constraints.SafeHtml;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -34,13 +33,13 @@ public class SplitController {
     }
 
     @PatchMapping("/settle/{splitId}")
-    private ResponseEntity<?> settle(@PathVariable String splitId, @SafeHtml @Valid @RequestBody SplitSettleRequest settleRequest) {
+    private ResponseEntity<?> settle(@PathVariable String splitId, @Valid @RequestBody SplitSettleRequest settleRequest) {
         splitService.settleSplit(splitId, settleRequest.getAmount());
         return Response.ok("SUCCESS");
     }
 
     @PostMapping({"", "/"})
-    public ResponseEntity<?> save(@Valid @SafeHtml @RequestBody List<SplitSaveRequest> splitSaveRequestList) {
+    public ResponseEntity<?> save(@Valid @RequestBody List<SplitSaveRequest> splitSaveRequestList) {
         try {
             splitService.save(splitSaveRequestList);
         } catch (Exception e) {

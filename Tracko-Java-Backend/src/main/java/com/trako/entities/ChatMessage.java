@@ -2,7 +2,7 @@ package com.trako.entities;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.Date;
 
 @Entity
