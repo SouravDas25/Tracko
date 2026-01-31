@@ -1,0 +1,133 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-initial-schema
+      author: cascade
+      changes:
+        - createTable:
+            tableName: users
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: name, type: varchar(255) }
+              - column: { name: phone_no, type: varchar(32) }
+              - column: { name: email, type: varchar(255) }
+              - column: { name: profile_pic, type: varchar(512) }
+              - column: { name: firebase_uuid, type: varchar(128) }
+              - column: { name: is_shadow, type: int }
+        - addUniqueConstraint:
+            tableName: users
+            columnNames: phone_no
+            constraintName: uq_users_phone_no
+
+        - createTable:
+            tableName: chat_groups
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: name, type: varchar(255) }
+              - column: { name: created_at, type: timestamp }
+
+        - createTable:
+            tableName: users_chat_groups
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: user_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: group_id, type: varchar(36), constraints: { nullable: false } }
+        - addForeignKeyConstraint:
+            baseTableName: users_chat_groups
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_ucg_user
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: users_chat_groups
+            baseColumnNames: group_id
+            referencedTableName: chat_groups
+            referencedColumnNames: id
+            constraintName: fk_ucg_group
+            onDelete: CASCADE
+        - createIndex:
+            tableName: users_chat_groups
+            indexName: idx_ucg_user
+            columns: [ { column: { name: user_id } } ]
+        - createIndex:
+            tableName: users_chat_groups
+            indexName: idx_ucg_group
+            columns: [ { column: { name: group_id } } ]
+
+        - createTable:
+            tableName: chat_messages
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: group_id, type: varchar(36) }
+              - column: { name: user_id, type: varchar(36) }
+              - column: { name: message, type: varchar(2000) }
+              - column: { name: is_read, type: int }
+              - column: { name: created_at, type: timestamp }
+        - addForeignKeyConstraint:
+            baseTableName: chat_messages
+            baseColumnNames: group_id
+            referencedTableName: chat_groups
+            referencedColumnNames: id
+            constraintName: fk_cm_group
+            onDelete: SET NULL
+        - addForeignKeyConstraint:
+            baseTableName: chat_messages
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_cm_user
+            onDelete: SET NULL
+        - createIndex:
+            tableName: chat_messages
+            indexName: idx_cm_group_created
+            columns:
+              - column: { name: group_id }
+              - column: { name: created_at }
+
+        - createTable:
+            tableName: splits
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: source_user_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: due_user_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: split_amount, type: numeric(12,2) }
+              - column: { name: settled_amount, type: numeric(12,2) }
+              - column: { name: transaction_amount, type: numeric(12,2) }
+              - column: { name: transaction_name, type: varchar(255) }
+              - column: { name: created_at, type: timestamp }
+        - addForeignKeyConstraint:
+            baseTableName: splits
+            baseColumnNames: source_user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_splits_source_user
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: splits
+            baseColumnNames: due_user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_splits_due_user
+            onDelete: CASCADE
+        - createIndex:
+            tableName: splits
+            indexName: idx_splits_pair
+            columns:
+              - column: { name: source_user_id }
+              - column: { name: due_user_id }
+
+        - createTable:
+            tableName: nlp_data
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: user_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: request, type: varchar(4000) }
+              - column: { name: response, type: varchar(4000) }
+              - column: { name: created_at, type: timestamp }
+        - addForeignKeyConstraint:
+            baseTableName: nlp_data
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_nlp_user
+            onDelete: CASCADE

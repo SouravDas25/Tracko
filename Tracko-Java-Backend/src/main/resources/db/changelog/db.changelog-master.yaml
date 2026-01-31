@@ -1,0 +1,7 @@
+databaseChangeLog:
+  - changeSet:
+      id: 000-master-init
+      author: cascade
+      changes:
+        - include:
+            file: db/changelog/001-initial-schema.yaml
