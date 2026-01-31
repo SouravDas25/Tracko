@@ -24,13 +24,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
 public class WebSecurityConfig {
-
-    @Autowired
-    private JwtRequestFilter jwtRequestFilter;
-
-    @Autowired
-    private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
-
     @Autowired
     private JwtUserDetailsService jwtUserDetailsService;
 
@@ -63,7 +56,9 @@ public class WebSecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http,
+                                                  JwtRequestFilter jwtRequestFilter,
+                                                  JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

@@ -14,8 +14,6 @@ spring:
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
     enabled: true
-  main:
-    allow-circular-references: true
 
 # Optional H2 console
 server:
