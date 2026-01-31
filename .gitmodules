@@ -1,6 +1,0 @@
-[submodule "Tracko-Java-Backend"]
-	path = Tracko-Java-Backend
-	url = https://github.com/SouravDas25/Tracko-Java-Backend.git
-[submodule "Tracko-Python-Backend"]
-	path = Tracko-Python-Backend
-	url = https://github.com/SouravDas25/Tracko-Python-Backend.git

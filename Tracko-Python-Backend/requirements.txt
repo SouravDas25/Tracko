@@ -1,0 +1,8 @@
+nltk
+pandas
+Django
+django_extensions
+sklearn
+numpy
+requests
+freeze

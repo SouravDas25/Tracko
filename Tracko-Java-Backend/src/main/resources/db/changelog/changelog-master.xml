@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+
+    <changeSet author="SD25" id="1">
+        <createTable tableName="users">
+            <column name="id" type="VARCHAR(36)" defaultValue="uuid_generate_v4()">
+                <constraints primaryKey="true" nullable="false" unique="true"/>
+            </column>
+            <column name="name" type="VARCHAR(250)"/>
+            <column name="phone_no" type="VARCHAR(15)">
+                <constraints unique="true" nullable="false"/>
+            </column>
+            <column name="email" type="VARCHAR(256)"/>
+            <column name="profile_pic" type="VARCHAR(256)"/>
+            <column name="firebase_uuid" type="VARCHAR(256)"/>
+            <column name="is_shadow" type="INT" defaultValue="0"/>
+        </createTable>
+
+    </changeSet>
+    <changeSet id="2" author="SD25">
+        <createTable tableName="chat_groups">
+            <column name="id" type="VARCHAR(36)" defaultValue="uuid_generate_v4()">
+                <constraints primaryKey="true" unique="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(250)"/>
+            <column name="created_at" type="TIMESTAMP" defaultValue="NOW()"/>
+        </createTable>
+        <createTable tableName="users_chat_groups">
+            <column name="user_id" type="VARCHAR(36)"/>
+            <column name="group_id" type="VARCHAR(36)"/>
+            <column name="id" type="VARCHAR(36)">
+                <constraints primaryKey="true" nullable="false" unique="true"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint baseColumnNames="user_id"
+                                 baseTableName="users_chat_groups"
+                                 constraintName="fk_users_chat_groups_user_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="users"/>
+
+        <addForeignKeyConstraint baseColumnNames="group_id"
+                                 baseTableName="users_chat_groups"
+                                 constraintName="fk_users_chat_groups_group_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="chat_groups"/>
+        <createTable tableName="chat_messages">
+            <column name="id" type="VARCHAR(36)" defaultValue="uuid_generate_v4()">
+                <constraints primaryKey="true" nullable="false" unique="true"/>
+            </column>
+            <column name="group_id" type="VARCHAR(36)"/>
+            <column name="user_id" type="VARCHAR(36)"/>
+            <column name="message" type="VARCHAR(512)"/>
+            <column name="created_at" type="TIMESTAMP" defaultValue="NOW()">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_read" type="INTEGER"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="3" author="SD">
+        <addUniqueConstraint tableName="users_chat_groups" columnNames="user_id,group_id"/>
+    </changeSet>
+    <changeSet id="4" author="SD">
+        <addForeignKeyConstraint baseTableName="chat_messages" baseColumnNames="group_id"
+                                 constraintName="fk_chat_messages_chat_groups"
+                                 referencedTableName="chat_groups"
+                                 referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="chat_messages" baseColumnNames="user_id"
+                                 constraintName="fk_chat_messages_users"
+                                 referencedTableName="users"
+                                 referencedColumnNames="id"/>
+    </changeSet>
+    <changeSet id="20160901-5" author="SD">
+        <createTable tableName="splits">
+            <column name="id" type="VARCHAR(36)" defaultValue="uuid_generate_v4()">
+                <constraints nullable="false" unique="true" primaryKey="true"/>
+            </column>
+            <column name="source_user_id" type="VARCHAR(36)">
+                <constraints foreignKeyName="fk_splits_users_own"
+                             referencedTableName="users"
+                             referencedColumnNames="id" nullable="false"/>
+            </column>
+            <column name="due_user_id" type="VARCHAR(36)">
+                <constraints foreignKeyName="fk_splits_users_due"
+                             referencedTableName="users"
+                             referencedColumnNames="id" nullable="false"/>
+            </column>
+            <column name="split_amount" type="DOUBLE" defaultValue="0"/>
+            <column name="settled_amount" type="DOUBLE" defaultValue="0"/>
+            <column name="transaction_amount" type="DOUBLE" defaultValue="0"/>
+            <column name="transaction_name" type="NVARCHAR(250)"/>
+            <column name="created_at" type="TIMESTAMP" defaultValue="NOW()"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="20160901-10" author="SD">
+        <createTable tableName="nlp_data">
+            <column name="id" type="VARCHAR(36)" defaultValue="uuid_generate_v4()">
+                <constraints nullable="false" unique="true" primaryKey="true"/>
+            </column>
+            <column name="user_id" type="VARCHAR(36)">
+                <constraints foreignKeyName="fk_nlp_data_users"
+                             referencedTableName="users"
+                             referencedColumnNames="id" nullable="false"/>
+            </column>
+            <column name="request" type="text"/>
+            <column name="response" type="text"/>
+            <column name="created_at" type="TIMESTAMP" defaultValue="NOW()"/>
+        </createTable>
+    </changeSet>
+</databaseChangeLog>
+
+        <!--<changeSet>-->
+        <!--TRUNCATE TABLE "SYSTEM"."DATABASECHANGELOGLOCK";-->
+        <!--ALTER TABLE "SYSTEM"."DATABASECHANGELOGLOCK" DROP (LOCKED);-->
+
+        <!--ALTER TABLE "SYSTEM"."DATABASECHANGELOGLOCK" ADD (LOCKED INTEGER);-->
+        <!--</changeSet>-->

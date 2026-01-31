@@ -1,0 +1,15 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Init') {
+            steps {
+                git credentialsId: 'git_credentials', url: 'https://github.com/SouravDas25/Tracko-Java-Backend'
+
+                withMaven( maven: 'mavenGBL') {
+                  sh "mvn clean install"
+                }
+            }
+        }
+    }
+}
