@@ -52,6 +52,7 @@ public class User extends AbstractBaseEntity {
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private Set<UserChatGroup> groups;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<NlpData> nlpData;
 
