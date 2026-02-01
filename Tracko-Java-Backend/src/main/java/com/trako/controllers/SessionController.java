@@ -1,6 +1,7 @@
 package com.trako.controllers;
 
 import com.trako.models.request.AuthicationRequest;
+import com.trako.models.request.LoginRequest;
 import com.trako.models.request.UserSaveRequest;
 import com.trako.models.responses.JwtResponse;
 import com.trako.services.UserService;
@@ -14,7 +15,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -33,6 +38,17 @@ public class SessionController {
     @Autowired
     private AuthenticationManager authenticationManager;
 
+    @Autowired(required = false)
+    @Qualifier("devUserDetailsService")
+    private UserDetailsService devUserDetailsService;
+
+    @Autowired(required = false)
+    @Qualifier("jwtUserDetailsService")
+    private UserDetailsService jwtUserDetailsService;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @PostMapping("/api/oauth/token")
     public ResponseEntity<?> signIn(@RequestBody AuthicationRequest authicationRequest) {
 
@@ -43,6 +59,30 @@ public class SessionController {
         String jwtToken = jwtTokenUtil.generateToken((UserDetails) authenticate.getPrincipal());
 
         return ResponseEntity.ok(new JwtResponse(jwtToken));
+    }
+
+    @PostMapping("/api/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
+        try {
+            UserDetailsService uds = jwtUserDetailsService != null ? jwtUserDetailsService : devUserDetailsService;
+            if (uds == null) {
+                return Response.unauthorized();
+            }
+            UserDetails user = uds.loadUserByUsername(loginRequest.getUsername());
+            boolean ok = user != null && passwordEncoder.matches(loginRequest.getPassword(), user.getPassword());
+            if (!ok && user != null) {
+                ok = loginRequest.getPassword() != null && loginRequest.getPassword().equals(user.getPassword());
+            }
+            if (!ok) {
+                log.warn("Login failed for username={}", loginRequest.getUsername());
+                return Response.unauthorized();
+            }
+            String jwtToken = jwtTokenUtil.generateToken(user);
+            return ResponseEntity.ok(new JwtResponse(jwtToken));
+        } catch (AuthenticationException ex) {
+            log.warn("AuthenticationException during login for username={}", loginRequest.getUsername());
+            return Response.unauthorized();
+        }
     }
 
     @PostMapping(value = "/api/signUp")

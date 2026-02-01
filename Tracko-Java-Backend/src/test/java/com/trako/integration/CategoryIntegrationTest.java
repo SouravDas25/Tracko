@@ -1,11 +1,12 @@
 package com.trako.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.trako.config.TestSecurityConfig;
+import com.trako.config.TestJwtSecurityConfig;
 import com.trako.entities.Category;
 import com.trako.entities.User;
 import com.trako.repositories.CategoryRepository;
 import com.trako.repositories.UsersRepository;
+import com.trako.util.JwtTokenUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
+
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -24,7 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import(TestSecurityConfig.class)
+@Import(TestJwtSecurityConfig.class)
 @Transactional
 public class CategoryIntegrationTest {
 
@@ -40,7 +43,11 @@ public class CategoryIntegrationTest {
     @Autowired
     private UsersRepository usersRepository;
 
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
+
     private User testUser;
+    private String bearerToken;
 
     @BeforeEach
     public void setup() {
@@ -51,16 +58,24 @@ public class CategoryIntegrationTest {
         testUser.setName("Test User");
         testUser.setPhoneNo("1234567890");
         testUser.setEmail("test@example.com");
+        testUser.setFireBaseId("password");
         testUser = usersRepository.save(testUser);
+
+        var principal = new org.springframework.security.core.userdetails.User(
+                testUser.getPhoneNo(),
+                testUser.getFireBaseId(),
+                Collections.emptyList()
+        );
+        bearerToken = "Bearer " + jwtTokenUtil.generateToken(principal);
     }
 
     @Test
     public void testCreateCategory() throws Exception {
         Category category = new Category();
         category.setName("Food");
-        category.setUserId(testUser.getId());
 
         mockMvc.perform(post("/api/categories")
+                .header("Authorization", bearerToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(category)))
                 .andExpect(status().isOk())
@@ -80,7 +95,8 @@ public class CategoryIntegrationTest {
         category2.setUserId(testUser.getId());
         categoryRepository.save(category2);
 
-        mockMvc.perform(get("/api/categories"))
+        mockMvc.perform(get("/api/categories")
+                        .header("Authorization", bearerToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result", hasSize(2)))
                 .andExpect(jsonPath("$.result[*].name", containsInAnyOrder("Food", "Travel")));
@@ -93,7 +109,8 @@ public class CategoryIntegrationTest {
         category.setUserId(testUser.getId());
         Category saved = categoryRepository.save(category);
 
-        mockMvc.perform(get("/api/categories/" + saved.getId()))
+        mockMvc.perform(get("/api/categories/" + saved.getId())
+                        .header("Authorization", bearerToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.name").value("Grocery"));
     }
@@ -110,7 +127,8 @@ public class CategoryIntegrationTest {
         category2.setUserId(testUser.getId());
         categoryRepository.save(category2);
 
-        mockMvc.perform(get("/api/categories/user/" + testUser.getId()))
+        mockMvc.perform(get("/api/categories/user/" + testUser.getId())
+                        .header("Authorization", bearerToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result", hasSize(2)))
                 .andExpect(jsonPath("$.result[*].userId", everyItem(is(testUser.getId()))));
@@ -126,6 +144,7 @@ public class CategoryIntegrationTest {
         saved.setName("Updated Category");
 
         mockMvc.perform(put("/api/categories/" + saved.getId())
+                .header("Authorization", bearerToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(saved)))
                 .andExpect(status().isOk())
@@ -139,10 +158,12 @@ public class CategoryIntegrationTest {
         category.setUserId(testUser.getId());
         Category saved = categoryRepository.save(category);
 
-        mockMvc.perform(delete("/api/categories/" + saved.getId()))
+        mockMvc.perform(delete("/api/categories/" + saved.getId())
+                        .header("Authorization", bearerToken))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(get("/api/categories/" + saved.getId()))
+        mockMvc.perform(get("/api/categories/" + saved.getId())
+                        .header("Authorization", bearerToken))
                 .andExpect(status().isNotFound());
     }
 }

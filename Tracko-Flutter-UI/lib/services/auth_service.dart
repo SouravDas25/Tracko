@@ -36,7 +36,26 @@ class AuthService {
       'phoneNo': phoneNo,
       'uuid': firebaseUuid,
     });
-    final token = res['token'];
+    final token = res['token'] ?? res['jwtToken'];
+    if (token is String) {
+      await _storage.write(key: 'jwt_token', value: token);
+      return token;
+    }
+    return null;
+  }
+
+  Future<String?> signInBasic({
+    required String username,
+    required String password,
+  }) async {
+    final res = await _api.post<Map<String, dynamic>>(
+      ApiConfig.authLoginBasic,
+      data: {
+        'username': username,
+        'password': password,
+      },
+    );
+    final token = res['token'] ?? res['jwtToken'];
     if (token is String) {
       await _storage.write(key: 'jwt_token', value: token);
       return token;

@@ -1,7 +1,10 @@
 package com.trako.controllers;
 
 import com.trako.entities.Category;
+import com.trako.exceptions.UserNotLoggedInException;
+import com.trako.models.request.CategorySaveRequest;
 import com.trako.services.CategoryService;
+import com.trako.services.UserService;
 import com.trako.util.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +19,9 @@ public class CategoryController {
 
     @Autowired
     private CategoryService categoryService;
+
+    @Autowired
+    private UserService userService;
 
     @GetMapping
     public ResponseEntity<?> getAll() {
@@ -32,19 +38,41 @@ public class CategoryController {
 
     @GetMapping("/user/{userId}")
     public ResponseEntity<?> getByUserId(@PathVariable String userId) {
-        List<Category> categories = categoryService.findByUserId(userId);
-        return Response.ok(categories);
+        try {
+            String currentUserId = userService.loggedInUser().getId();
+            if (!currentUserId.equals(userId)) {
+                return Response.unauthorized();
+            }
+            List<Category> categories = categoryService.findByUserId(currentUserId);
+            return Response.ok(categories);
+        } catch (UserNotLoggedInException e) {
+            return Response.unauthorized();
+        }
     }
 
     @PostMapping
-    public ResponseEntity<?> create(@Valid @RequestBody Category category) {
+    public ResponseEntity<?> create(@Valid @RequestBody CategorySaveRequest request) {
+        Category category = new Category();
+        category.setName(request.getName());
+        try {
+            category.setUserId(userService.loggedInUser().getId());
+        } catch (UserNotLoggedInException e) {
+            return Response.unauthorized();
+        }
         Category saved = categoryService.save(category);
         return Response.ok(saved, "Category created successfully");
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> update(@PathVariable Long id, @Valid @RequestBody Category category) {
+    public ResponseEntity<?> update(@PathVariable Long id, @Valid @RequestBody CategorySaveRequest request) {
+        Category category = new Category();
         category.setId(id);
+        category.setName(request.getName());
+        try {
+            category.setUserId(userService.loggedInUser().getId());
+        } catch (UserNotLoggedInException e) {
+            return Response.unauthorized();
+        }
         Category updated = categoryService.save(category);
         return Response.ok(updated, "Category updated successfully");
     }

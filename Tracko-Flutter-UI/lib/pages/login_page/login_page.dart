@@ -1,5 +1,7 @@
 import 'package:tracko/component/menu_bar.dart' as TrackoMenuBar;
 import 'package:flutter/material.dart';
+import 'package:tracko/services/auth_service.dart';
+import 'package:dio/dio.dart';
 
 class LoginPage extends StatelessWidget {
   LoginPage({Key? key}) : super(key: key);
@@ -11,7 +13,7 @@ class LoginPage extends StatelessWidget {
         body: Padding(
           padding: const EdgeInsets.all(16.0),
           child: ListView(children: [
-            Image.asset("assets/login_img2.jpg"),
+            Image.asset("assets/images/login_img2.jpg"),
             LoginForm(),
           ]),
         ));
@@ -27,6 +29,77 @@ class LoginForm extends StatefulWidget {
 
 class _LoginPage extends State<LoginForm> {
   final _formKey = GlobalKey<FormState>();
+  final _usernameController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _submitting = false;
+  bool _obscurePassword = true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final loggedIn = await AuthService().isLoggedIn();
+      if (!mounted) return;
+      if (loggedIn) {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  String _friendlyError(Object e) {
+    if (e is DioException) {
+      if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.sendTimeout ||
+          e.type == DioExceptionType.receiveTimeout) {
+        return 'Connection timed out. Please try again.';
+      }
+      if (e.type == DioExceptionType.connectionError) {
+        return 'No internet connection. Please check your network.';
+      }
+      final status = e.response?.statusCode;
+      if (status == 401 || status == 403) {
+        return 'Invalid email or password.';
+      }
+    }
+    return 'Login failed. Please try again.';
+  }
+
+  Future<void> _submit() async {
+    if (_submitting) return;
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+
+    setState(() => _submitting = true);
+    try {
+      final auth = AuthService();
+      final token = await auth.signInBasic(
+        username: _usernameController.text.trim(),
+        password: _passwordController.text,
+      );
+      if (token != null && token.isNotEmpty) {
+        if (!mounted) return;
+        Navigator.pushReplacementNamed(context, '/home');
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Invalid email or password.')),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_friendlyError(e))),
+      );
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,38 +108,62 @@ class _LoginPage extends State<LoginForm> {
       child: Column(
         children: <Widget>[
           TextFormField(
-            decoration: new InputDecoration(hintText: "E-Mail"),
+            controller: _usernameController,
+            decoration: const InputDecoration(labelText: 'Email'),
+            keyboardType: TextInputType.emailAddress,
+            textInputAction: TextInputAction.next,
+            autofillHints: const [AutofillHints.username, AutofillHints.email],
+            autocorrect: false,
+            enableSuggestions: false,
             validator: (value) {
               if (value?.isEmpty ?? true) {
-                return 'Please enter some text';
+                return 'Email is required';
               }
+              return null;
             },
           ),
           TextFormField(
-            decoration: new InputDecoration(hintText: "Password"),
+            controller: _passwordController,
+            decoration: InputDecoration(
+              labelText: 'Password',
+              suffixIcon: IconButton(
+                onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),
+              ),
+            ),
+            obscureText: _obscurePassword,
+            textInputAction: TextInputAction.done,
+            autofillHints: const [AutofillHints.password],
+            autocorrect: false,
+            enableSuggestions: false,
+            onFieldSubmitted: (_) => _submit(),
             validator: (value) {
               if (value?.isEmpty ?? true) {
-                return 'Please enter some text';
+                return 'Password is required';
               }
+              return null;
             },
           ),
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 16.0),
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.teal,
                 foregroundColor: Colors.white,
               ),
-              onPressed: () {
-                // Validate will return true if the form is valid, or false if
-                // the form is invalid.
-                if (_formKey.currentState?.validate() ?? false) {
-                  // If the form is valid, we want to show a Snackbar
-                  ScaffoldMessenger.of(context)
-                      .showSnackBar(SnackBar(content: Text('Processing Data')));
-                }
-              },
-              child: Text('Login'),
+              onPressed: _submitting ? null : _submit,
+              child: _submitting
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : const Text('Login'),
             ),
+          ),
+          TextButton(
+            onPressed: _submitting ? null : () => Navigator.pushNamed(context, '/phone_login'),
+            child: const Text('Login with phone instead'),
           ),
         ],
       ),

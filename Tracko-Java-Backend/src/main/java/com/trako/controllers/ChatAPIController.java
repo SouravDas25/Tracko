@@ -8,7 +8,9 @@ import com.trako.models.request.RetriveMessageRequest;
 import com.trako.models.request.SendMessageRequest;
 import com.trako.models.responses.GetGroupsResponse;
 import com.trako.services.ChatService;
+import com.trako.services.UserService;
 import com.trako.util.Response;
+import com.trako.exceptions.UserNotLoggedInException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +28,9 @@ public class ChatAPIController {
     @Autowired
     ChatService chatService;
 
+    @Autowired
+    UserService userService;
+
     @RequestMapping(value = "/create", method = RequestMethod.POST)
     ResponseEntity<?> create(@RequestBody CreateChatGroupRequestObject requestObject) {
         log.info("Chat group save request : {} ", requestObject);
@@ -42,11 +47,14 @@ public class ChatAPIController {
     @RequestMapping(value = "/send", method = RequestMethod.POST)
     ResponseEntity<?> sendMesssage(@RequestBody SendMessageRequest sendMessageRequest) {
         try {
-            chatService.sendMessage(sendMessageRequest.getSender(), sendMessageRequest.getChatGroupAddress(),
+            String currentUserId = userService.loggedInUser().getId();
+            chatService.sendMessage(currentUserId, sendMessageRequest.getChatGroupAddress(),
                     sendMessageRequest.getMessage());
             return Response.ok("SUCCESS");
         } catch (NotFoundException e) {
             return Response.notFound();
+        } catch (UserNotLoggedInException e) {
+            return Response.unauthorized();
         }
 
     }
@@ -60,8 +68,16 @@ public class ChatAPIController {
 
     @RequestMapping(value = "/groups/{id}", method = RequestMethod.GET)
     ResponseEntity<?> getGroups(@PathVariable("id") String userId) {
-        List<GetGroupsResponse> groupsByUser = chatService.getGroupsByUser(userId);
-        return Response.ok(groupsByUser);
+        try {
+            String currentUserId = userService.loggedInUser().getId();
+            if (!currentUserId.equals(userId)) {
+                return Response.unauthorized();
+            }
+            List<GetGroupsResponse> groupsByUser = chatService.getGroupsByUser(currentUserId);
+            return Response.ok(groupsByUser);
+        } catch (UserNotLoggedInException e) {
+            return Response.unauthorized();
+        }
     }
 
 }

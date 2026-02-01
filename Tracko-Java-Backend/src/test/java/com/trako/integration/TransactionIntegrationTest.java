@@ -1,7 +1,7 @@
 package com.trako.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.trako.config.TestSecurityConfig;
+import com.trako.config.TestJwtSecurityConfig;
 import com.trako.entities.Account;
 import com.trako.entities.Category;
 import com.trako.entities.Transaction;
@@ -10,6 +10,7 @@ import com.trako.repositories.AccountRepository;
 import com.trako.repositories.CategoryRepository;
 import com.trako.repositories.TransactionRepository;
 import com.trako.repositories.UsersRepository;
+import com.trako.util.JwtTokenUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
+import java.util.Collections;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -30,7 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import(TestSecurityConfig.class)
+@Import(TestJwtSecurityConfig.class)
 @Transactional
 public class TransactionIntegrationTest {
 
@@ -52,9 +54,13 @@ public class TransactionIntegrationTest {
     @Autowired
     private UsersRepository usersRepository;
 
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
+
     private User testUser;
     private Account testAccount;
     private Category testCategory;
+    private String bearerToken;
 
     @BeforeEach
     public void setup() {
@@ -67,7 +73,15 @@ public class TransactionIntegrationTest {
         testUser.setName("Test User");
         testUser.setPhoneNo("1234567890");
         testUser.setEmail("test@example.com");
+        testUser.setFireBaseId("password");
         testUser = usersRepository.save(testUser);
+
+        var principal = new org.springframework.security.core.userdetails.User(
+                testUser.getPhoneNo(),
+                testUser.getFireBaseId(),
+                Collections.emptyList()
+        );
+        bearerToken = "Bearer " + jwtTokenUtil.generateToken(principal);
 
         testAccount = new Account();
         testAccount.setName("Savings");
@@ -92,6 +106,7 @@ public class TransactionIntegrationTest {
         transaction.setComments("Pizza");
 
         mockMvc.perform(post("/api/transactions")
+                .header("Authorization", bearerToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(transaction)))
                 .andExpect(status().isOk())
@@ -120,7 +135,8 @@ public class TransactionIntegrationTest {
         transaction2.setCategoryId(testCategory.getId());
         transactionRepository.save(transaction2);
 
-        mockMvc.perform(get("/api/transactions"))
+        mockMvc.perform(get("/api/transactions")
+                        .header("Authorization", bearerToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result", hasSize(2)))
                 .andExpect(jsonPath("$.result[*].name", containsInAnyOrder("Lunch", "Dinner")));
@@ -137,7 +153,8 @@ public class TransactionIntegrationTest {
         transaction.setCategoryId(testCategory.getId());
         Transaction saved = transactionRepository.save(transaction);
 
-        mockMvc.perform(get("/api/transactions/" + saved.getId()))
+        mockMvc.perform(get("/api/transactions/" + saved.getId())
+                        .header("Authorization", bearerToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.name").value("Coffee"))
                 .andExpect(jsonPath("$.result.amount").value(5.00));
@@ -154,7 +171,8 @@ public class TransactionIntegrationTest {
         transaction.setCategoryId(testCategory.getId());
         transactionRepository.save(transaction);
 
-        mockMvc.perform(get("/api/transactions/user/" + testUser.getId()))
+        mockMvc.perform(get("/api/transactions/user/" + testUser.getId())
+                        .header("Authorization", bearerToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result", hasSize(1)))
                 .andExpect(jsonPath("$.result[0].name").value("Groceries"));
@@ -171,7 +189,8 @@ public class TransactionIntegrationTest {
         transaction.setCategoryId(testCategory.getId());
         transactionRepository.save(transaction);
 
-        mockMvc.perform(get("/api/transactions/account/" + testAccount.getId()))
+        mockMvc.perform(get("/api/transactions/account/" + testAccount.getId())
+                        .header("Authorization", bearerToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result", hasSize(1)))
                 .andExpect(jsonPath("$.result[0].name").value("ATM Withdrawal"));
@@ -188,7 +207,8 @@ public class TransactionIntegrationTest {
         transaction.setCategoryId(testCategory.getId());
         transactionRepository.save(transaction);
 
-        mockMvc.perform(get("/api/transactions/category/" + testCategory.getId()))
+        mockMvc.perform(get("/api/transactions/category/" + testCategory.getId())
+                        .header("Authorization", bearerToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result", hasSize(1)))
                 .andExpect(jsonPath("$.result[0].name").value("Restaurant"));
@@ -209,6 +229,7 @@ public class TransactionIntegrationTest {
         saved.setAmount(15.00);
 
         mockMvc.perform(put("/api/transactions/" + saved.getId())
+                .header("Authorization", bearerToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(saved)))
                 .andExpect(status().isOk())
@@ -227,10 +248,12 @@ public class TransactionIntegrationTest {
         transaction.setCategoryId(testCategory.getId());
         Transaction saved = transactionRepository.save(transaction);
 
-        mockMvc.perform(delete("/api/transactions/" + saved.getId()))
+        mockMvc.perform(delete("/api/transactions/" + saved.getId())
+                        .header("Authorization", bearerToken))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(get("/api/transactions/" + saved.getId()))
+        mockMvc.perform(get("/api/transactions/" + saved.getId())
+                        .header("Authorization", bearerToken))
                 .andExpect(status().isNotFound());
     }
 
@@ -270,6 +293,7 @@ public class TransactionIntegrationTest {
         transactionRepository.save(nonCountable);
 
         mockMvc.perform(get("/api/transactions/user/" + testUser.getId() + "/summary")
+                .header("Authorization", bearerToken)
                 .param("startDate", "2020-01-01")
                 .param("endDate", "2030-12-31"))
                 .andExpect(status().isOk())
@@ -302,6 +326,7 @@ public class TransactionIntegrationTest {
         transactionRepository.save(income2);
 
         mockMvc.perform(get("/api/transactions/user/" + testUser.getId() + "/total-income")
+                .header("Authorization", bearerToken)
                 .param("startDate", "2020-01-01")
                 .param("endDate", "2030-12-31"))
                 .andExpect(status().isOk())
@@ -331,6 +356,7 @@ public class TransactionIntegrationTest {
         transactionRepository.save(expense2);
 
         mockMvc.perform(get("/api/transactions/user/" + testUser.getId() + "/total-expense")
+                .header("Authorization", bearerToken)
                 .param("startDate", "2020-01-01")
                 .param("endDate", "2030-12-31"))
                 .andExpect(status().isOk())
@@ -361,6 +387,7 @@ public class TransactionIntegrationTest {
         transactionRepository.save(nonCountable2);
 
         mockMvc.perform(get("/api/transactions/user/" + testUser.getId() + "/summary")
+                .header("Authorization", bearerToken)
                 .param("startDate", "2020-01-01")
                 .param("endDate", "2030-12-31"))
                 .andExpect(status().isOk())

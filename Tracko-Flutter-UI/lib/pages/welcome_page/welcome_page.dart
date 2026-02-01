@@ -67,28 +67,51 @@ class _WelcomePage extends State<WelcomePage> {
         child: WidgetUtil.spinLoader(),
       );
     } else {
-      loaderOrButton = SizedBox(
-        width: double.infinity,
-        child: ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.teal,
-            foregroundColor: Colors.white,
-            padding: EdgeInsets.symmetric(vertical: 20.0),
+      loaderOrButton = Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.teal,
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(vertical: 20.0),
+              ),
+              onPressed: () {
+                setState(() {
+                  isUserValid = true; // Prevent re-check
+                });
+                Navigator.pushReplacementNamed(
+                  context,
+                  "/phone_login",
+                );
+              },
+              child: Text(
+                'Login',
+                style: TextStyle(fontSize: 18.0),
+              ),
+            ),
           ),
-          onPressed: () {
-            setState(() {
-              isUserValid = true; // Prevent re-check
-            });
-            Navigator.pushReplacementNamed(
-              context,
-              "/phone_login",
-            );
-          },
-          child: Text(
-            'Login',
-            style: TextStyle(fontSize: 18.0),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.teal,
+                side: const BorderSide(color: Colors.teal),
+                padding: const EdgeInsets.symmetric(vertical: 18.0),
+              ),
+              onPressed: () {
+                Navigator.pushNamed(context, '/login');
+              },
+              child: const Text(
+                'Login with username/password',
+                style: TextStyle(fontSize: 16.0),
+              ),
+            ),
           ),
-        ),
+        ],
       );
     }
     return Scaffold(

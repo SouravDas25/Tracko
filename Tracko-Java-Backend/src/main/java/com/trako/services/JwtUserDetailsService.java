@@ -18,10 +18,16 @@ public class JwtUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String phoneNo) throws UsernameNotFoundException {
-        com.trako.entities.User byPhoneNo = usersRepository.findByPhoneNo(phoneNo);
-        if (byPhoneNo == null) {
+        com.trako.entities.User u = usersRepository.findByPhoneNo(phoneNo);
+        if (u == null) {
+            u = usersRepository.findByEmail(phoneNo);
+        }
+        if (u == null) {
+            u = usersRepository.findByName(phoneNo);
+        }
+        if (u == null) {
             throw new UsernameNotFoundException("User not found in DB.");
         }
-        return new User(byPhoneNo.getPhoneNo(), byPhoneNo.getFireBaseId(), new ArrayList<>());
+        return new User(u.getPhoneNo(), u.getFireBaseId(), new ArrayList<>());
     }
 }

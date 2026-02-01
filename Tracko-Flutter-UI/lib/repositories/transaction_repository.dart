@@ -40,7 +40,7 @@ class TransactionRepository {
     required DateTime endDate,
   }) async {
     final res = await _api.get<List<dynamic>>(
-      "${ApiConfig.transactions}/user/$userId/date-range",
+      "${ApiConfig.transactions}/date-range",
       query: {
         'startDate': startDate.toIso8601String().split('T').first,
         'endDate': endDate.toIso8601String().split('T').first,
@@ -99,7 +99,7 @@ class TransactionRepository {
   // Aggregation methods - backend calculates
   Future<Map<String, dynamic>> getSummary(String userId, DateTime startDate, DateTime endDate) async {
     final res = await _api.get<Map<String, dynamic>>(
-      "${ApiConfig.transactions}/user/$userId/summary",
+      "${ApiConfig.transactions}/summary",
       query: {
         'startDate': startDate.toIso8601String().split('T').first,
         'endDate': endDate.toIso8601String().split('T').first,
@@ -110,7 +110,7 @@ class TransactionRepository {
 
   Future<double> getTotalIncome(String userId, DateTime startDate, DateTime endDate) async {
     final res = await _api.get<double>(
-      "${ApiConfig.transactions}/user/$userId/total-income",
+      "${ApiConfig.transactions}/total-income",
       query: {
         'startDate': startDate.toIso8601String().split('T').first,
         'endDate': endDate.toIso8601String().split('T').first,
@@ -121,7 +121,7 @@ class TransactionRepository {
 
   Future<double> getTotalExpense(String userId, DateTime startDate, DateTime endDate) async {
     final res = await _api.get<double>(
-      "${ApiConfig.transactions}/user/$userId/total-expense",
+      "${ApiConfig.transactions}/total-expense",
       query: {
         'startDate': startDate.toIso8601String().split('T').first,
         'endDate': endDate.toIso8601String().split('T').first,

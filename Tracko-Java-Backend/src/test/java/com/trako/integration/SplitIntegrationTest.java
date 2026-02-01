@@ -1,9 +1,10 @@
 package com.trako.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.trako.config.TestSecurityConfig;
+import com.trako.config.TestJwtSecurityConfig;
 import com.trako.entities.*;
 import com.trako.repositories.*;
+import com.trako.util.JwtTokenUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
+import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -25,7 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import(TestSecurityConfig.class)
+@Import(TestJwtSecurityConfig.class)
 @Transactional
 public class SplitIntegrationTest {
 
@@ -51,10 +53,14 @@ public class SplitIntegrationTest {
     private UsersRepository usersRepository;
 
     @Autowired
+    private JwtTokenUtil jwtTokenUtil;
+
+    @Autowired
     private jakarta.persistence.EntityManager entityManager;
 
     private User testUser;
     private Transaction testTransaction;
+    private String bearerToken;
 
     @BeforeEach
     public void setup() {
@@ -68,7 +74,15 @@ public class SplitIntegrationTest {
         testUser.setName("Test User");
         testUser.setPhoneNo("1234567890");
         testUser.setEmail("test@example.com");
+        testUser.setFireBaseId("password");
         testUser = usersRepository.save(testUser);
+
+        var principal = new org.springframework.security.core.userdetails.User(
+                testUser.getPhoneNo(),
+                testUser.getFireBaseId(),
+                Collections.emptyList()
+        );
+        bearerToken = "Bearer " + jwtTokenUtil.generateToken(principal);
 
         Account testAccount = new Account();
         testAccount.setName("Savings");
@@ -99,6 +113,7 @@ public class SplitIntegrationTest {
         split.setIsSettled(0);
 
         mockMvc.perform(post("/api/splits")
+                .header("Authorization", bearerToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(split)))
                 .andExpect(status().isOk())
@@ -120,7 +135,8 @@ public class SplitIntegrationTest {
         split2.setAmount(50.00);
         splitRepository.save(split2);
 
-        mockMvc.perform(get("/api/splits"))
+        mockMvc.perform(get("/api/splits")
+                        .header("Authorization", bearerToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result", hasSize(2)));
     }
@@ -133,7 +149,8 @@ public class SplitIntegrationTest {
         split.setAmount(75.00);
         Split saved = splitRepository.save(split);
 
-        mockMvc.perform(get("/api/splits/" + saved.getId()))
+        mockMvc.perform(get("/api/splits/" + saved.getId())
+                        .header("Authorization", bearerToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.amount").value(75.00));
     }
@@ -146,7 +163,8 @@ public class SplitIntegrationTest {
         split.setAmount(100.00);
         splitRepository.save(split);
 
-        mockMvc.perform(get("/api/splits/transaction/" + testTransaction.getId()))
+        mockMvc.perform(get("/api/splits/transaction/" + testTransaction.getId())
+                        .header("Authorization", bearerToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result", hasSize(1)))
                 .andExpect(jsonPath("$.result[0].transactionId").value(testTransaction.getId().intValue()));
@@ -160,7 +178,8 @@ public class SplitIntegrationTest {
         split.setAmount(50.00);
         splitRepository.save(split);
 
-        mockMvc.perform(get("/api/splits/user/" + testUser.getId()))
+        mockMvc.perform(get("/api/splits/user/" + testUser.getId())
+                        .header("Authorization", bearerToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result", hasSize(1)))
                 .andExpect(jsonPath("$.result[0].userId").value(testUser.getId()));
@@ -182,7 +201,8 @@ public class SplitIntegrationTest {
         split2.setIsSettled(1);
         splitRepository.save(split2);
 
-        mockMvc.perform(get("/api/splits/user/" + testUser.getId() + "/unsettled"))
+        mockMvc.perform(get("/api/splits/user/" + testUser.getId() + "/unsettled")
+                        .header("Authorization", bearerToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result", hasSize(1)))
                 .andExpect(jsonPath("$.result[0].isSettled").value(0));
@@ -197,7 +217,8 @@ public class SplitIntegrationTest {
         split.setIsSettled(0);
         Split saved = splitRepository.save(split);
 
-        mockMvc.perform(patch("/api/splits/settle/" + saved.getId()))
+        mockMvc.perform(patch("/api/splits/settle/" + saved.getId())
+                        .header("Authorization", bearerToken))
                 .andExpect(status().isOk());
 
         entityManager.flush();
@@ -217,10 +238,12 @@ public class SplitIntegrationTest {
         split.setAmount(50.00);
         Split saved = splitRepository.save(split);
 
-        mockMvc.perform(delete("/api/splits/" + saved.getId()))
+        mockMvc.perform(delete("/api/splits/" + saved.getId())
+                        .header("Authorization", bearerToken))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(get("/api/splits/" + saved.getId()))
+        mockMvc.perform(get("/api/splits/" + saved.getId())
+                        .header("Authorization", bearerToken))
                 .andExpect(status().isNotFound());
     }
 }
