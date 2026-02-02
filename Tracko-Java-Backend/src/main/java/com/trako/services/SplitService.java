@@ -35,6 +35,14 @@ public class SplitService {
         return splitRepository.findByUserIdAndIsSettled(userId, 0);
     }
 
+    public List<Split> findByContactId(Long contactId) {
+        return splitRepository.findByContactId(contactId);
+    }
+
+    public List<Split> findUnsettledByContactId(Long contactId) {
+        return splitRepository.findByContactIdAndIsSettled(contactId, 0);
+    }
+
     public Split save(Split split) {
         return splitRepository.save(split);
     }
@@ -42,6 +50,11 @@ public class SplitService {
     @Transactional
     public void settleSplit(Long splitId) {
         splitRepository.settleSplit(splitId);
+    }
+
+    @Transactional
+    public void unsettleSplit(Long splitId) {
+        splitRepository.unsettleSplit(splitId);
     }
 
     public void delete(Long id) {

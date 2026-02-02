@@ -1,5 +1,6 @@
 import 'package:tracko/models/transaction.dart';
 import 'package:tracko/models/user.dart';
+import 'package:tracko/models/contact.dart';
 import 'package:tracko/orm_stub.dart';
 // import 'package:jaguar_orm/jaguar_orm.dart'; // Removed - migrating to plain sqflite
 
@@ -9,16 +10,18 @@ class Split {
   int? id;
   int transactionId = 0;
   int userId = 0;
+  int? contactId;
   double amount = 0.0;
   int isSettled = 0;
   DateTime settledAt = DateTime.now();
   Transaction? transaction;
+  Contact? contact;
 
   Split();
 
   @override
   String toString() {
-    return 'Split{id: $id, transactionId: $transactionId, userId: $userId, amount: $amount, isSettled: $isSettled}';
+    return 'Split{id: $id, transactionId: $transactionId, userId: $userId, contactId: $contactId, amount: $amount, isSettled: $isSettled}';
   }
 }
 
@@ -48,6 +51,7 @@ class SplitBean extends Bean<Split> {
     s.id = (map['id'] as int?);
     s.userId = (map['userId'] as int?) ?? 0;
     s.transactionId = (map['transactionId'] as int?) ?? 0;
+    s.contactId = (map['contactId'] as int?);
     s.amount = (map['amount'] as num?)?.toDouble() ?? 0.0;
     s.isSettled = (map['isSettled'] as int?) ?? 0;
     final settledAtRaw = map['settledAt'];
@@ -79,6 +83,7 @@ class SplitBean extends Bean<Split> {
       {
         'userId': s.userId,
         'transactionId': s.transactionId,
+        'contactId': s.contactId,
         'amount': s.amount,
         'isSettled': s.isSettled,
         'settledAt': s.settledAt.toIso8601String(),
@@ -100,6 +105,7 @@ class SplitBean extends Bean<Split> {
     final id = await adapter.db.insert(tableName, {
       'userId': s.userId,
       'transactionId': s.transactionId,
+      'contactId': s.contactId,
       'amount': s.amount,
       'isSettled': s.isSettled,
       'settledAt': s.settledAt.toIso8601String(),

@@ -1,0 +1,78 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-contacts-create-table
+      author: cascade
+      preConditions:
+        onFail: MARK_RAN
+        onError: MARK_RAN
+        not:
+          tableExists:
+            tableName: contacts
+      changes:
+        - createTable:
+            tableName: contacts
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_contacts
+              - column:
+                  name: user_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: name
+                  type: VARCHAR(250)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: phone_no
+                  type: VARCHAR(32)
+              - column:
+                  name: email
+                  type: VARCHAR(150)
+  - changeSet:
+      id: 004-contacts-fk-user
+      author: cascade
+      preConditions:
+        onFail: MARK_RAN
+        onError: MARK_RAN
+        and:
+          - tableExists:
+              tableName: contacts
+          - tableExists:
+              tableName: users
+          - not:
+              foreignKeyConstraintExists:
+                foreignKeyName: fk_contacts_user
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: contacts
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_contacts_user
+            onDelete: CASCADE
+  - changeSet:
+      id: 004-contacts-index-user
+      author: cascade
+      preConditions:
+        onFail: MARK_RAN
+        onError: MARK_RAN
+        and:
+          - tableExists:
+              tableName: contacts
+          - not:
+              indexExists:
+                indexName: idx_contacts_user
+      changes:
+        - createIndex:
+            indexName: idx_contacts_user
+            tableName: contacts
+            columns:
+              - column:
+                  name: user_id

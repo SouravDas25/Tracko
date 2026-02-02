@@ -1,15 +1,28 @@
 import 'package:tracko/Utils/SettingUtil.dart';
 import 'package:tracko/models/split.dart';
+import 'package:tracko/models/contact.dart';
 import 'package:tracko/repositories/split_repository.dart';
+import 'package:tracko/repositories/contact_repository.dart';
 import 'package:tracko/repositories/transaction_repository.dart';
 import 'package:tracko/controllers/CategoryController.dart';
 
 class SplitController {
+  static String? _normalizeUserId(String userId) {
+    final id = userId.trim();
+    if (id.isEmpty || id == '0') return null;
+    return id;
+  }
+
   static Future<double> getDueAmount(int userId) async {
+    return getDueAmountByUserId(userId.toString());
+  }
+
+  static Future<double> getDueAmountByUserId(String userId) async {
     final splitRepo = SplitRepository();
-    final userIdStr = userId.toString();
-    List<Split> splits = await splitRepo.getByUserId(userIdStr);
-    
+    final uid = _normalizeUserId(userId);
+    if (uid == null) return 0.0;
+    List<Split> splits = await splitRepo.getByUserId(uid);
+
     // Filter unsettled splits
     splits = splits.where((s) => s.isSettled == 0).toList();
 
@@ -19,23 +32,44 @@ class SplitController {
 
   static Future<List<Split>> findByUserId(int userId,
       {bool preload = true}) async {
+    return findByUserIdKey(userId.toString(), preload: preload);
+  }
+
+  static Future<List<Split>> findByUserIdKey(String userId,
+      {bool preload = true}) async {
     final splitRepo = SplitRepository();
+    final contactRepo = ContactRepository();
     final txRepo = TransactionRepository();
-    final userIdStr = userId.toString();
+    final userIdStr = _normalizeUserId(userId);
+    if (userIdStr == null) return <Split>[];
     
     DateTime month = SettingUtil.currentMonth;
     DateTime nextMonth = SettingUtil.nextMonth;
 
     // Get all splits for user
     List<Split> splits = await splitRepo.getByUserId(userIdStr);
+
+    // Preload contacts once (used to show who a split is with)
+    final Map<int, Contact> contactsById = {};
+    try {
+      final contacts = await contactRepo.listMine();
+      for (final c in contacts) {
+        if (c.id != null) contactsById[c.id!] = c;
+      }
+    } catch (e) {
+      // Ignore contact load failures; splits will still show without contact info.
+    }
     
     List<Split> returningSplit = [];
     for (Split split in splits) {
+      if (split.contactId != null) {
+        split.contact = contactsById[split.contactId!];
+      }
       // Get transaction for this split
-      if (split.transactionId == null) continue;
+      if (split.transactionId == 0) continue;
       
       try {
-        split.transaction = await txRepo.getById(split.transactionId!);
+        split.transaction = await txRepo.getById(split.transactionId);
       } catch (e) {
         continue; // Skip if transaction not found
       }
@@ -46,9 +80,8 @@ class SplitController {
       bool inCurrentMonth = split.transaction!.date.isAfter(month) && 
                            split.transaction!.date.isBefore(nextMonth);
       bool isUnsettled = split.isSettled == 0;
-      bool settledThisMonth = split.settledAt != null && 
-                             split.settledAt!.isAfter(month) && 
-                             split.settledAt!.isBefore(nextMonth);
+      bool settledThisMonth = split.settledAt.isAfter(month) && 
+                             split.settledAt.isBefore(nextMonth);
       
       if (inCurrentMonth || isUnsettled || settledThisMonth) {
         // Preload category if requested
@@ -68,10 +101,15 @@ class SplitController {
   }
 
   static Future<int> settleAll(int userId) async {
+    return settleAllByUserId(userId.toString());
+  }
+
+  static Future<int> settleAllByUserId(String userId) async {
     final splitRepo = SplitRepository();
-    final userIdStr = userId.toString();
-    List<Split> splitList = await splitRepo.getByUserId(userIdStr);
-    
+    final uid = _normalizeUserId(userId);
+    if (uid == null) return 0;
+    List<Split> splitList = await splitRepo.getByUserId(uid);
+
     for (Split split in splitList) {
       await settleSplit(split);
     }

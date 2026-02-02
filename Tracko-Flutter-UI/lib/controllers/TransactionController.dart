@@ -6,6 +6,7 @@ import 'package:tracko/controllers/ChatController.dart';
 import 'package:tracko/controllers/SplitController.dart';
 import 'package:tracko/controllers/UserController.dart';
 import 'package:tracko/dtos/TrackoContact.dart';
+import 'package:tracko/models/contact.dart' as backend;
 import 'package:tracko/models/account.dart';
 import 'package:tracko/models/category.dart';
 import 'package:tracko/models/split.dart';
@@ -14,6 +15,7 @@ import 'package:tracko/models/user.dart';
 import 'package:tracko/services/SessionService.dart';
 import 'package:tracko/repositories/transaction_repository.dart';
 import 'package:tracko/repositories/split_repository.dart';
+import 'package:tracko/repositories/contact_repository.dart';
 // import 'package:jaguar_orm/jaguar_orm.dart'; // Removed - migrating to plain sqflite
 
 import 'CategoryController.dart';
@@ -56,55 +58,67 @@ class TransactionController {
 
   static Future<bool> saveSplitsInTransaction(Transaction transaction) async {
     final splitRepo = SplitRepository();
-    bool isUserCountable = false;
-    double a = (transaction.amount / transaction.contacts.length);
     User rootUser = SessionService.currentUser();
 
-    for (int i = 0; i < transaction.contacts.length; i++) {
-      TrakoContact contact = transaction.contacts.elementAt(i);
-      print(contact.phoneNo + " " + rootUser.phoneNo);
-      if (contact.phoneNo == null) {
-        throw Exception("No Phone Number Found in Contact Info.");
-      }
+    final participants = transaction.contacts
+        .where((c) => c.contactId != null)
+        .toList(growable: false);
+    if (participants.isEmpty) {
+      return true;
+    }
+
+    final totalPeople = participants.length + 1; // + you
+    final share = transaction.amount / totalPeople;
+
+    for (int i = 0; i < participants.length; i++) {
+      TrakoContact contact = participants.elementAt(i);
       Split split = new Split();
-      split.amount = a;
+      split.amount = share;
       split.transactionId = transaction.id ?? 0;
       split.isSettled = 0;
-
-      User user;
-
-      if (rootUser.phoneNo.contains(contact.phoneNo)) {
-        isUserCountable = true;
-        user = rootUser;
-      } else {
-        String phoneNumber = contact.phoneNo;
-        phoneNumber = CommonUtil.extractPhoneNumber(phoneNumber);
-        user = await UserController.findByPhoneNumber(phoneNumber);
-        if (user == null) {
-          user = new User();
-        }
-        user.phoneNo = phoneNumber;
-        user.name = contact.name;
-        user.email = contact.email != null ? contact.email : "";
-        user.profilePic = "";
-        user.id = await UserController.saveUser(user, isShadow: true);
-        await ChatController.createChatGroup(user);
-      }
-      split.userId = user.id ?? 0;
+      split.contactId = contact.contactId;
       
       // Create split via backend API
       Split created = await splitRepo.create(split);
       split.id = created.id;
     }
-    return isUserCountable;
+    return true;
   }
 
   static Future<Set<TrakoContact>> loadSplits(Transaction transaction) async {
     final splitRepo = SplitRepository();
+    final contactRepo = ContactRepository();
     final txId = transaction.id ?? 0;
     final splits = await splitRepo.getByTransactionId(txId);
     transaction.splits = splits;
-    transaction.contacts = transaction.contacts ?? Set<TrakoContact>();
+
+    final contactsById = <int, backend.Contact>{};
+    try {
+      final all = await contactRepo.listMine();
+      for (final c in all) {
+        if (c.id != null) contactsById[c.id!] = c;
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    transaction.contacts = Set<TrakoContact>();
+    // Always include current user
+    transaction.contacts.add(SessionService.currentUserContact());
+
+    for (final s in splits) {
+      final cid = s.contactId;
+      if (cid == null) continue;
+      final c = contactsById[cid];
+      if (c == null) continue;
+      final tc = TrakoContact();
+      tc.contactId = cid;
+      tc.name = c.name;
+      tc.phoneNo = c.phoneNo;
+      tc.email = c.email;
+      transaction.contacts.add(tc);
+    }
+
     return transaction.contacts;
   }
 

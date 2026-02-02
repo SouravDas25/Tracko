@@ -10,6 +10,7 @@ abstract class AsyncLoadState<T extends StatefulWidget> extends State<T> {
   @mustCallSuper
   void loadCompleteView() {
     this.__isLoading = false;
+    this.__isError = false;
     if (this.mounted) setState(() {});
   }
 

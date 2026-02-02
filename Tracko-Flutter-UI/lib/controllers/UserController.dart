@@ -32,6 +32,13 @@ class UserController {
     return user ?? User();
   }
 
+  static Future<User> findByGlobalId(String globalId) async {
+    final userRepo = UserRepository();
+    if (globalId.trim().isEmpty) return User();
+    User? user = await userRepo.getById(globalId);
+    return user ?? User();
+  }
+
   static getAllUsers() async {
     final userRepo = UserRepository();
     return await userRepo.getAll();

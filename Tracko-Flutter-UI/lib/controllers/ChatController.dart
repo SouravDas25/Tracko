@@ -21,6 +21,7 @@ class ChatController {
     for (final u in res.userList.userList) {
       if (u.phoneNo == current.phoneNo) continue;
       final c = Chat();
+      c.userGlobalId = u.id;
       c.userId = int.tryParse(u.id) ?? 0;
       c.chatGroupId = res.chatGroupResponse.id;
       chats.add(c);

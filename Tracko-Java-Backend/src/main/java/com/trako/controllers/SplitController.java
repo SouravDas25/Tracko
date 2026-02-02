@@ -2,6 +2,7 @@ package com.trako.controllers;
 
 import com.trako.entities.Split;
 import com.trako.entities.Transaction;
+import com.trako.repositories.ContactRepository;
 import com.trako.exceptions.UserNotLoggedInException;
 import com.trako.repositories.TransactionRepository;
 import com.trako.services.UserService;
@@ -27,10 +28,43 @@ public class SplitController {
     @Autowired
     private TransactionRepository transactionRepository;
 
+    @Autowired
+    private ContactRepository contactRepository;
+
     @GetMapping
     public ResponseEntity<?> getAll() {
         List<Split> splits = splitService.findAll();
         return Response.ok(splits);
+    }
+
+    @GetMapping("/contact/{contactId}")
+    public ResponseEntity<?> getByContactId(@PathVariable Long contactId) {
+        try {
+            String currentUserId = userService.loggedInUser().getId();
+            var contactOpt = contactRepository.findById(contactId);
+            if (contactOpt.isEmpty() || !currentUserId.equals(contactOpt.get().getUserId())) {
+                return Response.unauthorized();
+            }
+            List<Split> splits = splitService.findByContactId(contactId);
+            return Response.ok(splits);
+        } catch (UserNotLoggedInException e) {
+            return Response.unauthorized();
+        }
+    }
+
+    @GetMapping("/contact/{contactId}/unsettled")
+    public ResponseEntity<?> getUnsettledByContactId(@PathVariable Long contactId) {
+        try {
+            String currentUserId = userService.loggedInUser().getId();
+            var contactOpt = contactRepository.findById(contactId);
+            if (contactOpt.isEmpty() || !currentUserId.equals(contactOpt.get().getUserId())) {
+                return Response.unauthorized();
+            }
+            List<Split> splits = splitService.findUnsettledByContactId(contactId);
+            return Response.ok(splits);
+        } catch (UserNotLoggedInException e) {
+            return Response.unauthorized();
+        }
     }
 
     @GetMapping("/{id}")
@@ -104,6 +138,15 @@ public class SplitController {
             if (!owned) {
                 return Response.unauthorized();
             }
+            // Validate contact ownership if provided
+            if (split.getContactId() != null) {
+                var contactOpt = contactRepository.findById(split.getContactId());
+                if (contactOpt.isEmpty() || !currentUserId.equals(contactOpt.get().getUserId())) {
+                    return Response.unauthorized();
+                }
+            }
+            // Ensure split is associated to current owner
+            split.setUserId(currentUserId);
             Split saved = splitService.save(split);
             return Response.ok(saved, "Split created successfully");
         } catch (UserNotLoggedInException e) {
@@ -127,6 +170,27 @@ public class SplitController {
             }
             splitService.settleSplit(splitId);
             return Response.ok("Split settled successfully");
+        } catch (UserNotLoggedInException e) {
+            return Response.unauthorized();
+        }
+    }
+
+    @PatchMapping("/unsettle/{splitId}")
+    public ResponseEntity<?> unsettle(@PathVariable Long splitId) {
+        try {
+            String currentUserId = userService.loggedInUser().getId();
+            Split split = splitService.findById(splitId).orElse(null);
+            if (split == null) {
+                return Response.notFound("Split not found");
+            }
+            boolean owned = transactionRepository.findByUserId(currentUserId)
+                    .stream()
+                    .anyMatch(t -> t.getId().equals(split.getTransactionId()));
+            if (!owned) {
+                return Response.unauthorized();
+            }
+            splitService.unsettleSplit(splitId);
+            return Response.ok("Split unsettled successfully");
         } catch (UserNotLoggedInException e) {
             return Response.unauthorized();
         }

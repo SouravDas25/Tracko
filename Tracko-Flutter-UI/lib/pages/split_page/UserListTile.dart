@@ -28,8 +28,15 @@ class _ChatTile extends AsyncLoadState<UserListTile> {
   @override
   asyncLoad() async {
     this.currentUser = SessionService.currentUser();
-    this.otherUser = await UserController.findById(widget.chat.userId);
-    this.sumAmount = await SplitController.getDueAmount(this.otherUser.id ?? 0);
+    if (widget.chat.userGlobalId.isNotEmpty) {
+      this.otherUser = await UserController.findByGlobalId(widget.chat.userGlobalId);
+    } else {
+      this.otherUser = await UserController.findById(widget.chat.userId);
+    }
+    final otherUserKey = this.otherUser.globalId.isNotEmpty
+        ? this.otherUser.globalId
+        : (this.otherUser.id?.toString() ?? '');
+    this.sumAmount = await SplitController.getDueAmountByUserId(otherUserKey);
     this.loadCompleteView();
   }
 

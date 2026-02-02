@@ -5,3 +5,7 @@ databaseChangeLog:
       file: db/changelog/002-add-timestamp-defaults.yaml
   - include:
       file: db/changelog/003-add-missing-tables.yaml
+  - include:
+      file: db/changelog/004-create-contacts.yaml
+  - include:
+      file: db/changelog/005-add-contactid-to-splits.yaml

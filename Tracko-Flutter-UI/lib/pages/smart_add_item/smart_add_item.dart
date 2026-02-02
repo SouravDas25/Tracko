@@ -5,7 +5,7 @@ import 'package:tracko/component/AccountDialog.dart';
 import 'package:tracko/component/CategoryDialog.dart';
 import 'package:tracko/component/FLushDialog.dart';
 import 'package:tracko/component/LoadingDialog.dart';
-import 'package:tracko/component/select_contact.dart';
+import 'package:tracko/component/select_backend_contact.dart';
 import 'package:tracko/controllers/AccountController.dart';
 import 'package:tracko/controllers/CategoryController.dart';
 import 'package:tracko/controllers/TransactionController.dart';
@@ -173,7 +173,7 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
   void callSplitPage() async {
     List<TrakoContact> result = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => SelectContactPage()),
+      MaterialPageRoute(builder: (context) => SelectBackendContactPage()),
     );
 //    print(result);
     if (result != null) {

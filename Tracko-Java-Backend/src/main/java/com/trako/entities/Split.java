@@ -46,6 +46,14 @@ public class Split {
     @JoinColumn(name = "user_id", insertable = false, updatable = false)
     private User user;
 
+    @Column(name = "contact_id")
+    private Long contactId;
+
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "contact_id", insertable = false, updatable = false)
+    private Contact contact;
+
     public Long getId() {
         return id;
     }
@@ -108,5 +116,21 @@ public class Split {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public Long getContactId() {
+        return contactId;
+    }
+
+    public void setContactId(Long contactId) {
+        this.contactId = contactId;
+    }
+
+    public Contact getContact() {
+        return contact;
+    }
+
+    public void setContact(Contact contact) {
+        this.contact = contact;
     }
 }

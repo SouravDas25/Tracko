@@ -44,8 +44,11 @@ class _SplitList extends AsyncLoadState<SplitByUser> {
   }
 
   loadData() async {
-    dueAmount = await SplitController.getDueAmount(widget.otherUser.id ?? 0);
-    splits = await SplitController.findByUserId(widget.otherUser.id ?? 0);
+    final otherUserKey = widget.otherUser.globalId.isNotEmpty
+        ? widget.otherUser.globalId
+        : (widget.otherUser.id?.toString() ?? '');
+    dueAmount = await SplitController.getDueAmountByUserId(otherUserKey);
+    splits = await SplitController.findByUserIdKey(otherUserKey);
     expandList = splits.map((Split split) {
       return SplitExpanded(false, split);
     }).cast<SplitExpanded>().toList();
@@ -156,6 +159,22 @@ class _SplitList extends AsyncLoadState<SplitByUser> {
                       subtitle: Column(
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: <Widget>[
+                          if (item.split.contact != null)
+                            Row(
+                              children: <Widget>[
+                                const Icon(Icons.person, size: 15.0, color: Colors.blueGrey),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    item.split.contact!.name.isNotEmpty
+                                        ? item.split.contact!.name
+                                        : (item.split.contact!.phoneNo),
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(fontWeight: FontWeight.w600),
+                                  ),
+                                ),
+                              ],
+                            ),
                           Row(
                             children: <Widget>[
                               Padding(

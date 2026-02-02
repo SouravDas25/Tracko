@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../config/api_config.dart';
+import '../Utils/ServerUtil.dart';
 
 class ApiClient {
   static final ApiClient _instance = ApiClient._internal();
@@ -24,7 +25,15 @@ class ApiClient {
 
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
-        final token = await _storage.read(key: 'jwt_token');
+        var token = await _storage.read(key: 'jwt_token');
+        if (token == null || token.isEmpty) {
+          // Backward-compat: older parts of the app store auth token here.
+          token = ServerUtil.authJwtToken;
+          if (token != null && token.isNotEmpty) {
+            // Keep both auth systems in sync.
+            await _storage.write(key: 'jwt_token', value: token);
+          }
+        }
         if (token != null && token.isNotEmpty) {
           options.headers['Authorization'] = 'Bearer $token';
         }
@@ -55,6 +64,11 @@ class ApiClient {
 
   Future<T> put<T>(String path, {dynamic data}) async {
     final res = await _dio.put(path, data: data);
+    return res.data as T;
+  }
+
+  Future<T> patch<T>(String path, {dynamic data}) async {
+    final res = await _dio.patch(path, data: data);
     return res.data as T;
   }
 

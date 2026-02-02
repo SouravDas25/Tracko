@@ -18,6 +18,7 @@ class ApiConfig {
   static const String categories = '/api/categories';
   static const String transactions = '/api/transactions';
   static const String splits = '/api/splits';
+  static const String contacts = '/api/contacts';
   static const String jsonStore = '/api/json-store';
   static const String users = '/api/user';
   static const String chats = '/api/chat';

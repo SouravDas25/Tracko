@@ -2,7 +2,10 @@ import 'package:tracko/Utils/CommonUtil.dart';
 // import 'package:contacts_service/contacts_service.dart'; // TODO: Replace with AGP 8+ compatible alternative
 
 class TrakoContact {
-  late String name, phoneNo, email;
+  String name = '';
+  String phoneNo = '';
+  String email = '';
+  int? contactId;
 
   TrakoContact();
 
@@ -22,8 +25,10 @@ class TrakoContact {
       identical(this, other) ||
       other is TrakoContact &&
           runtimeType == other.runtimeType &&
-          phoneNo == other.phoneNo;
+          ((contactId != null && other.contactId != null)
+              ? contactId == other.contactId
+              : phoneNo == other.phoneNo);
 
   @override
-  int get hashCode => phoneNo.hashCode;
+  int get hashCode => (contactId ?? phoneNo).hashCode;
 }

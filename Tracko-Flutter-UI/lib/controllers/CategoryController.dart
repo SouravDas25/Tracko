@@ -4,6 +4,9 @@ import 'package:tracko/models/category.dart';
 import 'package:tracko/models/transaction.dart';
 import 'package:tracko/scratch/ChartUtil.dart';
 import 'package:tracko/repositories/category_repository.dart';
+import 'package:tracko/repositories/transaction_repository.dart';
+import 'package:tracko/services/SessionService.dart';
+import 'package:tracko/Utils/SettingUtil.dart';
 import 'package:dio/dio.dart';
 
 class CategoryController {
@@ -23,20 +26,41 @@ class CategoryController {
   }
 
   static Future<List<ChartEntry>> getPieChartData() async {
-    List<ChartEntry> data = [];
-//    print("create Data Called.");
-    final repo = CategoryRepository();
-    List<Category> categories = await repo.getAll();
-    for (Category category in categories) {
-      // TODO: Replace with backend totals when Transaction repository is added
-      double amount = 0.0;
-//      print("amount : "+amount.toString());
-      if (amount > 0.0) {
-        data.add(ChartEntry(category.id ?? 0, category.name, amount.toInt()));
-      }
+    final txRepo = TransactionRepository();
+    final catRepo = CategoryRepository();
+
+    final begin = SettingUtil.currentMonth;
+    final end = SettingUtil.nextMonth;
+
+    // Backend authorizes from JWT; userId param is not required by API but retained in signature.
+    final userId = (SessionService.currentUser().id ?? '').toString();
+    final txs = await txRepo.getByUserIdAndDateRange(userId, startDate: begin, endDate: end);
+
+    final byCategory = <int, double>{};
+    for (final t in txs) {
+      // Pie chart should represent expenses by category.
+      if (t.transactionType != TransactionType.DEBIT) continue;
+      final cid = t.categoryId;
+      if (cid == 0) continue;
+      byCategory[cid] = (byCategory[cid] ?? 0.0) + (t.amount);
     }
-    data = data.reversed.toList();
-//    print("data : " + (data.toString()));
+
+    if (byCategory.isEmpty) return <ChartEntry>[];
+
+    final categories = await catRepo.getAll();
+    final names = <int, String>{};
+    for (final c in categories) {
+      final id = c.id ?? 0;
+      if (id != 0) names[id] = c.name;
+    }
+
+    final data = <ChartEntry>[];
+    byCategory.forEach((cid, amount) {
+      if (amount <= 0) return;
+      data.add(ChartEntry(cid, names[cid] ?? 'Category $cid', amount.round()));
+    });
+
+    data.sort((a, b) => b.value.compareTo(a.value));
     return data.length > 4 ? data.sublist(0, 4) : data;
   }
 

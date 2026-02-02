@@ -50,52 +50,55 @@ class CategoryChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (seriesList == null) {
-      return Container(
-          width: double.infinity,
-          height: 250,
-          child: Center(
-            widthFactor: 2.0,
-            child: CircularProgressIndicator(),
-          ));
-    }
+    // seriesList is non-nullable; keep a fixed height so this widget never expands infinitely
+    // inside scrollables (ListView/SmartRefresher).
+    final chartHeight =
+        (MediaQuery.of(context).size.height * 0.45).clamp(240.0, 520.0);
 //    print(seriesList.length);
     if (seriesList.length <= 0) {
-      return Container(
-          width: double.infinity,
-          height: 250,
-          child: Center(
-            child: Text("No Data Available"),
-          ));
+      return SizedBox(
+        width: double.infinity,
+        height: chartHeight,
+        child: Center(
+          child: Text("No Data Available"),
+        ),
+      );
     }
 
-    return Container(
-//        padding: EdgeInsets.all(8.0),
-        width: double.infinity,
-        child: Column(
-          children: <Widget>[
-            const SizedBox(
-              height: 28,
+    return SizedBox(
+      width: double.infinity,
+      height: chartHeight,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          const SizedBox(height: 12),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: createIndicators(seriesList),
             ),
-            SingleChildScrollView(
-              child: Row(
-                mainAxisSize: MainAxisSize.max,
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: createIndicators(seriesList),
+          ),
+          const SizedBox(height: 12),
+          Expanded(
+            child: AspectRatio(
+              aspectRatio: 1.8,
+              child: PieChart(
+                PieChartData(
+                  startDegreeOffset: 180,
+                  borderData: FlBorderData(
+                    show: false,
+                  ),
+                  sectionsSpace: 1,
+                  sections: showingSections(seriesList),
+                  centerSpaceRadius: 40,
+                ),
               ),
-              scrollDirection: Axis.horizontal,
             ),
-            PieChart(PieChartData(
-              startDegreeOffset: 180,
-              borderData: FlBorderData(
-                show: false,
-              ),
-              sectionsSpace: 1,
-              sections: showingSections(seriesList),
-              centerSpaceRadius: 40,
-            )),
-          ],
-        ));
+          ),
+        ],
+      ),
+    );
   }
 
   List<Widget> createIndicators(List<ChartEntry> data) {

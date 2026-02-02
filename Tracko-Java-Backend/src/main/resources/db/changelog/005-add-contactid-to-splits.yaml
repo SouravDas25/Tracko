@@ -1,0 +1,64 @@
+databaseChangeLog:
+  - changeSet:
+      id: 005-splits-add-contact-id
+      author: cascade
+      preConditions:
+        onFail: MARK_RAN
+        onError: MARK_RAN
+        and:
+          - tableExists:
+              tableName: splits
+          - tableExists:
+              tableName: contacts
+          - not:
+              columnExists:
+                tableName: splits
+                columnName: contact_id
+      changes:
+        - addColumn:
+            tableName: splits
+            columns:
+              - column:
+                  name: contact_id
+                  type: BIGINT
+  - changeSet:
+      id: 005-splits-fk-contact
+      author: cascade
+      preConditions:
+        onFail: MARK_RAN
+        onError: MARK_RAN
+        and:
+          - tableExists:
+              tableName: splits
+          - tableExists:
+              tableName: contacts
+          - not:
+              foreignKeyConstraintExists:
+                foreignKeyName: fk_splits_contact
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: splits
+            baseColumnNames: contact_id
+            referencedTableName: contacts
+            referencedColumnNames: id
+            constraintName: fk_splits_contact
+            onDelete: SET NULL
+  - changeSet:
+      id: 005-splits-index-contact
+      author: cascade
+      preConditions:
+        onFail: MARK_RAN
+        onError: MARK_RAN
+        and:
+          - tableExists:
+              tableName: splits
+          - not:
+              indexExists:
+                indexName: idx_splits_contact
+      changes:
+        - createIndex:
+            indexName: idx_splits_contact
+            tableName: splits
+            columns:
+              - column:
+                  name: contact_id

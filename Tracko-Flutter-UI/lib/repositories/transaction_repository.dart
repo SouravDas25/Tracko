@@ -1,6 +1,7 @@
 import '../config/api_config.dart';
 import '../models/transaction.dart' as legacy;
 import '../services/api_client.dart';
+import '../Utils/enums.dart';
 
 class TransactionRepository {
   final _api = ApiClient();
@@ -71,13 +72,12 @@ class TransactionRepository {
     }
     // Map enums if available
     final tt = json['transactionType'] ?? json['transaction_type'];
-    if (tt != null) {
-      // legacy TransactionType.inttify likely handles string/int; leave for controller usage
-      // Here we set raw value if field exists on model; otherwise skip
-      try {
-        // ignore: invalid_use_of_protected_member
-        // t.transactionType = TransactionType.inttify(tt);
-      } catch (_) {}
+    if (tt is int) {
+      t.transactionType = tt;
+    } else if (tt is num) {
+      t.transactionType = tt.toInt();
+    } else if (tt is String) {
+      t.transactionType = TransactionType.inttify(tt);
     }
     t.accountId = ((json['accountId'] ?? json['account_id']) as num?)?.toInt() ?? 0;
     t.categoryId = ((json['categoryId'] ?? json['category_id']) as num?)?.toInt() ?? 0;

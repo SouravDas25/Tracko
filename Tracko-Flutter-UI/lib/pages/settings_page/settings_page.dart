@@ -8,6 +8,7 @@ import 'package:tracko/component/month_picker_dialog.dart';
 import 'package:tracko/models/user.dart';
 import 'package:tracko/pages/account_page/AccountPage.dart';
 import 'package:tracko/pages/category_page/category_page.dart';
+import 'package:tracko/pages/contact_page/contact_page.dart';
 import 'package:tracko/services/SessionService.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' as DateFormatter;
@@ -119,6 +120,24 @@ class _SettingsPage extends State<SettingsPage> {
                 context,
                 MaterialPageRoute(
                   builder: (context) => AccountPage(),
+                ),
+              );
+            },
+          ),
+        ),
+        Divider(height: 0),
+        Card(
+          margin: EdgeInsets.all(0),
+          elevation: 0,
+          child: ListTile(
+            leading: Icon(Icons.contacts, size: 30.0),
+            title: Text("Contacts", style: TextStyle(fontSize: 20.0)),
+            trailing: Icon(Icons.arrow_forward_ios),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ContactPage(),
                 ),
               );
             },
