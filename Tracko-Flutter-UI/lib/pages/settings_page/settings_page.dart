@@ -63,8 +63,8 @@ class _SettingsPage extends State<SettingsPage> {
             leading: CircleAvatar(
               radius: 20.0,
               child: user == null ||
-                  user.profilePic == null ||
-                  user.profilePic.length <= 0
+                      user.profilePic == null ||
+                      user.profilePic.length <= 0
                   ? Image.asset("assets/images/user-avatar.png")
                   : Image.network(user.profilePic),
             ),
@@ -160,12 +160,8 @@ class _SettingsPage extends State<SettingsPage> {
             onTap: () async {
               var m = await showMonthPicker(
                   context: context,
-                  firstDate: DateTime(DateTime
-                      .now()
-                      .year - 1, 5),
-                  lastDate: DateTime(DateTime
-                      .now()
-                      .year + 1, 9),
+                  firstDate: DateTime(DateTime.now().year - 1, 5),
+                  lastDate: DateTime(DateTime.now().year + 1, 9),
                   initialDate: month);
               if (m != null) {
                 month = m;

@@ -1,7 +1,10 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../config/api_config.dart';
 import '../Utils/ServerUtil.dart';
+import '../Utils/WidgetUtil.dart';
+import 'SessionService.dart';
 
 class ApiClient {
   static final ApiClient _instance = ApiClient._internal();
@@ -9,6 +12,12 @@ class ApiClient {
 
   late final Dio _dio;
   final _storage = const FlutterSecureStorage();
+  static bool _isAutoSigningOut = false;
+  static bool _suppressAuthHeader = false;
+
+  static void resetAuthSuppression() {
+    _suppressAuthHeader = false;
+  }
 
   ApiClient._internal() {
     _dio = Dio(
@@ -25,6 +34,10 @@ class ApiClient {
 
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
+        if (_suppressAuthHeader) {
+          handler.next(options);
+          return;
+        }
         var token = await _storage.read(key: 'jwt_token');
         if (token == null || token.isEmpty) {
           // Backward-compat: older parts of the app store auth token here.
@@ -46,6 +59,33 @@ class ApiClient {
           response.data = data['result'];
         }
         handler.next(response);
+      },
+      onError: (DioException err, handler) async {
+        final code = err.response?.statusCode;
+        if ((code == 401 || code == 403) && !_isAutoSigningOut) {
+          _isAutoSigningOut = true;
+          _suppressAuthHeader = true;
+          try {
+            SessionService.clearCache();
+          } catch (_) {
+            // ignore
+          }
+
+          try {
+            final state = WidgetUtil.globalHomeTabState;
+            if (state != null && state.mounted) {
+              Navigator.of(state.context).pushNamedAndRemoveUntil(
+                '/login',
+                (route) => false,
+              );
+            }
+          } catch (_) {
+            // ignore
+          } finally {
+            _isAutoSigningOut = false;
+          }
+        }
+        handler.next(err);
       },
     ));
   }

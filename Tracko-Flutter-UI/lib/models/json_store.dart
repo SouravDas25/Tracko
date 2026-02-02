@@ -14,8 +14,8 @@ class JsonStoreModel {
   }
 
   Map<String, dynamic> toJson() => {
-    'name': name,
-    // Send as json_value to match backend
-    'json_value': value,
-  };
+        'name': name,
+        // Send as json_value to match backend
+        'json_value': value,
+      };
 }

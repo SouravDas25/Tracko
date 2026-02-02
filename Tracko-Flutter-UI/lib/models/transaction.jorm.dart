@@ -24,7 +24,7 @@ abstract class _TransactionBean implements Bean<Transaction> {
         comments.name: comments,
         date.name: date,
         amount.name: amount,
-    isCountable.name: isCountable,
+        isCountable.name: isCountable,
         accountId.name: accountId,
         categoryId.name: categoryId,
       };

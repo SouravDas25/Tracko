@@ -35,7 +35,7 @@ class SessionService {
     if (_loggedInUser != null) {
       return _loggedInUser!;
     }
-    
+
     // Return a default user if not logged in
     _loggedInUser = User();
     _loggedInUser!.id = 1;
@@ -61,9 +61,9 @@ class SessionService {
     user.email = "";
     user.phoneNo = phoneNo;
     // Firebase ID is no longer used for authentication
-    user.fireBaseId = 'bypass-auth'; 
+    user.fireBaseId = 'bypass-auth';
     user.globalId = '';
-    
+
     _loggedInUser = user;
     return user;
   }

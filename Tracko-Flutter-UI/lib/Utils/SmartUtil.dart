@@ -1,7 +1,4 @@
-
-
 class SmartUtil {
-
   static bool _isAutoEnable = false;
 
   static void setAutoEnable() {

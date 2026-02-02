@@ -8,12 +8,15 @@ class JsonStoreRepository {
 
   Future<List<JsonStoreModel>> getAll() async {
     final res = await _api.get<List<dynamic>>(ApiConfig.jsonStore);
-    return res.map((e) => JsonStoreModel.fromJson(e as Map<String, dynamic>)).toList();
+    return res
+        .map((e) => JsonStoreModel.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   Future<JsonStoreModel?> getByName(String name) async {
     try {
-      final res = await _api.get<Map<String, dynamic>>("${ApiConfig.jsonStore}/$name");
+      final res =
+          await _api.get<Map<String, dynamic>>("${ApiConfig.jsonStore}/$name");
       return JsonStoreModel.fromJson(res);
     } catch (_) {
       return null;
@@ -21,12 +24,15 @@ class JsonStoreRepository {
   }
 
   Future<JsonStoreModel> save(JsonStoreModel model) async {
-    final res = await _api.post<Map<String, dynamic>>(ApiConfig.jsonStore, data: model.toJson());
+    final res = await _api.post<Map<String, dynamic>>(ApiConfig.jsonStore,
+        data: model.toJson());
     return JsonStoreModel.fromJson(res);
   }
 
   Future<JsonStoreModel> update(String name, JsonStoreModel model) async {
-    final res = await _api.put<Map<String, dynamic>>("${ApiConfig.jsonStore}/$name", data: model.toJson());
+    final res = await _api.put<Map<String, dynamic>>(
+        "${ApiConfig.jsonStore}/$name",
+        data: model.toJson());
     return JsonStoreModel.fromJson(res);
   }
 

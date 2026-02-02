@@ -115,8 +115,8 @@ class SplitBean extends Bean<Split> {
 
   Future<List<Split>> findByTransaction(int? transactionId) async {
     if (transactionId == null) return [];
-    final rows = await adapter.db
-        .rawQuery('SELECT * FROM $tableName WHERE transactionId = ?', [transactionId]);
+    final rows = await adapter.db.rawQuery(
+        'SELECT * FROM $tableName WHERE transactionId = ?', [transactionId]);
     return rows.map((m) => fromMap(m)).toList();
   }
 
@@ -124,8 +124,8 @@ class SplitBean extends Bean<Split> {
   _Finder get finder => _Finder(this);
 
   Future<List<Split>> findMany(_Finder finder) async {
-    final rows = await adapter.db.rawQuery(
-        'SELECT * FROM $tableName WHERE ${finder.toSql()}');
+    final rows = await adapter.db
+        .rawQuery('SELECT * FROM $tableName WHERE ${finder.toSql()}');
     return rows.map((m) => fromMap(m)).toList();
   }
 }

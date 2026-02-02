@@ -133,7 +133,9 @@ class _SplitPage extends RefreshableState<SplitPage> {
                 style: TextStyle(fontSize: 20.0),
               ),
               subtitle: Text(
-                row.contact.phoneNo.isNotEmpty ? row.contact.phoneNo : row.contact.email,
+                row.contact.phoneNo.isNotEmpty
+                    ? row.contact.phoneNo
+                    : row.contact.email,
               ),
               trailing: Text(
                 row.dueAmount.toStringAsFixed(2),
@@ -145,7 +147,9 @@ class _SplitPage extends RefreshableState<SplitPage> {
               leading: CircleAvatar(
                 radius: 24.0,
                 child: Text(
-                  row.contact.name.isNotEmpty ? row.contact.name.substring(0, 1).toUpperCase() : '?',
+                  row.contact.name.isNotEmpty
+                      ? row.contact.name.substring(0, 1).toUpperCase()
+                      : '?',
                 ),
               ),
               contentPadding: EdgeInsets.all(8.0),
@@ -156,6 +160,4 @@ class _SplitPage extends RefreshableState<SplitPage> {
       ),
     );
   }
-
-
 }

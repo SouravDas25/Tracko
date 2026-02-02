@@ -54,7 +54,8 @@ class _OtpPage extends State<OtpPage> {
   Future<void> _bypassAuthentication() async {
     try {
       LoadingDialog.show(context);
-      await afterAuthentication(widget.phoneNumber, 'bypass-${widget.phoneNumber}');
+      await afterAuthentication(
+          widget.phoneNumber, 'bypass-${widget.phoneNumber}');
       LoadingDialog.hide(context);
       redirectToSetUp();
     } catch (e) {
@@ -66,7 +67,8 @@ class _OtpPage extends State<OtpPage> {
   }
 
   afterAuthentication(String phoneNumber, [String? uuid]) async {
-    TrackoUser.User user = await SessionService.createCurrentUser(phoneNumber, uuid: uuid ?? '');
+    TrackoUser.User user =
+        await SessionService.createCurrentUser(phoneNumber, uuid: uuid ?? '');
     user.globalId = await ServerUtil.signUp(user) ?? '';
     SessionService.setCurrentUser(user);
   }
@@ -82,11 +84,11 @@ class _OtpPage extends State<OtpPage> {
   }
 
   verificationFailed(FirebaseAuthException authException) {
-    print("This is a Auth Exception : " + (authException.message ?? 'Unknown error'));
+    print("This is a Auth Exception : " +
+        (authException.message ?? 'Unknown error'));
     if (this.mounted)
       FlushDialog.flash(context, "Verification Failed",
-          'Phone number verification failed. Code: ${authException
-              .code}. Message: ${authException.message}');
+          'Phone number verification failed. Code: ${authException.code}. Message: ${authException.message}');
   }
 
   codeSent(String verificationId, int? forceResendingToken) async {
@@ -177,7 +179,7 @@ class _OtpPage extends State<OtpPage> {
             ),
           Padding(
             padding:
-            const EdgeInsets.symmetric(horizontal: 16.0, vertical: 75.0),
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 75.0),
             child: Center(
               child: Image(
                 image: AssetImage('assets/images/otp-icon.png'),

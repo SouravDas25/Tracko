@@ -6,15 +6,15 @@ import 'package:tracko/repositories/user_repository.dart';
 class UserController {
   static Future<int> saveUser(User user, {bool isShadow = false}) async {
     final userRepo = UserRepository();
-    
+
     // Save user via backend API
     String globalId = await userRepo.save(user, isShadow: isShadow);
     user.globalId = globalId;
-    
+
     if (user.globalId == null || user.globalId!.isEmpty) {
       throw Exception("Failed to add user ${user.phoneNo}.");
     }
-    
+
     // Parse ID from globalId
     user.id = int.tryParse(globalId);
     return user.id ?? 0;
@@ -50,11 +50,11 @@ class UserController {
     print(rootUser);
     users.removeWhere((user) => rootUser.phoneNo.contains(user.phoneNo));
     for (User user in users) {
-      user.splits = await SplitController.findByUserId(user.id ?? 0, preload: false);
+      user.splits =
+          await SplitController.findByUserId(user.id ?? 0, preload: false);
     }
     users.sort(
-            (user1, user2) =>
-            user1.splits.length.compareTo(user2.splits.length));
+        (user1, user2) => user1.splits.length.compareTo(user2.splits.length));
     return users;
   }
 

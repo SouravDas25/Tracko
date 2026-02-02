@@ -262,11 +262,13 @@ class _MonthPickerDialogState extends State<_MonthPickerDialog> {
     return TextButton(
       onPressed: callback,
       style: TextButton.styleFrom(
-        foregroundColor: date.month == selectedDate.month && date.year == selectedDate.year
-            ? theme.colorScheme.secondary
-            : date.month == DateTime.now().month && date.year == DateTime.now().year
+        foregroundColor:
+            date.month == selectedDate.month && date.year == selectedDate.year
                 ? theme.colorScheme.secondary
-                : null,
+                : date.month == DateTime.now().month &&
+                        date.year == DateTime.now().year
+                    ? theme.colorScheme.secondary
+                    : null,
       ),
       child: Text(
         DateFormat.MMM(locale).format(date),
@@ -285,7 +287,9 @@ class _MonthPickerDialogState extends State<_MonthPickerDialog> {
       style: TextButton.styleFrom(
         foregroundColor: year == selectedDate.year
             ? theme.colorScheme.secondary
-            : year == DateTime.now().year ? theme.colorScheme.secondary : null,
+            : year == DateTime.now().year
+                ? theme.colorScheme.secondary
+                : null,
       ),
       child: Text(
         DateFormat.y(locale).format(DateTime(year)),

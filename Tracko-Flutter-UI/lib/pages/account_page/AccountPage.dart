@@ -5,6 +5,7 @@ import 'package:tracko/component/FLushDialog.dart';
 import 'package:tracko/component/screen.dart';
 import 'package:tracko/controllers/AccountController.dart';
 import 'package:tracko/models/account.dart';
+import 'package:tracko/pages/transaction_list_page/transaction_list_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 
@@ -63,25 +64,35 @@ class AccountPageState extends AsyncLoadState<AccountPage> {
                   style: WidgetUtil.defaultTextStyle(),
                 ),
                 onTap: () {
-                  showDialog(
-                    context: context,
-                    builder: (_) => AccountDialog(
-                          account: accounts[i],
-                          callback: () {
-                            setState(() {
-                              initData();
-                            });
-                          },
-                        ),
+                  final id = accounts[i].id ?? 0;
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => TransactionListPage(
+                        initialAccountIds: id == 0 ? null : [id],
+                        showAccountFilter: false,
+                      ),
+                    ),
                   );
                 },
-                trailing: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Icon(
+                trailing: IconButton(
+                  icon: const Icon(
                     Icons.edit,
                     size: 30,
                     color: Colors.blueAccent,
                   ),
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (_) => AccountDialog(
+                        account: accounts[i],
+                        callback: () {
+                          setState(() {
+                            initData();
+                          });
+                        },
+                      ),
+                    );
+                  },
                 ),
               ),
             ),
@@ -109,12 +120,12 @@ class AccountPageState extends AsyncLoadState<AccountPage> {
             showDialog(
               context: context,
               builder: (_) => AccountDialog(
-                    callback: () {
-                      setState(() {
-                        initData();
-                      });
-                    },
-                  ),
+                callback: () {
+                  setState(() {
+                    initData();
+                  });
+                },
+              ),
             );
           }),
     );

@@ -15,7 +15,7 @@ class ChatMessageTile extends StatelessWidget {
     return Flex(
       direction: Axis.horizontal,
       mainAxisAlignment:
-      this.isSelf ? MainAxisAlignment.start : MainAxisAlignment.end,
+          this.isSelf ? MainAxisAlignment.start : MainAxisAlignment.end,
       children: <Widget>[
         Card(
           elevation: 1.5,

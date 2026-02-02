@@ -22,9 +22,7 @@ class CategoryDialog extends StatelessWidget {
 
   upsertCategory() async {
     this.name = _controller.text;
-    if (name
-        .trim()
-        .length <= 0) {
+    if (name.trim().length <= 0) {
       return;
     }
     Category category = this.category ?? Category();

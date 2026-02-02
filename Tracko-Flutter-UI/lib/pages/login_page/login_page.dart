@@ -127,8 +127,10 @@ class _LoginPage extends State<LoginForm> {
             decoration: InputDecoration(
               labelText: 'Password',
               suffixIcon: IconButton(
-                onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),
+                onPressed: () =>
+                    setState(() => _obscurePassword = !_obscurePassword),
+                icon: Icon(
+                    _obscurePassword ? Icons.visibility : Icons.visibility_off),
               ),
             ),
             obscureText: _obscurePassword,
@@ -156,13 +158,16 @@ class _LoginPage extends State<LoginForm> {
                   ? const SizedBox(
                       width: 18,
                       height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white),
                     )
                   : const Text('Login'),
             ),
           ),
           TextButton(
-            onPressed: _submitting ? null : () => Navigator.pushNamed(context, '/phone_login'),
+            onPressed: _submitting
+                ? null
+                : () => Navigator.pushNamed(context, '/phone_login'),
             child: const Text('Login with phone instead'),
           ),
         ],

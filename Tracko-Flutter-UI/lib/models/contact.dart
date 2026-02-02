@@ -17,11 +17,13 @@ class Contact {
       c.id = int.tryParse(idRaw);
     }
     c.name = (json['name'] as String?) ?? '';
-    c.phoneNo = (json['phoneNo'] as String?) ?? (json['phone_no'] as String?) ?? '';
+    c.phoneNo =
+        (json['phoneNo'] as String?) ?? (json['phone_no'] as String?) ?? '';
     c.email = (json['email'] as String?) ?? '';
     return c;
   }
 
   @override
-  String toString() => 'Contact{id: $id, name: $name, phoneNo: $phoneNo, email: $email}';
+  String toString() =>
+      'Contact{id: $id, name: $name, phoneNo: $phoneNo, email: $email}';
 }

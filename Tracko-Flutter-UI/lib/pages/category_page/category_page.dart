@@ -65,15 +65,14 @@ class _category_page extends AsyncLoadState<CategoryPage> {
                 onTap: () {
                   showDialog(
                     context: context,
-                    builder: (_) =>
-                        CategoryDialog(
-                          category: categories[i],
-                          callback: () {
-                            setState(() {
-                              initData();
-                            });
-                          },
-                        ),
+                    builder: (_) => CategoryDialog(
+                      category: categories[i],
+                      callback: () {
+                        setState(() {
+                          initData();
+                        });
+                      },
+                    ),
                   );
                 },
                 trailing: Padding(
@@ -110,14 +109,13 @@ class _category_page extends AsyncLoadState<CategoryPage> {
           onPressed: () {
             showDialog(
               context: context,
-              builder: (_) =>
-                  CategoryDialog(
-                    callback: () {
-                      setState(() {
-                        initData();
-                      });
-                    },
-                  ),
+              builder: (_) => CategoryDialog(
+                callback: () {
+                  setState(() {
+                    initData();
+                  });
+                },
+              ),
             );
           }),
     );

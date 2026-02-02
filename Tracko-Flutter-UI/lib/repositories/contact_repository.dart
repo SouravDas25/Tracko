@@ -11,7 +11,8 @@ class ContactRepository {
   }
 
   Future<Contact?> getById(int id) async {
-    final res = await _api.get<Map<String, dynamic>>("${ApiConfig.contacts}/$id");
+    final res =
+        await _api.get<Map<String, dynamic>>("${ApiConfig.contacts}/$id");
     return Contact.fromJson(res);
   }
 

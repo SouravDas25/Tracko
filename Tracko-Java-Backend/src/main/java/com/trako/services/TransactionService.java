@@ -32,6 +32,10 @@ public class TransactionService {
         return transactionRepository.findByUserIdAndDateBetween(userId, startDate, endDate);
     }
 
+    public List<Transaction> findByUserIdAndDateBetweenAndAccountIds(String userId, Date startDate, Date endDate, List<Long> accountIds) {
+        return transactionRepository.findByUserIdAndDateBetweenAndAccountIds(userId, startDate, endDate, accountIds);
+    }
+
     public List<Transaction> findByAccountId(Long accountId) {
         return transactionRepository.findByAccountId(accountId);
     }
@@ -66,6 +70,33 @@ public class TransactionService {
             }
         }
         
+        double netTotal = totalIncome - totalExpense;
+        return new TransactionSummaryDTO(totalIncome, totalExpense, netTotal, count);
+    }
+
+    public TransactionSummaryDTO getSummary(String userId, Date startDate, Date endDate, List<Long> accountIds) {
+        List<Transaction> transactions;
+        if (accountIds == null || accountIds.isEmpty()) {
+            transactions = transactionRepository.findByUserIdAndDateBetween(userId, startDate, endDate);
+        } else {
+            transactions = transactionRepository.findByUserIdAndDateBetweenAndAccountIds(userId, startDate, endDate, accountIds);
+        }
+
+        double totalIncome = 0.0;
+        double totalExpense = 0.0;
+        int count = 0;
+
+        for (Transaction t : transactions) {
+            if (t.getIsCountable() == 1) {
+                count++;
+                if (t.getTransactionType() == 2) { // CREDIT = income
+                    totalIncome += t.getAmount();
+                } else if (t.getTransactionType() == 1) { // DEBIT = expense
+                    totalExpense += t.getAmount();
+                }
+            }
+        }
+
         double netTotal = totalIncome - totalExpense;
         return new TransactionSummaryDTO(totalIncome, totalExpense, netTotal, count);
     }

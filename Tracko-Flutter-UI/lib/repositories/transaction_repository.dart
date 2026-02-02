@@ -16,22 +16,26 @@ class TransactionRepository {
   }
 
   Future<legacy.Transaction> getById(int id) async {
-    final res = await _api.get<Map<String, dynamic>>("${ApiConfig.transactions}/$id");
+    final res =
+        await _api.get<Map<String, dynamic>>("${ApiConfig.transactions}/$id");
     return _toLegacy(res);
   }
 
   Future<List<legacy.Transaction>> getByUserId(String userId) async {
-    final res = await _api.get<List<dynamic>>("${ApiConfig.transactions}/user/$userId");
+    final res =
+        await _api.get<List<dynamic>>("${ApiConfig.transactions}/user/$userId");
     return res.map((e) => _toLegacy(e as Map<String, dynamic>)).toList();
   }
 
   Future<List<legacy.Transaction>> getByAccountId(int accountId) async {
-    final res = await _api.get<List<dynamic>>("${ApiConfig.transactions}/account/$accountId");
+    final res = await _api
+        .get<List<dynamic>>("${ApiConfig.transactions}/account/$accountId");
     return res.map((e) => _toLegacy(e as Map<String, dynamic>)).toList();
   }
 
   Future<List<legacy.Transaction>> getByCategoryId(int categoryId) async {
-    final res = await _api.get<List<dynamic>>("${ApiConfig.transactions}/category/$categoryId");
+    final res = await _api
+        .get<List<dynamic>>("${ApiConfig.transactions}/category/$categoryId");
     return res.map((e) => _toLegacy(e as Map<String, dynamic>)).toList();
   }
 
@@ -39,25 +43,50 @@ class TransactionRepository {
     String userId, {
     required DateTime startDate,
     required DateTime endDate,
+    List<int>? accountIds,
   }) async {
     final res = await _api.get<List<dynamic>>(
       "${ApiConfig.transactions}/date-range",
       query: {
         'startDate': startDate.toIso8601String().split('T').first,
         'endDate': endDate.toIso8601String().split('T').first,
+        if (accountIds != null && accountIds.isNotEmpty)
+          'accountIds': accountIds.join(','),
       },
     );
     return res.map((e) => _toLegacy(e as Map<String, dynamic>)).toList();
   }
 
   Future<legacy.Transaction> create(legacy.Transaction t) async {
-    final res = await _api.post<Map<String, dynamic>>(ApiConfig.transactions, data: _fromLegacy(t));
+    final res = await _api.post<Map<String, dynamic>>(ApiConfig.transactions,
+        data: _fromLegacy(t));
     return _toLegacy(res);
   }
 
   Future<legacy.Transaction> update(int id, legacy.Transaction t) async {
-    final res = await _api.put<Map<String, dynamic>>("${ApiConfig.transactions}/$id", data: _fromLegacy(t));
+    final res = await _api.put<Map<String, dynamic>>(
+        "${ApiConfig.transactions}/$id",
+        data: _fromLegacy(t));
     return _toLegacy(res);
+  }
+
+  Future<void> createTransfer({
+    required int fromAccountId,
+    required int toAccountId,
+    required double amount,
+    String? name,
+    String? comments,
+  }) async {
+    await _api.post<void>(
+      ApiConfig.transfers,
+      data: {
+        'fromAccountId': fromAccountId,
+        'toAccountId': toAccountId,
+        'amount': amount,
+        'name': name,
+        'comments': comments,
+      },
+    );
   }
 
   legacy.Transaction _toLegacy(Map<String, dynamic> json) {
@@ -79,14 +108,17 @@ class TransactionRepository {
     } else if (tt is String) {
       t.transactionType = TransactionType.inttify(tt);
     }
-    t.accountId = ((json['accountId'] ?? json['account_id']) as num?)?.toInt() ?? 0;
-    t.categoryId = ((json['categoryId'] ?? json['category_id']) as num?)?.toInt() ?? 0;
+    t.accountId =
+        ((json['accountId'] ?? json['account_id']) as num?)?.toInt() ?? 0;
+    t.categoryId =
+        ((json['categoryId'] ?? json['category_id']) as num?)?.toInt() ?? 0;
     t.isCountable = (json['isCountable'] ?? json['is_countable'] ?? 1) as int;
     return t;
   }
 
   Map<String, dynamic> _fromLegacy(legacy.Transaction t) => {
-        'transactionType': t.transactionType, // ensure controller sets correct value
+        'transactionType':
+            t.transactionType, // ensure controller sets correct value
         'name': t.name,
         'amount': t.amount,
         'date': t.date.toIso8601String(),
@@ -97,18 +129,22 @@ class TransactionRepository {
       };
 
   // Aggregation methods - backend calculates
-  Future<Map<String, dynamic>> getSummary(String userId, DateTime startDate, DateTime endDate) async {
+  Future<Map<String, dynamic>> getSummary(
+      String userId, DateTime startDate, DateTime endDate, {List<int>? accountIds}) async {
     final res = await _api.get<Map<String, dynamic>>(
       "${ApiConfig.transactions}/summary",
       query: {
         'startDate': startDate.toIso8601String().split('T').first,
         'endDate': endDate.toIso8601String().split('T').first,
+        if (accountIds != null && accountIds.isNotEmpty)
+          'accountIds': accountIds.join(','),
       },
     );
     return res;
   }
 
-  Future<double> getTotalIncome(String userId, DateTime startDate, DateTime endDate) async {
+  Future<double> getTotalIncome(
+      String userId, DateTime startDate, DateTime endDate) async {
     final res = await _api.get<double>(
       "${ApiConfig.transactions}/total-income",
       query: {
@@ -119,7 +155,8 @@ class TransactionRepository {
     return res;
   }
 
-  Future<double> getTotalExpense(String userId, DateTime startDate, DateTime endDate) async {
+  Future<double> getTotalExpense(
+      String userId, DateTime startDate, DateTime endDate) async {
     final res = await _api.get<double>(
       "${ApiConfig.transactions}/total-expense",
       query: {

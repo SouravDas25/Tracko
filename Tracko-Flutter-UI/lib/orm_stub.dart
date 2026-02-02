@@ -56,4 +56,3 @@ mixin _TransactionBean {}
 mixin _SplitBean {}
 mixin _ChatBean {}
 mixin _UserBean {}
-

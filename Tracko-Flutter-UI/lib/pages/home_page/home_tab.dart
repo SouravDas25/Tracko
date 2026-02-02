@@ -2,9 +2,11 @@ import 'package:tracko/Utils/SettingUtil.dart';
 import 'package:tracko/Utils/WidgetUtil.dart';
 import 'package:tracko/pages/home_page/home_page.dart';
 import 'package:tracko/pages/settings_page/settings_page.dart';
-import 'package:tracko/pages/smartify_page/smartify_page.dart';
+import 'package:tracko/pages/stats_page/stats_page.dart';
 import 'package:tracko/pages/split_page/SplitPage.dart';
 import 'package:tracko/pages/transaction_list_page/transaction_list_page.dart';
+import 'package:tracko/pages/account_page/AccountPage.dart';
+import 'package:tracko/pages/account_page/accounts_overview_page.dart';
 import 'package:bottom_navy_bar/bottom_navy_bar.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -61,8 +63,8 @@ class _HomeTab extends State<HomeTab> with SingleTickerProviderStateMixin {
       activeColor: Colors.teal,
     ),
     BottomNavyBarItem(
-      icon: Icon(Icons.wb_incandescent),
-      title: Text("Smartify"),
+      icon: Icon(Icons.bar_chart),
+      title: Text("Stats"),
       activeColor: Colors.blue,
     ),
     BottomNavyBarItem(
@@ -76,9 +78,11 @@ class _HomeTab extends State<HomeTab> with SingleTickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Scaffold(
       bottomNavigationBar: BottomNavyBar(
-        iconSize: 30,
+        iconSize: 22,
         selectedIndex: _selectedIndex,
         showElevation: true,
+        itemCornerRadius: 8,
+        curve: Curves.easeInOut,
         onItemSelected: (int selectedPos) {
           setState(() {
             _selectedIndex = selectedPos;
@@ -112,10 +116,10 @@ class _HomeTab extends State<HomeTab> with SingleTickerProviderStateMixin {
           physics: NeverScrollableScrollPhysics(),
           controller: tabController,
           children: <Widget>[
-            TransactionListPage(),
+            AccountsOverviewPage(),
             SplitPage(),
-            HomePage(),
-            SmartPage(),
+            TransactionListPage(embedded: true),
+            StatsPage(),
             SettingsPage(),
           ]),
     );

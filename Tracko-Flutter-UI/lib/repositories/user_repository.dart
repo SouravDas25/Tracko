@@ -41,8 +41,9 @@ class UserRepository {
       'profilePic': user.profilePic ?? '',
       'isShadow': isShadow,
     };
-    
-    final res = await _api.post<String>("${ApiConfig.users}/save", data: payload);
+
+    final res =
+        await _api.post<String>("${ApiConfig.users}/save", data: payload);
     return res;
   }
 

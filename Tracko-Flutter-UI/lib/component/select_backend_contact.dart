@@ -19,7 +19,8 @@ class _CustomContact {
   _CustomContact({required this.contact, this.isChecked = false});
 }
 
-class _SelectBackendContactList extends AsyncLoadState<SelectBackendContactPage> {
+class _SelectBackendContactList
+    extends AsyncLoadState<SelectBackendContactPage> {
   final _repo = ContactRepository();
 
   List<_CustomContact> visibleContacts = <_CustomContact>[];
@@ -147,7 +148,8 @@ class _SelectBackendContactList extends AsyncLoadState<SelectBackendContactPage>
         decoration: InputDecoration(
             hintText: 'Search Contacts',
             contentPadding: EdgeInsets.fromLTRB(20.0, 15.0, 20.0, 15.0),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.0))),
+            border:
+                OutlineInputBorder(borderRadius: BorderRadius.circular(10.0))),
       ),
     ));
 

@@ -4,7 +4,9 @@ class NumberPad extends StatelessWidget {
   final Function deleteTextFunction, insertTextFunction, doneFunction;
 
   NumberPad(
-      {required this.deleteTextFunction, required this.doneFunction, required this.insertTextFunction})
+      {required this.deleteTextFunction,
+      required this.doneFunction,
+      required this.insertTextFunction})
       : super();
 
   @override

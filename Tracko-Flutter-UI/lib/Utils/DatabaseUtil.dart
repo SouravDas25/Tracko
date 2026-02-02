@@ -25,7 +25,8 @@ class DatabaseUtil {
   static DatabaseUtil _instance = new DatabaseUtil();
 
   static isNotConnected() {
-    return _instance.rawDatabase == null || !(_instance.rawDatabase?.isOpen ?? false);
+    return _instance.rawDatabase == null ||
+        !(_instance.rawDatabase?.isOpen ?? false);
   }
 
   static Future<String> fetchDatabasePath() async {
@@ -76,10 +77,11 @@ class DatabaseUtil {
     // For now, skip seeding to allow app to compile and run
     dynamic db = adapter ?? _instance.rawDatabase;
     if (db == null) return;
-    
+
     // Check if accounts table has data
     try {
-      var accountCount = await db.rawQuery('SELECT COUNT(*) as count FROM accounts');
+      var accountCount =
+          await db.rawQuery('SELECT COUNT(*) as count FROM accounts');
       if (accountCount.isNotEmpty && accountCount[0]['count'] == 0) {
         await db.insert('accounts', {'id': 1, 'name': 'Savings', 'userId': 1});
         await db.insert('accounts', {'id': 2, 'name': 'Cash', 'userId': 1});
@@ -89,15 +91,19 @@ class DatabaseUtil {
     }
 
     try {
-      var categoryCount = await db.rawQuery('SELECT COUNT(*) as count FROM categories');
+      var categoryCount =
+          await db.rawQuery('SELECT COUNT(*) as count FROM categories');
       if (categoryCount.isNotEmpty && categoryCount[0]['count'] == 0) {
-        await db.insert('categories', {'id': 1, 'name': 'Default', 'userId': 1});
+        await db
+            .insert('categories', {'id': 1, 'name': 'Default', 'userId': 1});
         await db.insert('categories', {'id': 2, 'name': 'Food', 'userId': 1});
         await db.insert('categories', {'id': 3, 'name': 'Travel', 'userId': 1});
         await db.insert('categories', {'id': 4, 'name': 'Misc', 'userId': 1});
-        await db.insert('categories', {'id': 5, 'name': 'Personal', 'userId': 1});
+        await db
+            .insert('categories', {'id': 5, 'name': 'Personal', 'userId': 1});
         await db.insert('categories', {'id': 6, 'name': 'Salary', 'userId': 1});
-        await db.insert('categories', {'id': 7, 'name': 'Grocery', 'userId': 1});
+        await db
+            .insert('categories', {'id': 7, 'name': 'Grocery', 'userId': 1});
       }
     } catch (e) {
       print('Seeding categories failed or table does not exist: $e');
@@ -137,7 +143,6 @@ class DatabaseUtil {
         "category": "Payment App"
       }
     ];
-
 
     for (int i = 0; i < 50; i++) {
       category.shuffle(rng);

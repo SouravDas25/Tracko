@@ -30,7 +30,9 @@ class SmartAddItemPage extends StatefulWidget {
   final Function complete;
 
   SmartAddItemPage(this.transaction,
-      {required this.saveCallback, required this.mainButtonText, required this.complete});
+      {required this.saveCallback,
+      required this.mainButtonText,
+      required this.complete});
 
   @override
   State<StatefulWidget> createState() {
@@ -49,6 +51,8 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
   DateTime date = DateTime.now();
   int categoryId = 0;
   int accountId = 0;
+  int transferFromAccountId = 0;
+  int transferToAccountId = 0;
   int transactionType = 0;
 
   List<User> frequentSplitters = [];
@@ -66,6 +70,10 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
     this.comments.text = transaction.comments;
     this.categoryId = transaction.categoryId;
     this.accountId = transaction.accountId;
+    this.transferFromAccountId =
+        transaction.transferFromAccountId ?? transaction.accountId;
+    this.transferToAccountId =
+        transaction.transferToAccountId ?? transaction.accountId;
     this.name.text = transaction.name;
     this.transactionType = transaction.transactionType;
     if (transaction.contacts != null) splitList.addAll(transaction.contacts);
@@ -80,10 +88,17 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
   initData() async {
     categories = await CategoryController.getAllCategories();
     accounts = await AccountController.getAllAccounts();
-    if (accountId == null) accountId = accounts[0].id ?? 0;
+    if (accountId == 0) {
+      accountId = accounts.isNotEmpty ? (accounts[0].id ?? 0) : 0;
+    }
+    if (transferFromAccountId == 0) {
+      transferFromAccountId = accounts.isNotEmpty ? (accounts[0].id ?? 0) : 0;
+    }
+    if (transferToAccountId == 0) {
+      transferToAccountId = accounts.isNotEmpty ? (accounts[0].id ?? 0) : 0;
+    }
 
-    if (splitList == null)
-      splitList = await TransactionController.loadSplits(widget.transaction);
+    splitList = await TransactionController.loadSplits(widget.transaction);
     if (splitList.length <= 0 && transactionType == TransactionType.DEBIT) {
       frequentSplitters = await UserController.getFrequentSplitters();
       TrakoContact userContact = SessionService.currentUserContact();
@@ -102,25 +117,37 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
       if (castAmountText2Double(amount.text) <= 0) {
         throw Exception("Amount should be non-zero and non-negative");
       }
-      if (categoryId == null || accountId == null) {
-        throw Exception("Category and Account has to be specified");
+      if (transactionType == TransactionType.TRANSFER) {
+        if (transferFromAccountId == 0 || transferToAccountId == 0) {
+          throw Exception("From Account and To Account has to be specified");
+        }
+        if (transferFromAccountId == transferToAccountId) {
+          throw Exception("From Account and To Account cannot be same");
+        }
+      } else {
+        if (categoryId == 0 || accountId == 0) {
+          throw Exception("Category and Account has to be specified");
+        }
       }
       Transaction transaction = widget.transaction;
       transaction.amount = castAmountText2Double(amount.text);
       transaction.date = date;
       transaction.name = name.text.trim();
-      transaction.categoryId = categoryId;
-      transaction.accountId = this.accountId;
+      if (transactionType == TransactionType.TRANSFER) {
+        transaction.transferFromAccountId = transferFromAccountId;
+        transaction.transferToAccountId = transferToAccountId;
+        transaction.accountId = transferFromAccountId;
+      } else {
+        transaction.categoryId = categoryId;
+        transaction.accountId = this.accountId;
+      }
       transaction.comments = comments.text;
       transaction.transactionType = transactionType;
-      if (transaction.contacts == null) transaction.contacts = Set();
       if (splitList.length > 0) {
         transaction.contacts.clear();
         transaction.contacts.addAll(splitList);
       }
-      if (widget.saveCallback != null) {
-        await widget.saveCallback(transaction);
-      }
+      await widget.saveCallback(transaction);
       isSuccessfulSave = true;
     } catch (exception) {
       await FlushDialog.flash(context, "Error", exception.toString());
@@ -130,9 +157,7 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
     }
     if (isSuccessfulSave) {
       Navigator.of(context).pop(isSuccessfulSave);
-      if (widget.complete != null) {
-        await widget.complete(widget.transaction);
-      }
+      await widget.complete(widget.transaction);
     }
   }
 
@@ -156,7 +181,7 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
   }
 
   void onRadioChange(int? val) {
-    if (val == TransactionType.CREDIT) {
+    if (val == TransactionType.CREDIT || val == TransactionType.TRANSFER) {
       splitList.clear();
     }
     setState(() {
@@ -165,9 +190,7 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
   }
 
   void onNameChange() async {
-    if (categoryId != null) {
-      Category category = await CategoryController.findById(categoryId);
-    }
+    await CategoryController.findById(categoryId);
   }
 
   void callSplitPage() async {
@@ -192,17 +215,19 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
       appBar: AppBar(
         backgroundColor: transactionType == TransactionType.DEBIT
             ? Colors.red
-            : Colors.lightGreen,
+            : (transactionType == TransactionType.TRANSFER
+                ? Colors.grey
+                : Colors.lightGreen),
         actions: transactionType == TransactionType.DEBIT
             ? <Widget>[
-          IconButton(
-            icon: Icon(
-              Icons.call_split,
-              size: 30.0,
-            ),
-            onPressed: callSplitPage,
-          )
-        ]
+                IconButton(
+                  icon: Icon(
+                    Icons.call_split,
+                    size: 30.0,
+                  ),
+                  onPressed: callSplitPage,
+                )
+              ]
             : [],
         title: Text(isEdit ? "Update Transaction" : "New Transaction"),
         centerTitle: true,
@@ -219,7 +244,7 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
                     padding: const EdgeInsets.all(18.0),
                     child: TextField(
                       style:
-                      TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+                          TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
                       controller: name,
                     ),
                   ),
@@ -247,63 +272,74 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
                   'Expense',
                   style: new TextStyle(fontSize: 16.0),
                 ),
+                new Radio<int>(
+                  value: TransactionType.TRANSFER,
+                  groupValue: transactionType,
+                  onChanged: onRadioChange,
+                ),
+                new Text(
+                  'Transfer',
+                  style: new TextStyle(fontSize: 16.0),
+                ),
               ],
             ),
-            DropdownButton<int>(
-              style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black),
-              isExpanded: true,
-              value: categoryId,
-              hint: Text("Please choose a Category"),
-              items: categories.map((Category value) {
-                return new DropdownMenuItem<int>(
-                  value: value.id,
-                  child: Row(
-                    children: <Widget>[
-                      Padding(
-                        padding: const EdgeInsets.all(10.0),
-                        child: WidgetUtil.textAvatar(value.name,
-                            backgroundColor: Colors.green),
-                      ),
-                      new Text(value.name),
-                    ],
-                  ),
-                );
-              }).toList(),
-              onChanged: (int? id) {
-                setState(() {
-                  this.categoryId = id ?? 0;
-                });
-              },
-            ),
-            SizedBox(
-              width: double.infinity,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: <Widget>[
-                  TextButton(
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (_) => CategoryDialog(
-                          callback: () {
-                            setState(() {
-                              initData();
-                            });
-                          },
+            if (transactionType != TransactionType.TRANSFER)
+              DropdownButton<int>(
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black),
+                isExpanded: true,
+                value: categoryId,
+                hint: Text("Please choose a Category"),
+                items: categories.map((Category value) {
+                  return new DropdownMenuItem<int>(
+                    value: value.id,
+                    child: Row(
+                      children: <Widget>[
+                        Padding(
+                          padding: const EdgeInsets.all(10.0),
+                          child: WidgetUtil.textAvatar(value.name,
+                              backgroundColor: Colors.green),
                         ),
-                      );
-                    },
-                    child: Text(
-                      "+ Category",
-                      textAlign: TextAlign.right,
+                        new Text(value.name),
+                      ],
                     ),
-                  )
-                ],
+                  );
+                }).toList(),
+                onChanged: (int? id) {
+                  setState(() {
+                    this.categoryId = id ?? 0;
+                  });
+                },
               ),
-            ),
+            if (transactionType != TransactionType.TRANSFER)
+              SizedBox(
+                width: double.infinity,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: <Widget>[
+                    TextButton(
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (_) => CategoryDialog(
+                            callback: () {
+                              setState(() {
+                                initData();
+                              });
+                            },
+                          ),
+                        );
+                      },
+                      child: Text(
+                        "+ Category",
+                        textAlign: TextAlign.right,
+                      ),
+                    )
+                  ],
+                ),
+              ),
             TextField(
               keyboardType: TextInputType.numberWithOptions(decimal: true),
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -320,7 +356,8 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
               format: DateFormat('dd-MMM-yyyy'),
               readOnly: true,
               decoration: InputDecoration(
-                  labelText: 'Date', floatingLabelBehavior: FloatingLabelBehavior.never),
+                  labelText: 'Date',
+                  floatingLabelBehavior: FloatingLabelBehavior.never),
               onShowPicker: (context, currentValue) {
                 return showDatePicker(
                     context: context,
@@ -334,78 +371,143 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
             ),
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: new DropdownButton<int>(
-                isExpanded: true,
-                value: accountId,
-                style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black),
-                hint: Text("Please choose a Account"),
-                items: accounts.map((Account value) {
-                  return new DropdownMenuItem<int>(
-                    value: value.id,
-                    child: new Text(value.name),
-                  );
-                }).toList(),
-                onChanged: (int? value) {
-                  setState(() {
-                    this.accountId = value ?? 0;
-                  });
-                },
-              ),
+              child: transactionType == TransactionType.TRANSFER
+                  ? Column(
+                      children: [
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 6.0),
+                            child: Text("From Account"),
+                          ),
+                        ),
+                        new DropdownButton<int>(
+                          isExpanded: true,
+                          value: transferFromAccountId,
+                          style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black),
+                          hint: Text("Please choose From Account"),
+                          items: accounts.map((Account value) {
+                            return new DropdownMenuItem<int>(
+                              value: value.id,
+                              child: new Text(value.name),
+                            );
+                          }).toList(),
+                          onChanged: (int? value) {
+                            setState(() {
+                              transferFromAccountId = value ?? 0;
+                              if (transferToAccountId == 0) {
+                                transferToAccountId = value ?? 0;
+                              }
+                            });
+                          },
+                        ),
+                        SizedBox(height: 12),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 6.0),
+                            child: Text("To Account"),
+                          ),
+                        ),
+                        new DropdownButton<int>(
+                          isExpanded: true,
+                          value: transferToAccountId,
+                          style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black),
+                          hint: Text("Please choose To Account"),
+                          items: accounts.map((Account value) {
+                            return new DropdownMenuItem<int>(
+                              value: value.id,
+                              child: new Text(value.name),
+                            );
+                          }).toList(),
+                          onChanged: (int? value) {
+                            setState(() {
+                              transferToAccountId = value ?? 0;
+                            });
+                          },
+                        ),
+                      ],
+                    )
+                  : new DropdownButton<int>(
+                      isExpanded: true,
+                      value: accountId,
+                      style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black),
+                      hint: Text("Please choose a Account"),
+                      items: accounts.map((Account value) {
+                        return new DropdownMenuItem<int>(
+                          value: value.id,
+                          child: new Text(value.name),
+                        );
+                      }).toList(),
+                      onChanged: (int? value) {
+                        setState(() {
+                          this.accountId = value ?? 0;
+                        });
+                      },
+                    ),
             ),
             SizedBox(
                 width: double.infinity,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: <Widget>[
-                    TextButton(
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (_) => AccountDialog(
-                            callback: () {
-                              setState(() {
-                                initData();
-                              });
-                            },
-                          ),
-                        );
-                      },
-                      child: Text(
-                        "+ Account",
-                        textAlign: TextAlign.right,
-                      ),
-                    )
+                    if (transactionType != TransactionType.TRANSFER)
+                      TextButton(
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (_) => AccountDialog(
+                              callback: () {
+                                setState(() {
+                                  initData();
+                                });
+                              },
+                            ),
+                          );
+                        },
+                        child: Text(
+                          "+ Account",
+                          textAlign: TextAlign.right,
+                        ),
+                      )
                   ],
                 )),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: Text("Splits"),
-            ),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                  children: frequentSplitters
-                      .map((User user) =>
-                      ActionChip(
-                        avatar: WidgetUtil.textAvatar(user.name),
-                        onPressed: () {
-                          addSplit(user);
-                        },
-                        label: Text(user.name),
-                      ))
-                      .toList()),
-            ),
-            Container(
-              child: SplitSectionInAddTransaction(
-                parentState: this,
-                amount: castAmountText2Double(amount.text),
-                splitList: splitList,
-                textEditingControllers: splitAmountTextEditionControllers,
+            if (transactionType != TransactionType.TRANSFER) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Text("Splits"),
               ),
-            ),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                    children: frequentSplitters
+                        .map((User user) => ActionChip(
+                              avatar: WidgetUtil.textAvatar(user.name),
+                              onPressed: () {
+                                addSplit(user);
+                              },
+                              label: Text(user.name),
+                            ))
+                        .toList()),
+              ),
+              Container(
+                child: SplitSectionInAddTransaction(
+                  parentState: this,
+                  amount: castAmountText2Double(amount.text),
+                  splitList: splitList,
+                  textEditingControllers: splitAmountTextEditionControllers,
+                ),
+              ),
+            ],
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8.0),
               child: TextField(

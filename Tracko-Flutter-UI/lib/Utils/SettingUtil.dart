@@ -31,7 +31,8 @@ class SettingUtil {
   }
 
   static Future<bool> isAutoBackUpEnabled() async {
-    bool isKeyPresent = await JsonStore.has(ConstantUtil.AUTO_BACK_UP_KEY) ?? false;
+    bool isKeyPresent =
+        await JsonStore.has(ConstantUtil.AUTO_BACK_UP_KEY) ?? false;
     if (!isKeyPresent) return true;
     String val = await JsonStore.get(ConstantUtil.AUTO_BACK_UP_KEY) ?? '1';
     return val == "1" ? true : false;
@@ -46,9 +47,11 @@ class SettingUtil {
   static DateTime? _lastBackedUpTime;
 
   static Future<DateTime?> getLastBackedUpTime() async {
-    bool hasTimestamp = await JsonStore.has(ConstantUtil.AUTO_BACK_UP_TIMESTAMP_KEY) ?? false;
+    bool hasTimestamp =
+        await JsonStore.has(ConstantUtil.AUTO_BACK_UP_TIMESTAMP_KEY) ?? false;
     if (hasTimestamp) {
-      String val = await JsonStore.get(ConstantUtil.AUTO_BACK_UP_TIMESTAMP_KEY) ?? '';
+      String val =
+          await JsonStore.get(ConstantUtil.AUTO_BACK_UP_TIMESTAMP_KEY) ?? '';
       if (val.isNotEmpty) {
         _lastBackedUpTime =
             DateTime.fromMillisecondsSinceEpoch(int.parse(val), isUtc: true);

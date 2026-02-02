@@ -26,7 +26,8 @@ class SplitController {
     // Filter unsettled splits
     splits = splits.where((s) => s.isSettled == 0).toList();
 
-    double amount = splits.fold(0.0, (value, element) => value + element.amount);
+    double amount =
+        splits.fold(0.0, (value, element) => value + element.amount);
     return amount;
   }
 
@@ -42,7 +43,7 @@ class SplitController {
     final txRepo = TransactionRepository();
     final userIdStr = _normalizeUserId(userId);
     if (userIdStr == null) return <Split>[];
-    
+
     DateTime month = SettingUtil.currentMonth;
     DateTime nextMonth = SettingUtil.nextMonth;
 
@@ -59,7 +60,7 @@ class SplitController {
     } catch (e) {
       // Ignore contact load failures; splits will still show without contact info.
     }
-    
+
     List<Split> returningSplit = [];
     for (Split split in splits) {
       if (split.contactId != null) {
@@ -67,36 +68,36 @@ class SplitController {
       }
       // Get transaction for this split
       if (split.transactionId == 0) continue;
-      
+
       try {
         split.transaction = await txRepo.getById(split.transactionId);
       } catch (e) {
         continue; // Skip if transaction not found
       }
-      
+
       if (split.transaction == null) continue;
-      
+
       // Filter: include if transaction in current month OR split is unsettled OR settled this month
-      bool inCurrentMonth = split.transaction!.date.isAfter(month) && 
-                           split.transaction!.date.isBefore(nextMonth);
+      bool inCurrentMonth = split.transaction!.date.isAfter(month) &&
+          split.transaction!.date.isBefore(nextMonth);
       bool isUnsettled = split.isSettled == 0;
-      bool settledThisMonth = split.settledAt.isAfter(month) && 
-                             split.settledAt.isBefore(nextMonth);
-      
+      bool settledThisMonth =
+          split.settledAt.isAfter(month) && split.settledAt.isBefore(nextMonth);
+
       if (inCurrentMonth || isUnsettled || settledThisMonth) {
         // Preload category if requested
         if (preload && split.transaction != null) {
-          split.transaction!.category = 
+          split.transaction!.category =
               await CategoryController.findById(split.transaction!.categoryId);
         }
         returningSplit.add(split);
       }
     }
-    
+
     // Sort by transaction date
-    returningSplit.sort((a, b) => 
-        (a.transaction?.date ?? DateTime.now()).compareTo(b.transaction?.date ?? DateTime.now()));
-    
+    returningSplit.sort((a, b) => (a.transaction?.date ?? DateTime.now())
+        .compareTo(b.transaction?.date ?? DateTime.now()));
+
     return returningSplit;
   }
 
@@ -119,7 +120,7 @@ class SplitController {
   static Future<int> settleSplit(Split split, {int? settleTo}) async {
     final splitRepo = SplitRepository();
     if (split.id == null) return 0;
-    
+
     // Use settle endpoint if available, otherwise update manually
     try {
       await splitRepo.settle(split.id!);
@@ -140,7 +141,7 @@ class SplitController {
   static removeByTransactionId(int transactionId) async {
     final splitRepo = SplitRepository();
     List<Split> splits = await splitRepo.getByTransactionId(transactionId);
-    
+
     for (Split split in splits) {
       if (split.id != null) {
         await splitRepo.delete(split.id!);

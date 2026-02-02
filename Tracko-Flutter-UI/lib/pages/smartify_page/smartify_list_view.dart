@@ -11,7 +11,9 @@ class SmartListView extends StatelessWidget {
   State<StatefulWidget> parent;
 
   SmartListView(this.transactions, this.parent,
-      {required this.deleteSingle, required this.complete, required this.cancel});
+      {required this.deleteSingle,
+      required this.complete,
+      required this.cancel});
 
   List<Widget> generate(BuildContext context) {
     List<Widget> widgets = <Widget>[];
@@ -21,8 +23,8 @@ class SmartListView extends StatelessWidget {
       widgets.add(IgnorePointer(
         ignoring: false,
         child: TransactionTile(this.parent, transaction,
-                (parent, Transaction transaction) {
-              parent.setState(() {});
+            (parent, Transaction transaction) {
+          parent.setState(() {});
         }),
       ));
     }

@@ -15,6 +15,17 @@ import 'package:intl/intl.dart' as DateFormatter;
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 class TransactionListPage extends StatefulWidget {
+  final List<int>? initialAccountIds;
+  final bool showAccountFilter;
+  final bool embedded;
+
+  const TransactionListPage({
+    Key? key,
+    this.initialAccountIds,
+    this.showAccountFilter = true,
+    this.embedded = false,
+  }) : super(key: key);
+
   @override
   State<StatefulWidget> createState() {
     return _AccountsPage();
@@ -37,22 +48,37 @@ class _AccountsPage extends RefreshableState<TransactionListPage> {
 
   @override
   asyncLoad() async {
-    await refresh();
-    this.loadCompleteView();
+    try {
+      // Pre-seed selections from initialAccountIds if provided
+      if (widget.initialAccountIds != null && widget.initialAccountIds!.isNotEmpty) {
+        selections = List<dynamic>.from(widget.initialAccountIds!);
+      }
+      await refresh();
+      this.loadCompleteView();
+    } catch (e) {
+      if (mounted) {
+        // If not logged in or session invalid, go to welcome/login flow.
+        Navigator.pushReplacementNamed(context, '/welcome');
+      }
+    }
   }
 
   @override
   Future<void> refresh() async {
-    accounts = await AccountController.getAllAccounts();
-//    print(accounts);
-//    await adapter.close();
-    await initTransactionData();
-//    Future<void>.delayed(Duration(milliseconds: 5));
-    if (this.mounted) {
-      setState(() {
-//      refreshController.sendBack(true, RefreshStatus.completed);
-        refreshController.refreshCompleted();
-      });
+    try {
+      accounts = await AccountController.getAllAccounts();
+      await initTransactionData();
+      if (this.mounted) {
+        setState(() {
+          refreshController.refreshCompleted();
+        });
+      }
+    } catch (e) {
+      // Likely unauthenticated; redirect to welcome/login.
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/welcome');
+      }
+      rethrow;
     }
   }
 
@@ -74,16 +100,23 @@ class _AccountsPage extends RefreshableState<TransactionListPage> {
     transactions = await TransactionController.getTransaction(currentPage,
         accountIds: accountIds);
     totalAmount = incomeAmount = expenseAmount = 0;
-    incomeAmount = await TransactionController.getCurrentMonthIncome(
-        accountIds: accountIds);
+    incomeAmount =
+        await TransactionController.getCurrentMonthIncome(accountIds: accountIds);
     expenseAmount = await TransactionController.getCurrentMonthExpense(
         accountIds: accountIds);
-    previousMonthAmount = await TransactionController.getPreviousMonthTotal();
+
+    final prevSummary = await TransactionController.getSummaryBetween(
+      SettingUtil.previousMonth,
+      SettingUtil.currentMonth,
+      accountIds: accountIds,
+    );
+    previousMonthAmount =
+        (prevSummary['netTotal'] as num?)?.toDouble() ?? 0.0;
+
     totalAmount = incomeAmount - expenseAmount + previousMonthAmount;
   }
 
-  @override
-  Widget completeWidget(BuildContext context) {
+  Widget _buildContent() {
     return SmartRefresher(
       controller: refreshController,
       enablePullDown: true,
@@ -93,35 +126,35 @@ class _AccountsPage extends RefreshableState<TransactionListPage> {
       },
       child: ListView(
         children: <Widget>[
-          Padding(
-            padding: const EdgeInsets.all(4.0),
-            child: MultiSelect(
-              autovalidateMode: AutovalidateMode.disabled,
-              titleText: 'Select multiple accounts',
-              textField: 'name',
-              valueField: 'id',
-              required: false,
-              filterable: true,
-              value: null,
-              change: (values) {
-                selections = values;
-              },
-              open: () {},
-              close: () {},
-              onSaved: (values) async {
-                selections = values;
-//                print("selected $values ");
-                await initTransactionData();
-                setState(() {});
-              },
-              dataSource: accounts.map((Account account) {
-                return {
-                  "name": account.name,
-                  "id": account.id,
-                };
-              }).toList(),
+          if (widget.showAccountFilter)
+            Padding(
+              padding: const EdgeInsets.all(4.0),
+              child: MultiSelect(
+                autovalidateMode: AutovalidateMode.disabled,
+                titleText: 'Select multiple accounts',
+                textField: 'name',
+                valueField: 'id',
+                required: false,
+                filterable: true,
+                value: null,
+                change: (values) {
+                  selections = values;
+                },
+                open: () {},
+                close: () {},
+                onSaved: (values) async {
+                  selections = values;
+                  await initTransactionData();
+                  setState(() {});
+                },
+                dataSource: accounts.map((Account account) {
+                  return {
+                    "name": account.name,
+                    "id": account.id,
+                  };
+                }).toList(),
+              ),
             ),
-          ),
           Padding(
             padding: const EdgeInsets.only(top: 4.0),
             child: Card(
@@ -140,8 +173,7 @@ class _AccountsPage extends RefreshableState<TransactionListPage> {
                     ),
                     dense: true,
                     title: Text(
-                      "Last Month (${DateFormatter.DateFormat("MMM").format(
-                          SettingUtil.previousMonth)})",
+                      "Last Month (${DateFormatter.DateFormat("MMM").format(SettingUtil.previousMonth)})",
                       style: TextStyle(fontSize: 18.0),
                     ),
                   ),
@@ -203,9 +235,9 @@ class _AccountsPage extends RefreshableState<TransactionListPage> {
               itemBuilder: (BuildContext context, int index) {
                 Transaction transaction = transactions[index];
                 return TransactionTile(this, transaction,
-                        (dynamic parent, Transaction transaction) {
-                      parent.refresh();
-                    });
+                    (dynamic parent, Transaction transaction) {
+                  parent.refresh();
+                });
               },
             ),
           ),
@@ -218,6 +250,26 @@ class _AccountsPage extends RefreshableState<TransactionListPage> {
             },
           )
         ],
+      ),
+    );
+  }
+
+  @override
+  Widget completeWidget(BuildContext context) {
+    if (widget.embedded) {
+      return _buildContent();
+    }
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Transactions'),
+        centerTitle: true,
+      ),
+      body: _buildContent(),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.pushNamed(context, '/add_item');
+        },
+        child: const Icon(Icons.add),
       ),
     );
   }

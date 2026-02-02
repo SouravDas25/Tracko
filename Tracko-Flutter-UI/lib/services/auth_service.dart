@@ -13,7 +13,8 @@ class AuthService {
     String? email,
     String? profilePic,
   }) async {
-    final res = await _api.post<Map<String, dynamic>>(ApiConfig.authSignUp, data: {
+    final res =
+        await _api.post<Map<String, dynamic>>(ApiConfig.authSignUp, data: {
       'phoneNo': phoneNo,
       'uuid': firebaseUuid, // backend maps to fireBaseId
       'name': name,
@@ -24,6 +25,7 @@ class AuthService {
     final token = res['token'] ?? res['jwtToken'];
     if (token is String) {
       await _storage.write(key: 'jwt_token', value: token);
+      ApiClient.resetAuthSuppression();
     }
     return (res['id'] ?? res['userId'] ?? '').toString();
   }
@@ -32,13 +34,15 @@ class AuthService {
     required String phoneNo,
     required String firebaseUuid,
   }) async {
-    final res = await _api.post<Map<String, dynamic>>(ApiConfig.authLogin, data: {
+    final res =
+        await _api.post<Map<String, dynamic>>(ApiConfig.authLogin, data: {
       'phoneNo': phoneNo,
       'uuid': firebaseUuid,
     });
     final token = res['token'] ?? res['jwtToken'];
     if (token is String) {
       await _storage.write(key: 'jwt_token', value: token);
+      ApiClient.resetAuthSuppression();
       return token;
     }
     return null;
@@ -58,12 +62,14 @@ class AuthService {
     final token = res['token'] ?? res['jwtToken'];
     if (token is String) {
       await _storage.write(key: 'jwt_token', value: token);
+      ApiClient.resetAuthSuppression();
       return token;
     }
     return null;
   }
 
-  Future<bool> isLoggedIn() async => (await _storage.read(key: 'jwt_token')) != null;
+  Future<bool> isLoggedIn() async =>
+      (await _storage.read(key: 'jwt_token')) != null;
   Future<void> logout() async => _storage.delete(key: 'jwt_token');
   Future<String?> getToken() async => _storage.read(key: 'jwt_token');
 }

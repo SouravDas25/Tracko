@@ -17,7 +17,9 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 import java.util.Date;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/transactions")
@@ -35,11 +37,42 @@ public class TransactionController {
     @Autowired
     private CategoryRepository categoryRepository;
 
+    private List<Transaction> hideTransferCredits(List<Transaction> transactions, String userId) {
+        var transferCats = categoryRepository.findByUserIdAndName(userId, "TRANSFER");
+        if (transferCats == null || transferCats.isEmpty()) {
+            return transactions;
+        }
+        Long transferCategoryId = transferCats.get(0).getId();
+        return transactions.stream()
+                .filter(t -> !(t.getCategoryId() != null
+                        && t.getCategoryId().equals(transferCategoryId)
+                        && t.getIsCountable() != null && t.getIsCountable() == 0
+                        && t.getTransactionType() != null && t.getTransactionType() == 2)) // hide CREDIT side
+                .collect(Collectors.toList());
+    }
+
+    private List<Transaction> markTransferTypeAsTransfer(List<Transaction> transactions, String userId) {
+        var transferCats = categoryRepository.findByUserIdAndName(userId, "TRANSFER");
+        if (transferCats == null || transferCats.isEmpty()) {
+            return transactions;
+        }
+        Long transferCategoryId = transferCats.get(0).getId();
+        for (var t : transactions) {
+            if (t.getCategoryId() != null && t.getCategoryId().equals(transferCategoryId)
+                    && t.getIsCountable() != null && t.getIsCountable() == 0) {
+                t.setTransactionType(3); // mark as TRANSFER for response rendering
+            }
+        }
+        return transactions;
+    }
+
     @GetMapping
     public ResponseEntity<?> getAll() {
         try {
             String currentUserId = userService.loggedInUser().getId();
             List<Transaction> transactions = transactionService.findByUserId(currentUserId);
+            transactions = hideTransferCredits(transactions, currentUserId);
+            transactions = markTransferTypeAsTransfer(transactions, currentUserId);
             return Response.ok(transactions);
         } catch (UserNotLoggedInException e) {
             return Response.unauthorized();
@@ -75,10 +108,12 @@ public class TransactionController {
     @GetMapping("/summary")
     public ResponseEntity<?> getMySummary(
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
-            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate) {
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate,
+            @RequestParam(required = false) String accountIds) {
         try {
             String currentUserId = userService.loggedInUser().getId();
-            TransactionSummaryDTO summary = transactionService.getSummary(currentUserId, startDate, endDate);
+            List<Long> ids = parseAccountIds(accountIds);
+            TransactionSummaryDTO summary = transactionService.getSummary(currentUserId, startDate, endDate, ids);
             return Response.ok(summary);
         } catch (UserNotLoggedInException e) {
             return Response.unauthorized();
@@ -88,14 +123,40 @@ public class TransactionController {
     @GetMapping("/date-range")
     public ResponseEntity<?> getMyTransactionsByDateRange(
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
-            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate) {
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate,
+            @RequestParam(required = false) String accountIds) {
         try {
             String currentUserId = userService.loggedInUser().getId();
-            List<Transaction> transactions = transactionService.findByUserIdAndDateBetween(currentUserId, startDate, endDate);
+            List<Long> ids = parseAccountIds(accountIds);
+            List<Transaction> transactions;
+            if (ids == null || ids.isEmpty()) {
+                transactions = transactionService.findByUserIdAndDateBetween(currentUserId, startDate, endDate);
+            } else {
+                transactions = transactionService.findByUserIdAndDateBetweenAndAccountIds(currentUserId, startDate, endDate, ids);
+            }
+            transactions = hideTransferCredits(transactions, currentUserId);
+            transactions = markTransferTypeAsTransfer(transactions, currentUserId);
             return Response.ok(transactions);
         } catch (UserNotLoggedInException e) {
             return Response.unauthorized();
         }
+    }
+
+    private List<Long> parseAccountIds(String accountIds) {
+        if (accountIds == null || accountIds.trim().isEmpty()) return new ArrayList<>();
+        List<Long> out = new ArrayList<>();
+        String[] parts = accountIds.split(",");
+        for (String p : parts) {
+            if (p == null) continue;
+            String s = p.trim();
+            if (s.isEmpty()) continue;
+            try {
+                out.add(Long.parseLong(s));
+            } catch (Exception ignored) {
+                // ignore invalid entries
+            }
+        }
+        return out;
     }
 
     @GetMapping("/{id}")
@@ -124,6 +185,8 @@ public class TransactionController {
                 return Response.unauthorized();
             }
             List<Transaction> transactions = transactionService.findByUserId(currentUserId);
+            transactions = hideTransferCredits(transactions, currentUserId);
+            transactions = markTransferTypeAsTransfer(transactions, currentUserId);
             return Response.ok(transactions);
         } catch (UserNotLoggedInException e) {
             return Response.unauthorized();
@@ -141,6 +204,8 @@ public class TransactionController {
                 return Response.unauthorized();
             }
             List<Transaction> transactions = transactionService.findByUserIdAndDateBetween(currentUserId, startDate, endDate);
+            transactions = hideTransferCredits(transactions, currentUserId);
+            transactions = markTransferTypeAsTransfer(transactions, currentUserId);
             return Response.ok(transactions);
         } catch (UserNotLoggedInException e) {
             return Response.unauthorized();
@@ -150,12 +215,26 @@ public class TransactionController {
     @GetMapping("/account/{accountId}")
     public ResponseEntity<?> getByAccountId(@PathVariable Long accountId) {
         List<Transaction> transactions = transactionService.findByAccountId(accountId);
+        try {
+            String currentUserId = userService.loggedInUser().getId();
+            transactions = hideTransferCredits(transactions, currentUserId);
+            transactions = markTransferTypeAsTransfer(transactions, currentUserId);
+        } catch (UserNotLoggedInException e) {
+            // If unauthenticated, return raw list (consistent with previous behavior)
+        }
         return Response.ok(transactions);
     }
 
     @GetMapping("/category/{categoryId}")
     public ResponseEntity<?> getByCategoryId(@PathVariable Long categoryId) {
         List<Transaction> transactions = transactionService.findByCategoryId(categoryId);
+        try {
+            String currentUserId = userService.loggedInUser().getId();
+            transactions = hideTransferCredits(transactions, currentUserId);
+            transactions = markTransferTypeAsTransfer(transactions, currentUserId);
+        } catch (UserNotLoggedInException e) {
+            // If unauthenticated, return raw list
+        }
         return Response.ok(transactions);
     }
 

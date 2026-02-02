@@ -7,7 +7,6 @@ import 'package:tracko/services/SessionService.dart';
 // import 'package:contacts_service/contacts_service.dart'; // TODO: Replace with AGP 8+ compatible alternative
 import 'package:flutter/material.dart';
 
-
 //
 // ignore: camel_case_types
 class SelectContactPage extends StatefulWidget {
@@ -55,7 +54,8 @@ class SelectContactList extends AsyncLoadState<SelectContactPage> {
       filter = searchController.text.toLowerCase();
       visibleContacts = allContacts
           .where((customContact) =>
-      customContact.contact?.name?.toLowerCase().contains(filter) == true)
+              customContact.contact?.name?.toLowerCase().contains(filter) ==
+              true)
           .toList();
     });
   }
@@ -82,11 +82,13 @@ class SelectContactList extends AsyncLoadState<SelectContactPage> {
               .add(CustomContact(contact: TrakoContact.fromContact(contact)));
         }
       }
-      allContacts.sort((a, b) => (a.contact?.name ?? '').compareTo(b.contact?.name ?? ''));
+      allContacts.sort(
+          (a, b) => (a.contact?.name ?? '').compareTo(b.contact?.name ?? ''));
       setState(() {
         visibleContacts = allContacts;
       });
     }
+
     setState(() {
       visibleContacts = allContacts;
     });
@@ -145,7 +147,8 @@ class SelectContactList extends AsyncLoadState<SelectContactPage> {
         trailing: Checkbox(
             activeColor: Colors.green,
             value: customContact.isChecked,
-            onChanged: (bool? value) => onCheckBoxHit(customContact, value ?? false)),
+            onChanged: (bool? value) =>
+                onCheckBoxHit(customContact, value ?? false)),
       );
     }
 
@@ -177,7 +180,7 @@ class SelectContactList extends AsyncLoadState<SelectContactPage> {
             hintText: 'Search Contacts',
             contentPadding: EdgeInsets.fromLTRB(20.0, 15.0, 20.0, 15.0),
             border:
-            OutlineInputBorder(borderRadius: BorderRadius.circular(10.0))),
+                OutlineInputBorder(borderRadius: BorderRadius.circular(10.0))),
       ),
     ));
     if (selectedContacts.isNotEmpty) {
@@ -185,23 +188,22 @@ class SelectContactList extends AsyncLoadState<SelectContactPage> {
         scrollDirection: Axis.horizontal,
         child: Row(
             children: selectedContacts
-                .map((CustomContact cc) =>
-                Chip(
-                  avatar: WidgetUtil.textAvatar(cc.contact?.name ?? ''),
-                  onDeleted: () => onCheckBoxHit(cc, false),
-                  label: Text(cc.contact?.name ?? ''),
-                ))
+                .map((CustomContact cc) => Chip(
+                      avatar: WidgetUtil.textAvatar(cc.contact?.name ?? ''),
+                      onDeleted: () => onCheckBoxHit(cc, false),
+                      label: Text(cc.contact?.name ?? ''),
+                    ))
                 .toList()),
       ));
     }
     body.add(new Expanded(
         child: new ListView.builder(
-          itemCount: visibleContacts?.length,
-          itemBuilder: (BuildContext context, int index) {
-            CustomContact _contact = visibleContacts[index];
-            return _buildListTile(_contact);
-          },
-        )));
+      itemCount: visibleContacts?.length,
+      itemBuilder: (BuildContext context, int index) {
+        CustomContact _contact = visibleContacts[index];
+        return _buildListTile(_contact);
+      },
+    )));
     return Scaffold(
         appBar: appBar,
         body: Column(

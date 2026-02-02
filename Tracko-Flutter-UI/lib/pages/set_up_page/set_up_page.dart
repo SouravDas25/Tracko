@@ -32,7 +32,8 @@ class _setUpPage extends State<SetUpPage> {
     try {
       User user = await SessionService.getCurrentUser();
       GlobalAccountResponse globalAccount =
-      await ServerUtil.getGlobalAccount(user.phoneNo) ?? GlobalAccountResponse.fromJson({});
+          await ServerUtil.getGlobalAccount(user.phoneNo) ??
+              GlobalAccountResponse.fromJson({});
       print(globalAccount);
       if (globalAccount != null) {
         if (nameController.text.length <= 0 &&
@@ -53,14 +54,14 @@ class _setUpPage extends State<SetUpPage> {
   updateUser() async {
     try {
       LoadingDialog.show(context);
-      
+
       // Get current user from session
       User user = await SessionService.getCurrentUser();
-      
+
       print(user);
       user.name = nameController.text;
       user.email = emailController.text;
-      
+
       String globalId = this.globalAccountId;
       if (globalId == null || globalId.isEmpty) {
         // Create new global account via backend
@@ -77,10 +78,10 @@ class _setUpPage extends State<SetUpPage> {
         user.globalId = globalId;
         await ServerUtil.updateGlobalUser(user);
       }
-      
+
       // Save user via backend repository
       await UserController.saveUser(user);
-      
+
       // Update session
       SessionService.setCurrentUser(user);
 
@@ -167,7 +168,7 @@ class _setUpPage extends State<SetUpPage> {
                         controller: emailController,
                         keyboardType: TextInputType.emailAddress,
                         decoration:
-                        new InputDecoration(hintText: "Email Address"),
+                            new InputDecoration(hintText: "Email Address"),
                         style: TextStyle(fontSize: 20.0),
                         validator: (value) {
                           if (value?.isEmpty ?? true) {

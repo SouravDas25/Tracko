@@ -36,7 +36,8 @@ class SmsScanningService {
   static bool isScanningAllowed(dynamic msg) {
     if (ConstantUtil.DISABLE_SCANNING_MONTH_LIMIT) {
       try {
-        int msgMonth = currentSMS?.date?.month ?? SettingUtil.currentMonth.month;
+        int msgMonth =
+            currentSMS?.date?.month ?? SettingUtil.currentMonth.month;
         int msgYear = currentSMS?.date?.year ?? SettingUtil.currentMonth.year;
         int diff = SettingUtil.currentMonth.month - msgMonth;
         int ydiff = SettingUtil.currentMonth.year - msgYear;
@@ -49,7 +50,8 @@ class SmsScanningService {
     try {
       int msgMonth = currentSMS?.date?.month ?? SettingUtil.currentMonth.month;
       int msgYear = currentSMS?.date?.year ?? SettingUtil.currentMonth.year;
-      if (msgMonth == SettingUtil.currentMonth.month && msgYear == SettingUtil.currentMonth.year) return true;
+      if (msgMonth == SettingUtil.currentMonth.month &&
+          msgYear == SettingUtil.currentMonth.year) return true;
     } catch (e) {
       return false;
     }
@@ -63,7 +65,9 @@ class SmsScanningService {
 //      WidgetUtil.toast("Only scanning this months SMS.");
       return null;
     }
-    try { print(msg?.id); } catch (_) {}
+    try {
+      print(msg?.id);
+    } catch (_) {}
     Transaction? transaction;
     transaction = await ServerUtil.extractSmsData(msg);
     currentSMS = null;

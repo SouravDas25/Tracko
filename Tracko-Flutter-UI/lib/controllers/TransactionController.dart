@@ -25,7 +25,31 @@ class TransactionController {
     final txRepo = TransactionRepository();
     final splitRepo = SplitRepository();
     bool isUserCountable = true;
-    
+
+    if (transaction.transactionType == TransactionType.TRANSFER) {
+      if (transaction.id != null && transaction.id != 0) {
+        throw Exception(
+            "Editing transfer transactions is not supported. Create a new transfer instead.");
+      }
+      final fromId = transaction.transferFromAccountId;
+      final toId = transaction.transferToAccountId;
+      if (fromId == null || toId == null) {
+        throw Exception(
+            "From Account and To Account must be specified for transfer");
+      }
+      if (fromId == toId) {
+        throw Exception("From Account and To Account cannot be same");
+      }
+      await txRepo.createTransfer(
+        fromAccountId: fromId,
+        toAccountId: toId,
+        amount: transaction.amount,
+        name: transaction.name,
+        comments: transaction.comments,
+      );
+      return true;
+    }
+
     // Create or update transaction
     Transaction saved;
     if (transaction.id == null || transaction.id == 0) {
@@ -38,17 +62,19 @@ class TransactionController {
     // Handle splits if contacts exist
     if (transaction.contacts != null && transaction.contacts.length > 0) {
       // Delete existing splits for this transaction
-      final existingSplits = await splitRepo.getByTransactionId(transaction.id!);
+      final existingSplits =
+          await splitRepo.getByTransactionId(transaction.id!);
       for (var split in existingSplits) {
         if (split.id != null) {
           await splitRepo.delete(split.id!);
         }
       }
-      
+
       // Create new splits
-      isUserCountable = await TransactionController.saveSplitsInTransaction(transaction);
+      isUserCountable =
+          await TransactionController.saveSplitsInTransaction(transaction);
     }
-    
+
     // Update transaction with countable status
     transaction.isCountable = isUserCountable ? 1 : 0;
     saved = await txRepo.update(transaction.id!, transaction);
@@ -77,7 +103,7 @@ class TransactionController {
       split.transactionId = transaction.id ?? 0;
       split.isSettled = 0;
       split.contactId = contact.contactId;
-      
+
       // Create split via backend API
       Split created = await splitRepo.create(split);
       split.id = created.id;
@@ -127,8 +153,13 @@ class TransactionController {
     final txRepo = TransactionRepository();
     final user = SessionService.currentUser();
     final userId = (user.id ?? '').toString();
-    
-    final summary = await txRepo.getSummary(userId, begin, end);
+
+    final summary = await txRepo.getSummary(
+      userId,
+      begin,
+      end,
+      accountIds: accountId == null ? null : [accountId],
+    );
     return (summary['netTotal'] as num?)?.toDouble() ?? 0.0;
   }
 
@@ -149,41 +180,70 @@ class TransactionController {
   }
 
   static Future<double> getCurrentMonthIncome({List<int>? accountIds}) async {
-    final txRepo = TransactionRepository();
-    final user = SessionService.currentUser();
-    final userId = (user.id ?? '').toString();
-    DateTime month = SettingUtil.currentMonth;
-    DateTime nextMonth = SettingUtil.nextMonth;
-    
-    return await txRepo.getTotalIncome(userId, month, nextMonth);
+    final summary = await getSummaryBetween(
+      SettingUtil.currentMonth,
+      SettingUtil.nextMonth,
+      accountIds: accountIds,
+    );
+    return (summary['totalIncome'] as num?)?.toDouble() ?? 0.0;
   }
 
   static Future<double> getCurrentMonthExpense({List<int>? accountIds}) async {
+    final summary = await getSummaryBetween(
+      SettingUtil.currentMonth,
+      SettingUtil.nextMonth,
+      accountIds: accountIds,
+    );
+    return (summary['totalExpense'] as num?)?.toDouble() ?? 0.0;
+  }
+
+  static Future<Map<String, dynamic>> getSummaryBetween(
+    DateTime begin,
+    DateTime end, {
+    List<int>? accountIds,
+  }) async {
     final txRepo = TransactionRepository();
-    final user = SessionService.currentUser();
-    final userId = (user.id ?? '').toString();
-    DateTime month = SettingUtil.currentMonth;
-    DateTime nextMonth = SettingUtil.nextMonth;
-    
-    return await txRepo.getTotalExpense(userId, month, nextMonth);
+    String userId;
+    try {
+      final user = SessionService.currentUser();
+      userId = (user.id ?? '').toString();
+    } catch (_) {
+      return <String, dynamic>{};
+    }
+    return await txRepo.getSummary(userId, begin, end, accountIds: accountIds);
   }
 
   static Future<int> totalTransactionCount({List<int>? accountIds}) async {
     final txRepo = TransactionRepository();
-    final user = SessionService.currentUser();
-    final userId = (user.id ?? '').toString();
+    String userId;
+    try {
+      final user = SessionService.currentUser();
+      userId = (user.id ?? '').toString();
+    } catch (_) {
+      return 0;
+    }
     DateTime month = SettingUtil.currentMonth;
     DateTime nextMonth = SettingUtil.nextMonth;
-    
-    final summary = await txRepo.getSummary(userId, month, nextMonth);
+
+    final summary = await txRepo.getSummary(
+      userId,
+      month,
+      nextMonth,
+      accountIds: accountIds,
+    );
     return (summary['transactionCount'] as num?)?.toInt() ?? 0;
   }
 
   static Future<List<Transaction>> getTransaction(int pageNumber,
       {List<int>? accountIds}) async {
     final txRepo = TransactionRepository();
-    final user = SessionService.currentUser();
-    final userId = (user.id ?? '').toString();
+    String userId;
+    try {
+      final user = SessionService.currentUser();
+      userId = (user.id ?? '').toString();
+    } catch (_) {
+      return <Transaction>[];
+    }
     DateTime month = SettingUtil.currentMonth;
     DateTime nextMonth = SettingUtil.nextMonth;
 
@@ -195,7 +255,14 @@ class TransactionController {
       userId,
       startDate: month,
       endDate: nextMonth,
+      accountIds: accountIds,
     );
+
+    // Apply account filter (when called from Accounts page or multi-select)
+    if (accountIds != null && accountIds.isNotEmpty) {
+      final allowed = accountIds.toSet();
+      transactions = transactions.where((t) => allowed.contains(t.accountId)).toList();
+    }
 
     // Sort by date descending
     transactions.sort((a, b) => b.date.compareTo(a.date));
@@ -216,7 +283,8 @@ class TransactionController {
 
   static _preloadTransactions(Transaction transaction) async {
     // Load category via CategoryController (already migrated to backend)
-    transaction.category = await CategoryController.findById(transaction.categoryId);
+    transaction.category =
+        await CategoryController.findById(transaction.categoryId);
     await loadSplits(transaction);
   }
 
@@ -224,8 +292,13 @@ class TransactionController {
     final txRepo = TransactionRepository();
     DateTime month = SettingUtil.currentMonth;
     DateTime nextMonth = SettingUtil.nextMonth;
-    final user = SessionService.currentUser();
-    final userId = (user.id ?? '').toString();
+    String userId;
+    try {
+      final user = SessionService.currentUser();
+      userId = (user.id ?? '').toString();
+    } catch (_) {
+      return <Transaction>[];
+    }
 
     List<Transaction> transactions = await txRepo.getByUserIdAndDateRange(
       userId,
@@ -264,7 +337,7 @@ class TransactionController {
       dynamic entity = jsonResponse['entity'][0];
       transaction.name = entity['name'];
       transaction.category =
-      await CategoryController.findOrCreateByName(entity['category']);
+          await CategoryController.findOrCreateByName(entity['category']);
       transaction.categoryId = transaction.category?.id ?? 1;
 //      transaction.logo = entity['logo'];
     } else {

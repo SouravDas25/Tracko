@@ -20,7 +20,7 @@ abstract class _SplitBean implements Bean<Split> {
         userId.name: userId,
         amount.name: amount,
         isSettled.name: isSettled,
-    settledAt.name: settledAt,
+        settledAt.name: settledAt,
       };
   Split fromMap(Map map) {
     Split model = Split();

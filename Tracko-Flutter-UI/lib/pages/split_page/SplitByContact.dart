@@ -63,7 +63,6 @@ class _SplitByContactState extends AsyncLoadState<SplitByContact> {
         // ignore
       }
     }
-
   }
 
   settleAllSplit(List<Split> splits, int settleTo) async {
@@ -155,7 +154,8 @@ class _SplitByContactState extends AsyncLoadState<SplitByContact> {
         child: Column(
           children: <Widget>[
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
               child: Row(
                 children: [
                   Expanded(
@@ -241,7 +241,8 @@ class _SplitByContactState extends AsyncLoadState<SplitByContact> {
                       Text(
                         item.isSettled == 1 ? "Settled" : "Pending",
                         style: TextStyle(
-                            color: item.isSettled == 1 ? Colors.green : Colors.red,
+                            color:
+                                item.isSettled == 1 ? Colors.green : Colors.red,
                             fontWeight: FontWeight.w600),
                       )
                     ],
@@ -259,7 +260,8 @@ class _SplitByContactState extends AsyncLoadState<SplitByContact> {
                       IconButton(
                         visualDensity: VisualDensity.compact,
                         padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                        constraints:
+                            const BoxConstraints(minWidth: 28, minHeight: 28),
                         tooltip: 'Settle',
                         icon: const Icon(Icons.check_circle, size: 18),
                         color: Colors.green,
@@ -275,7 +277,8 @@ class _SplitByContactState extends AsyncLoadState<SplitByContact> {
                       IconButton(
                         visualDensity: VisualDensity.compact,
                         padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                        constraints:
+                            const BoxConstraints(minWidth: 28, minHeight: 28),
                         tooltip: 'Unsettle',
                         icon: const Icon(Icons.undo, size: 18),
                         color: Colors.red,

@@ -29,7 +29,8 @@ class _ChatTile extends AsyncLoadState<UserListTile> {
   asyncLoad() async {
     this.currentUser = SessionService.currentUser();
     if (widget.chat.userGlobalId.isNotEmpty) {
-      this.otherUser = await UserController.findByGlobalId(widget.chat.userGlobalId);
+      this.otherUser =
+          await UserController.findByGlobalId(widget.chat.userGlobalId);
     } else {
       this.otherUser = await UserController.findById(widget.chat.userId);
     }
@@ -54,8 +55,7 @@ class _ChatTile extends AsyncLoadState<UserListTile> {
         onTap: () {
           Navigator.of(context).push(MaterialPageRoute(
               builder: (context) =>
-                  SplitByUser(
-                      this.otherUser, widget.chat, this.currentUser)));
+                  SplitByUser(this.otherUser, widget.chat, this.currentUser)));
         },
         title: Text(
           this.otherUser.name,

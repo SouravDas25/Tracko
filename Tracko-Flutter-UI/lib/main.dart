@@ -1,6 +1,7 @@
 import 'package:tracko/Init.dart';
 import 'package:tracko/pages/route.dart';
 import 'package:tracko/pages/welcome_page/welcome_page.dart';
+import 'package:tracko/pages/transaction_list_page/transaction_list_page.dart';
 import 'package:flutter/material.dart';
 
 void main() async {
@@ -17,17 +18,32 @@ class MyApp extends StatelessWidget {
       title: 'Trako',
       routes: Routes.routes,
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
+        brightness: Brightness.light,
         primarySwatch: Colors.blue,
+        scaffoldBackgroundColor: Colors.white,
+        cardTheme: CardTheme(
+          elevation: 2,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
       ),
+      darkTheme: ThemeData(
+        brightness: Brightness.dark,
+        primarySwatch: Colors.blue,
+        scaffoldBackgroundColor: const Color(0xFF121212),
+        cardTheme: CardTheme(
+          elevation: 2,
+          color: const Color(0xFF1E1E1E),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFF1E1E1E),
+          elevation: 0,
+        ),
+        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+          backgroundColor: Color(0xFF1E1E1E),
+        ),
+      ),
+      themeMode: ThemeMode.dark,
       home: WelcomePage(),
     );
   }

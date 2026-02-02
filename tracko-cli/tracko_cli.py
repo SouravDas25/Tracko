@@ -395,6 +395,23 @@ def cmd_contacts_delete(args: argparse.Namespace) -> int:
     print_result(result, raw=args.raw)
     return 0 if result.get("ok") else 1
 
+
+def cmd_transfers_create(args: argparse.Namespace) -> int:
+    token, base_url = _get_token_from_args_or_config(args)
+    url = _join_url(base_url, "/api/transfers")
+    body = {
+        "fromAccountId": int(args.from_account_id),
+        "toAccountId": int(args.to_account_id),
+        "amount": float(args.amount),
+    }
+    if args.name:
+        body["name"] = args.name
+    if args.comments:
+        body["comments"] = args.comments
+    result = http_request("POST", url, token=token, json_body=body)
+    print_result(result, raw=args.raw)
+    return 0 if result.get("ok") else 1
+
 def cmd_login(args: argparse.Namespace) -> int:
     url = _join_url(args.base_url, "/api/login")
     body = {"username": args.username, "password": args.password}
@@ -560,6 +577,8 @@ def cmd_transactions_list(args: argparse.Namespace) -> int:
                 return "DEBIT"
             if v == 2 or str(v) == "2":
                 return "CREDIT"
+            if v == 3 or str(v) == "3":
+                return "TRANSFER"
             return v
 
         def _humanize_timedelta(delta: datetime.timedelta) -> str:
@@ -771,6 +790,8 @@ def build_parser() -> argparse.ArgumentParser:
         "  # Transactions\n"
         "  tracko_cli transactions list\n"
         "  tracko_cli transactions add --account-id 2 --category-id 2 --amount 250 --type expense --name Lunch --comments 'Team lunch'\n\n"
+        "  # Transfers (dual-record: debit source, credit destination)\n"
+        "  tracko_cli transfers create --from-account-id 2 --to-account-id 3 --amount 500 --name 'Move to Savings' --comments 'Feb savings'\n\n"
         "  # Splits (list)\n"
         "  tracko_cli splits list\n"
         "  tracko_cli splits for-transaction --transaction-id 6\n"
@@ -855,6 +876,17 @@ def build_parser() -> argparse.ArgumentParser:
     sp2 = sub_ct.add_parser("delete")
     sp2.add_argument("--id", required=True, type=int)
     sp2.set_defaults(func=cmd_contacts_delete)
+
+    # transfers
+    sp = sub.add_parser("transfers")
+    sub_tr = sp.add_subparsers(dest="transfers_cmd", required=True)
+    sp2 = sub_tr.add_parser("create")
+    sp2.add_argument("--from-account-id", required=True, type=int)
+    sp2.add_argument("--to-account-id", required=True, type=int)
+    sp2.add_argument("--amount", required=True, type=float)
+    sp2.add_argument("--name")
+    sp2.add_argument("--comments")
+    sp2.set_defaults(func=cmd_transfers_create)
 
     # splits
     sp = sub.add_parser("splits")

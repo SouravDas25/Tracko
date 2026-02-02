@@ -49,9 +49,12 @@ class _SplitList extends AsyncLoadState<SplitByUser> {
         : (widget.otherUser.id?.toString() ?? '');
     dueAmount = await SplitController.getDueAmountByUserId(otherUserKey);
     splits = await SplitController.findByUserIdKey(otherUserKey);
-    expandList = splits.map((Split split) {
-      return SplitExpanded(false, split);
-    }).cast<SplitExpanded>().toList();
+    expandList = splits
+        .map((Split split) {
+          return SplitExpanded(false, split);
+        })
+        .cast<SplitExpanded>()
+        .toList();
   }
 
   settleAllSplit(List<Split> splits, int settleTo) async {
@@ -147,8 +150,8 @@ class _SplitList extends AsyncLoadState<SplitByUser> {
                       onTap: () {
                         SplitController.settleSplit(item.split);
                       },
-                      leading:
-                          WidgetUtil.textAvatar(item.split.transaction?.name ?? ''),
+                      leading: WidgetUtil.textAvatar(
+                          item.split.transaction?.name ?? ''),
                       title: Padding(
                         padding: const EdgeInsets.only(top: 12.0, bottom: 8.0),
                         child: Text(
@@ -162,7 +165,8 @@ class _SplitList extends AsyncLoadState<SplitByUser> {
                           if (item.split.contact != null)
                             Row(
                               children: <Widget>[
-                                const Icon(Icons.person, size: 15.0, color: Colors.blueGrey),
+                                const Icon(Icons.person,
+                                    size: 15.0, color: Colors.blueGrey),
                                 const SizedBox(width: 6),
                                 Expanded(
                                   child: Text(
@@ -170,7 +174,8 @@ class _SplitList extends AsyncLoadState<SplitByUser> {
                                         ? item.split.contact!.name
                                         : (item.split.contact!.phoneNo),
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(fontWeight: FontWeight.w600),
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w600),
                                   ),
                                 ),
                               ],
@@ -225,12 +230,14 @@ class _SplitList extends AsyncLoadState<SplitByUser> {
                       LabelWidget(
                           "Transaction Date:",
                           item.split.transaction?.date != null
-                              ? DateFormat('dd-MMM-yyyy').format(item.split.transaction!.date)
+                              ? DateFormat('dd-MMM-yyyy')
+                                  .format(item.split.transaction!.date)
                               : "Date Not Avaialble",
                           Colors.black),
                       LabelWidget(
                           "Total Amount:",
-                          CommonUtil.toCurrency(item.split.transaction?.amount ?? 0.0),
+                          CommonUtil.toCurrency(
+                              item.split.transaction?.amount ?? 0.0),
                           Colors.orange),
                       Padding(
                         padding: EdgeInsets.symmetric(vertical: 4.0),

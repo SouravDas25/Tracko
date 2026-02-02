@@ -86,8 +86,7 @@ class TransactionTile extends StatelessWidget {
               style: TextStyle(fontSize: 20.0),
             ),
             subtitle: Text(transaction.contacts.length > 1
-                ? "${transaction.category?.name ?? ''} / ${transaction.contacts
-                ?.length}"
+                ? "${transaction.category?.name ?? ''} / ${transaction.contacts?.length}"
                 : "${transaction.category?.name ?? ''}"),
             trailing: WidgetUtil.transformTransaction2TextWidget(transaction),
           )),

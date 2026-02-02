@@ -21,9 +21,7 @@ class AccountDialog extends StatelessWidget {
 
   addAccount() async {
     this.name = _controller.text;
-    if (name
-        .trim()
-        .length <= 0) {
+    if (name.trim().length <= 0) {
       return;
     }
     Account account = this.account ?? Account();

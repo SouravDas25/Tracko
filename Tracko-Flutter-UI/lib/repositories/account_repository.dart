@@ -29,8 +29,10 @@ class AccountRepository {
     return _toLegacyAccount(res);
   }
 
-  Future<legacy.Account> updateAccount(int id, String name, String userId) async {
-    final res = await _api.put<Map<String, dynamic>>('${ApiConfig.accounts}/$id',
+  Future<legacy.Account> updateAccount(
+      int id, String name, String userId) async {
+    final res = await _api.put<Map<String, dynamic>>(
+        '${ApiConfig.accounts}/$id',
         data: {'name': name, 'userId': userId});
     return _toLegacyAccount(res);
   }

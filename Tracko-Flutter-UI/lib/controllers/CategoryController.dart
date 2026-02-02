@@ -34,7 +34,8 @@ class CategoryController {
 
     // Backend authorizes from JWT; userId param is not required by API but retained in signature.
     final userId = (SessionService.currentUser().id ?? '').toString();
-    final txs = await txRepo.getByUserIdAndDateRange(userId, startDate: begin, endDate: end);
+    final txs = await txRepo.getByUserIdAndDateRange(userId,
+        startDate: begin, endDate: end);
 
     final byCategory = <int, double>{};
     for (final t in txs) {

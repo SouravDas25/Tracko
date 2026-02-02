@@ -2,10 +2,11 @@ import 'package:tracko/Utils/WidgetUtil.dart';
 import 'package:flutter/material.dart';
 
 class DeleteDialog {
-  static Future<T> show<T>({required context,
-    required String title,
-    required String message,
-    required Function deleteCallback}) async {
+  static Future<T> show<T>(
+      {required context,
+      required String title,
+      required String message,
+      required Function deleteCallback}) async {
     return await showDialog(
       context: context,
       builder: (BuildContext context) {

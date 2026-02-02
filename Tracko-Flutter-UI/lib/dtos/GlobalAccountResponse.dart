@@ -19,6 +19,4 @@ class GlobalAccountResponse {
   String toString() {
     return 'GlobalAccountResponse{id: $id, name: $name, phoneNo: $phoneNo, email: $email, profilePic: $profilePic, fireBaseId: $fireBaseId}';
   }
-
-
 }

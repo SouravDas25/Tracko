@@ -121,11 +121,12 @@ class _WelcomePage extends State<WelcomePage> {
           child: ListView(children: [
             Padding(
               padding:
-              const EdgeInsets.symmetric(horizontal: 50.0, vertical: 40.0),
+                  const EdgeInsets.symmetric(horizontal: 50.0, vertical: 40.0),
               child: Center(
                   child: Image.asset(
-                    "assets/images/expense-icon.png", fit: BoxFit.scaleDown,
-                  )),
+                "assets/images/expense-icon.png",
+                fit: BoxFit.scaleDown,
+              )),
             ),
             Padding(
               padding: const EdgeInsets.all(8.0),

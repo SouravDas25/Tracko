@@ -10,7 +10,6 @@ class SmsController {
     } catch (_) {}
   }
 
-
   static getLastSmsCheckpoint() async {
     String value = await JsonStore.get(ConstantUtil.LAST_READ_SMS_ID) ?? '';
     int start = value == null ? 0 : int.parse(value);

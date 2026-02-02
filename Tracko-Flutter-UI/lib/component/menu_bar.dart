@@ -5,7 +5,7 @@ class MenuBar extends AppBar {
 
   MenuBar({this.titleName})
       : super(
-      title: titleName != null ? Text(titleName) : Text("Trako"),
-      centerTitle: true,
-      backgroundColor: Colors.teal);
+            title: titleName != null ? Text(titleName) : Text("Trako"),
+            centerTitle: true,
+            backgroundColor: Colors.teal);
 }

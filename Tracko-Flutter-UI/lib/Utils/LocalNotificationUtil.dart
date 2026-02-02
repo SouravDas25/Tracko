@@ -5,13 +5,15 @@ class LocalNotificationUtil {
   var androidPlatformChannelSpecifics = new AndroidNotificationDetails(
       'your channel id', 'your channel name',
       channelDescription: 'your channel description',
-      importance: Importance.max, priority: Priority.high);
+      importance: Importance.max,
+      priority: Priority.high);
   var iOSPlatformChannelSpecifics = new DarwinNotificationDetails();
 
   Future<void> show(int id, String title, String body,
       {String? payload, NotificationDetails? notificationDetails}) async {
     var platformChannelSpecifics = new NotificationDetails(
-        android: androidPlatformChannelSpecifics, iOS: iOSPlatformChannelSpecifics);
+        android: androidPlatformChannelSpecifics,
+        iOS: iOSPlatformChannelSpecifics);
     if (notificationDetails == null)
       notificationDetails = platformChannelSpecifics;
     await flutterLocalNotificationsPlugin
@@ -21,7 +23,8 @@ class LocalNotificationUtil {
   Future<void> schedule(int id, String title, String body, Duration duration,
       {String? payload, NotificationDetails? notificationDetails}) async {
     var platformChannelSpecifics = new NotificationDetails(
-        android: androidPlatformChannelSpecifics, iOS: iOSPlatformChannelSpecifics);
+        android: androidPlatformChannelSpecifics,
+        iOS: iOSPlatformChannelSpecifics);
 
     if (notificationDetails == null)
       notificationDetails = platformChannelSpecifics;
@@ -37,15 +40,15 @@ class LocalNotificationUtil {
 
   FlutterLocalNotificationsPlugin initialize({onSelect}) {
     var initializationSettingsAndroid =
-    new AndroidInitializationSettings('app_icon');
+        new AndroidInitializationSettings('app_icon');
     var initializationSettingsIOS = new DarwinInitializationSettings();
     var initializationSettings = new InitializationSettings(
         android: initializationSettingsAndroid, iOS: initializationSettingsIOS);
     flutterLocalNotificationsPlugin = new FlutterLocalNotificationsPlugin();
     flutterLocalNotificationsPlugin.initialize(initializationSettings,
         onDidReceiveNotificationResponse: (NotificationResponse response) {
-          if (onSelect != null) onSelect(response.payload);
-        });
+      if (onSelect != null) onSelect(response.payload);
+    });
     return flutterLocalNotificationsPlugin;
   }
 }

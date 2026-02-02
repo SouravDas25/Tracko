@@ -12,10 +12,10 @@ class SelectionModal extends StatefulWidget {
 
   SelectionModal(
       {required this.filterable,
-        required this.dataSource,
-        required this.values,
-        required this.textField,
-        required this.valueField})
+      required this.dataSource,
+      required this.values,
+      required this.textField,
+      required this.valueField})
       : super();
 }
 
@@ -148,7 +148,7 @@ class _SelectionModalState extends State<SelectionModal> {
     List<Widget> selectedOptions = [];
 
     var selectedValuesObjectList =
-    _localDataSourceWithState.where((item) => item['checked']).toList();
+        _localDataSourceWithState.where((item) => item['checked']).toList();
     var selectedValues = [];
     selectedValuesObjectList.forEach((item) {
       selectedValues.add(item['value']);
@@ -169,26 +169,26 @@ class _SelectionModalState extends State<SelectionModal> {
     });
     return selectedOptions.length > 0
         ? Container(
-      padding: EdgeInsets.all(10.0),
-      color: Colors.grey.shade400,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          new Text(
-            'Currently selected items (tap to remove)',
-            style: TextStyle(
-                color: Colors.black87, fontWeight: FontWeight.bold),
-          ),
-          Wrap(
-            spacing: 8.0, // gap between adjacent chips
-            runSpacing: 0.4, // gap between lines
-            alignment: WrapAlignment.start,
-            children: selectedOptions,
-          ),
-        ],
-      ),
-    )
+            padding: EdgeInsets.all(10.0),
+            color: Colors.grey.shade400,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                new Text(
+                  'Currently selected items (tap to remove)',
+                  style: TextStyle(
+                      color: Colors.black87, fontWeight: FontWeight.bold),
+                ),
+                Wrap(
+                  spacing: 8.0, // gap between adjacent chips
+                  runSpacing: 0.4, // gap between lines
+                  alignment: WrapAlignment.start,
+                  children: selectedOptions,
+                ),
+              ],
+            ),
+          )
         : new Container();
   }
 

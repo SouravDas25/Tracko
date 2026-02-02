@@ -110,9 +110,7 @@ class _HomePageState extends RefreshableState<HomePage>
                   height: 20,
                 ),
                 Text(
-                  "${DateFormatter.DateFormat("MMM").format(
-                      SettingUtil.previousMonth)} : ${CommonUtil.toCurrency(
-                      previousTotal)}",
+                  "${DateFormatter.DateFormat("MMM").format(SettingUtil.previousMonth)} : ${CommonUtil.toCurrency(previousTotal)}",
                   style: TextStyle(fontSize: 15),
                 ),
                 PaddedText(
@@ -139,7 +137,10 @@ class _HomePageState extends RefreshableState<HomePage>
               itemCount: transactions.length,
               itemBuilder: (BuildContext context, int index) {
                 Transaction transaction = transactions[index];
-                if (!kIsWeb && index != 0 && index % 3 == 0 && _bannerAd != null) {
+                if (!kIsWeb &&
+                    index != 0 &&
+                    index % 3 == 0 &&
+                    _bannerAd != null) {
                   return Column(
                     children: <Widget>[
                       Container(
@@ -150,7 +151,7 @@ class _HomePageState extends RefreshableState<HomePage>
                       TransactionTile(
                           this,
                           transaction,
-                              (dynamic parent, Transaction transaction) =>
+                          (dynamic parent, Transaction transaction) =>
                               parent.refresh()),
                     ],
                   );
@@ -158,7 +159,7 @@ class _HomePageState extends RefreshableState<HomePage>
                 return TransactionTile(
                     this,
                     transaction,
-                        (dynamic parent, Transaction transaction) =>
+                    (dynamic parent, Transaction transaction) =>
                         parent.refresh());
               }),
         ],

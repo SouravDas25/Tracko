@@ -18,7 +18,8 @@ class ScreenState extends State<Screen> {
   @override
   Widget build(BuildContext context) {
     PreferredSizeWidget? appBar = this.widget.title == null
-        ? TrackoMenuBar.MenuBar(titleName: widget.titleName) as PreferredSizeWidget?
+        ? TrackoMenuBar.MenuBar(titleName: widget.titleName)
+            as PreferredSizeWidget?
         : this.widget.title as PreferredSizeWidget?;
     return Scaffold(
       appBar: appBar,

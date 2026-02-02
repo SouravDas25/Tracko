@@ -39,7 +39,7 @@ class _PhoneLoginPage extends State<PhoneLoginPage> {
                     child: Text(
                       "+91 ",
                       style:
-                      TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
                     ),
                   ),
                   Flexible(
@@ -49,9 +49,9 @@ class _PhoneLoginPage extends State<PhoneLoginPage> {
                       controller: phoneNumberController,
                       keyboardType: TextInputType.phone,
                       style:
-                      TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
                       decoration:
-                      new InputDecoration(hintText: "Mobile Number"),
+                          new InputDecoration(hintText: "Mobile Number"),
                       textAlign: TextAlign.center,
                       validator: (value) {
                         if (value?.isEmpty ?? true) {

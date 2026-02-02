@@ -17,24 +17,24 @@ class MenuDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     return new Drawer(
         child: new ListView(
-          children: <Widget>[
-            new DrawerHeader(
-              child: new Text('${this.user.name}'),
-            ),
-            new ListTile(
-              title: new Text('First Menu Item'),
-              onTap: () {},
-            ),
-            new ListTile(
-              title: new Text('Second Menu Item'),
-              onTap: () {},
-            ),
-            new Divider(),
-            new ListTile(
-              title: new Text('About'),
-              onTap: () {},
-            ),
-          ],
-        ));
+      children: <Widget>[
+        new DrawerHeader(
+          child: new Text('${this.user.name}'),
+        ),
+        new ListTile(
+          title: new Text('First Menu Item'),
+          onTap: () {},
+        ),
+        new ListTile(
+          title: new Text('Second Menu Item'),
+          onTap: () {},
+        ),
+        new Divider(),
+        new ListTile(
+          title: new Text('About'),
+          onTap: () {},
+        ),
+      ],
+    ));
   }
 }

@@ -53,11 +53,15 @@ class CommonUtil {
   }
 
   static String toSign(int type) {
-    return type == TransactionType.DEBIT ? " - " : " + ";
+    if (type == TransactionType.DEBIT) return " - ";
+    if (type == TransactionType.TRANSFER) return " ";
+    return " + ";
   }
 
   static Color toTypeColor(int type) {
-    return type == TransactionType.DEBIT ? Colors.red : Colors.green;
+    if (type == TransactionType.DEBIT) return Colors.red;
+    if (type == TransactionType.CREDIT) return Colors.green;
+    return Colors.grey;
   }
 
   static getInitials(string) {

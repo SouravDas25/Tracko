@@ -126,7 +126,8 @@ class ServerUtil {
     Map<String, String> body = new Map();
     body['text'] = message?.body?.toString() ?? '';
     body['address'] = message?.address?.toString() ?? '';
-    body['date'] = (message?.dateSent ?? message?.date ?? DateTime.now()).toString();
+    body['date'] =
+        (message?.dateSent ?? message?.date ?? DateTime.now()).toString();
     String data = convert.jsonEncode(body);
 //    data = Uri.encodeQueryComponent(data);
     var header = {"Content-Type": "application/json"};
@@ -141,7 +142,7 @@ class ServerUtil {
       var jsonResponse = convert.jsonDecode(response.body);
 //      print(jsonResponse);
       Transaction transaction =
-      await TransactionController.fromJson(jsonResponse);
+          await TransactionController.fromJson(jsonResponse);
       if (transaction != null) {
         return transaction;
       }
@@ -153,7 +154,8 @@ class ServerUtil {
   }
 
   static Future<GroupByUserResponse?> getGroupsByUser(int userGlobalId) async {
-    var url = Uri.parse(DestinationUtil.javaBackend() + "api/chat/groups/$userGlobalId");
+    var url = Uri.parse(
+        DestinationUtil.javaBackend() + "api/chat/groups/$userGlobalId");
     var response = await http.get(url, headers: authHeader);
 //    print(response.body);
     if (response.statusCode == 200) {
@@ -163,9 +165,10 @@ class ServerUtil {
     return null;
   }
 
-  static Future<List<ChatMessagesResponses>?> getChatMessages(String groudId,
-      String currentUserGlobalId) async {
-    var url = Uri.parse(DestinationUtil.javaBackend() + "api/chat/messages/$groudId");
+  static Future<List<ChatMessagesResponses>?> getChatMessages(
+      String groudId, String currentUserGlobalId) async {
+    var url =
+        Uri.parse(DestinationUtil.javaBackend() + "api/chat/messages/$groudId");
     var requestBody = {"currentUserGlobalId": currentUserGlobalId};
     var headers = {"Content-Type": "application/json"};
     headers.addAll(authHeader);
@@ -184,8 +187,8 @@ class ServerUtil {
     return null;
   }
 
-  static Future<bool> sendMessage(String currentUserGlobalId, String groupId,
-      String message) async {
+  static Future<bool> sendMessage(
+      String currentUserGlobalId, String groupId, String message) async {
     var url = Uri.parse(DestinationUtil.javaBackend() + "api/chat/send");
     var requestBody = {
       "sender": currentUserGlobalId,
@@ -233,8 +236,8 @@ class ServerUtil {
     return false;
   }
 
-  static Future<String?> createChatGroup(User currentUser,
-      User otherUser) async {
+  static Future<String?> createChatGroup(
+      User currentUser, User otherUser) async {
     var url = Uri.parse(DestinationUtil.javaBackend() + "/api/chat/create");
     var requestBody = {
       "name": otherUser.name,

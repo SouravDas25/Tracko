@@ -21,6 +21,8 @@ class Transaction {
   double amount = 0.0;
   int isCountable = 1;
   int accountId = 1;
+  int? transferFromAccountId;
+  int? transferToAccountId;
   int categoryId = 1;
   List<Split> splits = [];
   Set<TrakoContact> contacts = {};
@@ -28,14 +30,12 @@ class Transaction {
 
   Transaction();
 
-  Transaction.make(this.id, this.name, this.comments, this.date,
-      this.amount, this.accountId, this.categoryId);
+  Transaction.make(this.id, this.name, this.comments, this.date, this.amount,
+      this.accountId, this.categoryId);
 
   @override
   String toString() {
-    return 'Transaction{id: $id, transactionType: ${TransactionType.stringify(
-        transactionType)}, name: $name, comments: $comments, date: $date, amount: $amount, accountId: $accountId, categoryId: $categoryId, category: ${category
-        .toString()}}';
+    return 'Transaction{id: $id, transactionType: ${TransactionType.stringify(transactionType)}, name: $name, comments: $comments, date: $date, amount: $amount, accountId: $accountId, categoryId: $categoryId, category: ${category.toString()}}';
   }
 
   Transaction.defaultObject() {
@@ -47,7 +47,6 @@ class Transaction {
     this.accountId = Account.defaultAccountId();
     this.categoryId = Category.defaultCategoryId();
   }
-
 }
 
 @GenBean()
@@ -92,8 +91,8 @@ class TransactionBean extends Bean<Transaction> {
   }
 
   Future<List<Transaction>> findByCategory(int categoryId) async {
-    final rows = await adapter.db
-        .rawQuery('SELECT * FROM $tableName WHERE categoryId = ?', [categoryId]);
+    final rows = await adapter.db.rawQuery(
+        'SELECT * FROM $tableName WHERE categoryId = ?', [categoryId]);
     return rows.map((m) => fromMap(m)).toList();
   }
 
@@ -114,7 +113,8 @@ class TransactionBean extends Bean<Transaction> {
   }
 
   Future<int> remove(int transactionId) async {
-    await adapter.db.delete(tableName, where: 'id = ?', whereArgs: [transactionId]);
+    await adapter.db
+        .delete(tableName, where: 'id = ?', whereArgs: [transactionId]);
     return transactionId;
   }
 
@@ -154,7 +154,6 @@ class TransactionBean extends Bean<Transaction> {
       return id;
     }
   }
-
 }
 
 // Helper class for field name access in SQL queries
