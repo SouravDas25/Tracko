@@ -43,17 +43,26 @@ class _WelcomePage extends State<WelcomePage> {
       final u = await SessionService.getCurrentUser();
       this.user = u;
       this.isUserValid = u != null ? await SessionService.loginUser(u) : false;
-      setState(() {
-        if (this.isUserValid) {
-          Navigator.pushReplacementNamed(
-            context,
-            "/home",
-          );
-        }
-      });
       print(this.user);
+
+      if (this.isUserValid && mounted) {
+        // Navigate immediately without setState to avoid conflicts
+        Navigator.pushReplacementNamed(context, "/home");
+        return;
+      }
+
+      if (mounted) {
+        setState(() {
+          loading = false;
+        });
+      }
+      return;
     }
-    loading = false;
+    if (mounted) {
+      setState(() {
+        loading = false;
+      });
+    }
   }
 
   @override

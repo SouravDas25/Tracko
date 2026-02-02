@@ -261,7 +261,8 @@ class TransactionController {
     // Apply account filter (when called from Accounts page or multi-select)
     if (accountIds != null && accountIds.isNotEmpty) {
       final allowed = accountIds.toSet();
-      transactions = transactions.where((t) => allowed.contains(t.accountId)).toList();
+      transactions =
+          transactions.where((t) => allowed.contains(t.accountId)).toList();
     }
 
     // Sort by date descending
@@ -276,6 +277,41 @@ class TransactionController {
 
     // Preload category and splits
     for (Transaction transaction in transactions) {
+      await _preloadTransactions(transaction);
+    }
+    return transactions;
+  }
+
+  static Future<List<Transaction>> getTransactionsForSelectedMonth(
+      {List<int>? accountIds}) async {
+    final txRepo = TransactionRepository();
+    String userId;
+    try {
+      final user = SessionService.currentUser();
+      userId = (user.id ?? '').toString();
+    } catch (_) {
+      return <Transaction>[];
+    }
+
+    final DateTime month = SettingUtil.currentMonth;
+    final DateTime nextMonth = SettingUtil.nextMonth;
+
+    List<Transaction> transactions = await txRepo.getByUserIdAndDateRange(
+      userId,
+      startDate: month,
+      endDate: nextMonth,
+      accountIds: accountIds,
+    );
+
+    if (accountIds != null && accountIds.isNotEmpty) {
+      final allowed = accountIds.toSet();
+      transactions =
+          transactions.where((t) => allowed.contains(t.accountId)).toList();
+    }
+
+    transactions.sort((a, b) => b.date.compareTo(a.date));
+
+    for (final transaction in transactions) {
       await _preloadTransactions(transaction);
     }
     return transactions;

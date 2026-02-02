@@ -19,7 +19,8 @@ class CommonUtil {
         date = DateTime.parse(date);
       }
     }
-    return timeago.format(date);
+    // Format as "Jan 15, 2026"
+    return DateFormat('MMM dd, yyyy').format(date);
   }
 
   static String toCurrency(double amount) {

@@ -43,6 +43,8 @@ class _AccountsPage extends RefreshableState<TransactionListPage> {
   double expenseAmount = 0.0;
   int currentPage = 1;
   int pageCount = 0;
+  DateTime selectedMonth =
+      SettingUtil.currentMonth; // For future month navigation
 
   _AccountsPage();
 
@@ -50,7 +52,8 @@ class _AccountsPage extends RefreshableState<TransactionListPage> {
   asyncLoad() async {
     try {
       // Pre-seed selections from initialAccountIds if provided
-      if (widget.initialAccountIds != null && widget.initialAccountIds!.isNotEmpty) {
+      if (widget.initialAccountIds != null &&
+          widget.initialAccountIds!.isNotEmpty) {
         selections = List<dynamic>.from(widget.initialAccountIds!);
       }
       await refresh();
@@ -92,16 +95,15 @@ class _AccountsPage extends RefreshableState<TransactionListPage> {
         accountIds.add(accountId);
       }
     }
-    pageCount = await TransactionController.totalTransactionCount(
+    // Load all transactions for the selected month (no pagination)
+    transactions = await TransactionController.getTransactionsForSelectedMonth(
         accountIds: accountIds);
 
-    pageCount = (pageCount / ConstantUtil.NO_OF_RECORDS_PER_PAGE).ceil();
-//    print(accountIds);
-    transactions = await TransactionController.getTransaction(currentPage,
-        accountIds: accountIds);
+    // Keep pageCount for PageWidget display (will remove later)
+    pageCount = 1;
     totalAmount = incomeAmount = expenseAmount = 0;
-    incomeAmount =
-        await TransactionController.getCurrentMonthIncome(accountIds: accountIds);
+    incomeAmount = await TransactionController.getCurrentMonthIncome(
+        accountIds: accountIds);
     expenseAmount = await TransactionController.getCurrentMonthExpense(
         accountIds: accountIds);
 
@@ -110,8 +112,7 @@ class _AccountsPage extends RefreshableState<TransactionListPage> {
       SettingUtil.currentMonth,
       accountIds: accountIds,
     );
-    previousMonthAmount =
-        (prevSummary['netTotal'] as num?)?.toDouble() ?? 0.0;
+    previousMonthAmount = (prevSummary['netTotal'] as num?)?.toDouble() ?? 0.0;
 
     totalAmount = incomeAmount - expenseAmount + previousMonthAmount;
   }
@@ -126,35 +127,6 @@ class _AccountsPage extends RefreshableState<TransactionListPage> {
       },
       child: ListView(
         children: <Widget>[
-          if (widget.showAccountFilter)
-            Padding(
-              padding: const EdgeInsets.all(4.0),
-              child: MultiSelect(
-                autovalidateMode: AutovalidateMode.disabled,
-                titleText: 'Select multiple accounts',
-                textField: 'name',
-                valueField: 'id',
-                required: false,
-                filterable: true,
-                value: null,
-                change: (values) {
-                  selections = values;
-                },
-                open: () {},
-                close: () {},
-                onSaved: (values) async {
-                  selections = values;
-                  await initTransactionData();
-                  setState(() {});
-                },
-                dataSource: accounts.map((Account account) {
-                  return {
-                    "name": account.name,
-                    "id": account.id,
-                  };
-                }).toList(),
-              ),
-            ),
           Padding(
             padding: const EdgeInsets.only(top: 4.0),
             child: Card(
@@ -244,6 +216,25 @@ class _AccountsPage extends RefreshableState<TransactionListPage> {
           PageWidget(
             initialPage: currentPage,
             totalPage: pageCount,
+            title: DateFormatter.DateFormat("MMM yyyy").format(selectedMonth),
+            disableBack: false,
+            disableNext: false,
+            onBack: () {
+              setState(() {
+                selectedMonth =
+                    DateTime.utc(selectedMonth.year, selectedMonth.month - 1);
+              });
+              SettingUtil.setSelectedMonth(selectedMonth);
+              refresh();
+            },
+            onNext: () {
+              setState(() {
+                selectedMonth =
+                    DateTime.utc(selectedMonth.year, selectedMonth.month + 1);
+              });
+              SettingUtil.setSelectedMonth(selectedMonth);
+              refresh();
+            },
             onChange: (BuildContext context, int pageNo) {
               currentPage = pageNo;
               this.refresh();

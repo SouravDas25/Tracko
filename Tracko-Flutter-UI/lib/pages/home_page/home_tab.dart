@@ -76,21 +76,41 @@ class _HomeTab extends State<HomeTab> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    final double _width = MediaQuery.of(context).size.width;
+    final bool isWide = _width >= 900;
+    final bool isVeryWide = _width >= 1200;
     return Scaffold(
-      bottomNavigationBar: BottomNavyBar(
-        iconSize: 22,
-        selectedIndex: _selectedIndex,
-        showElevation: true,
-        itemCornerRadius: 8,
-        curve: Curves.easeInOut,
-        onItemSelected: (int selectedPos) {
-          setState(() {
-            _selectedIndex = selectedPos;
-          });
-          tabController.animateTo(selectedPos);
-        },
-        items: navlist,
-      ),
+      bottomNavigationBar: isWide
+          ? null
+          : Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context)
+                        .bottomNavigationBarTheme
+                        .backgroundColor ??
+                    Theme.of(context).cardColor,
+                border: const Border(
+                  top: BorderSide(
+                    color: Color(0x3DFFFFFF),
+                    width: 0.5,
+                  ),
+                ),
+              ),
+              child: BottomNavyBar(
+                iconSize: 22,
+                selectedIndex: _selectedIndex,
+                showElevation: true,
+                itemCornerRadius: 8,
+                curve: Curves.easeInOut,
+                backgroundColor: Colors.transparent,
+                onItemSelected: (int selectedPos) {
+                  setState(() {
+                    _selectedIndex = selectedPos;
+                  });
+                  tabController.animateTo(selectedPos);
+                },
+                items: navlist,
+              ),
+            ),
       appBar: AppBar(
         leading: IconButton(
             iconSize: 35.0,
@@ -109,19 +129,73 @@ class _HomeTab extends State<HomeTab> with SingleTickerProviderStateMixin {
           )
         ],
         title: Text("Trako"),
-        backgroundColor: navlist[_selectedIndex].activeColor,
         centerTitle: true,
       ),
-      body: TabBarView(
-          physics: NeverScrollableScrollPhysics(),
-          controller: tabController,
-          children: <Widget>[
-            AccountsOverviewPage(),
-            SplitPage(),
-            TransactionListPage(embedded: true),
-            StatsPage(),
-            SettingsPage(),
-          ]),
+      body: isWide
+          ? Row(
+              children: [
+                Builder(builder: (context) {
+                  final railItems = [
+                    {'icon': Icons.home, 'label': 'Home', 'tab': 2},
+                    {
+                      'icon': Icons.account_circle,
+                      'label': 'Accounts',
+                      'tab': 0
+                    },
+                    {'icon': Icons.call_split, 'label': 'Split', 'tab': 1},
+                    {'icon': Icons.bar_chart, 'label': 'Stats', 'tab': 3},
+                    {'icon': Icons.settings, 'label': 'Settings', 'tab': 4},
+                  ];
+                  int railSelected =
+                      railItems.indexWhere((e) => e['tab'] == _selectedIndex);
+                  if (railSelected < 0) railSelected = 0;
+                  return NavigationRail(
+                    selectedIndex: railSelected,
+                    onDestinationSelected: (int idx) {
+                      final targetTab = railItems[idx]['tab'] as int;
+                      setState(() {
+                        _selectedIndex = targetTab;
+                      });
+                      tabController.animateTo(targetTab);
+                    },
+                    // When extended is true, labelType must be null/none per API contract
+                    labelType: isVeryWide
+                        ? NavigationRailLabelType.none
+                        : NavigationRailLabelType.all,
+                    extended: isVeryWide,
+                    destinations: railItems
+                        .map((e) => NavigationRailDestination(
+                              icon: Icon(e['icon'] as IconData),
+                              label: Text(e['label'] as String),
+                            ))
+                        .toList(),
+                  );
+                }),
+                const VerticalDivider(width: 1),
+                Expanded(
+                  child: TabBarView(
+                      physics: NeverScrollableScrollPhysics(),
+                      controller: tabController,
+                      children: <Widget>[
+                        AccountsOverviewPage(),
+                        SplitPage(),
+                        TransactionListPage(embedded: true),
+                        StatsPage(),
+                        SettingsPage(),
+                      ]),
+                ),
+              ],
+            )
+          : TabBarView(
+              physics: NeverScrollableScrollPhysics(),
+              controller: tabController,
+              children: <Widget>[
+                  AccountsOverviewPage(),
+                  SplitPage(),
+                  TransactionListPage(embedded: true),
+                  StatsPage(),
+                  SettingsPage(),
+                ]),
     );
   }
 }

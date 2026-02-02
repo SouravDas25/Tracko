@@ -19,7 +19,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     
     @Query("SELECT t FROM Transaction t WHERE t.accountId IN " +
            "(SELECT a.id FROM Account a WHERE a.userId = :userId) " +
-           "AND t.date BETWEEN :startDate AND :endDate " +
+           "AND t.date >= :startDate AND t.date < :endDate " +
            "ORDER BY t.date DESC")
     List<Transaction> findByUserIdAndDateBetween(
         @Param("userId") String userId,
@@ -29,7 +29,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
     @Query("SELECT t FROM Transaction t WHERE t.accountId IN " +
            "(SELECT a.id FROM Account a WHERE a.userId = :userId AND a.id IN :accountIds) " +
-           "AND t.date BETWEEN :startDate AND :endDate " +
+           "AND t.date >= :startDate AND t.date < :endDate " +
            "ORDER BY t.date DESC")
     List<Transaction> findByUserIdAndDateBetweenAndAccountIds(
         @Param("userId") String userId,
