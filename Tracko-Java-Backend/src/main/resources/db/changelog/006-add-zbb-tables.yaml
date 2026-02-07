@@ -1,0 +1,98 @@
+databaseChangeLog:
+  - changeSet:
+      id: 006-add-zbb-tables
+      author: cascade
+      changes:
+        # Update categories table
+        - addColumn:
+            tableName: categories
+            columns:
+              - column: { name: is_roll_over_enabled, type: boolean, defaultValueBoolean: false }
+              - column: { name: parent_category_id, type: bigint }
+        - addForeignKeyConstraint:
+            baseTableName: categories
+            baseColumnNames: parent_category_id
+            referencedTableName: categories
+            referencedColumnNames: id
+            constraintName: fk_categories_parent
+            onDelete: SET NULL
+
+        # Create budget_months table
+        - createTable:
+            tableName: budget_months
+            columns:
+              - column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: budget_month, type: int, constraints: { nullable: false } }
+              - column: { name: budget_year, type: int, constraints: { nullable: false } }
+              - column: { name: user_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: total_budget, type: double, defaultValueNumeric: 0.0 }
+              - column: { name: is_closed, type: boolean, defaultValueBoolean: false }
+              - column: { name: created_at, type: timestamp, defaultValueComputed: "CURRENT_TIMESTAMP" }
+              - column: { name: updated_at, type: timestamp, defaultValueComputed: "CURRENT_TIMESTAMP" }
+        - addForeignKeyConstraint:
+            baseTableName: budget_months
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_budget_months_user
+            onDelete: CASCADE
+        - addUniqueConstraint:
+            tableName: budget_months
+            columnNames: user_id, budget_month, budget_year
+            constraintName: uq_budget_months_user_date
+
+        # Create budget_category_allocations table
+        - createTable:
+            tableName: budget_category_allocations
+            columns:
+              - column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: budget_month_id, type: bigint, constraints: { nullable: false } }
+              - column: { name: category_id, type: bigint, constraints: { nullable: false } }
+              - column: { name: user_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: allocated_amount, type: double, defaultValueNumeric: 0.0 }
+              - column: { name: actual_spent, type: double, defaultValueNumeric: 0.0 }
+              - column: { name: remaining_balance, type: double, defaultValueNumeric: 0.0 }
+        - addForeignKeyConstraint:
+            baseTableName: budget_category_allocations
+            baseColumnNames: budget_month_id
+            referencedTableName: budget_months
+            referencedColumnNames: id
+            constraintName: fk_bca_budget_month
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: budget_category_allocations
+            baseColumnNames: category_id
+            referencedTableName: categories
+            referencedColumnNames: id
+            constraintName: fk_bca_category
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: budget_category_allocations
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_bca_user
+            onDelete: CASCADE
+        - addUniqueConstraint:
+            tableName: budget_category_allocations
+            columnNames: budget_month_id, category_id
+            constraintName: uq_bca_month_category
+
+        # Create allocation_rules table
+        - createTable:
+            tableName: allocation_rules
+            columns:
+              - column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: user_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: rule_name, type: varchar(255), constraints: { nullable: false } }
+              - column: { name: allocation_percentage, type: double, constraints: { nullable: false } }
+              - column: { name: is_active, type: boolean, defaultValueBoolean: true }
+              - column: { name: created_at, type: timestamp, defaultValueComputed: "CURRENT_TIMESTAMP" }
+              - column: { name: updated_at, type: timestamp, defaultValueComputed: "CURRENT_TIMESTAMP" }
+        - addForeignKeyConstraint:
+            baseTableName: allocation_rules
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_allocation_rules_user
+            onDelete: CASCADE

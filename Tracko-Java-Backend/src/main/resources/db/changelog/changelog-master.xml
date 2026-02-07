@@ -110,6 +110,7 @@
             <column name="created_at" type="TIMESTAMP" defaultValue="NOW()"/>
         </createTable>
     </changeSet>
+    <include file="db/changelog/006-add-zbb-tables.yaml"/>
 </databaseChangeLog>
 
         <!--<changeSet>-->

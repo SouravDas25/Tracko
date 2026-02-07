@@ -37,6 +37,18 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
         @Param("endDate") Date endDate,
         @Param("accountIds") List<Long> accountIds
     );
+
+    @Query("SELECT t FROM Transaction t WHERE t.accountId IN " +
+           "(SELECT a.id FROM Account a WHERE a.userId = :userId) " +
+           "AND t.categoryId = :categoryId " +
+           "AND t.date >= :startDate AND t.date < :endDate " +
+           "ORDER BY t.date DESC")
+    List<Transaction> findByUserIdAndCategoryIdAndDateBetween(
+        @Param("userId") String userId,
+        @Param("categoryId") Long categoryId,
+        @Param("startDate") Date startDate,
+        @Param("endDate") Date endDate
+    );
     
     List<Transaction> findByAccountId(Long accountId);
     List<Transaction> findByCategoryId(Long categoryId);

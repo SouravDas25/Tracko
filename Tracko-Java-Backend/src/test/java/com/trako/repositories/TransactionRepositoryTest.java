@@ -127,8 +127,12 @@ public class TransactionRepositoryTest {
 
         entityManager.flush();
 
+        cal.setTime(today);
+        cal.add(Calendar.DAY_OF_MONTH, 1);
+        Date tomorrow = cal.getTime();
+
         List<Transaction> transactions = transactionRepository.findByUserIdAndDateBetween(
-            testUser.getId(), fiveDaysAgo, today);
+            testUser.getId(), fiveDaysAgo, tomorrow);
 
         assertThat(transactions).hasSize(1);
         assertThat(transactions.get(0).getName()).isEqualTo("Recent");

@@ -21,10 +21,21 @@ public class Category {
     @Column(name = "user_id", length = 36)
     private String userId;
 
+    @Column(name = "is_roll_over_enabled")
+    private Boolean isRollOverEnabled = false;
+
+    @Column(name = "parent_category_id")
+    private Long parentCategoryId;
+
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", insertable = false, updatable = false)
     private User user;
+
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_category_id", insertable = false, updatable = false)
+    private Category parentCategory;
 
     public Long getId() {
         return id;
@@ -46,6 +57,30 @@ public class Category {
         return userId;
     }
 
+
+    public Boolean getIsRollOverEnabled() {
+        return isRollOverEnabled;
+    }
+
+    public void setIsRollOverEnabled(Boolean rollOverEnabled) {
+        isRollOverEnabled = rollOverEnabled;
+    }
+
+    public Long getParentCategoryId() {
+        return parentCategoryId;
+    }
+
+    public void setParentCategoryId(Long parentCategoryId) {
+        this.parentCategoryId = parentCategoryId;
+    }
+
+    public Category getParentCategory() {
+        return parentCategory;
+    }
+
+    public void setParentCategory(Category parentCategory) {
+        this.parentCategory = parentCategory;
+    }
     public void setUserId(String userId) {
         this.userId = userId;
     }

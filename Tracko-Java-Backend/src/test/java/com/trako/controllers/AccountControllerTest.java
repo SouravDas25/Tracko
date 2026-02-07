@@ -2,7 +2,11 @@ package com.trako.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trako.entities.Account;
+import com.trako.entities.User;
 import com.trako.services.AccountService;
+import com.trako.services.JwtUserDetailsService;
+import com.trako.services.UserService;
+import com.trako.util.JwtTokenUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,14 +37,30 @@ public class AccountControllerTest {
     @MockBean
     private AccountService accountService;
 
+    @MockBean
+    private UserService userService;
+
+    @MockBean
+    private JwtTokenUtil jwtTokenUtil;
+
+    @MockBean
+    private JwtUserDetailsService jwtUserDetailsService;
+
     private Account testAccount;
+    private User testUser;
 
     @BeforeEach
-    public void setup() {
+    public void setup() throws Exception {
         testAccount = new Account();
         testAccount.setId(1L);
         testAccount.setName("Savings");
         testAccount.setUserId("user123");
+
+        testUser = new User();
+        testUser.setId("user123");
+        testUser.setName("Test User");
+
+        when(userService.loggedInUser()).thenReturn(testUser);
     }
 
     @Test
@@ -50,7 +70,7 @@ public class AccountControllerTest {
 
         mockMvc.perform(get("/api/accounts"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data[0].name").value("Savings"));
+                .andExpect(jsonPath("$.result[0].name").value("Savings"));
 
         verify(accountService, times(1)).findAll();
     }
@@ -62,7 +82,7 @@ public class AccountControllerTest {
 
         mockMvc.perform(get("/api/accounts/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.name").value("Savings"));
+                .andExpect(jsonPath("$.result.name").value("Savings"));
 
         verify(accountService, times(1)).findById(1L);
     }
@@ -74,7 +94,7 @@ public class AccountControllerTest {
 
         mockMvc.perform(get("/api/accounts/user/user123"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data[0].userId").value("user123"));
+                .andExpect(jsonPath("$.result[0].userId").value("user123"));
 
         verify(accountService, times(1)).findByUserId("user123");
     }
@@ -89,7 +109,7 @@ public class AccountControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(testAccount)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.name").value("Savings"));
+                .andExpect(jsonPath("$.result.name").value("Savings"));
 
         verify(accountService, times(1)).save(any(Account.class));
     }
@@ -104,7 +124,7 @@ public class AccountControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(testAccount)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.name").value("Savings"));
+                .andExpect(jsonPath("$.result.name").value("Savings"));
 
         verify(accountService, times(1)).save(any(Account.class));
     }
