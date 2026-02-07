@@ -182,6 +182,27 @@ public class BudgetCalculationService {
                 .findByBudgetMonthIdAndCategoryId(budgetMonth.getId(), request.getCategoryId())
                 .orElse(new BudgetCategoryAllocation());
 
+        // Validate available funds
+        Date startDate = getStartDate(request.getMonth(), request.getYear());
+        Date endDate = getEndDate(request.getMonth(), request.getYear());
+        Double totalIncome = transactionService.getTotalIncome(userId, startDate, endDate);
+        Double rollover = calculateRolloverAmount(userId, request.getMonth(), request.getYear());
+        
+        Double currentTotalBudget = budgetMonth.getTotalBudget();
+        // If we are updating an existing allocation, we must subtract its OLD amount from the total usage
+        // before adding the new amount to check feasibility.
+        Double oldAmount = allocation.getAllocatedAmount() != null ? allocation.getAllocatedAmount() : 0.0;
+        Double budgetUsedByOthers = currentTotalBudget - oldAmount;
+        
+        Double availableTotal = totalIncome + rollover;
+        Double newTotalBudget = budgetUsedByOthers + request.getAmount();
+        
+        // Use a small epsilon for float comparison if needed, or just standard double logic
+        if (newTotalBudget > availableTotal + 0.001) { // 0.001 tolerance
+             throw new IllegalArgumentException("Insufficient funds. Available: " + 
+                     (availableTotal - budgetUsedByOthers) + ", Requested: " + request.getAmount());
+        }
+
         if (allocation.getId() == null) {
             allocation.setBudgetMonthId(budgetMonth.getId());
             allocation.setCategoryId(request.getCategoryId());
@@ -194,8 +215,6 @@ public class BudgetCalculationService {
         // Recalculate remaining based on actuals if we have them, strictly speaking we should probably re-fetch actuals here 
         // but for performance we rely on the last known state or 0. In a real real-time system we might want to fetch.
         // Let's fetch actuals to be safe and accurate.
-        Date startDate = getStartDate(request.getMonth(), request.getYear());
-        Date endDate = getEndDate(request.getMonth(), request.getYear());
         List<Transaction> transactions = transactionRepository.findByUserIdAndCategoryIdAndDateBetween(
                 userId, category.getId(), startDate, endDate);
         Double actual = transactions.stream()

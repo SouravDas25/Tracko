@@ -1,5 +1,6 @@
 import 'package:tracko/Utils/SettingUtil.dart';
 import 'package:tracko/Utils/WidgetUtil.dart';
+import 'package:tracko/pages/budget_page/budget_page.dart';
 import 'package:tracko/pages/home_page/home_page.dart';
 import 'package:tracko/pages/settings_page/settings_page.dart';
 import 'package:tracko/pages/stats_page/stats_page.dart';
@@ -24,14 +25,23 @@ class HomeTab extends StatefulWidget {
 class _HomeTab extends State<HomeTab> with SingleTickerProviderStateMixin {
   late TabController tabController;
 
-  int _selectedIndex = 2;
+  int _selectedIndex = 3;
+  // Mapping of bottom bar item positions (compact layout) to TabController indices.
+  // We omit the 'Split' tab (index 2) on small screens to satisfy BottomNavyBar's
+  // 2..5 item constraint while keeping 6 tabs available on wide screens via NavigationRail.
+  // Order maps compact bottom bar positions -> TabController indices.
+  // Keep Home (tab index 3) centered at bottom bar position 2.
+  final List<int> _navTabIndices = const [0, 1, 3, 2, 4];
 
   @override
   initState() {
     super.initState();
-    tabController = TabController(length: 5, vsync: this, initialIndex: 2);
+    tabController = TabController(length: 5, vsync: this, initialIndex: 3);
     tabController.addListener(() {
-      _selectedIndex = tabController.index;
+      // Keep the tab index as the source of truth
+      setState(() {
+        _selectedIndex = tabController.index;
+      });
     });
     afterLoggingIn();
   }
@@ -53,9 +63,9 @@ class _HomeTab extends State<HomeTab> with SingleTickerProviderStateMixin {
       activeColor: Colors.red,
     ),
     BottomNavyBarItem(
-      icon: Icon(Icons.call_split),
-      title: Text("Split"),
-      activeColor: Colors.orange,
+      icon: Icon(Icons.monetization_on),
+      title: Text("Budget"),
+      activeColor: Colors.green,
     ),
     BottomNavyBarItem(
       icon: Icon(Icons.home),
@@ -63,14 +73,14 @@ class _HomeTab extends State<HomeTab> with SingleTickerProviderStateMixin {
       activeColor: Colors.teal,
     ),
     BottomNavyBarItem(
+      icon: Icon(Icons.call_split),
+      title: Text("Split"),
+      activeColor: Colors.orange,
+    ),
+    BottomNavyBarItem(
       icon: Icon(Icons.bar_chart),
       title: Text("Stats"),
       activeColor: Colors.blue,
-    ),
-    BottomNavyBarItem(
-      icon: Icon(Icons.settings),
-      title: Text("Settings"),
-      activeColor: Colors.blueGrey,
     ),
   ];
 
@@ -97,16 +107,21 @@ class _HomeTab extends State<HomeTab> with SingleTickerProviderStateMixin {
               ),
               child: BottomNavyBar(
                 iconSize: 22,
-                selectedIndex: _selectedIndex,
+                // Convert current tab index to the compact bottom bar's item index.
+                selectedIndex: (() {
+                  final idx = _navTabIndices.indexOf(_selectedIndex);
+                  return idx >= 0 ? idx : 0;
+                })(),
                 showElevation: true,
                 itemCornerRadius: 8,
                 curve: Curves.easeInOut,
                 backgroundColor: Colors.transparent,
                 onItemSelected: (int selectedPos) {
                   setState(() {
-                    _selectedIndex = selectedPos;
+                    // Map from bottom bar position to actual tab index
+                    _selectedIndex = _navTabIndices[selectedPos];
                   });
-                  tabController.animateTo(selectedPos);
+                  tabController.animateTo(_selectedIndex);
                 },
                 items: navlist,
               ),
@@ -126,7 +141,16 @@ class _HomeTab extends State<HomeTab> with SingleTickerProviderStateMixin {
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             onPressed: () {},
-          )
+          ),
+          IconButton(
+            tooltip: "Settings",
+            icon: Icon(Icons.settings),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => SettingsPage()),
+              );
+            },
+          ),
         ],
         title: Text("Trako"),
         centerTitle: true,
@@ -136,15 +160,19 @@ class _HomeTab extends State<HomeTab> with SingleTickerProviderStateMixin {
               children: [
                 Builder(builder: (context) {
                   final railItems = [
-                    {'icon': Icons.home, 'label': 'Home', 'tab': 2},
                     {
                       'icon': Icons.account_circle,
                       'label': 'Accounts',
                       'tab': 0
                     },
-                    {'icon': Icons.call_split, 'label': 'Split', 'tab': 1},
-                    {'icon': Icons.bar_chart, 'label': 'Stats', 'tab': 3},
-                    {'icon': Icons.settings, 'label': 'Settings', 'tab': 4},
+                    {
+                      'icon': Icons.monetization_on,
+                      'label': 'Budget',
+                      'tab': 1
+                    },
+                    {'icon': Icons.call_split, 'label': 'Split', 'tab': 2},
+                    {'icon': Icons.home, 'label': 'Home', 'tab': 3},
+                    {'icon': Icons.bar_chart, 'label': 'Stats', 'tab': 4},
                   ];
                   int railSelected =
                       railItems.indexWhere((e) => e['tab'] == _selectedIndex);
@@ -178,10 +206,10 @@ class _HomeTab extends State<HomeTab> with SingleTickerProviderStateMixin {
                       controller: tabController,
                       children: <Widget>[
                         AccountsOverviewPage(),
+                        BudgetPage(),
                         SplitPage(),
                         TransactionListPage(embedded: true),
                         StatsPage(),
-                        SettingsPage(),
                       ]),
                 ),
               ],
@@ -191,10 +219,10 @@ class _HomeTab extends State<HomeTab> with SingleTickerProviderStateMixin {
               controller: tabController,
               children: <Widget>[
                   AccountsOverviewPage(),
+                  BudgetPage(),
                   SplitPage(),
                   TransactionListPage(embedded: true),
                   StatsPage(),
-                  SettingsPage(),
                 ]),
     );
   }

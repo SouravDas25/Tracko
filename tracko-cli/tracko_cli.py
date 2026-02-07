@@ -746,6 +746,88 @@ def cmd_transactions_add(args: argparse.Namespace) -> int:
     return 0 if result["ok"] else 1
 
 
+def cmd_budget_view(args: argparse.Namespace) -> int:
+    token, base_url = _get_token_from_args_or_config(args)
+    
+    now = datetime.datetime.now()
+    month = int(args.month) if args.month else now.month
+    year = int(args.year) if args.year else now.year
+    
+    params = {
+        "month": month,
+        "year": year,
+        "includeActual": "true",
+        "includeRollover": "true"
+    }
+    query = urllib.parse.urlencode(params)
+    url = _join_url(base_url, "/api/budget") + "?" + query
+    
+    result = http_request("GET", url, token=token)
+    
+    if args.raw:
+        print_result(result, raw=True)
+        return 0 if result["ok"] else 1
+
+    payload = result.get("json")
+    if not (result.get("ok") and isinstance(payload, dict)):
+        print_result(result, raw=False)
+        return 1
+    
+    data = payload.get("result")
+    if not isinstance(data, dict):
+        # Fallback if structure is unexpected
+        print_result(result, raw=False)
+        return 1
+
+    # Print Summary
+    print(f"Budget for {month}/{year}")
+    print(f"Total Income:     {data.get('totalIncome', 0)}")
+    print(f"Rollover:         {data.get('rolloverAmount', 0)}")
+    print(f"Available Assign: {data.get('availableToAssign', 0)}")
+    print(f"Total Budgeted:   {data.get('totalBudget', 0)}")
+    print(f"Total Spent:      {data.get('totalSpent', 0)}")
+    print("-" * 60)
+
+    # Print Categories
+    categories = data.get("categories", [])
+    if categories:
+        columns = [
+            ("categoryId", "ID"),
+            ("categoryName", "Category"),
+            ("allocatedAmount", "Allocated"),
+            ("actualSpent", "Spent"),
+            ("remainingBalance", "Remaining"),
+        ]
+        print_table(
+            categories,
+            columns,
+            max_widths={"categoryName": 30},
+            right_align={"categoryId", "allocatedAmount", "actualSpent", "remainingBalance"}
+        )
+
+    return 0
+
+
+def cmd_budget_allocate(args: argparse.Namespace) -> int:
+    token, base_url = _get_token_from_args_or_config(args)
+    url = _join_url(base_url, "/api/budget/allocate")
+    
+    now = datetime.datetime.now()
+    month = int(args.month) if args.month else now.month
+    year = int(args.year) if args.year else now.year
+
+    body = {
+        "month": month,
+        "year": year,
+        "categoryId": int(args.category_id),
+        "amount": float(args.amount)
+    }
+    
+    result = http_request("POST", url, token=token, json_body=body)
+    print_result(result, raw=args.raw)
+    return 0 if result["ok"] else 1
+
+
 def cmd_request(args: argparse.Namespace) -> int:
     token, base_url = _get_token_from_args_or_config(args)
     path = args.path
@@ -801,6 +883,9 @@ def build_parser() -> argparse.ArgumentParser:
         "  tracko_cli splits unsettled-contact --contact-id 1\n\n"
         "  # Splits (create)\n"
         "  tracko_cli splits create --transaction-id 6 --user-id 575e15bc-... --amount 125 --contact-id 1\n\n"
+        "  # Budget\n"
+        "  tracko_cli budget view --month 2 --year 2026\n"
+        "  tracko_cli budget allocate --category-id 1 --amount 500 --month 2 --year 2026\n\n"
         "  # Generic request\n"
         "  tracko_cli request --method GET --path /api/health\n"
         "  tracko_cli request --method POST --path /api/contacts --json '{\"name\":\"Bob\"}'\n"
@@ -939,6 +1024,22 @@ def build_parser() -> argparse.ArgumentParser:
     sp2.add_argument("--countable", action="store_true", default=True)
     sp2.add_argument("--not-countable", action="store_false", dest="countable")
     sp2.set_defaults(func=cmd_transactions_add)
+
+    # budget
+    sp = sub.add_parser("budget")
+    sub_budget = sp.add_subparsers(dest="budget_cmd", required=True)
+
+    sp2 = sub_budget.add_parser("view")
+    sp2.add_argument("--month", type=int, help="Month (1-12)")
+    sp2.add_argument("--year", type=int, help="Year (YYYY)")
+    sp2.set_defaults(func=cmd_budget_view)
+
+    sp2 = sub_budget.add_parser("allocate")
+    sp2.add_argument("--category-id", required=True, type=int)
+    sp2.add_argument("--amount", required=True, type=float)
+    sp2.add_argument("--month", type=int, help="Month (1-12)")
+    sp2.add_argument("--year", type=int, help="Year (YYYY)")
+    sp2.set_defaults(func=cmd_budget_allocate)
 
     sp = sub.add_parser("request", help="Generic request")
     sp.add_argument("--method", default="GET")

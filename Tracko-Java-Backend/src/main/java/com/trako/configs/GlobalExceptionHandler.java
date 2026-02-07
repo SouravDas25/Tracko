@@ -49,6 +49,12 @@ public class GlobalExceptionHandler {
         return Response.badRequest("Bad request");
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<?> handleIllegalArgument(IllegalArgumentException ex) {
+        log.warn("Bad request: {}", ex.getMessage());
+        return Response.badRequest(ex.getMessage());
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> handleUnexpected(Exception ex) {
         log.error("Unhandled exception", ex);

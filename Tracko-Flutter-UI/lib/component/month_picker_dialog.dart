@@ -119,14 +119,15 @@ class _MonthPickerDialogState extends State<_MonthPickerDialog> {
     return Material(
         color: theme.primaryColor,
         child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(10.0),
             child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(
                     '${DateFormat.yMMM(locale).format(selectedDate)}',
-                    style: theme.primaryTextTheme.titleMedium,
+                    style: theme.primaryTextTheme.titleMedium
+                        ?.copyWith(fontSize: 14),
                   ),
                   Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -141,7 +142,8 @@ class _MonthPickerDialogState extends State<_MonthPickerDialog> {
                             },
                             child: Text(
                               '${DateFormat.y(locale).format(DateTime(displayedPage))}',
-                              style: theme.primaryTextTheme.headlineMedium,
+                              style: theme.primaryTextTheme.headlineMedium
+                                  ?.copyWith(fontSize: 20),
                             ),
                           ),
                         if (isYearSelection)
@@ -151,19 +153,23 @@ class _MonthPickerDialogState extends State<_MonthPickerDialog> {
                               children: <Widget>[
                                 Text(
                                   '${DateFormat.y(locale).format(DateTime(displayedPage * 12))}',
-                                  style: theme.primaryTextTheme.headlineMedium,
+                                  style: theme.primaryTextTheme.headlineMedium
+                                      ?.copyWith(fontSize: 20),
                                 ),
                                 Text(
                                   '-',
-                                  style: theme.primaryTextTheme.headlineMedium,
+                                  style: theme.primaryTextTheme.headlineMedium
+                                      ?.copyWith(fontSize: 20),
                                 ),
                                 Text(
                                   '${DateFormat.y(locale).format(DateTime(displayedPage * 12 + 11))}',
-                                  style: theme.primaryTextTheme.headlineMedium,
+                                  style: theme.primaryTextTheme.headlineMedium
+                                      ?.copyWith(fontSize: 20),
                                 )
                               ]),
                         Row(children: <Widget>[
                           IconButton(
+                            iconSize: 20,
                             icon: Icon(
                               Icons.keyboard_arrow_up,
                               color: theme.primaryIconTheme.color,
@@ -174,6 +180,7 @@ class _MonthPickerDialogState extends State<_MonthPickerDialog> {
                                 curve: Curves.easeInOut),
                           ),
                           IconButton(
+                            iconSize: 20,
                             icon: Icon(
                               Icons.keyboard_arrow_down,
                               color: theme.primaryIconTheme.color,
@@ -190,8 +197,8 @@ class _MonthPickerDialogState extends State<_MonthPickerDialog> {
 
   Widget buildPager(ThemeData theme, String locale) {
     return SizedBox(
-        height: 220.0,
-        width: 300.0,
+        height: 180.0,
+        width: 260.0,
         child: Theme(
             data: theme.copyWith(
               buttonTheme: ButtonThemeData(
