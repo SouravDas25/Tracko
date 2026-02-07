@@ -12,6 +12,7 @@ class AuthService {
     required String name,
     String? email,
     String? profilePic,
+    String? baseCurrency,
   }) async {
     final res =
         await _api.post<Map<String, dynamic>>(ApiConfig.authSignUp, data: {
@@ -20,6 +21,7 @@ class AuthService {
       'name': name,
       'email': email,
       'profilePic': profilePic,
+      'baseCurrency': baseCurrency ?? 'INR',
     });
     // If backend sends token in body/header, store it when available
     final token = res['token'] ?? res['jwtToken'];

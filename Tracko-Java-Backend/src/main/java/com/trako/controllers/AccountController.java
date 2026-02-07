@@ -56,6 +56,9 @@ public class AccountController {
     public ResponseEntity<?> create(@Valid @RequestBody AccountSaveRequest request) {
         Account account = new Account();
         account.setName(request.getName());
+        if (request.getCurrency() != null) {
+            account.setCurrency(request.getCurrency());
+        }
         try {
             String currentUserId = userService.loggedInUser().getId();
             account.setUserId(currentUserId);
@@ -71,6 +74,9 @@ public class AccountController {
         Account account = new Account();
         account.setId(id);
         account.setName(request.getName());
+        if (request.getCurrency() != null) {
+            account.setCurrency(request.getCurrency());
+        }
         try {
             String currentUserId = userService.loggedInUser().getId();
             account.setUserId(currentUserId);

@@ -40,6 +40,10 @@ class _AccountsOverviewPageState extends AsyncLoadState<AccountsOverviewPage> {
                 accounts[i].name,
                 style: WidgetUtil.defaultTextStyle(),
               ),
+              subtitle: Text(
+                accounts[i].currency,
+                style: TextStyle(color: Colors.grey),
+              ),
               trailing: const Icon(Icons.chevron_right),
               onTap: () {
                 if (id == 0) return;

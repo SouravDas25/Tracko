@@ -21,6 +21,8 @@ public class UserSaveRequest {
 
     private Integer isShadow;
 
+    private String baseCurrency;
+
     public String getName() {
         return name;
     }
@@ -70,7 +72,15 @@ public class UserSaveRequest {
     }
 
     public boolean isShadow() {
-        return isShadow == 1;
+        return isShadow != null && isShadow == 1;
+    }
+
+    public String getBaseCurrency() {
+        return baseCurrency;
+    }
+
+    public void setBaseCurrency(String baseCurrency) {
+        this.baseCurrency = baseCurrency;
     }
 
     @Override

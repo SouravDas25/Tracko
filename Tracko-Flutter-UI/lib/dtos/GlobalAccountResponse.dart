@@ -5,6 +5,7 @@ class GlobalAccountResponse {
   late String email;
   late String profilePic;
   late String fireBaseId;
+  late String baseCurrency;
 
   GlobalAccountResponse.fromJson(dynamic jsonResponse) {
     this.id = jsonResponse["id"];
@@ -13,10 +14,11 @@ class GlobalAccountResponse {
     this.email = jsonResponse["email"];
     this.profilePic = jsonResponse["profilePic"];
     this.fireBaseId = jsonResponse["firebase_uuid"];
+    this.baseCurrency = jsonResponse["baseCurrency"] ?? "INR";
   }
 
   @override
   String toString() {
-    return 'GlobalAccountResponse{id: $id, name: $name, phoneNo: $phoneNo, email: $email, profilePic: $profilePic, fireBaseId: $fireBaseId}';
+    return 'GlobalAccountResponse{id: $id, name: $name, phoneNo: $phoneNo, email: $email, profilePic: $profilePic, fireBaseId: $fireBaseId, baseCurrency: $baseCurrency}';
   }
 }

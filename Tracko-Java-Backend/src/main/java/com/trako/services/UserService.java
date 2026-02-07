@@ -90,6 +90,13 @@ public class UserService {
             if (isPreset.getName() != null && user.getName() == null)
                 user.setName(isPreset.getName());
         }
+        
+        if (userSaveRequest.getBaseCurrency() != null) {
+            user.setBaseCurrency(userSaveRequest.getBaseCurrency());
+        } else if (user.getBaseCurrency() == null) {
+            user.setBaseCurrency("INR");
+        }
+        
         user = usersRepository.save(user);
         return user.getId();
     }
@@ -101,5 +108,9 @@ public class UserService {
 
         String jwtToken = jwtTokenUtil.generateToken((UserDetails) authenticate.getPrincipal());
         return jwtToken;
+    }
+
+    public User saveUser(User user) {
+        return usersRepository.save(user);
     }
 }

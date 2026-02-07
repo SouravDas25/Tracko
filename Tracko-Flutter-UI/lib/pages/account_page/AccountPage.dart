@@ -63,6 +63,10 @@ class AccountPageState extends AsyncLoadState<AccountPage> {
                   accounts[i].name,
                   style: WidgetUtil.defaultTextStyle(),
                 ),
+                subtitle: Text(
+                  accounts[i].currency,
+                  style: TextStyle(color: Colors.grey),
+                ),
                 onTap: () {
                   final id = accounts[i].id ?? 0;
                   Navigator.of(context).push(

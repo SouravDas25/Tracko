@@ -45,6 +45,23 @@ public class TransactionService {
     }
 
     public Transaction save(Transaction transaction) {
+        if (transaction.getAmount() == null) {
+            if (transaction.getOriginalAmount() != null && transaction.getExchangeRate() != null) {
+                // Calculate amount based on original amount and exchange rate
+                // Assuming exchangeRate is: 1 Unit of Original = X Units of Base
+                double calculatedAmount = transaction.getOriginalAmount() * transaction.getExchangeRate();
+                // Round to 2 decimal places
+                transaction.setAmount(Math.round(calculatedAmount * 100.0) / 100.0);
+            } else {
+                throw new IllegalArgumentException("Amount cannot be null unless originalAmount and exchangeRate are provided");
+            }
+        }
+        
+        // Ensure consistency if both are provided? 
+        // For now, trust the calculated or provided amount, but maybe we should re-calculate if original is present?
+        // Let's stick to: if original info is present, ensure amount matches?
+        // Or just lenient: if amount is present, use it. If not, calculate.
+        
         return transactionRepository.save(transaction);
     }
 

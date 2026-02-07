@@ -23,17 +23,18 @@ class AccountRepository {
     }
   }
 
-  Future<legacy.Account> createAccount(String name, String userId) async {
+  Future<legacy.Account> createAccount(
+      String name, String userId, String currency) async {
     final res = await _api.post<Map<String, dynamic>>(ApiConfig.accounts,
-        data: {'name': name, 'userId': userId});
+        data: {'name': name, 'userId': userId, 'currency': currency});
     return _toLegacyAccount(res);
   }
 
   Future<legacy.Account> updateAccount(
-      int id, String name, String userId) async {
+      int id, String name, String userId, String currency) async {
     final res = await _api.put<Map<String, dynamic>>(
         '${ApiConfig.accounts}/$id',
-        data: {'name': name, 'userId': userId});
+        data: {'name': name, 'userId': userId, 'currency': currency});
     return _toLegacyAccount(res);
   }
 
@@ -41,6 +42,7 @@ class AccountRepository {
     final a = legacy.Account();
     a.id = (json['id'] as num?)?.toInt();
     a.name = (json['name'] as String?) ?? '';
+    a.currency = (json['currency'] as String?) ?? 'INR';
     // Backend uses userId as String; legacy model expects int? -> leave null
     return a;
   }

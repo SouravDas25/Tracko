@@ -30,9 +30,17 @@ public class Transaction {
     @Column(name = "date")
     private Date date;
 
-    @NotNull
     @Column(name = "amount")
     private Double amount;
+
+    @Column(name = "original_currency", length = 3)
+    private String originalCurrency;
+
+    @Column(name = "original_amount")
+    private Double originalAmount;
+
+    @Column(name = "exchange_rate")
+    private Double exchangeRate;
 
     @NotNull
     @Column(name = "account_id")
@@ -101,6 +109,30 @@ public class Transaction {
 
     public void setAmount(Double amount) {
         this.amount = amount;
+    }
+
+    public String getOriginalCurrency() {
+        return originalCurrency;
+    }
+
+    public void setOriginalCurrency(String originalCurrency) {
+        this.originalCurrency = originalCurrency;
+    }
+
+    public Double getOriginalAmount() {
+        return originalAmount;
+    }
+
+    public void setOriginalAmount(Double originalAmount) {
+        this.originalAmount = originalAmount;
+    }
+
+    public Double getExchangeRate() {
+        return exchangeRate;
+    }
+
+    public void setExchangeRate(Double exchangeRate) {
+        this.exchangeRate = exchangeRate;
     }
 
     public Long getAccountId() {

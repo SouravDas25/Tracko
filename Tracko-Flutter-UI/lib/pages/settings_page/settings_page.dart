@@ -9,6 +9,7 @@ import 'package:tracko/models/user.dart';
 import 'package:tracko/pages/account_page/AccountPage.dart';
 import 'package:tracko/pages/category_page/category_page.dart';
 import 'package:tracko/pages/contact_page/contact_page.dart';
+import 'package:tracko/pages/settings_page/currency_settings_page.dart';
 import 'package:tracko/services/SessionService.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' as DateFormatter;
@@ -21,17 +22,21 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPage extends State<SettingsPage> {
-  late User user;
+  User? user;
   DateTime month = SettingUtil.currentMonth;
 
-  _SettingsPage() {
+  @override
+  void initState() {
+    super.initState();
     initData();
   }
 
   void initData() async {
-    user = SessionService.currentUser();
-//    await adapter.close();
-//    Future<void>.delayed(Duration(seconds: 1));
+    try {
+      user = await SessionService.getCurrentUser();
+    } catch (e) {
+      print("Error loading user: $e");
+    }
     if (this.mounted) setState(() {});
   }
 
@@ -51,112 +56,153 @@ class _SettingsPage extends State<SettingsPage> {
     Navigator.popAndPushNamed(context, "/welcome");
   }
 
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+      child: Text(
+        title,
+        style: TextStyle(
+          color: Theme.of(context).primaryColor,
+          fontWeight: FontWeight.bold,
+          fontSize: 14,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSettingsTile({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+    Widget? trailing,
+    Color? iconColor,
+  }) {
+    final color = iconColor ?? Theme.of(context).primaryColor;
+    return ListTile(
+      leading: Container(
+        padding: EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(icon, color: color),
+      ),
+      title: Text(title, style: TextStyle(fontSize: 16)),
+      trailing: trailing ?? Icon(Icons.chevron_right, color: Colors.grey),
+      onTap: onTap,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: ListView(children: <Widget>[
-        Card(
-          margin: EdgeInsets.all(0),
-          elevation: 0,
-          child: ListTile(
-            leading: CircleAvatar(
-              radius: 20.0,
-              child: user == null ||
-                      user.profilePic == null ||
-                      user.profilePic.length <= 0
-                  ? Image.asset("assets/images/user-avatar.png")
-                  : Image.network(user.profilePic),
-            ),
-            title: Padding(
-              padding: EdgeInsets.symmetric(vertical: 5.0),
-              child: Text(user == null ? "" : user.name,
-                  style: TextStyle(fontSize: 20.0)),
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              textDirection: TextDirection.ltr,
-              children: <Widget>[
-                Text(user == null ? "" : user.phoneNo),
-                Text(user == null ? "" : user.email),
+    // Determine text color based on brightness for secondary text
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final secondaryTextColor = isDark ? Colors.grey[400] : Colors.grey[600];
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Settings"),
+        centerTitle: true,
+        elevation: 0,
+      ),
+      body: ListView(
+        children: <Widget>[
+          SizedBox(height: 20),
+          // User Profile Section
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 30.0,
+                  backgroundColor:
+                      Theme.of(context).primaryColor.withOpacity(0.1),
+                  child: user == null ||
+                          user!.profilePic == null ||
+                          user!.profilePic.isEmpty
+                      ? Image.asset("assets/images/user-avatar.png")
+                      : ClipOval(child: Image.network(user!.profilePic)),
+                ),
+                SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        user?.name ?? "Guest",
+                        style: TextStyle(
+                            fontSize: 20.0, fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        user?.email ?? "",
+                        style:
+                            TextStyle(color: secondaryTextColor, fontSize: 14),
+                      ),
+                      Text(
+                        user?.phoneNo ?? "",
+                        style:
+                            TextStyle(color: secondaryTextColor, fontSize: 14),
+                      ),
+                    ],
+                  ),
+                ),
+                Text(
+                  ConstantUtil.version,
+                  style: TextStyle(color: secondaryTextColor, fontSize: 12),
+                ),
               ],
             ),
-            trailing: Text(ConstantUtil.version),
           ),
-        ),
-        PaddedText(
-          "DATA SETTINGS",
-          horizontal: 10.0,
-          vertical: 10.0,
-        ),
-        Card(
-          margin: EdgeInsets.all(0),
-          elevation: 0,
-          child: ListTile(
-            leading: Icon(Icons.category, size: 30.0),
-            title: Text("Categories", style: TextStyle(fontSize: 20.0)),
-            trailing: Icon(Icons.arrow_forward_ios),
-            onTap: () {
-//                Navigator.push(context, MaterialPageRoute())
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => CategoryPage(),
-                ),
-              );
-            },
+
+          Divider(height: 32),
+
+          _buildSectionHeader("DATA SETTINGS"),
+
+          _buildSettingsTile(
+            icon: Icons.category,
+            title: "Categories",
+            iconColor: Colors.orangeAccent,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => CategoryPage()),
+            ),
           ),
-        ),
-        Divider(height: 0),
-        Card(
-          margin: EdgeInsets.all(0),
-          elevation: 0,
-          child: ListTile(
-            leading: Icon(Icons.account_balance, size: 30.0),
-            title: Text("Accounts", style: TextStyle(fontSize: 20.0)),
-            trailing: Icon(Icons.arrow_forward_ios),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => AccountPage(),
-                ),
-              );
-            },
+          _buildSettingsTile(
+            icon: Icons.account_balance,
+            title: "Accounts",
+            iconColor: Colors.lightBlueAccent,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => AccountPage()),
+            ),
           ),
-        ),
-        Divider(height: 0),
-        Card(
-          margin: EdgeInsets.all(0),
-          elevation: 0,
-          child: ListTile(
-            leading: Icon(Icons.contacts, size: 30.0),
-            title: Text("Contacts", style: TextStyle(fontSize: 20.0)),
-            trailing: Icon(Icons.arrow_forward_ios),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ContactPage(),
-                ),
-              );
-            },
+          _buildSettingsTile(
+            icon: Icons.contacts,
+            title: "Contacts",
+            iconColor: Colors.tealAccent,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => ContactPage()),
+            ),
           ),
-        ),
-        PaddedText(
-          "SYSTEM SETTINGS",
-          horizontal: 10.0,
-          vertical: 10.0,
-        ),
-        Card(
-          margin: EdgeInsets.all(0),
-          elevation: 0,
-          child: ListTile(
-            leading: Icon(Icons.calendar_today, size: 30.0),
-            title: Text(
-                "Month - ${DateFormatter.DateFormat("MMMM").format(month)}",
-                style: TextStyle(fontSize: 20.0)),
-            trailing: Icon(Icons.arrow_forward_ios),
+          _buildSettingsTile(
+            icon: Icons.monetization_on,
+            title: "Currency Settings",
+            iconColor: Colors.greenAccent,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => CurrencySettingsPage()),
+            ),
+          ),
+
+          _buildSectionHeader("SYSTEM SETTINGS"),
+
+          _buildSettingsTile(
+            icon: Icons.calendar_today,
+            title: "Month - ${DateFormatter.DateFormat("MMMM").format(month)}",
+            iconColor: Colors.pinkAccent,
+            trailing: Icon(Icons.edit, size: 20, color: Colors.grey),
             onTap: () async {
               var m = await showMonthPicker(
                   context: context,
@@ -166,34 +212,29 @@ class _SettingsPage extends State<SettingsPage> {
               if (m != null) {
                 month = m;
                 SettingUtil.setSelectedMonth(month);
+                setState(() {});
               }
-              setState(() {});
             },
           ),
-        ),
-        Divider(height: 0),
-        Card(
-          margin: EdgeInsets.all(0),
-          elevation: 0,
-          child: ListTile(
-            leading: Icon(Icons.dns, size: 30.0),
-            title: Text("Reset All", style: TextStyle(fontSize: 20.0)),
-            trailing: Icon(Icons.arrow_forward_ios),
-            onTap: _showResetDatabaseDialog,
-          ),
-        ),
-        Divider(height: 0),
-        Card(
-          margin: EdgeInsets.all(0),
-          elevation: 0,
-          child: ListTile(
-            leading: Icon(Icons.exit_to_app, size: 30.0),
-            title: Text("Sign-out", style: TextStyle(fontSize: 20.0)),
+
+          Divider(),
+
+          ListTile(
+            leading: Container(
+              padding: EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.redAccent.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(Icons.exit_to_app, color: Colors.redAccent),
+            ),
+            title: Text("Sign-out",
+                style: TextStyle(fontSize: 16, color: Colors.redAccent)),
             onTap: _logout,
-            trailing: Icon(Icons.arrow_forward_ios),
           ),
-        ),
-      ]),
+          SizedBox(height: 20),
+        ],
+      ),
     );
   }
 }

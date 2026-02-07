@@ -113,6 +113,12 @@ class TransactionRepository {
     t.categoryId =
         ((json['categoryId'] ?? json['category_id']) as num?)?.toInt() ?? 0;
     t.isCountable = (json['isCountable'] ?? json['is_countable'] ?? 1) as int;
+
+    // Currency fields
+    t.originalCurrency = json['originalCurrency'] as String?;
+    t.originalAmount = (json['originalAmount'] as num?)?.toDouble();
+    t.exchangeRate = (json['exchangeRate'] as num?)?.toDouble();
+
     return t;
   }
 
@@ -126,11 +132,15 @@ class TransactionRepository {
         'categoryId': t.categoryId,
         'isCountable': t.isCountable,
         'description': t.comments,
+        'originalCurrency': t.originalCurrency,
+        'originalAmount': t.originalAmount,
+        'exchangeRate': t.exchangeRate,
       };
 
   // Aggregation methods - backend calculates
   Future<Map<String, dynamic>> getSummary(
-      String userId, DateTime startDate, DateTime endDate, {List<int>? accountIds}) async {
+      String userId, DateTime startDate, DateTime endDate,
+      {List<int>? accountIds}) async {
     final res = await _api.get<Map<String, dynamic>>(
       "${ApiConfig.transactions}/summary",
       query: {

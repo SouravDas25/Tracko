@@ -15,6 +15,7 @@ import 'package:tracko/models/account.dart';
 import 'package:tracko/models/category.dart';
 import 'package:tracko/models/transaction.dart';
 import 'package:tracko/models/user.dart';
+import 'package:tracko/models/user_currency.dart';
 import 'package:tracko/pages/smart_add_item/SplitSectionInAddTransaction.dart';
 import 'package:tracko/services/SessionService.dart';
 import 'package:datetime_picker_formfield/datetime_picker_formfield.dart';
@@ -44,6 +45,8 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
   TextEditingController comments = TextEditingController();
   TextEditingController amount = MoneyMaskedTextController(
       decimalSeparator: '.', thousandSeparator: ',', initialValue: 0.00);
+  TextEditingController exchangeRateController =
+      TextEditingController(text: '1.0');
   List<TextEditingController> splitAmountTextEditionControllers = [];
   TextEditingController name = TextEditingController();
   bool isEdit = false;
@@ -55,6 +58,13 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
   int transferToAccountId = 0;
   int transactionType = 0;
 
+  String baseCurrency = 'INR';
+  String selectedCurrency = 'INR';
+  double convertedAmount = 0.0;
+
+  List<String> availableCurrencies = ['INR'];
+  Map<String, double> currencyRates = {};
+
   List<User> frequentSplitters = [];
   Set<TrakoContact> splitList = Set();
   List<Category> categories = [];
@@ -62,11 +72,22 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
 
   _SmartAddItemPage(Transaction transaction) {
     this.date = transaction.date;
-    if (transaction.amount == 0.0) {
-      this.amount.text = 0.toString();
+
+    // Check if it's a foreign currency transaction
+    if (transaction.originalCurrency != null &&
+        transaction.originalCurrency!.isNotEmpty) {
+      this.selectedCurrency = transaction.originalCurrency!;
+      this.amount.text = (transaction.originalAmount ?? 0.0).toStringAsFixed(2);
+      this.exchangeRateController.text =
+          (transaction.exchangeRate ?? 1.0).toString();
     } else {
-      this.amount.text = transaction.amount.toStringAsFixed(2);
+      if (transaction.amount == 0.0) {
+        this.amount.text = 0.toString();
+      } else {
+        this.amount.text = transaction.amount.toStringAsFixed(2);
+      }
     }
+
     this.comments.text = transaction.comments;
     this.categoryId = transaction.categoryId;
     this.accountId = transaction.accountId;
@@ -82,10 +103,54 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
         splitAmountTextEditionControllers.add(TextEditingController()));
 //    print(splitAmountTextEditionControllers);
     name.addListener(onNameChange);
+    amount.addListener(updateCalculatedAmount);
+    exchangeRateController.addListener(updateCalculatedAmount);
+  }
+
+  @override
+  void initState() {
+    super.initState();
     initData();
   }
 
   initData() async {
+    try {
+      final user = await SessionService.getCurrentUser();
+      baseCurrency = user.baseCurrency.isNotEmpty ? user.baseCurrency : 'INR';
+
+      availableCurrencies = [baseCurrency];
+      currencyRates = {};
+
+      if (user.secondaryCurrencies.isNotEmpty) {
+        for (var uc in user.secondaryCurrencies) {
+          if (!availableCurrencies.contains(uc.currencyCode)) {
+            availableCurrencies.add(uc.currencyCode);
+          }
+          currencyRates[uc.currencyCode] = uc.exchangeRate;
+        }
+      }
+
+      // Ensure transaction's original currency is available
+      if (widget.transaction.originalCurrency != null &&
+          widget.transaction.originalCurrency!.isNotEmpty) {
+        if (!availableCurrencies
+            .contains(widget.transaction.originalCurrency!)) {
+          availableCurrencies.add(widget.transaction.originalCurrency!);
+        }
+      }
+
+      if (widget.transaction.id == null &&
+          widget.transaction.originalCurrency == null) {
+        selectedCurrency = baseCurrency;
+        exchangeRateController.text = '1.0';
+      } else if (widget.transaction.originalCurrency != null &&
+          availableCurrencies.contains(widget.transaction.originalCurrency)) {
+        selectedCurrency = widget.transaction.originalCurrency!;
+      }
+    } catch (e) {
+      print("Error initializing data: $e");
+    }
+
     categories = await CategoryController.getAllCategories();
     accounts = await AccountController.getAllAccounts();
     if (accountId == 0) {
@@ -107,14 +172,24 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
     }
 
     print(frequentSplitters);
+    updateCalculatedAmount();
     setState(() {});
+  }
+
+  void updateCalculatedAmount() {
+    double amt = castAmountText2Double(amount.text);
+    double rate = double.tryParse(exchangeRateController.text) ?? 1.0;
+    setState(() {
+      convertedAmount = amt * rate;
+    });
   }
 
   save() async {
     bool isSuccessfulSave = false;
     LoadingDialog.show(context);
     try {
-      if (castAmountText2Double(amount.text) <= 0) {
+      double inputAmount = castAmountText2Double(amount.text);
+      if (inputAmount <= 0) {
         throw Exception("Amount should be non-zero and non-negative");
       }
       if (transactionType == TransactionType.TRANSFER) {
@@ -130,7 +205,22 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
         }
       }
       Transaction transaction = widget.transaction;
-      transaction.amount = castAmountText2Double(amount.text);
+
+      // Handle Currency Logic
+      if (selectedCurrency != baseCurrency) {
+        transaction.originalCurrency = selectedCurrency;
+        transaction.originalAmount = inputAmount;
+        transaction.exchangeRate =
+            double.tryParse(exchangeRateController.text) ?? 1.0;
+        transaction.amount =
+            transaction.originalAmount! * transaction.exchangeRate!;
+      } else {
+        transaction.amount = inputAmount;
+        transaction.originalCurrency = null;
+        transaction.originalAmount = null;
+        transaction.exchangeRate = null;
+      }
+
       transaction.date = date;
       transaction.name = name.text.trim();
       if (transactionType == TransactionType.TRANSFER) {
@@ -313,42 +403,113 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
                   });
                 },
               ),
-            if (transactionType != TransactionType.TRANSFER)
-              SizedBox(
-                width: double.infinity,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: <Widget>[
-                    TextButton(
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (_) => CategoryDialog(
-                            callback: () {
-                              setState(() {
-                                initData();
-                              });
-                            },
-                          ),
-                        );
-                      },
-                      child: Text(
-                        "+ Category",
-                        textAlign: TextAlign.right,
-                      ),
-                    )
-                  ],
-                ),
+            SizedBox(
+              width: double.infinity,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: <Widget>[
+                  TextButton(
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (_) => CategoryDialog(
+                          callback: () {
+                            setState(() {
+                              initData();
+                            });
+                          },
+                        ),
+                      );
+                    },
+                    child: Text(
+                      "+ Category",
+                      textAlign: TextAlign.right,
+                    ),
+                  )
+                ],
               ),
-            TextField(
-              keyboardType: TextInputType.numberWithOptions(decimal: true),
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              decoration: new InputDecoration(
-                  prefixText: ConstantUtil.CURRENCY_SYMBOL,
-                  labelText: 'Amount',
-                  floatingLabelBehavior: FloatingLabelBehavior.never),
-              controller: amount,
             ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: DropdownButtonFormField<String>(
+                    value: selectedCurrency,
+                    decoration: InputDecoration(
+                      labelText: 'Currency',
+                      contentPadding: EdgeInsets.only(bottom: 12, top: 12),
+                    ),
+                    items: availableCurrencies.map((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
+                    onChanged: (newValue) {
+                      setState(() {
+                        selectedCurrency = newValue!;
+                        if (selectedCurrency == baseCurrency) {
+                          exchangeRateController.text = '1.0';
+                        } else if (currencyRates
+                            .containsKey(selectedCurrency)) {
+                          exchangeRateController.text =
+                              currencyRates[selectedCurrency].toString();
+                        }
+                        updateCalculatedAmount();
+                      });
+                    },
+                  ),
+                ),
+                SizedBox(width: 10),
+                Expanded(
+                  flex: 4,
+                  child: TextField(
+                    keyboardType:
+                        TextInputType.numberWithOptions(decimal: true),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    decoration: new InputDecoration(
+                        prefixText: '', // Removed fixed symbol
+                        labelText: 'Amount',
+                        floatingLabelBehavior: FloatingLabelBehavior.never),
+                    controller: amount,
+                  ),
+                ),
+              ],
+            ),
+
+            if (selectedCurrency != baseCurrency) ...[
+              SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: exchangeRateController,
+                      keyboardType:
+                          TextInputType.numberWithOptions(decimal: true),
+                      decoration: InputDecoration(
+                        labelText: 'Exchange Rate',
+                        helperText: '1 $selectedCurrency = ? $baseCurrency',
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: InputDecorator(
+                      decoration: InputDecoration(
+                        labelText: 'Converted ($baseCurrency)',
+                        border: InputBorder.none,
+                      ),
+                      child: Text(
+                        convertedAmount.toStringAsFixed(2),
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
 
             DateTimeField(
               initialValue: date,
@@ -503,6 +664,8 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
                 child: SplitSectionInAddTransaction(
                   parentState: this,
                   amount: castAmountText2Double(amount.text),
+                  currencySymbol:
+                      ConstantUtil.getCurrencySymbol(selectedCurrency),
                   splitList: splitList,
                   textEditingControllers: splitAmountTextEditionControllers,
                 ),

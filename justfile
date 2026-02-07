@@ -36,7 +36,7 @@ backend:
 # Stop all services (cross-platform)
 stop:
     @echo "🛑 Stopping services..."
-    @if command -v pkill >/dev/null 2>&1; then pkill -f "flutter run" || true; pkill -f "mvn spring-boot:run" || true; else taskkill /F /IM java.exe 2>/dev/null || true; taskkill /F /IM flutter.exe 2>/dev/null || true; fi
+    {{ if os() == "windows" { "Get-NetTCPConnection -LocalPort 8080 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique | Stop-Process -Force -ErrorAction SilentlyContinue; Stop-Process -Name 'flutter' -Force -ErrorAction SilentlyContinue; exit 0" } else { "pkill -f 'flutter run' || true; pkill -f 'mvn spring-boot:run' || true" } }}
     @echo "✅ Services stopped"
 
 

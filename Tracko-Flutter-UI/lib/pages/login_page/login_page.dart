@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:tracko/services/auth_service.dart';
 import 'package:dio/dio.dart';
 
+import 'package:tracko/services/SessionService.dart';
+
 class LoginPage extends StatelessWidget {
   LoginPage({Key? key}) : super(key: key);
 
@@ -41,6 +43,8 @@ class _LoginPage extends State<LoginForm> {
       final loggedIn = await AuthService().isLoggedIn();
       if (!mounted) return;
       if (loggedIn) {
+        // Ensure session is initialized
+        await SessionService.getCurrentUser();
         Navigator.pushReplacementNamed(context, '/home');
       }
     });
@@ -83,6 +87,9 @@ class _LoginPage extends State<LoginForm> {
         password: _passwordController.text,
       );
       if (token != null && token.isNotEmpty) {
+        // Fetch user profile to initialize session and currency settings
+        await SessionService.getCurrentUser(forceRefresh: true);
+
         if (!mounted) return;
         Navigator.pushReplacementNamed(context, '/home');
       } else {

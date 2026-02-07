@@ -1,3 +1,4 @@
+import 'package:tracko/Utils/CommonUtil.dart';
 import 'package:tracko/component/interfaces.dart';
 import 'package:tracko/models/contact.dart';
 import 'package:tracko/pages/split_page/SplitByContact.dart';
@@ -138,7 +139,7 @@ class _SplitPage extends RefreshableState<SplitPage> {
                     : row.contact.email,
               ),
               trailing: Text(
-                row.dueAmount.toStringAsFixed(2),
+                CommonUtil.toCurrency(row.dueAmount),
                 style: TextStyle(
                   fontWeight: FontWeight.w700,
                   color: row.dueAmount > 0 ? Colors.red : Colors.green,

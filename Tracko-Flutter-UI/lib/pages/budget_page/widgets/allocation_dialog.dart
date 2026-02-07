@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:tracko/Utils/CommonUtil.dart';
 import 'package:tracko/models/budget_allocation_request.dart';
 import 'package:tracko/services/budget_service.dart';
+import 'package:tracko/services/SessionService.dart';
 
 class AllocationDialog extends StatefulWidget {
   final int categoryId;
@@ -131,7 +132,7 @@ class _AllocationDialogState extends State<AllocationDialog> {
             ],
             decoration: InputDecoration(
               labelText: 'Allocated Amount',
-              prefixText: CommonUtil.rupeeSign,
+              prefixText: SessionService.currentCurrencySymbol,
               border: OutlineInputBorder(),
             ),
           ),

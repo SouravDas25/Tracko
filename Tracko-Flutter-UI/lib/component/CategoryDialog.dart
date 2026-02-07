@@ -37,7 +37,6 @@ class CategoryDialog extends StatelessWidget {
       await repo.update(category.id!, category.name);
     }
     print(category);
-//    await adapter.close();
     callback();
   }
 

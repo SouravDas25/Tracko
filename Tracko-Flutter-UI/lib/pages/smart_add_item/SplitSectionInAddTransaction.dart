@@ -8,6 +8,7 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 class SplitSectionInAddTransaction extends StatelessWidget {
   State parentState;
   final double amount;
+  final String currencySymbol;
   Set<TrakoContact> splitList;
   List<TextEditingController> textEditingControllers;
   bool disableSlide = false;
@@ -15,6 +16,7 @@ class SplitSectionInAddTransaction extends StatelessWidget {
   SplitSectionInAddTransaction(
       {required this.parentState,
       required this.amount,
+      this.currencySymbol = '₹',
       required this.splitList,
       required this.textEditingControllers})
       : super() {
@@ -30,7 +32,8 @@ class SplitSectionInAddTransaction extends StatelessWidget {
     } else {
       a = 0;
     }
-    return a.toStringAsFixed(2);
+    // Using simple format with symbol
+    return "$currencySymbol ${a.toStringAsFixed(2)}";
   }
 
   deleteSplit(TrakoContact element, int index) {
@@ -52,7 +55,15 @@ class SplitSectionInAddTransaction extends StatelessWidget {
         TrakoContact element = splitListIterator.current;
         iterator.moveNext();
         TextEditingController splitAmount = iterator.current;
-        splitAmount.text = calcAmount();
+        // Logic to strip symbol if needed for controller, but controller seems unused for reading here?
+        // Actually the controller.text is set here. If it's used elsewhere, we should be careful.
+        // Looking at code, splitAmountTextEditionControllers are created in parent but never read?
+        // Let's check SmartAddItemPage.save() - it doesn't read them. It recalculates based on share.
+        // So this is just for display.
+
+        String displayAmount = calcAmount();
+        splitAmount.text = displayAmount;
+
         return Slidable(
           enabled: !disableSlide,
           endActionPane: ActionPane(
@@ -72,7 +83,7 @@ class SplitSectionInAddTransaction extends StatelessWidget {
             contentPadding: EdgeInsets.all(0.0),
             dense: true,
             trailing: Text(
-              calcAmount(),
+              displayAmount,
               style: TextStyle(fontSize: 20.0),
             ),
             title: Text(

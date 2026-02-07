@@ -1,4 +1,5 @@
 import 'package:tracko/models/user.dart';
+import 'package:tracko/models/user_currency.dart';
 import 'package:tracko/services/api_client.dart';
 import 'package:tracko/config/api_config.dart';
 
@@ -10,6 +11,15 @@ class UserRepository {
       final res = await _api.get<List<dynamic>>("${ApiConfig.users}/$id");
       if (res.isEmpty) return null;
       return _fromBackend(res.first as Map<String, dynamic>);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Future<User?> getMe() async {
+    try {
+      final res = await _api.get<Map<String, dynamic>>("${ApiConfig.users}/me");
+      return _fromBackend(res);
     } catch (e) {
       return null;
     }
@@ -40,6 +50,7 @@ class UserRepository {
       'email': user.email ?? '',
       'profilePic': user.profilePic ?? '',
       'isShadow': isShadow,
+      'baseCurrency': user.baseCurrency,
     };
 
     final res =
@@ -55,6 +66,14 @@ class UserRepository {
     user.phoneNo = (json['phoneNo'] as String?) ?? '';
     user.email = (json['email'] as String?) ?? '';
     user.profilePic = (json['profilePic'] as String?) ?? '';
+    user.baseCurrency = (json['baseCurrency'] as String?) ?? 'INR';
+    
+    if (json['secondaryCurrencies'] != null) {
+      user.secondaryCurrencies = (json['secondaryCurrencies'] as List)
+          .map((e) => UserCurrency.fromJson(e as Map<String, dynamic>))
+          .toList();
+    }
+    
     return user;
   }
 }

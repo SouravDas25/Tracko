@@ -21,6 +21,9 @@ public class Account {
     @Column(name = "user_id", length = 36)
     private String userId;
 
+    @Column(name = "currency", length = 3)
+    private String currency = "INR";
+
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", insertable = false, updatable = false)
@@ -48,6 +51,14 @@ public class Account {
 
     public void setUserId(String userId) {
         this.userId = userId;
+    }
+
+    public String getCurrency() {
+        return currency;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency;
     }
 
     public User getUser() {

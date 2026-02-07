@@ -211,6 +211,7 @@ class Account {
   final String name;
   @JsonKey(name: 'user_id')
   final String userId;
+  final String currency; // 'INR', 'USD', 'EUR', etc.
   @JsonKey(name: 'created_at')
   final DateTime? createdAt;
   @JsonKey(name: 'updated_at')
@@ -220,6 +221,7 @@ class Account {
     this.id,
     required this.name,
     required this.userId,
+    this.currency = 'INR',
     this.createdAt,
     this.updatedAt,
   });
@@ -282,6 +284,12 @@ class Transaction {
   @JsonKey(name: 'is_countable')
   final int isCountable; // 0 or 1
   final String? description;
+  @JsonKey(name: 'original_currency')
+  final String? originalCurrency;
+  @JsonKey(name: 'original_amount')
+  final double? originalAmount;
+  @JsonKey(name: 'exchange_rate')
+  final double? exchangeRate;
   @JsonKey(name: 'created_at')
   final DateTime? createdAt;
   @JsonKey(name: 'updated_at')
@@ -297,6 +305,9 @@ class Transaction {
     this.categoryId,
     this.isCountable = 1,
     this.description,
+    this.originalCurrency,
+    this.originalAmount,
+    this.exchangeRate,
     this.createdAt,
     this.updatedAt,
   });
@@ -393,6 +404,7 @@ class AuthService {
     required String name,
     String? email,
     String? profilePic,
+    String? baseCurrency,
   }) async {
     try {
       final response = await _apiClient.post<Map<String, dynamic>>(
@@ -403,6 +415,7 @@ class AuthService {
           'name': name,
           'email': email,
           'profilePic': profilePic,
+          'baseCurrency': baseCurrency ?? 'INR',
         },
       );
       

@@ -29,6 +29,16 @@ public class UserController {
         return Response.ok(users);
     }
 
+    @GetMapping(value = "/me")
+    ResponseEntity<?> me() {
+        try {
+            User user = userService.loggedInUser();
+            return Response.ok(user);
+        } catch (Exception e) {
+            return Response.unauthorized();
+        }
+    }
+
     @GetMapping(value = "/byPhoneNo")
     ResponseEntity<?> showByPhone(@RequestParam("phone_no") String phoneNo) {
         User byPhoneNo = userService.findByPhoneNo(phoneNo);

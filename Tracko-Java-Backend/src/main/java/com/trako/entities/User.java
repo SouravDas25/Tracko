@@ -35,6 +35,9 @@ public class User extends AbstractBaseEntity {
     @Column(name = "global_id", length = 64, unique = true)
     private String globalId;
 
+    @Column(name = "base_currency", length = 3)
+    private String baseCurrency = "INR";
+
     @Column(name = "is_shadow")
     private Integer isShadow;
 
@@ -55,6 +58,9 @@ public class User extends AbstractBaseEntity {
     @JsonIgnore
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<NlpData> nlpData;
+
+    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserCurrency> secondaryCurrencies;
 
     public String getId() {
         return id;
@@ -112,6 +118,14 @@ public class User extends AbstractBaseEntity {
         this.globalId = globalId;
     }
 
+    public String getBaseCurrency() {
+        return baseCurrency;
+    }
+
+    public void setBaseCurrency(String baseCurrency) {
+        this.baseCurrency = baseCurrency;
+    }
+
     public Set<UserChatGroup> getGroups() {
         return groups;
     }
@@ -129,7 +143,7 @@ public class User extends AbstractBaseEntity {
     }
 
     public boolean isShadow() {
-        return isShadow == 1;
+        return isShadow != null && isShadow == 1;
     }
 
     public List<NlpData> getNlpData() {
@@ -138,6 +152,14 @@ public class User extends AbstractBaseEntity {
 
     public void setNlpData(List<NlpData> nlpData) {
         this.nlpData = nlpData;
+    }
+
+    public List<UserCurrency> getSecondaryCurrencies() {
+        return secondaryCurrencies;
+    }
+
+    public void setSecondaryCurrencies(List<UserCurrency> secondaryCurrencies) {
+        this.secondaryCurrencies = secondaryCurrencies;
     }
 
     @Override

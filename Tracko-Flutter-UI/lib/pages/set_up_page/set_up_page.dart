@@ -21,6 +21,19 @@ class _setUpPage extends State<SetUpPage> {
   final _formKey = GlobalKey<FormState>();
   String globalAccountId = '';
   int initLabel = 0;
+  String selectedCurrency = 'INR';
+  final List<String> currencies = [
+    'INR',
+    'USD',
+    'EUR',
+    'GBP',
+    'JPY',
+    'CAD',
+    'AUD',
+    'CHF',
+    'CNY',
+    'NZD'
+  ];
 
   @override
   void initState() {
@@ -31,6 +44,9 @@ class _setUpPage extends State<SetUpPage> {
   getAutoFillData() async {
     try {
       User user = await SessionService.getCurrentUser();
+      if (user.baseCurrency.isNotEmpty) {
+        selectedCurrency = user.baseCurrency;
+      }
       GlobalAccountResponse globalAccount =
           await ServerUtil.getGlobalAccount(user.phoneNo) ??
               GlobalAccountResponse.fromJson({});
@@ -61,6 +77,7 @@ class _setUpPage extends State<SetUpPage> {
       print(user);
       user.name = nameController.text;
       user.email = emailController.text;
+      user.baseCurrency = selectedCurrency;
 
       String globalId = this.globalAccountId;
       if (globalId == null || globalId.isEmpty) {
@@ -187,6 +204,27 @@ class _setUpPage extends State<SetUpPage> {
                       ),
                     ),
                   ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: DropdownButtonFormField<String>(
+                  value: selectedCurrency,
+                  decoration: InputDecoration(
+                    labelText: 'Base Currency',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: currencies.map((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
+                  onChanged: (newValue) {
+                    setState(() {
+                      selectedCurrency = newValue!;
+                    });
+                  },
                 ),
               ),
               Padding(
