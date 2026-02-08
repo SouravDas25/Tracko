@@ -5,7 +5,6 @@ import 'package:tracko/component/AsynLoadState.dart';
 import 'package:tracko/component/LabelWidget.dart';
 import 'package:tracko/component/LoadingDialog.dart';
 import 'package:tracko/controllers/SplitController.dart';
-import 'package:tracko/models/chats.dart';
 import 'package:tracko/models/split.dart';
 import 'package:tracko/models/user.dart';
 import 'package:flutter/cupertino.dart' hide Split;
@@ -14,10 +13,9 @@ import 'package:intl/intl.dart';
 
 class SplitByUser extends StatefulWidget {
   final User otherUser;
-  final Chat currentChat;
   final User currentUser;
 
-  SplitByUser(this.otherUser, this.currentChat, this.currentUser);
+  SplitByUser(this.otherUser, this.currentUser);
 
   @override
   State<StatefulWidget> createState() {
@@ -130,8 +128,7 @@ class _SplitList extends AsyncLoadState<SplitByUser> {
             onSelected: menuDropDownClick,
           )
         ],
-        title: Text(
-            " ${widget.otherUser.name} (${widget.otherUser.globalId}) ${widget.currentChat.chatGroupId}"),
+        title: Text(" ${widget.otherUser.name} (${widget.otherUser.globalId})"),
       ),
 //      backgroundColor: Colors.deepOrange[100],
       body: SingleChildScrollView(

@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:tracko/models/account.dart';
 import 'package:tracko/models/category.dart';
-import 'package:tracko/models/chats.dart';
 import 'package:tracko/models/split.dart';
 import 'package:tracko/models/user_currency.dart';
 
@@ -19,7 +18,6 @@ class User {
   List<Account> accounts = [];
   List<Category> categories = [];
   List<Split> splits = [];
-  List<Chat> chats = [];
   List<UserCurrency> secondaryCurrencies = [];
 
   User();

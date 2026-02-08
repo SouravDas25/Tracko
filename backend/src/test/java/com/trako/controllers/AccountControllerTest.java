@@ -3,6 +3,8 @@ package com.trako.controllers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trako.entities.Account;
 import com.trako.entities.User;
+import com.trako.repositories.CategoryRepository;
+import com.trako.repositories.TransactionRepository;
 import com.trako.services.AccountService;
 import com.trako.services.JwtUserDetailsService;
 import com.trako.services.UserService;
@@ -45,6 +47,12 @@ public class AccountControllerTest {
 
     @MockBean
     private JwtUserDetailsService jwtUserDetailsService;
+
+    @MockBean
+    private TransactionRepository transactionRepository;
+
+    @MockBean
+    private CategoryRepository categoryRepository;
 
     private Account testAccount;
     private User testUser;

@@ -2,7 +2,6 @@ import 'package:tracko/Utils/CommonUtil.dart';
 import 'package:tracko/Utils/ConstantUtil.dart';
 import 'package:tracko/Utils/SettingUtil.dart';
 import 'package:tracko/Utils/enums.dart';
-import 'package:tracko/controllers/ChatController.dart';
 import 'package:tracko/controllers/SplitController.dart';
 import 'package:tracko/controllers/UserController.dart';
 import 'package:tracko/dtos/TrackoContact.dart';

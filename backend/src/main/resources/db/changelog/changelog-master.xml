@@ -110,6 +110,14 @@
             <column name="created_at" type="TIMESTAMP" defaultValue="NOW()"/>
         </createTable>
     </changeSet>
+    <changeSet id="008-drop-chat-tables" author="cascade">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="chat_groups"/>
+        </preConditions>
+        <dropTable tableName="chat_messages" cascadeConstraints="true"/>
+        <dropTable tableName="users_chat_groups" cascadeConstraints="true"/>
+        <dropTable tableName="chat_groups" cascadeConstraints="true"/>
+    </changeSet>
     <include file="db/changelog/006-add-zbb-tables.yaml"/>
 </databaseChangeLog>
 

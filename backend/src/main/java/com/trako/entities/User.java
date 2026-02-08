@@ -9,7 +9,6 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -50,10 +49,6 @@ public class User extends AbstractBaseEntity {
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "updated_at")
     private Date updatedAt;
-
-    @JsonIgnore
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
-    private Set<UserChatGroup> groups;
 
     @JsonIgnore
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
@@ -124,14 +119,6 @@ public class User extends AbstractBaseEntity {
 
     public void setBaseCurrency(String baseCurrency) {
         this.baseCurrency = baseCurrency;
-    }
-
-    public Set<UserChatGroup> getGroups() {
-        return groups;
-    }
-
-    public void setGroups(Set<UserChatGroup> groups) {
-        this.groups = groups;
     }
 
     public Integer getIsShadow() {

@@ -1,29 +1,13 @@
 package com.trako.entities;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-
-import jakarta.persistence.*;
-import java.util.Date;
-
-@Entity
-@Table(name = "chat_messages")
 public class ChatMessage extends AbstractBaseEntity {
 
-    @Column(name = "group_id")
     private String groupId;
 
-    @Column(name = "user_id")
     private String userId;
 
-    @Column(name = "message")
     private String message;
 
-    @JsonFormat(pattern = "dd-MM-yyyy")
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "created_at", nullable = false, updatable = false, insertable = false)
-    private Date createdAt;
-
-    @Column(name = "is_read")
     private Integer isRead;
 
     public String getId() {
@@ -58,14 +42,6 @@ public class ChatMessage extends AbstractBaseEntity {
         this.message = message;
     }
 
-    public Date getCreatedAt() {
-        return createdAt;
-    }
-
-//  public void setCreatedAt(Date createdAt) {
-//    this.createdAt = createdAt;
-//  }
-
     public Integer getIsRead() {
         return isRead;
     }
@@ -79,7 +55,6 @@ public class ChatMessage extends AbstractBaseEntity {
                 ", groupId=" + groupId +
                 ", userId=" + userId +
                 ", message=" + message +
-                ", createdAt=" + createdAt +
                 ", read=" + isRead +
                 "}";
     }

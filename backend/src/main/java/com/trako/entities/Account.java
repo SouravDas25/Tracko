@@ -24,6 +24,9 @@ public class Account {
     @Column(name = "currency", length = 3)
     private String currency = "INR";
 
+    @Transient
+    private Double balance;
+
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", insertable = false, updatable = false)
@@ -59,6 +62,14 @@ public class Account {
 
     public void setCurrency(String currency) {
         this.currency = currency;
+    }
+
+    public Double getBalance() {
+        return balance;
+    }
+
+    public void setBalance(Double balance) {
+        this.balance = balance;
     }
 
     public User getUser() {

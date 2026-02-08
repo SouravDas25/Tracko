@@ -2,8 +2,6 @@ import 'dart:convert' as convert;
 
 import 'package:tracko/Utils/DestinationUtil.dart';
 import 'package:tracko/controllers/TransactionController.dart';
-import 'package:tracko/dtos/ChatGroups.dart';
-import 'package:tracko/dtos/ChatMessagesResponses.dart';
 import 'package:tracko/dtos/GlobalAccountResponse.dart';
 import 'package:tracko/models/transaction.dart';
 import 'package:tracko/models/user.dart';
@@ -153,60 +151,6 @@ class ServerUtil {
     }
   }
 
-  static Future<GroupByUserResponse?> getGroupsByUser(int userGlobalId) async {
-    var url = Uri.parse(
-        DestinationUtil.javaBackend() + "api/chat/groups/$userGlobalId");
-    var response = await http.get(url, headers: authHeader);
-//    print(response.body);
-    if (response.statusCode == 200) {
-      var jsonResponse = convert.jsonDecode(response.body);
-      return GroupByUserResponse.fromJson(jsonResponse['result']);
-    }
-    return null;
-  }
-
-  static Future<List<ChatMessagesResponses>?> getChatMessages(
-      String groudId, String currentUserGlobalId) async {
-    var url =
-        Uri.parse(DestinationUtil.javaBackend() + "api/chat/messages/$groudId");
-    var requestBody = {"currentUserGlobalId": currentUserGlobalId};
-    var headers = {"Content-Type": "application/json"};
-    headers.addAll(authHeader);
-    String data = convert.jsonEncode(requestBody);
-    var response = await http.post(url, body: data, headers: headers);
-//    print(response.body);
-    if (response.statusCode == 200) {
-      var jsonResponse = convert.jsonDecode(response.body);
-//      print(response.body);
-      List<ChatMessagesResponses> chats = [];
-      for (var obj in jsonResponse['result']) {
-        chats.add(ChatMessagesResponses.fromJson(obj));
-      }
-      return chats;
-    }
-    return null;
-  }
-
-  static Future<bool> sendMessage(
-      String currentUserGlobalId, String groupId, String message) async {
-    var url = Uri.parse(DestinationUtil.javaBackend() + "api/chat/send");
-    var requestBody = {
-      "sender": currentUserGlobalId,
-      "chatGroupAddress": groupId,
-      "message": message
-    };
-    var headers = {"Content-Type": "application/json"};
-    headers.addAll(authHeader);
-    String data = convert.jsonEncode(requestBody);
-    var response = await http.post(url, body: data, headers: headers);
-//    print(response.body);
-    if (response.statusCode == 200) {
-      var jsonResponse = convert.jsonDecode(response.body);
-      return jsonResponse['result'] == "SUCCESS";
-    }
-    return false;
-  }
-
   static Future<bool> updateGlobalUser(User user,
       {bool isShadow = false}) async {
     var url = Uri.parse(DestinationUtil.javaBackend() + "api/user/save");
@@ -234,27 +178,5 @@ class ServerUtil {
       return jsonResponse['result'] == user.globalId;
     }
     return false;
-  }
-
-  static Future<String?> createChatGroup(
-      User currentUser, User otherUser) async {
-    var url = Uri.parse(DestinationUtil.javaBackend() + "/api/chat/create");
-    var requestBody = {
-      "name": otherUser.name,
-      "users": [otherUser.phoneNo, currentUser.phoneNo]
-    };
-    String data = convert.jsonEncode(requestBody);
-    var headers = {"Content-Type": "application/json"};
-    headers.addAll(authHeader);
-    var response = await http.post(
-      url,
-      body: data,
-      headers: headers,
-    );
-    if (response.statusCode == 200) {
-      var jsonResponse = convert.jsonDecode(response.body);
-      return jsonResponse['result'];
-    }
-    return null;
   }
 }
