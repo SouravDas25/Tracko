@@ -23,7 +23,7 @@ def generate_csv(sentences):
 
 
 if __name__ == '__main__':
-    # dataframe = pd.read_excel("D:\\Programming\\Tracko-Python-Backend\\scratches\\sms-data.xls")
+    # dataframe = pd.read_excel("D:\\Programming\\ml-backend\\scratches\\sms-data.xls")
     # data = list(dataframe[dataframe['class'] == 'DEBIT'].head()['Body'])
     # generate_csv(data)
     df = pd.read_csv('data.csv')

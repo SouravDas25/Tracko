@@ -6,7 +6,7 @@ A comprehensive expense management application with Flutter mobile UI and dual b
 
 - **frontend**: Flutter mobile application
 - **backend**: Spring Boot REST API backend
-- **Tracko-Python-Backend**: Django backend with ML-powered expense categorization
+- **ml-backend**: Django backend with ML-powered expense categorization
 
 ## Getting Started
 
