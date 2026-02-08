@@ -9,7 +9,7 @@ curl -s http://localhost:8080/api/signUp > nul 2>&1
 if %errorlevel% neq 0 (
     echo [ERROR] Backend is not running on http://localhost:8080
     echo Please start the backend server first:
-    echo   cd Tracko-Java-Backend
+    echo   cd backend
     echo   mvn spring-boot:run
     echo.
     pause

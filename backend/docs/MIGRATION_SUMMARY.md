@@ -252,7 +252,7 @@ Tests run: 36, Failures: 0, Errors: 0, Skipped: 0 ✅
 ## File Structure
 
 ```
-Tracko-Java-Backend/
+backend/
 ├── src/main/java/com/trako/
 │   ├── entities/
 │   │   ├── Account.java ✨ NEW
@@ -341,7 +341,7 @@ Tracko-Java-Backend/
 
 **Development (no auth):**
 ```bash
-cd Tracko-Java-Backend
+cd backend
 $env:SPRING_PROFILES_ACTIVE='dev,noauth'
 mvn spring-boot:run
 ```

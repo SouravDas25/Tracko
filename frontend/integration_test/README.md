@@ -6,7 +6,7 @@ This directory contains integration tests for the Tracko expense management app,
 
 1. **Backend Server Running**: Ensure the Spring Boot backend is running on `http://localhost:8080`
    ```bash
-   cd Tracko-Java-Backend
+   cd backend
    mvn spring-boot:run
    ```
 

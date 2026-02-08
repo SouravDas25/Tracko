@@ -44,7 +44,7 @@ If you prefer to start services manually:
 
 ### Terminal 1 - Backend
 ```cmd
-cd C:\Users\soura\Documents\Personal\Tracko\Tracko-Java-Backend
+cd C:\Users\soura\Documents\Personal\Tracko\backend
 mvn spring-boot:run
 ```
 

@@ -10,7 +10,7 @@ set -euo pipefail
 # - Cleans up on exit, errors, or Ctrl+C
 
 # -------- Config --------
-BACKEND_DIR="C:/Users/soura/Documents/Personal/Tracko/Tracko-Java-Backend"
+BACKEND_DIR="C:/Users/soura/Documents/Personal/Tracko/backend"
 FLUTTER_DIR="C:/Users/soura/Documents/Personal/Tracko/frontend"
 LOGS_DIR="C:/Users/soura/Documents/Personal/Tracko/logs"
 BACKEND_PORT=${BACKEND_PORT:-8080}

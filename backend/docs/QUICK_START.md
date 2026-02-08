@@ -4,7 +4,7 @@
 
 ### Start Server (No Auth - Development)
 ```bash
-cd Tracko-Java-Backend
+cd backend
 $env:SPRING_PROFILES_ACTIVE='dev,noauth'
 mvn spring-boot:run
 ```

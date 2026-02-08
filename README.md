@@ -5,7 +5,7 @@ A comprehensive expense management application with Flutter mobile UI and dual b
 ## Project Structure
 
 - **frontend**: Flutter mobile application
-- **Tracko-Java-Backend**: Spring Boot REST API backend
+- **backend**: Spring Boot REST API backend
 - **Tracko-Python-Backend**: Django backend with ML-powered expense categorization
 
 ## Getting Started
@@ -45,7 +45,7 @@ Logs are written to the `logs/` folder.
 
 2. **Java Backend Setup**
    ```bash
-   cd Tracko-Java-Backend
+   cd backend
    mvn clean install -P dev
    mvn spring-boot:run -P dev
    ```
