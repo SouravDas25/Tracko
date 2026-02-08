@@ -29,9 +29,9 @@ public class UserStartupSeeder implements ApplicationRunner {
                 0
         );
         seedUserIfMissing(
-                "Friend User",
-                "8888888888",
-                "friend@example.com",
+                "Admin User",
+                "0000000000",
+                "admin@mail.com",
                 "password",
                 1
         );

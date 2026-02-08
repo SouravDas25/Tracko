@@ -3,6 +3,8 @@ version: '3'
 vars:
   BACKEND_DIR: backend
   FRONTEND_DIR: frontend
+  DOCKER_IMAGE: tracko-app:latest
+  DOCKER_TAR: dist/tracko-app.tar
 
 tasks:
   # Show common commands
@@ -91,3 +93,14 @@ tasks:
       - cmd: mvn -B install -P dev
         dir: "{{.BACKEND_DIR}}"
       
+
+  docker:tar:
+    desc: Build the Docker image (root Dockerfile) and export it as a .tar
+    cmds:
+      - cmd: >-
+          powershell -NoLogo -NoProfile -Command "New-Item -ItemType Directory -Force -Path dist | Out-Null"
+        platforms: [windows]
+      - cmd: mkdir -p dist
+        platforms: [linux, darwin]
+      - cmd: docker build -t "{{.DOCKER_IMAGE}}" .
+      - cmd: docker save -o "{{.DOCKER_TAR}}" "{{.DOCKER_IMAGE}}"

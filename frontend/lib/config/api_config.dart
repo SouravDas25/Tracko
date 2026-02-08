@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 class ApiConfig {
   // Development
   static const String devBaseUrl = 'http://localhost:8080';
@@ -8,7 +10,12 @@ class ApiConfig {
   // Toggle as needed
   static const bool isProduction = false;
 
-  static String get baseUrl => isProduction ? prodBaseUrl : devBaseUrl;
+  static String get baseUrl {
+    if (kIsWeb) {
+      return '';
+    }
+    return isProduction ? prodBaseUrl : devBaseUrl;
+  }
 
   // API Endpoints
   static const String authLogin = '/api/oauth/token';
