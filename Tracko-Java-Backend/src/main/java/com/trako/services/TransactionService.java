@@ -1,7 +1,10 @@
 package com.trako.services;
 
 import com.trako.entities.Transaction;
+import com.trako.entities.UserCurrency;
+import com.trako.exceptions.UserNotLoggedInException;
 import com.trako.repositories.TransactionRepository;
+import com.trako.repositories.UserCurrencyRepository;
 import com.trako.dtos.TransactionSummaryDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,6 +18,12 @@ public class TransactionService {
 
     @Autowired
     private TransactionRepository transactionRepository;
+
+    @Autowired
+    private UserCurrencyRepository userCurrencyRepository;
+
+    @Autowired
+    private UserService userService;
 
     public List<Transaction> findAll() {
         return transactionRepository.findAll();
@@ -52,8 +61,25 @@ public class TransactionService {
                 double calculatedAmount = transaction.getOriginalAmount() * transaction.getExchangeRate();
                 // Round to 2 decimal places
                 transaction.setAmount(Math.round(calculatedAmount * 100.0) / 100.0);
+            } else if (transaction.getOriginalAmount() != null && transaction.getOriginalCurrency() != null) {
+                // No exchangeRate provided: fetch from user's configured rates
+                String userId;
+                try {
+                    userId = userService.loggedInUser().getId();
+                } catch (UserNotLoggedInException e) {
+                    throw new RuntimeException("User not logged in", e);
+                }
+                String currencyCode = transaction.getOriginalCurrency().toUpperCase();
+                UserCurrency uc = userCurrencyRepository.findByUserIdAndCurrencyCode(userId, currencyCode);
+                if (uc != null && uc.getExchangeRate() != null) {
+                    double calculatedAmount = transaction.getOriginalAmount() * uc.getExchangeRate();
+                    transaction.setAmount(Math.round(calculatedAmount * 100.0) / 100.0);
+                    transaction.setExchangeRate(uc.getExchangeRate());
+                } else {
+                    throw new IllegalArgumentException("No exchange rate configured for currency: " + currencyCode);
+                }
             } else {
-                throw new IllegalArgumentException("Amount cannot be null unless originalAmount and exchangeRate are provided");
+                throw new IllegalArgumentException("Amount cannot be null unless originalAmount and either exchangeRate or originalCurrency are provided");
             }
         }
         

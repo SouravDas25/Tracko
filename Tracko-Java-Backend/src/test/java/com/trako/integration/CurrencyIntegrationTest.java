@@ -6,11 +6,13 @@ import com.trako.entities.Account;
 import com.trako.entities.Category;
 import com.trako.entities.Transaction;
 import com.trako.entities.User;
+import com.trako.entities.UserCurrency;
 import com.trako.models.request.AccountSaveRequest;
 import com.trako.models.request.UserSaveRequest;
 import com.trako.repositories.AccountRepository;
 import com.trako.repositories.CategoryRepository;
 import com.trako.repositories.TransactionRepository;
+import com.trako.repositories.UserCurrencyRepository;
 import com.trako.repositories.UsersRepository;
 import com.trako.util.JwtTokenUtil;
 import org.junit.jupiter.api.BeforeEach;
@@ -62,6 +64,9 @@ public class CurrencyIntegrationTest {
     private TransactionRepository transactionRepository;
 
     @Autowired
+    private UserCurrencyRepository userCurrencyRepository;
+
+    @Autowired
     private JwtTokenUtil jwtTokenUtil;
 
     @MockBean
@@ -90,6 +95,7 @@ public class CurrencyIntegrationTest {
         transactionRepository.deleteAll();
         accountRepository.deleteAll();
         categoryRepository.deleteAll();
+        userCurrencyRepository.deleteAll();
         usersRepository.deleteAll();
 
         // Create initial user
@@ -236,5 +242,58 @@ public class CurrencyIntegrationTest {
                 // Controller doesn't catch it explicitly, so default error handling.
                 // Let's assume 500 or 400 depending on Spring config.
                 // Ideally we should verify it fails.
+    }
+
+    @Test
+    public void testTransactionUsesUserCurrencyRateWhenExchangeRateNotProvided() throws Exception {
+        // Configure a user currency rate for EUR
+        UserCurrency eurRate = new UserCurrency();
+        eurRate.setUser(testUser);
+        eurRate.setCurrencyCode("EUR");
+        eurRate.setExchangeRate(1.12); // 1 EUR = 1.12 USD
+        userCurrencyRepository.save(eurRate);
+
+        // Create transaction with originalCurrency/Amount but NO exchangeRate
+        Transaction transaction = new Transaction();
+        transaction.setTransactionType(1); // Expense
+        transaction.setName("Paris Metro Ticket");
+        transaction.setDate(new Date());
+        transaction.setAccountId(testAccount.getId());
+        transaction.setCategoryId(testCategory.getId());
+        transaction.setOriginalCurrency("EUR");
+        transaction.setOriginalAmount(2.50);
+        // Do NOT set exchangeRate or amount
+
+        mockMvc.perform(post("/api/transactions")
+                .header("Authorization", bearerToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(transaction)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.amount").value(2.80)) // 2.50 * 1.12 rounded to 2.80
+                .andExpect(jsonPath("$.result.originalCurrency").value("EUR"))
+                .andExpect(jsonPath("$.result.originalAmount").value(2.50))
+                .andExpect(jsonPath("$.result.exchangeRate").value(1.12));
+    }
+
+    @Test
+    public void testTransactionFailsWhenNoUserCurrencyRateAndNoExchangeRateProvided() throws Exception {
+        // Ensure EUR is NOT configured for this user
+        userCurrencyRepository.deleteAll();
+
+        Transaction transaction = new Transaction();
+        transaction.setTransactionType(1);
+        transaction.setName("Unknown Currency");
+        transaction.setDate(new Date());
+        transaction.setAccountId(testAccount.getId());
+        transaction.setCategoryId(testCategory.getId());
+        transaction.setOriginalCurrency("EUR");
+        transaction.setOriginalAmount(10.0);
+        // No exchangeRate and EUR not configured
+
+        mockMvc.perform(post("/api/transactions")
+                .header("Authorization", bearerToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(transaction)))
+                .andExpect(status().isBadRequest()); // Service throws IllegalArgumentException
     }
 }

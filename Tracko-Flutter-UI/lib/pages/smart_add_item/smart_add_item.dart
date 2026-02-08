@@ -177,11 +177,17 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
   }
 
   void updateCalculatedAmount() {
-    double amt = castAmountText2Double(amount.text);
-    double rate = double.tryParse(exchangeRateController.text) ?? 1.0;
-    setState(() {
+    if (selectedCurrency != baseCurrency) {
+      double amt = castAmountText2Double(amount.text);
+      // Since backend will fetch the rate, we cannot preview exact conversion.
+      // We'll show a placeholder or fetch user's configured rate for preview.
+      // For now, keep existing behavior using the field value as a preview.
+      double rate = double.tryParse(exchangeRateController.text) ?? 1.0;
       convertedAmount = amt * rate;
-    });
+    } else {
+      convertedAmount = castAmountText2Double(amount.text);
+    }
+    setState(() {});
   }
 
   save() async {
@@ -210,15 +216,14 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
       if (selectedCurrency != baseCurrency) {
         transaction.originalCurrency = selectedCurrency;
         transaction.originalAmount = inputAmount;
-        transaction.exchangeRate =
-            double.tryParse(exchangeRateController.text) ?? 1.0;
-        transaction.amount =
-            transaction.originalAmount! * transaction.exchangeRate!;
+        // Let backend fetch exchangeRate; omit exchangeRate and amount
+        // amount is non-nullable, so we don't set it; repository will omit if null
+        transaction.exchangeRate = null as double?;
       } else {
         transaction.amount = inputAmount;
         transaction.originalCurrency = null;
-        transaction.originalAmount = null;
-        transaction.exchangeRate = null;
+        transaction.originalAmount = null as double?;
+        transaction.exchangeRate = null as double?;
       }
 
       transaction.date = date;

@@ -800,8 +800,9 @@ def cmd_transactions_add(args: argparse.Namespace) -> int:
         return 2
 
     # Build request body. By default, --amount is treated as normalized/base amount.
-    # If --currency is provided, we treat --amount as the original foreign amount
-    # and require --exchange-rate to compute the normalized amount for persistence.
+    # If --currency is provided, we treat --amount as the original foreign amount.
+    # Per request, we DO NOT send any exchange rate to the backend; the server should
+    # fetch the correct live rate and compute normalized amount.
     body = {
         "transactionType": transaction_type,
         "name": args.name,
@@ -814,22 +815,16 @@ def cmd_transactions_add(args: argparse.Namespace) -> int:
 
     currency = getattr(args, "currency", None)
     if currency:
-        rate = getattr(args, "exchange_rate", None)
-        if rate is None:
-            print("--exchange-rate is required when --currency is provided", file=sys.stderr)
-            return 2
+        # Backend will fetch the exchange rate from user's configured currencies.
+        # We only send originalCurrency and originalAmount.
         try:
             original_amount = float(args.amount)
-            exchange_rate = float(rate)
         except Exception:
-            print("Invalid --amount or --exchange-rate", file=sys.stderr)
+            print("Invalid --amount", file=sys.stderr)
             return 2
-        normalized = original_amount * exchange_rate
         body.update({
             "originalCurrency": str(currency).upper(),
             "originalAmount": original_amount,
-            "exchangeRate": exchange_rate,
-            "amount": normalized,
         })
     else:
         # Backwards compatible: amount is already normalized/base amount
@@ -1118,8 +1113,8 @@ def build_parser() -> argparse.ArgumentParser:
     sp2.add_argument("--countable", action="store_true", default=True)
     sp2.add_argument("--not-countable", action="store_false", dest="countable")
     # Multi-currency support: when provided, --amount is treated as original amount
-    sp2.add_argument("--currency", help="Original currency code (e.g., USD, EUR). If provided, --exchange-rate is required and --amount is treated as original amount")
-    sp2.add_argument("--exchange-rate", type=float, help="Exchange rate to convert original amount to base amount (base per 1 unit of original)")
+    sp2.add_argument("--currency", help="Original currency code (e.g., USD, EUR). Backend will fetch the configured exchange rate.")
+    sp2.add_argument("--exchange-rate", type=float, help="Optional: explicit exchange rate. If omitted, backend uses user's configured rate.")
     sp2.set_defaults(func=cmd_transactions_add)
 
     # budget

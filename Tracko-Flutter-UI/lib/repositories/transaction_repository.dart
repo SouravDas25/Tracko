@@ -122,20 +122,28 @@ class TransactionRepository {
     return t;
   }
 
-  Map<String, dynamic> _fromLegacy(legacy.Transaction t) => {
-        'transactionType':
-            t.transactionType, // ensure controller sets correct value
-        'name': t.name,
-        'amount': t.amount,
-        'date': t.date.toIso8601String(),
-        'accountId': t.accountId,
-        'categoryId': t.categoryId,
-        'isCountable': t.isCountable,
-        'description': t.comments,
-        'originalCurrency': t.originalCurrency,
-        'originalAmount': t.originalAmount,
-        'exchangeRate': t.exchangeRate,
-      };
+  Map<String, dynamic> _fromLegacy(legacy.Transaction t) {
+    final payload = {
+      'transactionType': t.transactionType,
+      'name': t.name,
+      'date': t.date.toIso8601String(),
+      'accountId': t.accountId,
+      'categoryId': t.categoryId,
+      'isCountable': t.isCountable,
+      'description': t.comments,
+      'originalCurrency': t.originalCurrency,
+      'originalAmount': t.originalAmount,
+    };
+    // Only include amount if explicitly set (base-currency transactions)
+    if (t.amount != null) {
+      payload['amount'] = t.amount;
+    }
+    // Only include exchangeRate if explicitly provided; otherwise backend will fetch
+    if (t.exchangeRate != null) {
+      payload['exchangeRate'] = t.exchangeRate;
+    }
+    return payload;
+  }
 
   // Aggregation methods - backend calculates
   Future<Map<String, dynamic>> getSummary(
