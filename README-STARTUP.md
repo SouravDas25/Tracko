@@ -50,7 +50,7 @@ mvn spring-boot:run
 
 ### Terminal 2 - Flutter UI
 ```cmd
-cd C:\Users\soura\Documents\Personal\Tracko\Tracko-Flutter-UI
+cd C:\Users\soura\Documents\Personal\Tracko\frontend
 flutter run
 ```
 

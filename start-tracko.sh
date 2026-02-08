@@ -95,7 +95,7 @@ echo ""
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
 
 backend_path="./Tracko-Java-Backend"
-flutter_path="./Tracko-Flutter-UI"
+flutter_path="./frontend"
 
 # Check if paths exist
 if [ ! -d "$backend_path" ]; then

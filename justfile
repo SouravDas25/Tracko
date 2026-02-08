@@ -21,12 +21,12 @@ help:
 # Start both Flutter UI and Java Backend
 start:
     @echo "🚀 Starting Tracko..."
-    concurrently --names "BACKEND,FLUTTER" --prefix-colors "blue,green" "cd Tracko-Java-Backend; mvn spring-boot:run -P dev" "cd Tracko-Flutter-UI; flutter run"
+    concurrently --names "BACKEND,FLUTTER" --prefix-colors "blue,green" "cd Tracko-Java-Backend; mvn spring-boot:run -P dev" "cd frontend; flutter run"
 
 # Start Flutter UI only
 flutter:
     @echo "🎨 Starting Flutter UI..."
-    cd Tracko-Flutter-UI; flutter run -d chrome
+    cd frontend; flutter run -d chrome
 
 # Start Java Backend only
 backend:
@@ -43,21 +43,21 @@ stop:
 # Clean build artifacts
 clean:
     @echo "🧹 Cleaning..."
-    cd Tracko-Flutter-UI; flutter clean; cd ..
+    cd frontend; flutter clean; cd ..
     cd Tracko-Java-Backend; mvn clean; cd ..
     @echo "✅ Clean complete"
 
 # Run tests
 test:
     @echo "🧪 Running tests..."
-    cd Tracko-Flutter-UI; flutter test; cd ..
+    cd frontend; flutter test; cd ..
     cd Tracko-Java-Backend; mvn test; cd ..
     @echo "✅ Tests complete"
 
 # Install dependencies
 install:
     @echo "📦 Installing dependencies..."
-    cd Tracko-Flutter-UI; flutter pub get; cd ..
+    cd frontend; flutter pub get; cd ..
     cd Tracko-Java-Backend; mvn install -P dev; cd ..
     npm install -g concurrently
     @echo "✅ Dependencies installed"

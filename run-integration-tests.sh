@@ -11,7 +11,7 @@ set -euo pipefail
 
 # -------- Config --------
 BACKEND_DIR="C:/Users/soura/Documents/Personal/Tracko/Tracko-Java-Backend"
-FLUTTER_DIR="C:/Users/soura/Documents/Personal/Tracko/Tracko-Flutter-UI"
+FLUTTER_DIR="C:/Users/soura/Documents/Personal/Tracko/frontend"
 LOGS_DIR="C:/Users/soura/Documents/Personal/Tracko/logs"
 BACKEND_PORT=${BACKEND_PORT:-8080}
 CHROMEDRIVER_PORT=${CHROMEDRIVER_PORT:-4444}

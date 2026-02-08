@@ -1,4 +1,4 @@
-# expense_manager ![Travis Ci](https://github.com/SouravDas25/Tracko-Flutter-UI/workflows/Build%20and%20Release%20apk/badge.svg)
+# expense_manager ![Travis Ci](https://github.com/SouravDas25/Tracko/workflows/Build%20and%20Release%20apk/badge.svg)
 
 A new Flutter project.
 

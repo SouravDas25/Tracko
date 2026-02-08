@@ -362,7 +362,7 @@ mvn test -Dtest=*IntegrationTest
 
 1. **Update dependencies:**
 ```bash
-cd Tracko-Flutter-UI
+cd frontend
 flutter pub add dio flutter_secure_storage json_annotation
 flutter pub add --dev build_runner json_serializable
 ```
