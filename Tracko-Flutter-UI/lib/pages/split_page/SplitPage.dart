@@ -121,6 +121,12 @@ class _SplitPage extends RefreshableState<SplitPage> {
         itemBuilder: (_, int index) {
           final row = this.contacts[index];
           return Card(
+            elevation: 1,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16.0),
+              side: BorderSide(
+                  color: Theme.of(context).dividerColor.withOpacity(0.1)),
+            ),
             child: ListTile(
               onTap: () {
                 Navigator.of(context).push(

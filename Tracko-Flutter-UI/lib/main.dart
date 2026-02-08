@@ -23,7 +23,8 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: Colors.white,
         cardTheme: CardTheme(
           elevation: 2,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
       darkTheme: ThemeData(
@@ -33,7 +34,8 @@ class MyApp extends StatelessWidget {
         cardTheme: CardTheme(
           elevation: 2,
           color: const Color(0xFF1E1E1E),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
         appBarTheme: const AppBarTheme(
           backgroundColor: Color(0xFF1E1E1E),

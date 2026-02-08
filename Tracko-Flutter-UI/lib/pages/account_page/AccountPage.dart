@@ -55,7 +55,13 @@ class AccountPageState extends AsyncLoadState<AccountPage> {
           return Slidable(
             // delegate: new SlidableScrollDelegate(), // Removed in flutter_slidable 3.x
             child: Card(
-              margin: EdgeInsets.all(2),
+              elevation: 1,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16.0),
+                side: BorderSide(
+                    color: Theme.of(context).dividerColor.withOpacity(0.1)),
+              ),
+              margin: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               child: ListTile(
                 contentPadding: EdgeInsets.all(8),
                 leading: WidgetUtil.textAvatar(accounts[i].name),

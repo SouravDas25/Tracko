@@ -83,7 +83,7 @@ class _SettingsPage extends State<SettingsPage> {
         padding: EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(16),
         ),
         child: Icon(icon, color: color),
       ),
@@ -224,7 +224,7 @@ class _SettingsPage extends State<SettingsPage> {
               padding: EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: Colors.redAccent.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(16),
               ),
               child: Icon(Icons.exit_to_app, color: Colors.redAccent),
             ),

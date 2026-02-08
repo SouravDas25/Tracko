@@ -284,7 +284,7 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
   }
 
   void callSplitPage() async {
-    List<TrakoContact> result = await Navigator.push(
+    List<TrakoContact>? result = await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => SelectBackendContactPage()),
     );
@@ -304,418 +304,627 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: transactionType == TransactionType.DEBIT
-            ? Colors.red
+            ? Colors.redAccent
             : (transactionType == TransactionType.TRANSFER
-                ? Colors.grey
-                : Colors.lightGreen),
+                ? Colors.blueGrey
+                : Colors.green),
         actions: transactionType == TransactionType.DEBIT
             ? <Widget>[
                 IconButton(
                   icon: Icon(
                     Icons.call_split,
-                    size: 30.0,
+                    size: 28.0,
                   ),
                   onPressed: callSplitPage,
+                  tooltip: "Split Transaction",
                 )
               ]
             : [],
-        title: Text(isEdit ? "Update Transaction" : "New Transaction"),
+        title: Text(isEdit ? "Edit Transaction" : "New Transaction"),
         centerTitle: true,
+        elevation: 0,
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        child: ListView(
+      body: SingleChildScrollView(
+        child: Column(
           children: <Widget>[
-            Row(
-              children: <Widget>[
-                WidgetUtil.textAvatar(name.text),
-                Flexible(
-                  child: Padding(
-                    padding: const EdgeInsets.all(18.0),
-                    child: TextField(
-                      style:
-                          TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
-                      controller: name,
+            _buildTypeSelector(),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildAmountSection(),
+                  SizedBox(height: 16),
+                  _buildDetailsSection(),
+                  if (transactionType == TransactionType.DEBIT) ...[
+                    SizedBox(height: 16),
+                    _buildSplitsSection(),
+                  ],
+                  SizedBox(height: 16),
+                  _buildCommentsSection(),
+                  SizedBox(height: 24),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: transactionType == TransactionType.DEBIT
+                          ? Colors.redAccent
+                          : (transactionType == TransactionType.TRANSFER
+                              ? Colors.blueGrey
+                              : Colors.green),
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 4,
                     ),
-                  ),
-                ),
-              ],
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                new Radio<int>(
-                  value: TransactionType.CREDIT,
-                  groupValue: transactionType,
-                  onChanged: onRadioChange,
-                ),
-                new Text(
-                  'Income',
-                  style: new TextStyle(fontSize: 16.0),
-                ),
-                new Radio<int>(
-                  value: TransactionType.DEBIT,
-                  groupValue: transactionType,
-                  onChanged: onRadioChange,
-                ),
-                new Text(
-                  'Expense',
-                  style: new TextStyle(fontSize: 16.0),
-                ),
-                new Radio<int>(
-                  value: TransactionType.TRANSFER,
-                  groupValue: transactionType,
-                  onChanged: onRadioChange,
-                ),
-                new Text(
-                  'Transfer',
-                  style: new TextStyle(fontSize: 16.0),
-                ),
-              ],
-            ),
-            if (transactionType != TransactionType.TRANSFER)
-              DropdownButton<int>(
-                style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black),
-                isExpanded: true,
-                value: categoryId,
-                hint: Text("Please choose a Category"),
-                items: categories.map((Category value) {
-                  return new DropdownMenuItem<int>(
-                    value: value.id,
-                    child: Row(
-                      children: <Widget>[
-                        Padding(
-                          padding: const EdgeInsets.all(10.0),
-                          child: WidgetUtil.textAvatar(value.name,
-                              backgroundColor: Colors.green),
-                        ),
-                        new Text(value.name),
-                      ],
-                    ),
-                  );
-                }).toList(),
-                onChanged: (int? id) {
-                  setState(() {
-                    this.categoryId = id ?? 0;
-                  });
-                },
-              ),
-            SizedBox(
-              width: double.infinity,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: <Widget>[
-                  TextButton(
                     onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (_) => CategoryDialog(
-                          callback: () {
-                            setState(() {
-                              initData();
-                            });
-                          },
-                        ),
-                      );
+                      this.save();
                     },
                     child: Text(
-                      "+ Category",
-                      textAlign: TextAlign.right,
+                      widget.mainButtonText != null
+                          ? widget.mainButtonText
+                          : (isEdit ? "Update" : "Save"),
+                      style: TextStyle(
+                          fontSize: 18.0, fontWeight: FontWeight.bold),
                     ),
-                  )
+                  ),
+                  SizedBox(height: 40),
                 ],
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTypeSelector() {
+    return Container(
+      color: Theme.of(context).cardColor,
+      padding: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+      margin: EdgeInsets.only(bottom: 16),
+      child: Container(
+        height: 48,
+        decoration: BoxDecoration(
+          color: Theme.of(context).brightness == Brightness.dark
+              ? Colors.black26
+              : Colors.grey.shade200,
+          borderRadius: BorderRadius.circular(24),
+        ),
+        padding: EdgeInsets.all(4),
+        child: Row(
+          children: [
+            Expanded(
+              child: _buildTypeButton(
+                  TransactionType.CREDIT, "Income", Colors.green),
+            ),
+            Expanded(
+              child: _buildTypeButton(
+                  TransactionType.DEBIT, "Expense", Colors.redAccent),
+            ),
+            Expanded(
+              child: _buildTypeButton(
+                  TransactionType.TRANSFER, "Transfer", Colors.blueGrey),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTypeButton(int type, String label, Color color) {
+    bool isSelected = transactionType == type;
+    return GestureDetector(
+      onTap: () => onRadioChange(type),
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 200),
+        decoration: BoxDecoration(
+          color: isSelected ? color : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: color.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
+                  )
+                ]
+              : [],
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected
+                ? Colors.white
+                : Theme.of(context).hintColor.withOpacity(0.7),
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAmountSection() {
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    Color typeColor;
+    if (transactionType == TransactionType.DEBIT) {
+      typeColor = isDarkMode ? Colors.redAccent : Colors.red;
+    } else if (transactionType == TransactionType.TRANSFER) {
+      typeColor = isDarkMode ? Colors.lightBlueAccent : Colors.blueGrey;
+    } else {
+      typeColor = isDarkMode ? Colors.greenAccent : Colors.green;
+    }
+
+    return Card(
+      elevation: 0,
+      color: Theme.of(context).cardColor,
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(
+              color: Theme.of(context).dividerColor.withOpacity(0.1))),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 20.0),
+        child: Column(
+          children: [
+            Text(
+              "Amount",
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).hintColor,
+                letterSpacing: 0.5,
+              ),
+            ),
+            SizedBox(height: 12),
             Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
               children: [
-                Expanded(
-                  flex: 2,
-                  child: DropdownButtonFormField<String>(
-                    value: selectedCurrency,
-                    decoration: InputDecoration(
-                      labelText: 'Currency',
-                      contentPadding: EdgeInsets.only(bottom: 12, top: 12),
-                    ),
-                    items: availableCurrencies.map((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value),
-                      );
-                    }).toList(),
-                    onChanged: (newValue) {
-                      setState(() {
-                        selectedCurrency = newValue!;
-                        if (selectedCurrency == baseCurrency) {
-                          exchangeRateController.text = '1.0';
-                        } else if (currencyRates
-                            .containsKey(selectedCurrency)) {
-                          exchangeRateController.text =
-                              currencyRates[selectedCurrency].toString();
-                        }
-                        updateCalculatedAmount();
-                      });
-                    },
-                  ),
+                DropdownButton<String>(
+                  value: selectedCurrency,
+                  underline: SizedBox(),
+                  icon: Icon(Icons.arrow_drop_down, size: 20, color: typeColor),
+                  style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: typeColor),
+                  items: availableCurrencies.map((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
+                  onChanged: (newValue) {
+                    setState(() {
+                      selectedCurrency = newValue!;
+                      if (selectedCurrency == baseCurrency) {
+                        exchangeRateController.text = '1.0';
+                      } else if (currencyRates.containsKey(selectedCurrency)) {
+                        exchangeRateController.text =
+                            currencyRates[selectedCurrency].toString();
+                      }
+                      updateCalculatedAmount();
+                    });
+                  },
                 ),
-                SizedBox(width: 10),
-                Expanded(
-                  flex: 4,
+                SizedBox(width: 8),
+                IntrinsicWidth(
                   child: TextField(
+                    controller: amount,
                     keyboardType:
                         TextInputType.numberWithOptions(decimal: true),
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                    decoration: new InputDecoration(
-                        prefixText: '', // Removed fixed symbol
-                        labelText: 'Amount',
-                        floatingLabelBehavior: FloatingLabelBehavior.never),
-                    controller: amount,
+                    style: TextStyle(
+                      fontSize: 40,
+                      fontWeight: FontWeight.w700,
+                      color: typeColor,
+                      height: 1.0,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: "0.00",
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.zero,
+                      isDense: true,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
                 ),
               ],
             ),
-
             if (selectedCurrency != baseCurrency) ...[
-              SizedBox(height: 10),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: exchangeRateController,
-                      keyboardType:
-                          TextInputType.numberWithOptions(decimal: true),
-                      decoration: InputDecoration(
-                        labelText: 'Exchange Rate',
-                        helperText: '1 $selectedCurrency = ? $baseCurrency',
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 10),
-                  Expanded(
-                    child: InputDecorator(
-                      decoration: InputDecoration(
-                        labelText: 'Converted ($baseCurrency)',
-                        border: InputBorder.none,
-                      ),
-                      child: Text(
-                        convertedAmount.toStringAsFixed(2),
-                        style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-
-            DateTimeField(
-              initialValue: date,
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              format: DateFormat('dd-MMM-yyyy'),
-              readOnly: true,
-              decoration: InputDecoration(
-                  labelText: 'Date',
-                  floatingLabelBehavior: FloatingLabelBehavior.never),
-              onShowPicker: (context, currentValue) {
-                return showDatePicker(
-                    context: context,
-                    firstDate: DateTime(1900),
-                    initialDate: currentValue ?? DateTime.now(),
-                    lastDate: DateTime(2100));
-              },
-              onChanged: (date) {
-                this.date = date ?? DateTime.now();
-              },
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: transactionType == TransactionType.TRANSFER
-                  ? Column(
+              SizedBox(height: 20),
+              Container(
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).scaffoldBackgroundColor,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  children: [
+                    Row(
                       children: [
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Padding(
-                            padding: const EdgeInsets.only(bottom: 6.0),
-                            child: Text("From Account"),
+                        Text("Exchange Rate:", style: TextStyle(fontSize: 12)),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: TextField(
+                            controller: exchangeRateController,
+                            keyboardType:
+                                TextInputType.numberWithOptions(decimal: true),
+                            decoration: InputDecoration(
+                              isDense: true,
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                            style: TextStyle(
+                                fontSize: 14, fontWeight: FontWeight.bold),
+                            textAlign: TextAlign.end,
                           ),
-                        ),
-                        new DropdownButton<int>(
-                          isExpanded: true,
-                          value: transferFromAccountId,
-                          style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black),
-                          hint: Text("Please choose From Account"),
-                          items: accounts.map((Account value) {
-                            return new DropdownMenuItem<int>(
-                              value: value.id,
-                              child: new Text(value.name),
-                            );
-                          }).toList(),
-                          onChanged: (int? value) {
-                            setState(() {
-                              transferFromAccountId = value ?? 0;
-                              if (transferToAccountId == 0) {
-                                transferToAccountId = value ?? 0;
-                              }
-                            });
-                          },
-                        ),
-                        SizedBox(height: 12),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Padding(
-                            padding: const EdgeInsets.only(bottom: 6.0),
-                            child: Text("To Account"),
-                          ),
-                        ),
-                        new DropdownButton<int>(
-                          isExpanded: true,
-                          value: transferToAccountId,
-                          style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black),
-                          hint: Text("Please choose To Account"),
-                          items: accounts.map((Account value) {
-                            return new DropdownMenuItem<int>(
-                              value: value.id,
-                              child: new Text(value.name),
-                            );
-                          }).toList(),
-                          onChanged: (int? value) {
-                            setState(() {
-                              transferToAccountId = value ?? 0;
-                            });
-                          },
                         ),
                       ],
-                    )
-                  : new DropdownButton<int>(
-                      isExpanded: true,
-                      value: accountId,
-                      style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black),
-                      hint: Text("Please choose a Account"),
-                      items: accounts.map((Account value) {
-                        return new DropdownMenuItem<int>(
-                          value: value.id,
-                          child: new Text(value.name),
-                        );
-                      }).toList(),
-                      onChanged: (int? value) {
-                        setState(() {
-                          this.accountId = value ?? 0;
-                        });
-                      },
                     ),
-            ),
-            SizedBox(
-                width: double.infinity,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: <Widget>[
-                    if (transactionType != TransactionType.TRANSFER)
-                      TextButton(
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (_) => AccountDialog(
-                              callback: () {
-                                setState(() {
-                                  initData();
-                                });
-                              },
-                            ),
-                          );
-                        },
-                        child: Text(
-                          "+ Account",
-                          textAlign: TextAlign.right,
+                    Divider(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text("Converted:", style: TextStyle(fontSize: 12)),
+                        Text(
+                          "$baseCurrency ${convertedAmount.toStringAsFixed(2)}",
+                          style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color:
+                                  Theme.of(context).textTheme.bodyLarge?.color),
                         ),
-                      )
+                      ],
+                    ),
                   ],
-                )),
-            if (transactionType != TransactionType.TRANSFER) ...[
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: Text("Splits"),
-              ),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                    children: frequentSplitters
-                        .map((User user) => ActionChip(
-                              avatar: WidgetUtil.textAvatar(user.name),
-                              onPressed: () {
-                                addSplit(user);
-                              },
-                              label: Text(user.name),
-                            ))
-                        .toList()),
-              ),
-              Container(
-                child: SplitSectionInAddTransaction(
-                  parentState: this,
-                  amount: castAmountText2Double(amount.text),
-                  currencySymbol:
-                      ConstantUtil.getCurrencySymbol(selectedCurrency),
-                  splitList: splitList,
-                  textEditingControllers: splitAmountTextEditionControllers,
                 ),
               ),
             ],
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: TextField(
-                controller: comments,
-                maxLines: 5,
-                decoration: new InputDecoration(
-                    labelStyle: TextStyle(fontSize: 19),
-                    labelText: 'comments',
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10.0))),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).primaryColor,
-                  padding: EdgeInsets.all(20.0),
-                  foregroundColor: Colors.white,
-                ),
-                onPressed: () {
-                  this.save();
-                },
-                child: Text(
-                  widget.mainButtonText == null
-                      ? "Update"
-                      : widget.mainButtonText,
-                  style: TextStyle(fontSize: 18.0),
-                ),
-              ),
-            ),
-//          Padding(
-//            padding: const EdgeInsets.only(top:8.0),
-//            child: ElevatedButton(
-//              color: Theme.of(context).primaryColor,
-//              padding: EdgeInsets.all(20.0),
-//              onPressed: () {
-//
-//              },
-//              textColor: Colors.white,
-//              child: Text("Split"),
-//            ),
-//          ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildAccountDropdown(
+      String label, int value, Function(int?) onChanged) {
+    return DropdownButtonFormField<int>(
+      value: value,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(Icons.account_balance_wallet_outlined),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(
+              color: Theme.of(context).dividerColor.withOpacity(0.1)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide:
+              BorderSide(color: Theme.of(context).primaryColor, width: 2),
+        ),
+        filled: true,
+        fillColor: Theme.of(context).cardColor,
+        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      ),
+      items: accounts.map((Account value) {
+        return DropdownMenuItem<int>(
+          value: value.id,
+          child: Text(value.name),
+        );
+      }).toList(),
+      onChanged: onChanged,
+    );
+  }
+
+  Widget _buildDetailsSection() {
+    return Column(
+      children: [
+        // Date Picker
+        DateTimeField(
+          initialValue: date,
+          format: DateFormat('dd-MMM-yyyy'),
+          readOnly: true,
+          resetIcon: null,
+          decoration: InputDecoration(
+            labelText: 'Date',
+            prefixIcon: Icon(Icons.calendar_today_outlined),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                  color: Theme.of(context).dividerColor.withOpacity(0.1)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide:
+                  BorderSide(color: Theme.of(context).primaryColor, width: 2),
+            ),
+            filled: true,
+            fillColor: Theme.of(context).cardColor,
+            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          ),
+          onShowPicker: (context, currentValue) {
+            return showDatePicker(
+                context: context,
+                firstDate: DateTime(1900),
+                initialDate: currentValue ?? DateTime.now(),
+                lastDate: DateTime(2100));
+          },
+          onChanged: (date) {
+            this.date = date ?? DateTime.now();
+          },
+        ),
+        SizedBox(height: 16),
+
+        // Category (if not transfer)
+        if (transactionType != TransactionType.TRANSFER) ...[
+          Row(
+            children: [
+              Expanded(
+                child: DropdownButtonFormField<int>(
+                  value: categoryId,
+                  decoration: InputDecoration(
+                    labelText: 'Category',
+                    prefixIcon: Icon(Icons.category_outlined),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide.none,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(
+                          color:
+                              Theme.of(context).dividerColor.withOpacity(0.1)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(
+                          color: Theme.of(context).primaryColor, width: 2),
+                    ),
+                    filled: true,
+                    fillColor: Theme.of(context).cardColor,
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  ),
+                  items: categories.map((Category value) {
+                    return DropdownMenuItem<int>(
+                      value: value.id,
+                      child: Text(
+                        value.name,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (int? id) {
+                    setState(() {
+                      this.categoryId = id ?? 0;
+                    });
+                  },
+                ),
+              ),
+              SizedBox(width: 12),
+              Ink(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                      color: Theme.of(context).dividerColor.withOpacity(0.1)),
+                ),
+                child: InkWell(
+                  customBorder: CircleBorder(),
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (_) => CategoryDialog(
+                        callback: () {
+                          setState(() {
+                            initData();
+                          });
+                        },
+                      ),
+                    );
+                  },
+                  child: Container(
+                    height: 48,
+                    width: 48,
+                    alignment: Alignment.center,
+                    child: Icon(Icons.add,
+                        color: Theme.of(context).colorScheme.onSurface),
+                  ),
+                ),
+              )
+            ],
+          ),
+          SizedBox(height: 16),
+        ],
+
+        // Accounts
+        if (transactionType == TransactionType.TRANSFER) ...[
+          _buildAccountDropdown("From Account", transferFromAccountId, (val) {
+            setState(() {
+              transferFromAccountId = val ?? 0;
+              if (transferToAccountId == 0) transferToAccountId = val ?? 0;
+            });
+          }),
+          SizedBox(height: 16),
+          _buildAccountDropdown("To Account", transferToAccountId, (val) {
+            setState(() {
+              transferToAccountId = val ?? 0;
+            });
+          }),
+        ] else ...[
+          Row(
+            children: [
+              Expanded(
+                child: _buildAccountDropdown("Account", accountId, (val) {
+                  setState(() {
+                    this.accountId = val ?? 0;
+                  });
+                }),
+              ),
+              SizedBox(width: 12),
+              Ink(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                      color: Theme.of(context).dividerColor.withOpacity(0.1)),
+                ),
+                child: InkWell(
+                  customBorder: CircleBorder(),
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (_) => AccountDialog(
+                        callback: () {
+                          setState(() {
+                            initData();
+                          });
+                        },
+                      ),
+                    );
+                  },
+                  child: Container(
+                    height: 48,
+                    width: 48,
+                    alignment: Alignment.center,
+                    child: Icon(Icons.add,
+                        color: Theme.of(context).colorScheme.onSurface),
+                  ),
+                ),
+              )
+            ],
+          ),
+        ],
+        SizedBox(height: 16),
+
+        // Name Input
+        TextField(
+          controller: name,
+          decoration: InputDecoration(
+            labelText: 'Description',
+            prefixIcon: Icon(Icons.description_outlined),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                  color: Theme.of(context).dividerColor.withOpacity(0.1)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide:
+                  BorderSide(color: Theme.of(context).primaryColor, width: 2),
+            ),
+            filled: true,
+            fillColor: Theme.of(context).cardColor,
+            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSplitsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              "Splits",
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).hintColor,
+              ),
+            ),
+            IconButton(
+              icon:
+                  Icon(Icons.call_split, color: Theme.of(context).primaryColor),
+              onPressed: callSplitPage,
+              tooltip: "Split Transaction",
+            ),
+          ],
+        ),
+        if (frequentSplitters.isNotEmpty) ...[
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: frequentSplitters
+                  .map((User user) => Padding(
+                        padding: const EdgeInsets.only(right: 8.0),
+                        child: ActionChip(
+                          avatar: WidgetUtil.textAvatar(user.name),
+                          label: Text(user.name),
+                          backgroundColor: Theme.of(context).cardColor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            side: BorderSide(
+                                color: Theme.of(context)
+                                    .dividerColor
+                                    .withOpacity(0.1)),
+                          ),
+                          onPressed: () {
+                            addSplit(user);
+                          },
+                        ),
+                      ))
+                  .toList(),
+            ),
+          ),
+          SizedBox(height: 12),
+        ],
+        SplitSectionInAddTransaction(
+          parentState: this,
+          amount: castAmountText2Double(amount.text),
+          currencySymbol: ConstantUtil.getCurrencySymbol(selectedCurrency),
+          splitList: splitList,
+          textEditingControllers: splitAmountTextEditionControllers,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCommentsSection() {
+    return TextField(
+      controller: comments,
+      maxLines: 3,
+      decoration: InputDecoration(
+        labelText: 'Comments',
+        prefixIcon: Icon(Icons.comment_outlined),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(
+              color: Theme.of(context).dividerColor.withOpacity(0.1)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide:
+              BorderSide(color: Theme.of(context).primaryColor, width: 2),
+        ),
+        filled: true,
+        fillColor: Theme.of(context).cardColor,
+        alignLabelWithHint: true,
+        contentPadding: EdgeInsets.all(16),
       ),
     );
   }

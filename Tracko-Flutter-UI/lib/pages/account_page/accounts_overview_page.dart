@@ -34,6 +34,12 @@ class _AccountsOverviewPageState extends AsyncLoadState<AccountsOverviewPage> {
         return Padding(
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
           child: Card(
+            elevation: 1,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16.0),
+              side: BorderSide(
+                  color: Theme.of(context).dividerColor.withOpacity(0.1)),
+            ),
             child: ListTile(
               leading: WidgetUtil.textAvatar(accounts[i].name),
               title: Text(

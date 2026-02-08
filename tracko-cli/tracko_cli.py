@@ -223,6 +223,75 @@ def cmd_health(args: argparse.Namespace) -> int:
     return 0 if result["ok"] else 1
 
 
+# =========================
+# User Currencies (secondary)
+# =========================
+
+def _render_currencies_list(result: dict, raw: bool) -> int:
+    if raw:
+        print_result(result, raw=True)
+        return 0 if result.get("ok") else 1
+    payload = result.get("json")
+    rows = None
+    if isinstance(payload, dict):
+        rows = payload.get("result")
+    if result.get("ok") and isinstance(rows, list):
+        print(f"HTTP {result.get('status')} ({result.get('elapsed_ms')}ms)")
+        columns = [
+            ("currencyCode", "Code"),
+            ("exchangeRate", "Rate"),
+        ]
+        print_table(
+            rows,
+            columns,
+            right_align={"exchangeRate"},
+        )
+        return 0
+    print_result(result, raw=False)
+    return 0 if result.get("ok") else 1
+
+
+def cmd_currencies_list(args: argparse.Namespace) -> int:
+    token, base_url = _get_token_from_args_or_config(args)
+    url = _join_url(base_url, "/api/user-currencies")
+    result = http_request("GET", url, token=token)
+    return _render_currencies_list(result, raw=args.raw)
+
+
+def cmd_currencies_add(args: argparse.Namespace) -> int:
+    token, base_url = _get_token_from_args_or_config(args)
+    url = _join_url(base_url, "/api/user-currencies")
+    body = {
+        "currencyCode": str(args.code).upper(),
+        "exchangeRate": float(args.rate),
+    }
+    result = http_request("POST", url, token=token, json_body=body)
+    print_result(result, raw=args.raw)
+    return 0 if result.get("ok") else 1
+
+
+def cmd_currencies_update(args: argparse.Namespace) -> int:
+    # Backend accepts POST for create/update as per app repository logic
+    token, base_url = _get_token_from_args_or_config(args)
+    url = _join_url(base_url, "/api/user-currencies")
+    body = {
+        "currencyCode": str(args.code).upper(),
+        "exchangeRate": float(args.rate),
+    }
+    result = http_request("POST", url, token=token, json_body=body)
+    print_result(result, raw=args.raw)
+    return 0 if result.get("ok") else 1
+
+
+def cmd_currencies_delete(args: argparse.Namespace) -> int:
+    token, base_url = _get_token_from_args_or_config(args)
+    code = str(args.code).upper()
+    url = _join_url(base_url, f"/api/user-currencies/{urllib.parse.quote(code)}")
+    result = http_request("DELETE", url, token=token)
+    print_result(result, raw=args.raw)
+    return 0 if result.get("ok") else 1
+
+
 def _render_splits_result(result: dict, raw: bool) -> int:
     if raw:
         print_result(result, raw=True)
@@ -730,16 +799,41 @@ def cmd_transactions_add(args: argparse.Namespace) -> int:
         print("Invalid --type. Use income or expense.", file=sys.stderr)
         return 2
 
+    # Build request body. By default, --amount is treated as normalized/base amount.
+    # If --currency is provided, we treat --amount as the original foreign amount
+    # and require --exchange-rate to compute the normalized amount for persistence.
     body = {
         "transactionType": transaction_type,
         "name": args.name,
         "comments": args.comments,
         "date": _parse_date_to_epoch_ms(args.date),
-        "amount": float(args.amount),
         "accountId": int(args.account_id),
         "categoryId": int(args.category_id),
         "isCountable": 1 if args.countable else 0,
     }
+
+    currency = getattr(args, "currency", None)
+    if currency:
+        rate = getattr(args, "exchange_rate", None)
+        if rate is None:
+            print("--exchange-rate is required when --currency is provided", file=sys.stderr)
+            return 2
+        try:
+            original_amount = float(args.amount)
+            exchange_rate = float(rate)
+        except Exception:
+            print("Invalid --amount or --exchange-rate", file=sys.stderr)
+            return 2
+        normalized = original_amount * exchange_rate
+        body.update({
+            "originalCurrency": str(currency).upper(),
+            "originalAmount": original_amount,
+            "exchangeRate": exchange_rate,
+            "amount": normalized,
+        })
+    else:
+        # Backwards compatible: amount is already normalized/base amount
+        body["amount"] = float(args.amount)
 
     result = http_request("POST", url, token=token, json_body=body)
     print_result(result, raw=args.raw)
@@ -1023,6 +1117,9 @@ def build_parser() -> argparse.ArgumentParser:
     sp2.add_argument("--date", default=None, help="YYYY-MM-DD or ISO-8601 or epoch-ms (default: now)")
     sp2.add_argument("--countable", action="store_true", default=True)
     sp2.add_argument("--not-countable", action="store_false", dest="countable")
+    # Multi-currency support: when provided, --amount is treated as original amount
+    sp2.add_argument("--currency", help="Original currency code (e.g., USD, EUR). If provided, --exchange-rate is required and --amount is treated as original amount")
+    sp2.add_argument("--exchange-rate", type=float, help="Exchange rate to convert original amount to base amount (base per 1 unit of original)")
     sp2.set_defaults(func=cmd_transactions_add)
 
     # budget
@@ -1040,6 +1137,27 @@ def build_parser() -> argparse.ArgumentParser:
     sp2.add_argument("--month", type=int, help="Month (1-12)")
     sp2.add_argument("--year", type=int, help="Year (YYYY)")
     sp2.set_defaults(func=cmd_budget_allocate)
+
+    # user currencies
+    sp = sub.add_parser("currencies")
+    sub_curr = sp.add_subparsers(dest="currencies_cmd", required=True)
+
+    sp2 = sub_curr.add_parser("list")
+    sp2.set_defaults(func=cmd_currencies_list)
+
+    sp2 = sub_curr.add_parser("add")
+    sp2.add_argument("--code", required=True, help="Currency code, e.g., USD")
+    sp2.add_argument("--rate", required=True, type=float, help="Exchange rate to base per 1 unit of this currency")
+    sp2.set_defaults(func=cmd_currencies_add)
+
+    sp2 = sub_curr.add_parser("update")
+    sp2.add_argument("--code", required=True, help="Currency code, e.g., USD")
+    sp2.add_argument("--rate", required=True, type=float, help="Exchange rate to base per 1 unit of this currency")
+    sp2.set_defaults(func=cmd_currencies_update)
+
+    sp2 = sub_curr.add_parser("delete")
+    sp2.add_argument("--code", required=True, help="Currency code to delete, e.g., USD")
+    sp2.set_defaults(func=cmd_currencies_delete)
 
     sp = sub.add_parser("request", help="Generic request")
     sp.add_argument("--method", default="GET")

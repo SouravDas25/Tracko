@@ -44,59 +44,62 @@ class SplitSectionInAddTransaction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Iterator<TextEditingController> iterator = textEditingControllers.iterator;
-    Iterator<TrakoContact> splitListIterator = splitList.iterator;
+    List<TrakoContact> contactsList = splitList.toList();
     return ListView.builder(
       physics: NeverScrollableScrollPhysics(),
       shrinkWrap: true,
-      itemCount: splitList.length,
+      itemCount: contactsList.length,
       itemBuilder: (context, int index) {
-        splitListIterator.moveNext();
-        TrakoContact element = splitListIterator.current;
-        iterator.moveNext();
-        TextEditingController splitAmount = iterator.current;
-        // Logic to strip symbol if needed for controller, but controller seems unused for reading here?
-        // Actually the controller.text is set here. If it's used elsewhere, we should be careful.
-        // Looking at code, splitAmountTextEditionControllers are created in parent but never read?
-        // Let's check SmartAddItemPage.save() - it doesn't read them. It recalculates based on share.
-        // So this is just for display.
+        TrakoContact element = contactsList[index];
 
         String displayAmount = calcAmount();
-        splitAmount.text = displayAmount;
 
-        return Slidable(
-          enabled: !disableSlide,
-          endActionPane: ActionPane(
-            motion: ScrollMotion(),
-            children: [
-              SlidableAction(
-                onPressed: (context) {
-                  deleteSplit(element, index);
-                },
-                backgroundColor: Colors.red,
-                foregroundColor: Colors.white,
-                icon: Icons.delete,
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8.0),
+          child: Slidable(
+            enabled: !disableSlide,
+            endActionPane: ActionPane(
+              motion: ScrollMotion(),
+              children: [
+                SlidableAction(
+                  onPressed: (context) {
+                    deleteSplit(element, index);
+                  },
+                  backgroundColor: Theme.of(context).colorScheme.error,
+                  foregroundColor: Theme.of(context).colorScheme.onError,
+                  icon: Icons.delete,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ],
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).cardColor,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                    color: Theme.of(context).dividerColor.withOpacity(0.1)),
               ),
-            ],
-          ),
-          child: ListTile(
-            contentPadding: EdgeInsets.all(0.0),
-            dense: true,
-            trailing: Text(
-              displayAmount,
-              style: TextStyle(fontSize: 20.0),
+              child: ListTile(
+                contentPadding:
+                    EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                dense: true,
+                trailing: Text(
+                  displayAmount,
+                  style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
+                ),
+                title: Text(
+                  element.phoneNo != SessionService.currentUser().phoneNo
+                      ? element.name
+                      : "You",
+                  style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w600),
+                ),
+                subtitle: Text(
+                  element.phoneNo != null ? element.phoneNo : "",
+                  style: TextStyle(fontSize: 14.0),
+                ),
+                leading: WidgetUtil.textAvatar(element.name),
+              ),
             ),
-            title: Text(
-              element.phoneNo != SessionService.currentUser().phoneNo
-                  ? element.name
-                  : "You",
-              style: TextStyle(fontSize: 16.0),
-            ),
-            subtitle: Text(
-              element.phoneNo != null ? element.phoneNo : "",
-              style: TextStyle(fontSize: 15.0),
-            ),
-            leading: WidgetUtil.textAvatar(element.name),
           ),
         );
       },

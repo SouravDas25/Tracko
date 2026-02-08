@@ -71,9 +71,11 @@ class TransactionTile extends StatelessWidget {
         ],
       ),
       child: Card(
+          elevation: 1,
           shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(4.0),
-              side: new BorderSide(color: Colors.grey, width: 0.25)),
+              borderRadius: BorderRadius.circular(16.0),
+              side: BorderSide(
+                  color: Theme.of(context).dividerColor.withOpacity(0.1))),
           child: ListTile(
             onTap: () {
               Navigator.of(context).push(MaterialPageRoute(

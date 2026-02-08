@@ -377,7 +377,8 @@ class _StatsPageState extends State<StatsPage> {
         pieSeries.add(ChartEntry(s.categoryId, s.categoryName, v));
       }
       pieSeries.sort((a, b) => b.value.compareTo(a.value));
-      final limitedPieSeries = pieSeries.length > 6 ? pieSeries.sublist(0, 6) : pieSeries;
+      final limitedPieSeries =
+          pieSeries.length > 6 ? pieSeries.sublist(0, 6) : pieSeries;
 
       if (!mounted) return;
       setState(() {
@@ -496,7 +497,8 @@ class _StatsPageState extends State<StatsPage> {
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
           child: Card(
             elevation: 2,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             child: Padding(
               padding: const EdgeInsets.all(12.0),
               child: _buildLineChart(),
@@ -554,7 +556,8 @@ class _StatsPageState extends State<StatsPage> {
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
           child: Card(
             elevation: 2,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             child: Padding(
               padding: const EdgeInsets.all(12.0),
               child: _buildPieChart(),
@@ -591,7 +594,8 @@ class _StatsPageState extends State<StatsPage> {
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
               child: Card(
                 elevation: 1,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
                 child: ListTile(
                   title: Text(s.categoryName),
                   trailing: Text(

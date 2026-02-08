@@ -130,9 +130,11 @@ class _AccountsPage extends RefreshableState<TransactionListPage> {
           Padding(
             padding: const EdgeInsets.only(top: 4.0),
             child: Card(
+              elevation: 2,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4.0),
-                  side: new BorderSide(color: Colors.grey, width: 0.5)),
+                  borderRadius: BorderRadius.circular(16.0),
+                  side: BorderSide(
+                      color: Theme.of(context).dividerColor.withOpacity(0.1))),
               child: ListView(
                 primary: false,
                 shrinkWrap: true,

@@ -96,23 +96,44 @@ class _ChatList extends AsyncLoadState<ChatView> {
 
   Widget _chatEnvironment() {
     return IconTheme(
-      data: new IconThemeData(color: Colors.blue),
+      data: new IconThemeData(color: Theme.of(context).colorScheme.primary),
       child: new Container(
-        margin: const EdgeInsets.symmetric(horizontal: 8.0),
+        margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
         child: new Row(
           children: <Widget>[
             new Flexible(
               child: new TextField(
-                  decoration: new InputDecoration.collapsed(
-                      hintText: "Start typing ..."),
+                  decoration: new InputDecoration(
+                    hintText: "Start typing ...",
+                    filled: true,
+                    fillColor: Theme.of(context).cardColor,
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(24),
+                      borderSide: BorderSide.none,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(24),
+                      borderSide: BorderSide(
+                          color:
+                              Theme.of(context).dividerColor.withOpacity(0.1)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(24),
+                      borderSide: BorderSide(
+                          color: Theme.of(context).primaryColor, width: 2),
+                    ),
+                  ),
                   controller: _chatController,
                   onSubmitted: _handleSubmit,
-                  style: TextStyle(fontSize: 18.0)),
+                  style: TextStyle(fontSize: 16.0)),
             ),
             new Container(
               margin: const EdgeInsets.symmetric(horizontal: 4.0),
               child: new IconButton(
                 icon: new Icon(Icons.send),
+                color: Theme.of(context).colorScheme.primary,
                 onPressed: () => _handleSubmit(_chatController.text),
               ),
             )

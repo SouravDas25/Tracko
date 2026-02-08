@@ -143,65 +143,72 @@ class _BudgetPageState extends State<BudgetPage> {
   Widget _buildSummaryCard() {
     if (_budgetData == null) return Container();
 
-    return Container(
-      padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor.withOpacity(0.05),
-        border: Border(bottom: BorderSide(color: Colors.grey.withOpacity(0.2))),
+    return Card(
+      elevation: 0,
+      margin: EdgeInsets.all(16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side:
+            BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.1)),
       ),
-      child: Column(
-        children: [
-          Text(
-            "Available to Assign",
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[700],
+      color: Theme.of(context).cardColor,
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+        child: Column(
+          children: [
+            Text(
+              "Available to Assign",
+              style: TextStyle(
+                fontSize: 14,
+                color: Theme.of(context).hintColor,
+                fontWeight: FontWeight.w500,
+              ),
             ),
-          ),
-          SizedBox(height: 2),
-          Text(
-            CommonUtil.toCurrency(_budgetData!.availableToAssign),
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: _budgetData!.availableToAssign >= 0
-                  ? Colors.green[700]
-                  : Colors.red[700],
+            SizedBox(height: 2),
+            Text(
+              CommonUtil.toCurrency(_budgetData!.availableToAssign),
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: _budgetData!.availableToAssign >= 0
+                    ? Colors.green[700]
+                    : Colors.red[700],
+              ),
             ),
-          ),
-          SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildSummaryItem(
-                "Total Income",
-                _budgetData!.totalIncome,
-                Colors.green,
-              ),
-              _buildSummaryItem(
-                "Rollover",
-                _budgetData!.rolloverAmount,
-                Colors.orange,
-              ),
-            ],
-          ),
-          SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildSummaryItem(
-                "Total Budgeted",
-                _budgetData!.totalBudget,
-                Colors.blue,
-              ),
-              _buildSummaryItem(
-                "Total Spent",
-                _budgetData!.totalSpent,
-                Colors.red,
-              ),
-            ],
-          ),
-        ],
+            SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildSummaryItem(
+                  "Total Income",
+                  _budgetData!.totalIncome,
+                  Colors.green,
+                ),
+                _buildSummaryItem(
+                  "Rollover",
+                  _budgetData!.rolloverAmount,
+                  Colors.orange,
+                ),
+              ],
+            ),
+            SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildSummaryItem(
+                  "Total Budgeted",
+                  _budgetData!.totalBudget,
+                  Colors.blue,
+                ),
+                _buildSummaryItem(
+                  "Total Spent",
+                  _budgetData!.totalSpent,
+                  Colors.red,
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
