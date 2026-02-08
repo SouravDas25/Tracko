@@ -1,6 +1,27 @@
 # Tracko Startup Scripts
 
-This folder contains scripts to easily start both the backend and Flutter UI together.
+This repo includes multiple ways to start/stop the backend and Flutter UI.
+
+## Recommended (Taskfile)
+
+If you have `task` installed, this is the simplest way to run Tracko.
+
+### Common commands
+
+```powershell
+task start
+task stop
+task clean
+task test
+task install
+```
+
+### Notes
+
+- `task start` runs the backend + Flutter UI.
+- `task backend` starts the Spring Boot backend only.
+- `task flutter` starts the Flutter UI only.
+- `task stop` stops the backend (port `8080`) and any running Flutter process.
 
 ## Available Scripts
 
@@ -94,6 +115,7 @@ Before running these scripts for the first time:
 
 ## Need Help?
 
-Check the migration documentation:
-- `BACKEND_MIGRATION_COMPLETE.md` - Backend API details
-- `UI_MIGRATION_COMPLETE.md` - Flutter UI changes
+Check the docs:
+
+- `backend/docs/MIGRATION_COMPLETE.md`
+- `backend/docs/MIGRATION_SUMMARY.md`

@@ -15,6 +15,7 @@ class ApiConfig {
   static const String authLoginBasic = '/api/login';
   static const String authSignUp = '/api/signUp';
   static const String accounts = '/api/accounts';
+  static const String accountBalances = '/api/accounts/balances';
   static const String categories = '/api/categories';
   static const String transactions = '/api/transactions';
   static const String transfers = '/api/transfers';

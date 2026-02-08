@@ -1,0 +1,93 @@
+version: '3'
+
+vars:
+  BACKEND_DIR: backend
+  FRONTEND_DIR: frontend
+
+tasks:
+  # Show common commands
+  help:
+    desc: Show available tasks
+    cmds:
+      - echo "Tracko - Expense Manager"
+      - echo ""
+      - echo "Available tasks:"
+      - echo "  task start     # Start Flutter UI and Java Backend"
+      - echo "  task flutter   # Start Flutter UI only"
+      - echo "  task backend   # Start Java Backend only (detached)"
+      - echo "  task stop      # Stop all services"
+      - echo "  task clean     # Clean build artifacts"
+      - echo "  task test      # Run tests"
+      - echo "  task install   # Install dependencies"
+
+  # Start both services (backend detached, flutter in foreground)
+  start:
+    desc: Start Flutter UI and Java Backend
+    deps: [backend, flutter]
+
+  # Start Flutter UI only
+  flutter:
+    desc: Start Flutter UI (Chrome)
+    dir: "{{.FRONTEND_DIR}}"
+    cmds:
+      - cmd: flutter run -d chrome
+
+  # Start Java Backend only (detached to avoid interactive prompts on Windows)
+  backend:
+    desc: Start Java Backend (Spring Boot, dev profile)
+    dir: "{{.BACKEND_DIR}}"
+    cmds:
+      - cmd: mvn -DskipTests spring-boot:run -P dev
+    silent: true
+
+  # Stop all services
+  stop:
+    desc: Stop all services
+    cmds:
+      - cmd: >-
+          powershell -NoLogo -NoProfile -Command '& {
+            $ErrorActionPreference = "SilentlyContinue"
+            try {
+              $processId = (Get-NetTCPConnection -LocalPort 8080 -ErrorAction SilentlyContinue |
+                Select-Object -ExpandProperty OwningProcess -Unique)
+              if ($processId) { Stop-Process -Id $processId -Force -ErrorAction SilentlyContinue }
+              Get-Process -Name "flutter" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+            } catch {
+            }
+            exit 0
+          }'
+        platforms: [windows]
+      - cmd: bash -lc "pkill -f 'flutter run' || true; pkill -f 'mvn spring-boot:run' || true"
+        platforms: [linux, darwin]
+
+  # Clean build artifacts
+  clean:
+    desc: Clean build artifacts
+    cmds:
+      - cmd: flutter clean
+        dir: "{{.FRONTEND_DIR}}"
+      - cmd: mvn -B clean
+        dir: "{{.BACKEND_DIR}}"
+      
+
+  # Run tests
+  test:
+    desc: Run tests (Flutter and Backend)
+    cmds:
+      - cmd: flutter test
+        dir: "{{.FRONTEND_DIR}}"
+      
+      - cmd: mvn -B test
+        dir: "{{.BACKEND_DIR}}"
+      
+
+  # Install dependencies
+  install:
+    desc: Install dependencies (Flutter and Backend)
+    cmds:
+      - cmd: flutter pub get
+        dir: "{{.FRONTEND_DIR}}"
+      
+      - cmd: mvn -B install -P dev
+        dir: "{{.BACKEND_DIR}}"
+      

@@ -1,10 +1,12 @@
 import 'package:tracko/Utils/WidgetUtil.dart';
+import 'package:tracko/Utils/CommonUtil.dart';
 import 'package:tracko/component/AccountDialog.dart';
 import 'package:tracko/component/AsynLoadState.dart';
 import 'package:tracko/component/FLushDialog.dart';
 import 'package:tracko/component/screen.dart';
 import 'package:tracko/controllers/AccountController.dart';
 import 'package:tracko/models/account.dart';
+import 'package:tracko/repositories/account_repository.dart';
 import 'package:tracko/pages/transaction_list_page/transaction_list_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -18,6 +20,7 @@ class AccountPage extends StatefulWidget {
 
 class AccountPageState extends AsyncLoadState<AccountPage> {
   List<Account> accounts = [];
+  Map<int, double> balances = {};
 
   @override
   asyncLoad() async {
@@ -28,6 +31,11 @@ class AccountPageState extends AsyncLoadState<AccountPage> {
 
   initData() async {
     accounts = await AccountController.getAllAccounts();
+    try {
+      balances = await AccountRepository().getAccountBalances();
+    } catch (_) {
+      balances = {};
+    }
   }
 
   void deleteDialog(int id) async {
@@ -84,25 +92,38 @@ class AccountPageState extends AsyncLoadState<AccountPage> {
                     ),
                   );
                 },
-                trailing: IconButton(
-                  icon: const Icon(
-                    Icons.edit,
-                    size: 30,
-                    color: Colors.blueAccent,
-                  ),
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (_) => AccountDialog(
-                        account: accounts[i],
-                        callback: () {
-                          setState(() {
-                            initData();
-                          });
-                        },
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      CommonUtil.toCurrency(
+                        balances[accounts[i].id ?? 0] ?? 0.0,
+                        currencyCode: accounts[i].currency,
                       ),
-                    );
-                  },
+                      style: WidgetUtil.defaultTextStyle(),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.edit,
+                        size: 30,
+                        color: Colors.blueAccent,
+                      ),
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (_) => AccountDialog(
+                            account: accounts[i],
+                            callback: () {
+                              setState(() {
+                                initData();
+                              });
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                  ],
                 ),
               ),
             ),

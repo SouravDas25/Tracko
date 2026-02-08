@@ -11,6 +11,19 @@ class AccountRepository {
     return res.map((e) => _toLegacyAccount(e as Map<String, dynamic>)).toList();
   }
 
+  Future<Map<int, double>> getAccountBalances() async {
+    final res = await _api.get<Map<String, dynamic>>(ApiConfig.accountBalances);
+    final out = <int, double>{};
+    res.forEach((key, value) {
+      final id = int.tryParse(key);
+      if (id == null) return;
+      if (value is num) {
+        out[id] = value.toDouble();
+      }
+    });
+    return out;
+  }
+
   Future<void> deleteAccount(int id) async {
     try {
       await _api.delete<void>('${ApiConfig.accounts}/$id');

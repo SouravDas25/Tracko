@@ -1,7 +1,10 @@
 package com.trako.controllers;
 
 import com.trako.entities.Account;
+import com.trako.entities.Transaction;
 import com.trako.models.request.AccountSaveRequest;
+import com.trako.repositories.CategoryRepository;
+import com.trako.repositories.TransactionRepository;
 import com.trako.services.AccountService;
 import com.trako.services.UserService;
 import com.trako.util.Response;
@@ -11,7 +14,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static com.trako.util.Response.notFound;
 
@@ -25,10 +30,56 @@ public class AccountController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private TransactionRepository transactionRepository;
+
+    @Autowired
+    private CategoryRepository categoryRepository;
+
     @GetMapping
     public ResponseEntity<?> getAll() {
         List<Account> accounts = accountService.findAll();
         return Response.ok(accounts);
+    }
+
+    @GetMapping("/balances")
+    public ResponseEntity<?> getMyAccountBalances() {
+        try {
+            String currentUserId = userService.loggedInUser().getId();
+
+            Long transferCategoryId = null;
+            var transferCats = categoryRepository.findByUserIdAndName(currentUserId, "TRANSFER");
+            if (transferCats != null && !transferCats.isEmpty()) {
+                transferCategoryId = transferCats.get(0).getId();
+            }
+
+            List<Transaction> transactions = transactionRepository.findByUserId(currentUserId);
+            Map<Long, Double> balances = new HashMap<>();
+
+            for (Transaction t : transactions) {
+                if (t.getAccountId() == null || t.getAmount() == null || t.getTransactionType() == null) {
+                    continue;
+                }
+
+                boolean isTransfer = transferCategoryId != null
+                        && t.getCategoryId() != null
+                        && t.getCategoryId().equals(transferCategoryId);
+                boolean include = (t.getIsCountable() != null && t.getIsCountable() == 1) || isTransfer;
+                if (!include) continue;
+
+                double current = balances.getOrDefault(t.getAccountId(), 0.0);
+                if (t.getTransactionType() == 2) { // CREDIT
+                    current += t.getAmount();
+                } else if (t.getTransactionType() == 1) { // DEBIT
+                    current -= t.getAmount();
+                }
+                balances.put(t.getAccountId(), current);
+            }
+
+            return Response.ok(balances);
+        } catch (UserNotLoggedInException e) {
+            return Response.unauthorized();
+        }
     }
 
     @GetMapping("/{id}")
