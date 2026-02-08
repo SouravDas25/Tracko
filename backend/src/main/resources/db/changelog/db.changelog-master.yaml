@@ -10,4 +10,6 @@ databaseChangeLog:
   - include:
       file: db/changelog/005-add-contactid-to-splits.yaml
   - include:
+      file: db/changelog/009-add-category-type.yaml
+  - include:
       file: db/changelog/008-drop-chat-tables.yaml

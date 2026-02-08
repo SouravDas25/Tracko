@@ -7,12 +7,13 @@ class ApiConfig {
   // Production
   static const String prodBaseUrl = 'https://your-production-url.com';
 
-  // Toggle as needed
-  static const bool isProduction = false;
+  // Toggle via build-time flag: --dart-define=IS_PRODUCTION=true
+  static const bool isProduction =
+      bool.fromEnvironment('IS_PRODUCTION', defaultValue: false);
 
   static String get baseUrl {
     if (kIsWeb) {
-      return '';
+      return isProduction ? '' : devBaseUrl;
     }
     return isProduction ? prodBaseUrl : devBaseUrl;
   }

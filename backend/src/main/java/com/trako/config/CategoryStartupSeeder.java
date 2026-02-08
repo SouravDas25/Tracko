@@ -1,6 +1,7 @@
 package com.trako.config;
 
 import com.trako.entities.Category;
+import com.trako.entities.CategoryType;
 import com.trako.entities.User;
 import com.trako.repositories.CategoryRepository;
 import com.trako.repositories.UsersRepository;
@@ -38,6 +39,7 @@ public class CategoryStartupSeeder implements ApplicationRunner {
             "TRANSFER"
     );
 
+
     @Autowired
     private UsersRepository usersRepository;
 
@@ -73,6 +75,11 @@ public class CategoryStartupSeeder implements ApplicationRunner {
                 Category c = new Category();
                 c.setName(norm);
                 c.setUserId(user.getId());
+                if ("INCOME".equalsIgnoreCase(norm) || "TRANSFER".equalsIgnoreCase(norm)) {
+                    c.setCategoryType(CategoryType.INCOME);
+                } else {
+                    c.setCategoryType(CategoryType.EXPENSE);
+                }
                 categoryRepository.save(c);
                 created++;
             }

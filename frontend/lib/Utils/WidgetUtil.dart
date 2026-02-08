@@ -6,18 +6,36 @@ import 'package:fluttertoast/fluttertoast.dart';
 
 class WidgetUtil {
   static Text transformTransaction2TextWidget(Transaction transaction) {
+    final oc = transaction.originalCurrency;
+    final oa = transaction.originalAmount;
+    if (oc != null && oc.isNotEmpty && oa != null) {
+      final sign = CommonUtil.toSign(transaction.transactionType);
+      final originalText = CommonUtil.toCurrency(oa, currencyCode: oc);
+      final baseText = CommonUtil.toCurrency(transaction.amount);
+      return Text(
+        '$sign$originalText / $baseText',
+        style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 20,
+            color: transaction.amount == 0
+                ? null
+                : CommonUtil.toTypeColor(transaction.transactionType)),
+      );
+    }
     return transformAmount2TextWidget(
-        transaction.transactionType, transaction.amount);
+      transaction.transactionType,
+      transaction.amount,
+    );
   }
 
   static Text transformAmount2TextWidget(int transactionType, double amount,
-      {bool addSign = true}) {
+      {bool addSign = true, String? currencyCode}) {
     String text = "";
     if (addSign) {
       text += CommonUtil.toSign(transactionType);
     }
     return Text(
-      text + CommonUtil.toCurrency(amount),
+      text + CommonUtil.toCurrency(amount, currencyCode: currencyCode),
       style: TextStyle(
           fontWeight: FontWeight.w600,
           fontSize: 20,

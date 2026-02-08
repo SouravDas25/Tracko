@@ -77,9 +77,15 @@ class TransactionTile extends StatelessWidget {
               side: BorderSide(
                   color: Theme.of(context).dividerColor.withOpacity(0.1))),
           child: ListTile(
-            onTap: () {
-              Navigator.of(context).push(MaterialPageRoute(
+            onTap: () async {
+              await Navigator.of(context).push(MaterialPageRoute(
                   builder: (context) => AddItemPage(transaction: transaction)));
+              try {
+                // Refresh parent list to show updated amounts/data
+                (parent as dynamic).refresh();
+              } catch (e) {
+                print("Parent refresh failed: $e");
+              }
             },
             leading: WidgetUtil.textAvatar(transaction.name),
             title: Text(

@@ -56,10 +56,13 @@ class TransactionController {
       saved = await txRepo.update(transaction.id!, transaction);
     }
     transaction.id = saved.id;
+    transaction.amount = saved.amount;
+    transaction.exchangeRate = saved.exchangeRate;
+    transaction.originalAmount = saved.originalAmount;
+    transaction.originalCurrency = saved.originalCurrency;
 
-    // Handle splits if contacts exist
-    if (transaction.contacts != null && transaction.contacts.length > 0) {
-      // Delete existing splits for this transaction
+    // Handle splits: Always clean up existing splits to ensure sync with UI
+    if (transaction.id != null && transaction.id! > 0) {
       final existingSplits =
           await splitRepo.getByTransactionId(transaction.id!);
       for (var split in existingSplits) {
@@ -67,12 +70,15 @@ class TransactionController {
           await splitRepo.delete(split.id!);
         }
       }
+    }
 
-      // Create new splits
+    // Create new splits if contacts exist
+    if (transaction.contacts != null && transaction.contacts.length > 0) {
       isUserCountable =
           await TransactionController.saveSplitsInTransaction(transaction);
     }
 
+    transaction.amount = saved.amount;
     // Update transaction with countable status
     transaction.isCountable = isUserCountable ? 1 : 0;
     saved = await txRepo.update(transaction.id!, transaction);
@@ -87,6 +93,7 @@ class TransactionController {
     final participants = transaction.contacts
         .where((c) => c.contactId != null)
         .toList(growable: false);
+
     if (participants.isEmpty) {
       return true;
     }
@@ -113,6 +120,13 @@ class TransactionController {
     final splitRepo = SplitRepository();
     final contactRepo = ContactRepository();
     final txId = transaction.id ?? 0;
+
+    if (txId == 0) {
+      transaction.splits = [];
+      transaction.contacts = {SessionService.currentUserContact()};
+      return transaction.contacts;
+    }
+
     final splits = await splitRepo.getByTransactionId(txId);
     transaction.splits = splits;
 

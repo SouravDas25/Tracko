@@ -134,8 +134,15 @@ class TransactionRepository {
       'originalCurrency': t.originalCurrency,
       'originalAmount': t.originalAmount,
     };
-    // Only include amount if explicitly set (base-currency transactions)
-    if (t.amount != null) {
+    final hasOriginalCurrency =
+        (t.originalCurrency != null && t.originalCurrency!.isNotEmpty);
+    final hasOriginalAmount = (t.originalAmount != null);
+
+    // Only include amount for base-currency transactions.
+    // IMPORTANT: Transaction.amount is non-nullable in Flutter (defaults to 0.0),
+    // so checking for null is not enough. If original currency info is present,
+    // omit amount to let backend compute base amount and persist it.
+    if (!(hasOriginalCurrency && hasOriginalAmount)) {
       payload['amount'] = t.amount;
     }
     // Only include exchangeRate if explicitly provided; otherwise backend will fetch

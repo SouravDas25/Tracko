@@ -13,10 +13,12 @@ import 'package:tracko/controllers/UserController.dart';
 import 'package:tracko/dtos/TrackoContact.dart';
 import 'package:tracko/models/account.dart';
 import 'package:tracko/models/category.dart';
+import 'package:tracko/models/contact.dart';
 import 'package:tracko/models/transaction.dart';
 import 'package:tracko/models/user.dart';
 import 'package:tracko/models/user_currency.dart';
 import 'package:tracko/pages/smart_add_item/SplitSectionInAddTransaction.dart';
+import 'package:tracko/repositories/contact_repository.dart';
 import 'package:tracko/services/SessionService.dart';
 import 'package:datetime_picker_formfield/datetime_picker_formfield.dart';
 import 'package:flutter/material.dart';
@@ -69,6 +71,37 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
   Set<TrakoContact> splitList = Set();
   List<Category> categories = [];
   List<Account> accounts = [];
+  List<Contact> myContacts = [];
+  final _contactRepo = ContactRepository();
+
+  List<Category> _filteredCategoriesForCurrentType() {
+    if (transactionType == TransactionType.CREDIT) {
+      return categories
+          .where((c) => (c.categoryType).toUpperCase() == 'INCOME')
+          .toList();
+    }
+    if (transactionType == TransactionType.DEBIT) {
+      return categories
+          .where((c) => (c.categoryType).toUpperCase() == 'EXPENSE')
+          .toList();
+    }
+    return categories;
+  }
+
+  void _ensureValidCategorySelection() {
+    final filtered = _filteredCategoriesForCurrentType();
+    final ids = filtered.map((c) => c.id).whereType<int>().toSet();
+    if (categoryId != 0 && ids.contains(categoryId)) return;
+    categoryId = filtered.isNotEmpty ? (filtered.first.id ?? 0) : 0;
+  }
+
+  String _normalizePhone(String? phone) {
+    if (phone == null) return '';
+    final digitsOnly = phone.replaceAll(RegExp(r'[^0-9]'), '');
+    if (digitsOnly.length <= 10) return digitsOnly;
+    // Compare by last 10 digits to handle country codes
+    return digitsOnly.substring(digitsOnly.length - 10);
+  }
 
   _SmartAddItemPage(Transaction transaction) {
     this.date = transaction.date;
@@ -102,7 +135,6 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
     splitList.forEach((contact) =>
         splitAmountTextEditionControllers.add(TextEditingController()));
 //    print(splitAmountTextEditionControllers);
-    name.addListener(onNameChange);
     amount.addListener(updateCalculatedAmount);
     exchangeRateController.addListener(updateCalculatedAmount);
   }
@@ -151,27 +183,36 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
       print("Error initializing data: $e");
     }
 
-    categories = await CategoryController.getAllCategories();
-    accounts = await AccountController.getAllAccounts();
-    if (accountId == 0) {
-      accountId = accounts.isNotEmpty ? (accounts[0].id ?? 0) : 0;
-    }
-    if (transferFromAccountId == 0) {
-      transferFromAccountId = accounts.isNotEmpty ? (accounts[0].id ?? 0) : 0;
-    }
-    if (transferToAccountId == 0) {
-      transferToAccountId = accounts.isNotEmpty ? (accounts[0].id ?? 0) : 0;
+    try {
+      categories = await CategoryController.getAllCategories();
+      accounts = await AccountController.getAllAccounts();
+      myContacts = await _contactRepo.listMine();
+
+      _ensureValidCategorySelection();
+
+      if (accountId == 0) {
+        accountId = accounts.isNotEmpty ? (accounts[0].id ?? 0) : 0;
+      }
+      if (transferFromAccountId == 0) {
+        transferFromAccountId = accounts.isNotEmpty ? (accounts[0].id ?? 0) : 0;
+      }
+      if (transferToAccountId == 0) {
+        transferToAccountId = accounts.isNotEmpty ? (accounts[0].id ?? 0) : 0;
+      }
+
+      final loadedContacts =
+          await TransactionController.loadSplits(widget.transaction);
+      splitList = Set<TrakoContact>.from(loadedContacts);
+      if (splitList.length <= 0 && transactionType == TransactionType.DEBIT) {
+        frequentSplitters = await UserController.getFrequentSplitters();
+        TrakoContact userContact = SessionService.currentUserContact();
+        splitList.add(userContact);
+        splitAmountTextEditionControllers.add(TextEditingController());
+      }
+    } catch (e) {
+      print("Error loading external data: $e");
     }
 
-    splitList = await TransactionController.loadSplits(widget.transaction);
-    if (splitList.length <= 0 && transactionType == TransactionType.DEBIT) {
-      frequentSplitters = await UserController.getFrequentSplitters();
-      TrakoContact userContact = SessionService.currentUserContact();
-      splitList.add(userContact);
-      splitAmountTextEditionControllers.add(TextEditingController());
-    }
-
-    print(frequentSplitters);
     updateCalculatedAmount();
     setState(() {});
   }
@@ -238,10 +279,13 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
       }
       transaction.comments = comments.text;
       transaction.transactionType = transactionType;
-      if (splitList.length > 0) {
-        transaction.contacts.clear();
+
+      // Sync contacts from UI selection
+      transaction.contacts.clear();
+      if (splitList.isNotEmpty) {
         transaction.contacts.addAll(splitList);
       }
+
       await widget.saveCallback(transaction);
       isSuccessfulSave = true;
     } catch (exception) {
@@ -268,9 +312,33 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
     }
   }
 
-  void addSplit(User user) {
+  Future<void> addSplit(User user) async {
     frequentSplitters.remove(user);
     TrakoContact contact = UserController.user2Contact(user);
+
+    if (myContacts.isEmpty) {
+      try {
+        myContacts = await _contactRepo.listMine();
+      } catch (_) {
+        // ignore
+      }
+    }
+
+    // Attempt to match with existing contact to get ID
+    try {
+      final userPhone = _normalizePhone(user.phoneNo);
+      if (userPhone.isNotEmpty) {
+        final match = myContacts.firstWhere(
+            (c) => _normalizePhone(c.phoneNo) == userPhone,
+            orElse: () => Contact());
+        if (match.id != null) {
+          contact.contactId = match.id;
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+
     syncSplit(contact);
     setState(() {});
   }
@@ -281,11 +349,9 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
     }
     setState(() {
       transactionType = val ?? 0;
-    });
-  }
 
-  void onNameChange() async {
-    await CategoryController.findById(categoryId);
+      _ensureValidCategorySelection();
+    });
   }
 
   void callSplitPage() async {
@@ -489,7 +555,11 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
               textBaseline: TextBaseline.alphabetic,
               children: [
                 DropdownButton<String>(
-                  value: selectedCurrency,
+                  value: availableCurrencies.contains(selectedCurrency)
+                      ? selectedCurrency
+                      : (availableCurrencies.isNotEmpty
+                          ? availableCurrencies.first
+                          : null),
                   underline: SizedBox(),
                   icon: Icon(Icons.arrow_drop_down, size: 20, color: typeColor),
                   style: TextStyle(
@@ -503,8 +573,9 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
                     );
                   }).toList(),
                   onChanged: (newValue) {
+                    if (newValue == null) return;
                     setState(() {
-                      selectedCurrency = newValue!;
+                      selectedCurrency = newValue;
                       if (selectedCurrency == baseCurrency) {
                         exchangeRateController.text = '1.0';
                       } else if (currencyRates.containsKey(selectedCurrency)) {
@@ -595,9 +666,13 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
   }
 
   Widget _buildAccountDropdown(
-      String label, int value, Function(int?) onChanged) {
+      String label, int? value, Function(int?) onChanged) {
+    final ids = accounts.map((a) => a.id).whereType<int>().toSet();
+    final int? safeValue = (value != null && ids.contains(value))
+        ? value
+        : (ids.isNotEmpty ? ids.first : null);
     return DropdownButtonFormField<int>(
-      value: value,
+      value: safeValue,
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(Icons.account_balance_wallet_outlined),
@@ -674,82 +749,100 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
 
         // Category (if not transfer)
         if (transactionType != TransactionType.TRANSFER) ...[
-          Row(
-            children: [
-              Expanded(
-                child: DropdownButtonFormField<int>(
-                  value: categoryId,
-                  decoration: InputDecoration(
-                    labelText: 'Category',
-                    prefixIcon: Icon(Icons.category_outlined),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide.none,
+          Builder(
+            builder: (context) {
+              final filteredCategories = _filteredCategoriesForCurrentType();
+              return Row(
+                children: [
+                  Expanded(
+                    child: DropdownButtonFormField<int>(
+                      value: filteredCategories
+                              .map((c) => c.id)
+                              .whereType<int>()
+                              .contains(categoryId)
+                          ? categoryId
+                          : (filteredCategories.isNotEmpty
+                              ? filteredCategories.first.id
+                              : null),
+                      decoration: InputDecoration(
+                        labelText: 'Category',
+                        prefixIcon: Icon(Icons.category_outlined),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide.none,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(
+                              color: Theme.of(context)
+                                  .dividerColor
+                                  .withOpacity(0.1)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(
+                              color: Theme.of(context).primaryColor, width: 2),
+                        ),
+                        filled: true,
+                        fillColor: Theme.of(context).cardColor,
+                        contentPadding:
+                            EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                      ),
+                      items: filteredCategories.map((Category value) {
+                        return DropdownMenuItem<int>(
+                          value: value.id,
+                          child: Text(
+                            value.name,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (int? id) {
+                        setState(() {
+                          this.categoryId = id ?? 0;
+                        });
+                      },
                     ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(
+                  ),
+                  SizedBox(width: 12),
+                  Ink(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).cardColor,
+                      shape: BoxShape.circle,
+                      border: Border.all(
                           color:
                               Theme.of(context).dividerColor.withOpacity(0.1)),
                     ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(
-                          color: Theme.of(context).primaryColor, width: 2),
+                    child: InkWell(
+                      customBorder: CircleBorder(),
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (_) => CategoryDialog(
+                            callback: () {
+                              setState(() {
+                                initData();
+                              });
+                            },
+                            categoryType:
+                                transactionType == TransactionType.CREDIT
+                                    ? 'INCOME'
+                                    : 'EXPENSE',
+                          ),
+                        );
+                      },
+                      child: Container(
+                        height: 48,
+                        width: 48,
+                        alignment: Alignment.center,
+                        child: Icon(Icons.add,
+                            color: Theme.of(context).colorScheme.onSurface),
+                      ),
                     ),
-                    filled: true,
-                    fillColor: Theme.of(context).cardColor,
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                  ),
-                  items: categories.map((Category value) {
-                    return DropdownMenuItem<int>(
-                      value: value.id,
-                      child: Text(
-                        value.name,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    );
-                  }).toList(),
-                  onChanged: (int? id) {
-                    setState(() {
-                      this.categoryId = id ?? 0;
-                    });
-                  },
-                ),
-              ),
-              SizedBox(width: 12),
-              Ink(
-                decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                      color: Theme.of(context).dividerColor.withOpacity(0.1)),
-                ),
-                child: InkWell(
-                  customBorder: CircleBorder(),
-                  onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (_) => CategoryDialog(
-                        callback: () {
-                          setState(() {
-                            initData();
-                          });
-                        },
-                      ),
-                    );
-                  },
-                  child: Container(
-                    height: 48,
-                    width: 48,
-                    alignment: Alignment.center,
-                    child: Icon(Icons.add,
-                        color: Theme.of(context).colorScheme.onSurface),
-                  ),
-                ),
-              )
-            ],
+                  )
+                ],
+              );
+            },
           ),
           SizedBox(height: 16),
         ],

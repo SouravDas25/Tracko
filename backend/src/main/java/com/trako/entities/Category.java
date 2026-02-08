@@ -27,6 +27,11 @@ public class Category {
     @Column(name = "parent_category_id")
     private Long parentCategoryId;
 
+    @NotNull
+    @Column(name = "category_type", length = 16)
+    @Enumerated(EnumType.STRING)
+    private CategoryType categoryType = CategoryType.EXPENSE;
+
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", insertable = false, updatable = false)
@@ -55,6 +60,14 @@ public class Category {
 
     public String getUserId() {
         return userId;
+    }
+
+    public CategoryType getCategoryType() {
+        return categoryType;
+    }
+
+    public void setCategoryType(CategoryType categoryType) {
+        this.categoryType = categoryType;
     }
 
 

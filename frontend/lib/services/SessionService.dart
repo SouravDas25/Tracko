@@ -5,6 +5,8 @@ import 'package:tracko/dtos/GlobalAccountResponse.dart';
 import 'package:tracko/dtos/TrackoContact.dart';
 import 'package:tracko/models/user.dart';
 import 'package:tracko/repositories/user_repository.dart';
+import 'package:tracko/services/api_client.dart';
+import 'package:tracko/services/auth_service.dart';
 
 class SessionService {
   static User? _loggedInUser;
@@ -34,6 +36,14 @@ class SessionService {
   }
 
   static logout() async {
+    try {
+      await AuthService().logout();
+    } catch (_) {
+      // ignore
+    }
+    // Backward-compat: older parts of the app store auth token here.
+    ServerUtil.authJwtToken = null;
+    ApiClient.resetAuthSuppression();
     clearCache();
   }
 

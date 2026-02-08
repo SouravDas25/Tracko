@@ -1,0 +1,24 @@
+databaseChangeLog:
+  - changeSet:
+      id: 009-categories-add-category-type
+      author: cascade
+      preConditions:
+        onFail: MARK_RAN
+        onError: MARK_RAN
+        and:
+          - tableExists:
+              tableName: categories
+          - not:
+              columnExists:
+                tableName: categories
+                columnName: category_type
+      changes:
+        - addColumn:
+            tableName: categories
+            columns:
+              - column:
+                  name: category_type
+                  type: varchar(16)
+                  defaultValue: EXPENSE
+                  constraints:
+                    nullable: false

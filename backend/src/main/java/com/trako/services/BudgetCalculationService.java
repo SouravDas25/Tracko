@@ -17,6 +17,8 @@ import java.util.stream.Collectors;
 @Service
 public class BudgetCalculationService {
 
+    private static final CategoryType CATEGORY_TYPE_EXPENSE = CategoryType.EXPENSE;
+
     @Autowired
     private BudgetMonthRepository budgetMonthRepository;
 
@@ -31,6 +33,12 @@ public class BudgetCalculationService {
 
     @Autowired
     private TransactionService transactionService;
+
+    private boolean isBudgetableExpenseCategory(Category category) {
+        if (category == null) return false;
+        if (!CATEGORY_TYPE_EXPENSE.equals(category.getCategoryType())) return false;
+        return true;
+    }
 
     @Transactional
     public BudgetResponseDTO getBudgetDetails(String userId, Integer month, Integer year,
@@ -53,6 +61,9 @@ public class BudgetCalculationService {
         // 4. Get Category Allocations
         List<BudgetCategoryAllocation> allocations = budgetCategoryAllocationRepository
                 .findByUserIdAndBudgetMonthId(userId, budgetMonth.getId());
+
+        // Ensure budget month totals reflect EXPENSE-only allocations
+        updateMonthTotalBudget(budgetMonth);
         
         // Map to DTOs and calculate actuals if needed
         List<BudgetCategoryDTO> categoryDTOs = new ArrayList<>();
@@ -63,13 +74,18 @@ public class BudgetCalculationService {
         List<Category> categoriesToProcess;
         if (categoryId != null) {
             Category cat = categoryRepository.findById(categoryId).orElse(null);
-            if (cat != null && cat.getUserId().equals(userId)) {
+            if (cat != null
+                    && cat.getUserId().equals(userId)
+                    && isBudgetableExpenseCategory(cat)) {
                 categoriesToProcess = Collections.singletonList(cat);
             } else {
                 categoriesToProcess = Collections.emptyList();
             }
         } else {
-            categoriesToProcess = categoryRepository.findByUserId(userId);
+            categoriesToProcess = categoryRepository.findByUserIdAndCategoryType(userId, CATEGORY_TYPE_EXPENSE)
+                    .stream()
+                    .filter(this::isBudgetableExpenseCategory)
+                    .collect(Collectors.toList());
         }
 
         Map<Long, BudgetCategoryAllocation> allocationMap = allocations.stream()
@@ -176,6 +192,10 @@ public class BudgetCalculationService {
 
         if (!category.getUserId().equals(userId)) {
             throw new RuntimeException("Unauthorized access to category");
+        }
+
+        if (!isBudgetableExpenseCategory(category)) {
+            throw new IllegalArgumentException("Budgeting is only supported for EXPENSE categories");
         }
 
         BudgetCategoryAllocation allocation = budgetCategoryAllocationRepository
@@ -292,7 +312,9 @@ public class BudgetCalculationService {
             
             for (BudgetCategoryAllocation alloc : prevAllocations) {
                 Category cat = categoryRepository.findById(alloc.getCategoryId()).orElse(null);
-                if (cat != null && Boolean.TRUE.equals(cat.getIsRollOverEnabled())) {
+                if (cat != null
+                        && isBudgetableExpenseCategory(cat)
+                        && Boolean.TRUE.equals(cat.getIsRollOverEnabled())) {
                     if (alloc.getRemainingBalance() > 0) {
                         categoryRollovers += alloc.getRemainingBalance();
                     }
@@ -317,13 +339,19 @@ public class BudgetCalculationService {
                     return budgetMonthRepository.save(newMonth);
                 });
     }
-    
+
     private void updateMonthTotalBudget(BudgetMonth budgetMonth) {
         List<BudgetCategoryAllocation> allocations = budgetCategoryAllocationRepository
                 .findByBudgetMonthId(budgetMonth.getId());
-        double total = allocations.stream()
-                .mapToDouble(BudgetCategoryAllocation::getAllocatedAmount)
-                .sum();
+
+        double total = 0.0;
+        for (BudgetCategoryAllocation alloc : allocations) {
+            Category cat = categoryRepository.findById(alloc.getCategoryId()).orElse(null);
+            if (cat == null) continue;
+            if (!isBudgetableExpenseCategory(cat)) continue;
+            total += alloc.getAllocatedAmount() != null ? alloc.getAllocatedAmount() : 0.0;
+        }
+
         budgetMonth.setTotalBudget(total);
         budgetMonthRepository.save(budgetMonth);
     }

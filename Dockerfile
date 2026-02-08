@@ -23,7 +23,7 @@ RUN git config --global --add safe.directory /sdks/flutter
 COPY frontend/pubspec.yaml frontend/pubspec.lock* ./
 RUN flutter pub get
 COPY frontend/ ./
-RUN flutter build web --release --pwa-strategy=none
+RUN flutter build web --release --pwa-strategy=none --dart-define=IS_PRODUCTION=true
 
 # Runtime image: nginx + Java
 FROM eclipse-temurin:17-jre

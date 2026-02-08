@@ -53,7 +53,10 @@ class _SettingsPage extends State<SettingsPage> {
 
   Future<void> _logout() async {
     await SessionService.logout();
-    Navigator.popAndPushNamed(context, "/welcome");
+    Navigator.of(context).pushNamedAndRemoveUntil(
+      "/welcome",
+      (route) => false,
+    );
   }
 
   Widget _buildSectionHeader(String title) {

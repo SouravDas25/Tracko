@@ -259,8 +259,9 @@ class _AccountsPage extends RefreshableState<TransactionListPage> {
       ),
       body: _buildContent(),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.pushNamed(context, '/add_item');
+        onPressed: () async {
+          await Navigator.pushNamed(context, '/add_item');
+          refresh();
         },
         child: const Icon(Icons.add),
       ),

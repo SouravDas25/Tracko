@@ -25,9 +25,11 @@ class TrakoContact {
       identical(this, other) ||
       other is TrakoContact &&
           runtimeType == other.runtimeType &&
-          ((contactId != null && other.contactId != null)
+          (contactId != null && other.contactId != null
               ? contactId == other.contactId
-              : phoneNo == other.phoneNo);
+              : (contactId == other.contactId &&
+                  phoneNo.isNotEmpty &&
+                  phoneNo == other.phoneNo));
 
   @override
   int get hashCode => (contactId ?? phoneNo).hashCode;

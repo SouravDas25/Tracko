@@ -11,13 +11,20 @@ class CategoryDialog extends StatelessWidget {
   Function callback;
   bool isEdit = false;
   Category? category;
+  final String? categoryType;
+  String _selectedCategoryType = 'EXPENSE';
 
-  CategoryDialog({required this.callback, this.category}) {
+  CategoryDialog({required this.callback, this.category, this.categoryType}) {
     if (this.category != null) {
       _controller.text = this.category?.name ?? '';
       isEdit = true;
     } else
       this.category = new Category();
+
+    _selectedCategoryType =
+        (this.categoryType != null && this.categoryType!.trim().isNotEmpty)
+            ? this.categoryType!.trim().toUpperCase()
+            : ((this.category?.categoryType ?? 'EXPENSE').trim().toUpperCase());
   }
 
   upsertCategory() async {
@@ -27,14 +34,17 @@ class CategoryDialog extends StatelessWidget {
     }
     Category category = this.category ?? Category();
     category.name = name;
+    category.categoryType = _selectedCategoryType.trim().toUpperCase();
     User user = SessionService.currentUser();
     category.userId = user.id;
     final repo = CategoryRepository();
     if (category.id == null) {
-      final created = await repo.create(category.name);
+      final created =
+          await repo.create(category.name, categoryType: category.categoryType);
       category.id = created.id;
     } else {
-      await repo.update(category.id!, category.name);
+      await repo.update(category.id!, category.name,
+          categoryType: category.categoryType);
     }
     print(category);
     callback();
@@ -44,14 +54,43 @@ class CategoryDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return new AlertDialog(
       title: new Text(isEdit ? "Update Category" : "Add Category"),
-      content: TextField(
-        controller: _controller,
-        decoration: new InputDecoration(
-          hintText: 'Name',
-        ),
-//        onChanged: (text) {
-//          name = text;
-//        },
+      content: StatefulBuilder(
+        builder: (context, setState) {
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _controller,
+                decoration: new InputDecoration(
+                  hintText: 'Name',
+                ),
+              ),
+              SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                value: _selectedCategoryType,
+                decoration: InputDecoration(
+                  labelText: 'Type',
+                ),
+                items: const [
+                  DropdownMenuItem(
+                    value: 'EXPENSE',
+                    child: Text('Expense'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'INCOME',
+                    child: Text('Income'),
+                  ),
+                ],
+                onChanged: (val) {
+                  if (val == null) return;
+                  setState(() {
+                    _selectedCategoryType = val;
+                  });
+                },
+              ),
+            ],
+          );
+        },
       ),
       actions: <Widget>[
         ElevatedButton(

@@ -71,16 +71,17 @@ public class CategoryIntegrationTest {
 
     @Test
     public void testCreateCategory() throws Exception {
-        Category category = new Category();
-        category.setName("Food");
+        var body = new java.util.HashMap<String, Object>();
+        body.put("name", "Food");
 
         mockMvc.perform(post("/api/categories")
                 .header("Authorization", bearerToken)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(category)))
+                .content(objectMapper.writeValueAsString(body)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.name").value("Food"))
-                .andExpect(jsonPath("$.result.userId").value(testUser.getId()));
+                .andExpect(jsonPath("$.result.userId").value(testUser.getId()))
+                .andExpect(jsonPath("$.result.categoryType").value("EXPENSE"));
     }
 
     @Test
@@ -141,14 +142,17 @@ public class CategoryIntegrationTest {
         category.setUserId(testUser.getId());
         Category saved = categoryRepository.save(category);
 
-        saved.setName("Updated Category");
+        var body = new java.util.HashMap<String, Object>();
+        body.put("name", "Updated Category");
+        body.put("categoryType", "INCOME");
 
         mockMvc.perform(put("/api/categories/" + saved.getId())
                 .header("Authorization", bearerToken)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(saved)))
+                .content(objectMapper.writeValueAsString(body)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result.name").value("Updated Category"));
+                .andExpect(jsonPath("$.result.name").value("Updated Category"))
+                .andExpect(jsonPath("$.result.categoryType").value("INCOME"));
     }
 
     @Test

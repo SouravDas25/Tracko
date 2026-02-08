@@ -7,6 +7,7 @@ class Category {
   int? id;
   String name = '';
   int? userId;
+  String categoryType = 'EXPENSE';
   List<Transaction> transactions = [];
 
   Category();
@@ -15,7 +16,7 @@ class Category {
 
   @override
   String toString() {
-    return 'Category{id: $id, name: $name, userId: $userId, transactions: $transactions}';
+    return 'Category{id: $id, name: $name, userId: $userId, categoryType: $categoryType, transactions: $transactions}';
   }
 
   static int defaultCategoryId() {

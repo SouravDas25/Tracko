@@ -19,20 +19,24 @@ class CategoryRepository {
     return _toLegacyCategory(res);
   }
 
-  Future<legacy.Category> create(String name, {String? userId}) async {
+  Future<legacy.Category> create(String name,
+      {String? userId, String? categoryType}) async {
     final body = {
       'name': name,
       if (userId != null) 'userId': userId,
+      if (categoryType != null) 'categoryType': categoryType,
     };
     final res =
         await _api.post<Map<String, dynamic>>(ApiConfig.categories, data: body);
     return _toLegacyCategory(res);
   }
 
-  Future<legacy.Category> update(int id, String name, {String? userId}) async {
+  Future<legacy.Category> update(int id, String name,
+      {String? userId, String? categoryType}) async {
     final body = {
       'name': name,
       if (userId != null) 'userId': userId,
+      if (categoryType != null) 'categoryType': categoryType,
     };
     final res = await _api
         .put<Map<String, dynamic>>('${ApiConfig.categories}/$id', data: body);
@@ -58,6 +62,7 @@ class CategoryRepository {
     final c = legacy.Category();
     c.id = (json['id'] as num?)?.toInt();
     c.name = (json['name'] as String?) ?? '';
+    c.categoryType = (json['categoryType'] as String?) ?? 'EXPENSE';
     // legacy model expects int? userId; backend has String -> leave null
     return c;
   }

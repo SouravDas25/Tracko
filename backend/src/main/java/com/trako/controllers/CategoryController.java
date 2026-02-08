@@ -1,6 +1,7 @@
 package com.trako.controllers;
 
 import com.trako.entities.Category;
+import com.trako.entities.CategoryType;
 import com.trako.exceptions.UserNotLoggedInException;
 import com.trako.models.request.CategorySaveRequest;
 import com.trako.services.CategoryService;
@@ -54,6 +55,8 @@ public class CategoryController {
     public ResponseEntity<?> create(@Valid @RequestBody CategorySaveRequest request) {
         Category category = new Category();
         category.setName(request.getName());
+        CategoryType type = request.getCategoryType() != null ? request.getCategoryType() : CategoryType.EXPENSE;
+        category.setCategoryType(type);
         try {
             category.setUserId(userService.loggedInUser().getId());
         } catch (UserNotLoggedInException e) {
@@ -65,9 +68,17 @@ public class CategoryController {
 
     @PutMapping("/{id}")
     public ResponseEntity<?> update(@PathVariable Long id, @Valid @RequestBody CategorySaveRequest request) {
-        Category category = new Category();
-        category.setId(id);
+        Category category = categoryService.findById(id)
+                .orElse(null);
+
+        if (category == null) {
+            return Response.notFound("Category not found");
+        }
+
         category.setName(request.getName());
+        if (request.getCategoryType() != null) {
+            category.setCategoryType(request.getCategoryType());
+        }
         try {
             category.setUserId(userService.loggedInUser().getId());
         } catch (UserNotLoggedInException e) {

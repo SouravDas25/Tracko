@@ -62,11 +62,21 @@ class _category_page extends AsyncLoadState<CategoryPage> {
                   categories[i].name,
                   style: WidgetUtil.defaultTextStyle(),
                 ),
+                subtitle: Text(
+                  (categories[i].categoryType).toUpperCase() == 'INCOME'
+                      ? 'Income'
+                      : 'Expense',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                  ),
+                ),
                 onTap: () {
                   showDialog(
                     context: context,
                     builder: (_) => CategoryDialog(
                       category: categories[i],
+                      categoryType: categories[i].categoryType,
                       callback: () {
                         setState(() {
                           initData();
