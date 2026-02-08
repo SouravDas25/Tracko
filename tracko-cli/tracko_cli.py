@@ -2,6 +2,7 @@ import argparse
 import datetime
 import json
 import os
+import ssl
 import sys
 import time
 import urllib.error
@@ -10,6 +11,9 @@ import urllib.request
 
 
 DEFAULT_BASE_URL = "http://localhost:8080"
+
+# Create unverified SSL context for self-signed certificates
+SSL_CONTEXT = ssl._create_unverified_context()
 
 # Optional: python-dateutil for robust datetime parsing
 try:
@@ -67,7 +71,9 @@ def http_request(method: str, url: str, *, token: str | None = None, json_body: 
 
     started = time.time()
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
+        # Use SSL context for HTTPS requests to handle self-signed certificates
+        context = SSL_CONTEXT if url.startswith("https://") else None
+        with urllib.request.urlopen(req, timeout=timeout, context=context) as resp:
             raw = resp.read()
             elapsed_ms = int((time.time() - started) * 1000)
             content_type = resp.headers.get("Content-Type", "")

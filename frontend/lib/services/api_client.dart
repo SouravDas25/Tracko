@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../config/api_config.dart';
 import '../Utils/ServerUtil.dart';
 import '../Utils/WidgetUtil.dart';
@@ -14,6 +16,23 @@ class ApiClient {
   final _storage = const FlutterSecureStorage();
   static bool _isAutoSigningOut = false;
   static bool _suppressAuthHeader = false;
+
+  Future<String?> _readToken() async {
+    if (kIsWeb) {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString('jwt_token');
+    }
+    return _storage.read(key: 'jwt_token');
+  }
+
+  Future<void> _writeToken(String token) async {
+    if (kIsWeb) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('jwt_token', token);
+      return;
+    }
+    await _storage.write(key: 'jwt_token', value: token);
+  }
 
   static void resetAuthSuppression() {
     _suppressAuthHeader = false;
@@ -38,13 +57,13 @@ class ApiClient {
           handler.next(options);
           return;
         }
-        var token = await _storage.read(key: 'jwt_token');
+        var token = await _readToken();
         if (token == null || token.isEmpty) {
           // Backward-compat: older parts of the app store auth token here.
           token = ServerUtil.authJwtToken;
           if (token != null && token.isNotEmpty) {
             // Keep both auth systems in sync.
-            await _storage.write(key: 'jwt_token', value: token);
+            await _writeToken(token);
           }
         }
         if (token != null && token.isNotEmpty) {
