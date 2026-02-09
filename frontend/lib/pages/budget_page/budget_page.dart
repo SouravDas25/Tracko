@@ -7,6 +7,7 @@ import 'package:tracko/models/budget_response.dart';
 import 'package:tracko/pages/budget_page/widgets/allocation_dialog.dart';
 import 'package:tracko/pages/budget_page/widgets/budget_category_tile.dart';
 import 'package:tracko/services/budget_service.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 class BudgetPage extends StatefulWidget {
   @override
@@ -18,11 +19,18 @@ class _BudgetPageState extends State<BudgetPage> {
   final BudgetService _budgetService = BudgetService();
   BudgetResponse? _budgetData;
   bool _isLoading = true;
+  final RefreshController _refreshController = RefreshController();
 
   @override
   void initState() {
     super.initState();
     _loadBudgetData();
+  }
+
+  @override
+  void dispose() {
+    _refreshController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadBudgetData() async {
@@ -40,12 +48,14 @@ class _BudgetPageState extends State<BudgetPage> {
           _budgetData = data;
           _isLoading = false;
         });
+        _refreshController.refreshCompleted();
       }
     } catch (e) {
       if (mounted) {
         setState(() {
           _isLoading = false;
         });
+        _refreshController.refreshFailed();
         WidgetUtil.toast("Failed to load budget data");
       }
     }
@@ -105,37 +115,36 @@ class _BudgetPageState extends State<BudgetPage> {
         ),
         centerTitle: false,
         titleSpacing: 16,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.refresh),
-            onPressed: _loadBudgetData,
-          ),
-        ],
+        actions: [],
       ),
       body: _isLoading
           ? Center(child: WidgetUtil.spinLoader())
           : _budgetData == null
               ? Center(child: Text("No data available"))
-              : Column(
-                  children: [
-                    _buildSummaryCard(),
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: _budgetData!.categories.length,
-                        itemBuilder: (context, index) {
-                          final category = _budgetData!.categories[index];
-                          return BudgetCategoryTile(
-                            category: category,
-                            onTap: () => _showAllocationDialog(
-                              category.categoryId,
-                              category.categoryName,
-                              category.allocatedAmount,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
+              : SmartRefresher(
+                  controller: _refreshController,
+                  enablePullDown: true,
+                  enablePullUp: false,
+                  onRefresh: () async {
+                    await _loadBudgetData();
+                  },
+                  child: ListView.builder(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    itemCount: _budgetData!.categories.length + 1,
+                    itemBuilder: (context, index) {
+                      if (index == 0) return _buildSummaryCard();
+
+                      final category = _budgetData!.categories[index - 1];
+                      return BudgetCategoryTile(
+                        category: category,
+                        onTap: () => _showAllocationDialog(
+                          category.categoryId,
+                          category.categoryName,
+                          category.allocatedAmount,
+                        ),
+                      );
+                    },
+                  ),
                 ),
     );
   }

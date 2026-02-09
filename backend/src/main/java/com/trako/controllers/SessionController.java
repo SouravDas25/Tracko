@@ -93,7 +93,8 @@ public class SessionController {
         if (id == null)
             Response.badRequest("Phone Number Incorrect");
         log.info("User Saved : {}", id);
-        String jwtToken = userService.generateToken(userSaveRequest.getPhoneNo(), userSaveRequest.getFireBaseId());
+        UserDetails userDetails = jwtUserDetailsService.loadUserByUsername(userSaveRequest.getPhoneNo());
+        String jwtToken = jwtTokenUtil.generateToken(userDetails);
         HttpHeaders responseHeaders = new HttpHeaders();
         responseHeaders.set("Jwt-Token", jwtToken);
         return Response.ok(id, "User Saved Successfully.", responseHeaders);

@@ -49,6 +49,12 @@ class _AccountsPage extends RefreshableState<TransactionListPage> {
   _AccountsPage();
 
   @override
+  void dispose() {
+    refreshController.dispose();
+    super.dispose();
+  }
+
+  @override
   asyncLoad() async {
     try {
       // Pre-seed selections from initialAccountIds if provided
@@ -122,11 +128,49 @@ class _AccountsPage extends RefreshableState<TransactionListPage> {
       controller: refreshController,
       enablePullDown: true,
       enablePullUp: false,
-      onRefresh: () {
-        refresh();
+      onRefresh: () async {
+        await refresh();
       },
       child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
         children: <Widget>[
+          Padding(
+            padding: const EdgeInsets.only(top: 4.0),
+            child: DefaultTextStyle.merge(
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+              child: PageWidget(
+                initialPage: currentPage,
+                totalPage: pageCount,
+                title:
+                    DateFormatter.DateFormat("MMM yyyy").format(selectedMonth),
+                disableBack: false,
+                disableNext: false,
+                onBack: () {
+                  setState(() {
+                    selectedMonth = DateTime.utc(
+                        selectedMonth.year, selectedMonth.month - 1);
+                  });
+                  SettingUtil.setSelectedMonth(selectedMonth);
+                  refresh();
+                },
+                onNext: () {
+                  setState(() {
+                    selectedMonth = DateTime.utc(
+                        selectedMonth.year, selectedMonth.month + 1);
+                  });
+                  SettingUtil.setSelectedMonth(selectedMonth);
+                  refresh();
+                },
+                onChange: (BuildContext context, int pageNo) {
+                  currentPage = pageNo;
+                  this.refresh();
+                },
+              ),
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.only(top: 4.0),
             child: Card(
@@ -215,33 +259,6 @@ class _AccountsPage extends RefreshableState<TransactionListPage> {
               },
             ),
           ),
-          PageWidget(
-            initialPage: currentPage,
-            totalPage: pageCount,
-            title: DateFormatter.DateFormat("MMM yyyy").format(selectedMonth),
-            disableBack: false,
-            disableNext: false,
-            onBack: () {
-              setState(() {
-                selectedMonth =
-                    DateTime.utc(selectedMonth.year, selectedMonth.month - 1);
-              });
-              SettingUtil.setSelectedMonth(selectedMonth);
-              refresh();
-            },
-            onNext: () {
-              setState(() {
-                selectedMonth =
-                    DateTime.utc(selectedMonth.year, selectedMonth.month + 1);
-              });
-              SettingUtil.setSelectedMonth(selectedMonth);
-              refresh();
-            },
-            onChange: (BuildContext context, int pageNo) {
-              currentPage = pageNo;
-              this.refresh();
-            },
-          )
         ],
       ),
     );

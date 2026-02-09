@@ -2,7 +2,6 @@ package com.trako.controllers;
 
 import com.trako.entities.Category;
 import com.trako.entities.CategoryType;
-import com.trako.exceptions.UserNotLoggedInException;
 import com.trako.models.request.CategorySaveRequest;
 import com.trako.services.CategoryService;
 import com.trako.services.UserService;
@@ -26,29 +25,32 @@ public class CategoryController {
 
     @GetMapping
     public ResponseEntity<?> getAll() {
-        List<Category> categories = categoryService.findAll();
+        String currentUserId = userService.loggedInUser().getId();
+        List<Category> categories = categoryService.findByUserId(currentUserId);
         return Response.ok(categories);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getById(@PathVariable Long id) {
-        return categoryService.findById(id)
-                .map(Response::ok)
-                .orElse(Response.notFound("Category not found"));
+        String currentUserId = userService.loggedInUser().getId();
+        Category category = categoryService.findById(id).orElse(null);
+        if (category == null) {
+            return Response.notFound("Category not found");
+        }
+        if (!currentUserId.equals(category.getUserId())) {
+            return Response.unauthorized();
+        }
+        return Response.ok(category);
     }
 
     @GetMapping("/user/{userId}")
     public ResponseEntity<?> getByUserId(@PathVariable String userId) {
-        try {
-            String currentUserId = userService.loggedInUser().getId();
-            if (!currentUserId.equals(userId)) {
-                return Response.unauthorized();
-            }
-            List<Category> categories = categoryService.findByUserId(currentUserId);
-            return Response.ok(categories);
-        } catch (UserNotLoggedInException e) {
+        String currentUserId = userService.loggedInUser().getId();
+        if (!currentUserId.equals(userId)) {
             return Response.unauthorized();
         }
+        List<Category> categories = categoryService.findByUserId(currentUserId);
+        return Response.ok(categories);
     }
 
     @PostMapping
@@ -57,11 +59,7 @@ public class CategoryController {
         category.setName(request.getName());
         CategoryType type = request.getCategoryType() != null ? request.getCategoryType() : CategoryType.EXPENSE;
         category.setCategoryType(type);
-        try {
-            category.setUserId(userService.loggedInUser().getId());
-        } catch (UserNotLoggedInException e) {
-            return Response.unauthorized();
-        }
+        category.setUserId(userService.loggedInUser().getId());
         Category saved = categoryService.save(category);
         return Response.ok(saved, "Category created successfully");
     }
@@ -79,9 +77,8 @@ public class CategoryController {
         if (request.getCategoryType() != null) {
             category.setCategoryType(request.getCategoryType());
         }
-        try {
-            category.setUserId(userService.loggedInUser().getId());
-        } catch (UserNotLoggedInException e) {
+        String currentUserId = userService.loggedInUser().getId();
+        if (!currentUserId.equals(category.getUserId())) {
             return Response.unauthorized();
         }
         Category updated = categoryService.save(category);
@@ -90,6 +87,14 @@ public class CategoryController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable Long id) {
+        String currentUserId = userService.loggedInUser().getId();
+        Category category = categoryService.findById(id).orElse(null);
+        if (category == null) {
+            return Response.notFound("Category not found");
+        }
+        if (!currentUserId.equals(category.getUserId())) {
+            return Response.unauthorized();
+        }
         categoryService.delete(id);
         return Response.ok("Category deleted successfully");
     }

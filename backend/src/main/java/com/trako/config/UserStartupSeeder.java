@@ -26,6 +26,7 @@ public class UserStartupSeeder implements ApplicationRunner {
                 "9999999999",
                 "user@example.com",
                 "password",
+                0,
                 0
         );
         seedUserIfMissing(
@@ -33,14 +34,40 @@ public class UserStartupSeeder implements ApplicationRunner {
                 "0000000000",
                 "admin@mail.com",
                 "password",
+                0,
                 1
         );
     }
 
-    private void seedUserIfMissing(String name, String phoneNo, String email, String fireBaseId, Integer isShadow) {
+    private void seedUserIfMissing(String name, String phoneNo, String email, String fireBaseId, Integer isShadow, Integer isAdmin) {
         try {
             User existing = usersRepository.findByPhoneNo(phoneNo);
             if (existing != null) {
+                boolean changed = false;
+                if (existing.getIsAdmin() == null || !existing.getIsAdmin().equals(isAdmin)) {
+                    existing.setIsAdmin(isAdmin);
+                    changed = true;
+                }
+                if (existing.getIsShadow() == null || !existing.getIsShadow().equals(isShadow)) {
+                    existing.setIsShadow(isShadow);
+                    changed = true;
+                }
+                if (existing.getFireBaseId() == null || !existing.getFireBaseId().equals(fireBaseId)) {
+                    existing.setFireBaseId(fireBaseId);
+                    changed = true;
+                }
+                if (existing.getEmail() == null || !existing.getEmail().equals(email)) {
+                    existing.setEmail(email);
+                    changed = true;
+                }
+                if (existing.getName() == null || !existing.getName().equals(name)) {
+                    existing.setName(name);
+                    changed = true;
+                }
+                if (changed) {
+                    usersRepository.save(existing);
+                    log.info("Updated seeded user: {} ({})", name, phoneNo);
+                }
                 return;
             }
             User u = new User();
@@ -49,6 +76,7 @@ public class UserStartupSeeder implements ApplicationRunner {
             u.setEmail(email);
             u.setFireBaseId(fireBaseId);
             u.setIsShadow(isShadow);
+            u.setIsAdmin(isAdmin);
             u.setGlobalId(UUID.randomUUID().toString().replace("-", ""));
             usersRepository.save(u);
             log.info("Seeded sample user: {} ({})", name, phoneNo);

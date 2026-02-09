@@ -1,9 +1,12 @@
 package com.trako.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.trako.config.TestSecurityConfig;
+import com.trako.config.TestJwtSecurityConfig;
 import com.trako.entities.JsonStore;
+import com.trako.entities.User;
 import com.trako.repositories.JsonStoreRepository;
+import com.trako.repositories.UsersRepository;
+import com.trako.util.JwtTokenUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +18,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
+
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -22,7 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import(TestSecurityConfig.class)
+@Import(TestJwtSecurityConfig.class)
 @Transactional
 public class JsonStoreIntegrationTest {
 
@@ -35,9 +40,33 @@ public class JsonStoreIntegrationTest {
     @Autowired
     private JsonStoreRepository jsonStoreRepository;
 
+    @Autowired
+    private UsersRepository usersRepository;
+
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
+
+    private User testUser;
+    private String bearerToken;
+
     @BeforeEach
     public void setup() {
         jsonStoreRepository.deleteAll();
+        usersRepository.deleteAll();
+
+        testUser = new User();
+        testUser.setName("Test User");
+        testUser.setPhoneNo("1234567890");
+        testUser.setEmail("test@example.com");
+        testUser.setFireBaseId("password");
+        testUser = usersRepository.save(testUser);
+
+        var principal = new org.springframework.security.core.userdetails.User(
+                testUser.getPhoneNo(),
+                testUser.getFireBaseId(),
+                Collections.emptyList()
+        );
+        bearerToken = "Bearer " + jwtTokenUtil.generateToken(principal);
     }
 
     @Test
@@ -47,6 +76,7 @@ public class JsonStoreIntegrationTest {
         setting.setValue("{\"mode\":\"dark\"}");
 
         mockMvc.perform(post("/api/json-store")
+                .header("Authorization", bearerToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(setting)))
                 .andExpect(status().isOk())
@@ -66,7 +96,8 @@ public class JsonStoreIntegrationTest {
         setting2.setValue("en");
         jsonStoreRepository.save(setting2);
 
-        mockMvc.perform(get("/api/json-store"))
+        mockMvc.perform(get("/api/json-store")
+                .header("Authorization", bearerToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result", hasSize(2)))
                 .andExpect(jsonPath("$.result[*].name", containsInAnyOrder("theme", "language")));
@@ -79,7 +110,8 @@ public class JsonStoreIntegrationTest {
         setting.setValue("USD");
         jsonStoreRepository.save(setting);
 
-        mockMvc.perform(get("/api/json-store/currency"))
+        mockMvc.perform(get("/api/json-store/currency")
+                .header("Authorization", bearerToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.name").value("currency"))
                 .andExpect(jsonPath("$.result.value").value("USD"));
@@ -87,7 +119,8 @@ public class JsonStoreIntegrationTest {
 
     @Test
     public void testGetSettingByNameNotFound() throws Exception {
-        mockMvc.perform(get("/api/json-store/nonexistent"))
+        mockMvc.perform(get("/api/json-store/nonexistent")
+                .header("Authorization", bearerToken))
                 .andExpect(status().isNotFound());
     }
 
@@ -103,6 +136,7 @@ public class JsonStoreIntegrationTest {
         updated.setValue("{\"mode\":\"dark\"}");
 
         mockMvc.perform(put("/api/json-store/theme")
+                .header("Authorization", bearerToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updated)))
                 .andExpect(status().isOk())
@@ -116,10 +150,12 @@ public class JsonStoreIntegrationTest {
         setting.setValue("temporary");
         jsonStoreRepository.save(setting);
 
-        mockMvc.perform(delete("/api/json-store/temp"))
+        mockMvc.perform(delete("/api/json-store/temp")
+                .header("Authorization", bearerToken))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(get("/api/json-store/temp"))
+        mockMvc.perform(get("/api/json-store/temp")
+                .header("Authorization", bearerToken))
                 .andExpect(status().isNotFound());
     }
 
@@ -130,6 +166,7 @@ public class JsonStoreIntegrationTest {
         setting.setValue("{\"notifications\":{\"email\":true,\"push\":false},\"privacy\":{\"shareData\":false}}");
 
         mockMvc.perform(post("/api/json-store")
+                .header("Authorization", bearerToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(setting)))
                 .andExpect(status().isOk())
@@ -144,6 +181,7 @@ public class JsonStoreIntegrationTest {
         setting.setValue("newValue");
 
         mockMvc.perform(put("/api/json-store/newSetting")
+                .header("Authorization", bearerToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(setting)))
                 .andExpect(status().isOk())

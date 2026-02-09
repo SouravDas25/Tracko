@@ -40,6 +40,9 @@ public class User extends AbstractBaseEntity {
     @Column(name = "is_shadow")
     private Integer isShadow;
 
+    @Column(name = "is_admin")
+    private Integer isAdmin = 0;
+
     @CreationTimestamp
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "created_at", updatable = false)
@@ -131,6 +134,18 @@ public class User extends AbstractBaseEntity {
 
     public boolean isShadow() {
         return isShadow != null && isShadow == 1;
+    }
+
+    public Integer getIsAdmin() {
+        return isAdmin;
+    }
+
+    public void setIsAdmin(Integer isAdmin) {
+        this.isAdmin = isAdmin;
+    }
+
+    public boolean isAdmin() {
+        return isAdmin != null && isAdmin == 1;
     }
 
     public List<NlpData> getNlpData() {

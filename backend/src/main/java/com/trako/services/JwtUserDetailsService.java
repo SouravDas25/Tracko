@@ -1,6 +1,7 @@
 package com.trako.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -8,6 +9,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.List;
 import com.trako.repositories.UsersRepository;
 
 @Service
@@ -22,12 +24,18 @@ public class JwtUserDetailsService implements UserDetailsService {
         if (u == null) {
             u = usersRepository.findByEmail(phoneNo);
         }
+
         if (u == null) {
             u = usersRepository.findByName(phoneNo);
         }
         if (u == null) {
             throw new UsernameNotFoundException("User not found in DB.");
         }
-        return new User(u.getPhoneNo(), u.getFireBaseId(), new ArrayList<>());
+
+        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+        if (u.isAdmin()) {
+            authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        }
+        return new User(u.getPhoneNo(), u.getFireBaseId(), authorities);
     }
 }

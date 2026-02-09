@@ -26,9 +26,7 @@ class PageWidget extends StatelessWidget {
       ignoring: disable,
       child: IconButton(
         icon: Icon(Icons.arrow_back),
-        color: disable
-            ? Theme.of(context).disabledColor
-            : Theme.of(context).primaryColor,
+        color: disable ? Theme.of(context).disabledColor : null,
         onPressed: () {
           if (onBack != null) {
             onBack!.call();
@@ -44,12 +42,8 @@ class PageWidget extends StatelessWidget {
     return IgnorePointer(
       ignoring: disable,
       child: IconButton(
-        icon: Icon(
-          Icons.arrow_forward,
-          color: disable
-              ? Theme.of(context).disabledColor
-              : Theme.of(context).primaryColor,
-        ),
+        icon: Icon(Icons.arrow_forward),
+        color: disable ? Theme.of(context).disabledColor : null,
         onPressed: () {
           if (onNext != null) {
             onNext!.call();
@@ -67,11 +61,18 @@ class PageWidget extends StatelessWidget {
     final bool isNextDisabled = disableNext ?? (initialPage >= totalPage);
     final String displayTitle = title ?? "${initialPage} of $totalPage";
 
+    final TextStyle? titleStyle =
+        Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+            );
+
     return Card(
       child: ListTile(
         leading: backButton(context, disable: isBackDisabled),
         title: Text(
           displayTitle,
+          style: titleStyle,
           textAlign: TextAlign.center,
         ),
         trailing: nextButton(context, disable: isNextDisabled),

@@ -74,13 +74,13 @@ public class AccountControllerTest {
     @Test
     @WithMockUser
     public void testGetAll() throws Exception {
-        when(accountService.findAll()).thenReturn(Arrays.asList(testAccount));
+        when(accountService.findByUserId("user123")).thenReturn(Arrays.asList(testAccount));
 
         mockMvc.perform(get("/api/accounts"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result[0].name").value("Savings"));
 
-        verify(accountService, times(1)).findAll();
+        verify(accountService, times(1)).findByUserId("user123");
     }
 
     @Test
@@ -125,6 +125,7 @@ public class AccountControllerTest {
     @Test
     @WithMockUser
     public void testUpdate() throws Exception {
+        when(accountService.findById(1L)).thenReturn(Optional.of(testAccount));
         when(accountService.save(any(Account.class))).thenReturn(testAccount);
 
         mockMvc.perform(put("/api/accounts/1")
@@ -134,18 +135,21 @@ public class AccountControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.name").value("Savings"));
 
+        verify(accountService, times(1)).findById(1L);
         verify(accountService, times(1)).save(any(Account.class));
     }
 
     @Test
     @WithMockUser
     public void testDelete() throws Exception {
+        when(accountService.findById(1L)).thenReturn(Optional.of(testAccount));
         doNothing().when(accountService).delete(1L);
 
         mockMvc.perform(delete("/api/accounts/1")
                 .with(csrf()))
                 .andExpect(status().isOk());
 
+        verify(accountService, times(1)).findById(1L);
         verify(accountService, times(1)).delete(1L);
     }
 }

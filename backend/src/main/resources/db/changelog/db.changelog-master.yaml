@@ -13,3 +13,5 @@ databaseChangeLog:
       file: db/changelog/009-add-category-type.yaml
   - include:
       file: db/changelog/008-drop-chat-tables.yaml
+  - include:
+      file: db/changelog/010-add-users-is-admin.yaml

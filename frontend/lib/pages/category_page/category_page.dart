@@ -7,6 +7,7 @@ import 'package:tracko/controllers/CategoryController.dart';
 import 'package:tracko/models/category.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 class CategoryPage extends StatefulWidget {
   @override
@@ -17,6 +18,13 @@ class CategoryPage extends StatefulWidget {
 
 class _category_page extends AsyncLoadState<CategoryPage> {
   List<Category> categories = [];
+  final RefreshController refreshController = RefreshController();
+
+  @override
+  void dispose() {
+    refreshController.dispose();
+    super.dispose();
+  }
 
   @override
   asyncLoad() async {
@@ -27,6 +35,14 @@ class _category_page extends AsyncLoadState<CategoryPage> {
 
   initData() async {
     categories = await CategoryController.getAllCategories();
+  }
+
+  Future<void> refresh() async {
+    await initData();
+    if (!mounted) return;
+    setState(() {
+      refreshController.refreshCompleted();
+    });
   }
 
   void deleteDialog(int id) async {
@@ -49,70 +65,79 @@ class _category_page extends AsyncLoadState<CategoryPage> {
         title: Text("Categories"),
         centerTitle: true,
       ),
-      body: ListView.builder(
-        itemBuilder: (context, i) {
-          return Slidable(
-            // delegate: new SlidableScrollDelegate(), // Removed in flutter_slidable 3.x
-            child: Card(
-              margin: EdgeInsets.all(2),
-              child: ListTile(
-                contentPadding: EdgeInsets.all(8),
-                leading: WidgetUtil.textAvatar(categories[i].name),
-                title: Text(
-                  categories[i].name,
-                  style: WidgetUtil.defaultTextStyle(),
-                ),
-                subtitle: Text(
-                  (categories[i].categoryType).toUpperCase() == 'INCOME'
-                      ? 'Income'
-                      : 'Expense',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
+      body: SmartRefresher(
+        controller: refreshController,
+        enablePullDown: true,
+        enablePullUp: false,
+        onRefresh: () async {
+          await refresh();
+        },
+        child: ListView.builder(
+          physics: const AlwaysScrollableScrollPhysics(),
+          itemBuilder: (context, i) {
+            return Slidable(
+              // delegate: new SlidableScrollDelegate(), // Removed in flutter_slidable 3.x
+              child: Card(
+                margin: EdgeInsets.all(2),
+                child: ListTile(
+                  contentPadding: EdgeInsets.all(8),
+                  leading: WidgetUtil.textAvatar(categories[i].name),
+                  title: Text(
+                    categories[i].name,
+                    style: WidgetUtil.defaultTextStyle(),
                   ),
-                ),
-                onTap: () {
-                  showDialog(
-                    context: context,
-                    builder: (_) => CategoryDialog(
-                      category: categories[i],
-                      categoryType: categories[i].categoryType,
-                      callback: () {
-                        setState(() {
-                          initData();
-                        });
-                      },
+                  subtitle: Text(
+                    (categories[i].categoryType).toUpperCase() == 'INCOME'
+                        ? 'Income'
+                        : 'Expense',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
                     ),
-                  );
-                },
-                trailing: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Icon(
-                    Icons.edit,
-                    size: 30,
-                    color: Colors.blueAccent,
+                  ),
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (_) => CategoryDialog(
+                        category: categories[i],
+                        categoryType: categories[i].categoryType,
+                        callback: () {
+                          setState(() {
+                            initData();
+                          });
+                        },
+                      ),
+                    );
+                  },
+                  trailing: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Icon(
+                      Icons.edit,
+                      size: 30,
+                      color: Colors.blueAccent,
+                    ),
                   ),
                 ),
               ),
-            ),
-            // TODO: Reimplement with SlidableAction for flutter_slidable 3.x
-            endActionPane: ActionPane(
-              motion: ScrollMotion(),
-              children: [
-                SlidableAction(
-                  onPressed: (context) {
-                    deleteDialog(categories[i].id ?? 0);
-                  },
-                  backgroundColor: Colors.red,
-                  foregroundColor: Colors.white,
-                  icon: Icons.delete,
-                  label: 'Delete',
-                ),
-              ],
-            ),
-          );
-        },
-        itemCount: categories.length,
+              // TODO: Reimplement with SlidableAction for flutter_slidable 3.x
+              endActionPane: ActionPane(
+                motion: ScrollMotion(),
+                children: [
+                  SlidableAction(
+                    onPressed: (context) {
+                      deleteDialog(categories[i].id ?? 0);
+                    },
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                    icon: Icons.delete,
+                    label: 'Delete',
+                  ),
+                ],
+              ),
+            );
+          },
+          itemCount: categories.length,
+        ),
       ),
       floatingActionButton: FloatingActionButton(
           child: Icon(Icons.add),

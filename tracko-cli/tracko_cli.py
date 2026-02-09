@@ -553,6 +553,55 @@ def cmd_users_list(args: argparse.Namespace) -> int:
     return 0 if result["ok"] else 1
 
 
+def cmd_users_me(args: argparse.Namespace) -> int:
+    token, base_url = _get_token_from_args_or_config(args)
+    url = _join_url(base_url, "/api/user/me")
+    result = http_request("GET", url, token=token)
+    print_result(result, raw=args.raw)
+    return 0 if result.get("ok") else 1
+
+
+def cmd_users_get(args: argparse.Namespace) -> int:
+    token, base_url = _get_token_from_args_or_config(args)
+    url = _join_url(base_url, f"/api/user/{urllib.parse.quote(str(args.id))}")
+    result = http_request("GET", url, token=token)
+    print_result(result, raw=args.raw)
+    return 0 if result.get("ok") else 1
+
+
+def cmd_users_find_phone(args: argparse.Namespace) -> int:
+    token, base_url = _get_token_from_args_or_config(args)
+    q = urllib.parse.urlencode({"phone_no": str(args.phone_no)})
+    url = _join_url(base_url, "/api/user/byPhoneNo") + "?" + q
+    result = http_request("GET", url, token=token)
+    print_result(result, raw=args.raw)
+    return 0 if result.get("ok") else 1
+
+
+def cmd_users_upsert(args: argparse.Namespace) -> int:
+    token, base_url = _get_token_from_args_or_config(args)
+    url = _join_url(base_url, "/api/user/save")
+
+    body: dict = {
+        "phoneNo": str(args.phone_no),
+        "uuid": str(args.uuid),
+    }
+    if args.name is not None:
+        body["name"] = args.name
+    if args.email is not None:
+        body["email"] = args.email
+    if args.profile_pic is not None:
+        body["profilePic"] = args.profile_pic
+    if args.base_currency is not None:
+        body["baseCurrency"] = args.base_currency
+    if args.shadow is not None:
+        body["isShadow"] = 1 if args.shadow else 0
+
+    result = http_request("POST", url, token=token, json_body=body)
+    print_result(result, raw=args.raw)
+    return 0 if result.get("ok") else 1
+
+
 def cmd_accounts_list(args: argparse.Namespace) -> int:
     token, base_url = _get_token_from_args_or_config(args)
     url = _join_url(base_url, "/api/accounts")
@@ -1017,6 +1066,29 @@ def build_parser() -> argparse.ArgumentParser:
     sub_users = sp.add_subparsers(dest="users_cmd", required=True)
     sp2 = sub_users.add_parser("list")
     sp2.set_defaults(func=cmd_users_list)
+
+    sp2 = sub_users.add_parser("me")
+    sp2.set_defaults(func=cmd_users_me)
+
+    sp2 = sub_users.add_parser("get")
+    sp2.add_argument("--id", required=True, help="User id")
+    sp2.set_defaults(func=cmd_users_get)
+
+    sp2 = sub_users.add_parser("find-phone")
+    sp2.add_argument("--phone-no", required=True)
+    sp2.set_defaults(func=cmd_users_find_phone)
+
+    sp2 = sub_users.add_parser("upsert")
+    sp2.add_argument("--phone-no", required=True)
+    sp2.add_argument("--uuid", required=True, help="Firebase UUID / password")
+    sp2.add_argument("--name")
+    sp2.add_argument("--email")
+    sp2.add_argument("--profile-pic")
+    sp2.add_argument("--base-currency")
+    sh = sp2.add_mutually_exclusive_group()
+    sh.add_argument("--shadow", action="store_true", default=None)
+    sh.add_argument("--not-shadow", action="store_false", dest="shadow")
+    sp2.set_defaults(func=cmd_users_upsert)
 
     sp = sub.add_parser("accounts")
     sub_acc = sp.add_subparsers(dest="accounts_cmd", required=True)

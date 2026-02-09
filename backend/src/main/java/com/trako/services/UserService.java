@@ -9,8 +9,6 @@ import com.trako.util.JwtTokenUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -29,9 +27,6 @@ public class UserService {
 
     @Autowired
     private JwtTokenUtil jwtTokenUtil;
-
-    @Autowired
-    private AuthenticationManager authenticationManager;
 
     public User loggedInUser() throws UserNotLoggedInException {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -55,6 +50,13 @@ public class UserService {
     public User findByPhoneNo(String phoneNo) {
         phoneNo = CommonUtil.extractPhoneNumber(phoneNo);
         return usersRepository.findByPhoneNo(phoneNo);
+    }
+
+    public User findById(String id) {
+        if (id == null || id.isBlank()) {
+            return null;
+        }
+        return usersRepository.findById(id).orElse(null);
     }
 
     public String save(UserSaveRequest userSaveRequest) {
@@ -99,15 +101,6 @@ public class UserService {
         
         user = usersRepository.save(user);
         return user.getId();
-    }
-
-    public String generateToken(String phoneNo, String firebaseUUID) {
-        UsernamePasswordAuthenticationToken token =
-                new UsernamePasswordAuthenticationToken(phoneNo, firebaseUUID);
-        Authentication authenticate = authenticationManager.authenticate(token);
-
-        String jwtToken = jwtTokenUtil.generateToken((UserDetails) authenticate.getPrincipal());
-        return jwtToken;
     }
 
     public User saveUser(User user) {
