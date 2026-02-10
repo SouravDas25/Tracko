@@ -396,4 +396,502 @@ public class TransactionIntegrationTest {
                 .andExpect(jsonPath("$.result.netTotal").value(0.00))
                 .andExpect(jsonPath("$.result.transactionCount").value(0));
     }
+
+    @Test
+    public void testCreateTransactionWithoutAuth() throws Exception {
+        Transaction transaction = new Transaction();
+        transaction.setTransactionType(1);
+        transaction.setName("No Auth");
+        transaction.setAmount(10.00);
+        transaction.setDate(new Date());
+        transaction.setAccountId(testAccount.getId());
+        transaction.setCategoryId(testCategory.getId());
+
+        mockMvc.perform(post("/api/transactions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(transaction)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void testSummaryWithInvalidDateReturnsBadRequest() throws Exception {
+        mockMvc.perform(get("/api/transactions/summary")
+                        .header("Authorization", bearerToken)
+                        .param("startDate", "invalid-date")
+                        .param("endDate", "2030-12-31"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void testTotalIncomeWithInvalidDateReturnsBadRequest() throws Exception {
+        mockMvc.perform(get("/api/transactions/total-income")
+                        .header("Authorization", bearerToken)
+                        .param("startDate", "2020-01-01")
+                        .param("endDate", "31-12-2030"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void testDateRangeWithInvalidDateReturnsBadRequest() throws Exception {
+        mockMvc.perform(get("/api/transactions/date-range")
+                        .header("Authorization", bearerToken)
+                        .param("startDate", "2020/01/01")
+                        .param("endDate", "2030-12-31"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void testUserDateRangeWithInvalidDateReturnsBadRequest() throws Exception {
+        mockMvc.perform(get("/api/transactions/user/" + testUser.getId() + "/date-range")
+                        .header("Authorization", bearerToken)
+                        .param("startDate", "2020-13-01")
+                        .param("endDate", "2030-12-31"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void testCreateTransactionForForeignAccountUnauthorized() throws Exception {
+        // Create another user and their account
+        User other = new User();
+        other.setName("Other");
+        other.setPhoneNo("5550001111");
+        other.setEmail("other@example.com");
+        other.setFireBaseId("other_pass");
+        other = usersRepository.save(other);
+
+        Account foreignAcc = new Account();
+        foreignAcc.setName("Foreign Acc");
+        foreignAcc.setUserId(other.getId());
+        foreignAcc = accountRepository.save(foreignAcc);
+
+        Transaction transaction = new Transaction();
+        transaction.setTransactionType(1);
+        transaction.setName("Foreign Post");
+        transaction.setAmount(5.00);
+        transaction.setDate(new Date());
+        transaction.setAccountId(foreignAcc.getId());
+        transaction.setCategoryId(testCategory.getId());
+
+        mockMvc.perform(post("/api/transactions")
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(transaction)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void testGetTransactionOfAnotherUserUnauthorized() throws Exception {
+        // Another user's transaction
+        User other = new User();
+        other.setName("Other");
+        other.setPhoneNo("5550002222");
+        other.setEmail("other2@example.com");
+        other.setFireBaseId("other2_pass");
+        other = usersRepository.save(other);
+
+        Account otherAcc = new Account();
+        otherAcc.setName("Other Acc");
+        otherAcc.setUserId(other.getId());
+        otherAcc = accountRepository.save(otherAcc);
+
+        Category otherCat = new Category();
+        otherCat.setName("OtherCat");
+        otherCat.setUserId(other.getId());
+        otherCat = categoryRepository.save(otherCat);
+
+        Transaction otherTxn = new Transaction();
+        otherTxn.setTransactionType(1);
+        otherTxn.setName("OtherTxn");
+        otherTxn.setAmount(3.00);
+        otherTxn.setDate(new Date());
+        otherTxn.setAccountId(otherAcc.getId());
+        otherTxn.setCategoryId(otherCat.getId());
+        otherTxn = transactionRepository.save(otherTxn);
+
+        mockMvc.perform(get("/api/transactions/" + otherTxn.getId())
+                        .header("Authorization", bearerToken))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void testGetTransactionsByOtherUserIdUnauthorized() throws Exception {
+        User other = new User();
+        other.setName("OtherUser");
+        other.setPhoneNo("5550003333");
+        other.setEmail("other3@example.com");
+        other.setFireBaseId("other3_pass");
+        other = usersRepository.save(other);
+
+        mockMvc.perform(get("/api/transactions/user/" + other.getId())
+                        .header("Authorization", bearerToken))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void testGetTotalIncomeForOtherUserUnauthorized() throws Exception {
+        User other = new User();
+        other.setName("Other4");
+        other.setPhoneNo("5550004444");
+        other.setEmail("other4@example.com");
+        other.setFireBaseId("other4_pass");
+        other = usersRepository.save(other);
+
+        mockMvc.perform(get("/api/transactions/user/" + other.getId() + "/total-income")
+                        .header("Authorization", bearerToken)
+                        .param("startDate", "2020-01-01")
+                        .param("endDate", "2030-12-31"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void testGetMyTransactionsByDateRangeWithAccountFilter() throws Exception {
+        Account secondAcc = new Account();
+        secondAcc.setName("Spending");
+        secondAcc.setUserId(testUser.getId());
+        secondAcc = accountRepository.save(secondAcc);
+
+        Transaction t1 = new Transaction();
+        t1.setTransactionType(1);
+        t1.setName("A1");
+        t1.setAmount(10.00);
+        t1.setDate(new Date());
+        t1.setAccountId(testAccount.getId());
+        t1.setCategoryId(testCategory.getId());
+        transactionRepository.save(t1);
+
+        Transaction t2 = new Transaction();
+        t2.setTransactionType(1);
+        t2.setName("A2");
+        t2.setAmount(20.00);
+        t2.setDate(new Date());
+        t2.setAccountId(secondAcc.getId());
+        t2.setCategoryId(testCategory.getId());
+        transactionRepository.save(t2);
+
+        mockMvc.perform(get("/api/transactions/date-range")
+                        .header("Authorization", bearerToken)
+                        .param("startDate", "2020-01-01")
+                        .param("endDate", "2030-12-31")
+                        .param("accountIds", String.valueOf(testAccount.getId())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result", hasSize(1)))
+                .andExpect(jsonPath("$.result[0].name").value("A1"));
+    }
+
+    @Test
+    public void testGetAllHidesTransferCreditAndMarksTransferType() throws Exception {
+        // Ensure TRANSFER category exists
+        Category transfer = new Category();
+        transfer.setName("TRANSFER");
+        transfer.setUserId(testUser.getId());
+        transfer = categoryRepository.save(transfer);
+
+        // Create a transfer pair: debit (type 1, non-countable) and credit (type 2, non-countable)
+        Transaction debit = new Transaction();
+        debit.setTransactionType(1);
+        debit.setName("Transfer Out");
+        debit.setAmount(40.00);
+        debit.setDate(new Date());
+        debit.setAccountId(testAccount.getId());
+        debit.setCategoryId(transfer.getId());
+        debit.setIsCountable(0);
+        transactionRepository.save(debit);
+
+        Transaction credit = new Transaction();
+        credit.setTransactionType(2);
+        credit.setName("Transfer In");
+        credit.setAmount(40.00);
+        credit.setDate(new Date());
+        credit.setAccountId(testAccount.getId());
+        credit.setCategoryId(transfer.getId());
+        credit.setIsCountable(0);
+        transactionRepository.save(credit);
+
+        mockMvc.perform(get("/api/transactions")
+                        .header("Authorization", bearerToken))
+                .andExpect(status().isOk())
+                // CREDIT side should be hidden, only one entry returned
+                .andExpect(jsonPath("$.result", hasSize(1)))
+                // transactionType should be marked as 3 (TRANSFER)
+                .andExpect(jsonPath("$.result[0].transactionType").value(3));
+    }
+
+    @Test
+    public void testCurrentUserSummaryIncomeExpenseEndpoints() throws Exception {
+        // income
+        Transaction income = new Transaction();
+        income.setTransactionType(2);
+        income.setName("Pay");
+        income.setAmount(120.00);
+        income.setDate(new Date());
+        income.setAccountId(testAccount.getId());
+        income.setCategoryId(testCategory.getId());
+        income.setIsCountable(1);
+        transactionRepository.save(income);
+
+        // expense
+        Transaction expense = new Transaction();
+        expense.setTransactionType(1);
+        expense.setName("Snacks");
+        expense.setAmount(20.00);
+        expense.setDate(new Date());
+        expense.setAccountId(testAccount.getId());
+        expense.setCategoryId(testCategory.getId());
+        expense.setIsCountable(1);
+        transactionRepository.save(expense);
+
+        // /summary
+        mockMvc.perform(get("/api/transactions/summary")
+                        .header("Authorization", bearerToken)
+                        .param("startDate", "2020-01-01")
+                        .param("endDate", "2030-12-31"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.totalIncome").value(120.00))
+                .andExpect(jsonPath("$.result.totalExpense").value(20.00));
+
+        // /total-income
+        mockMvc.perform(get("/api/transactions/total-income")
+                        .header("Authorization", bearerToken)
+                        .param("startDate", "2020-01-01")
+                        .param("endDate", "2030-12-31"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result").value(120.00));
+
+        // /total-expense
+        mockMvc.perform(get("/api/transactions/total-expense")
+                        .header("Authorization", bearerToken)
+                        .param("startDate", "2020-01-01")
+                        .param("endDate", "2030-12-31"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result").value(20.00));
+    }
+
+    @Test
+    public void testAccountAndCategoryEndpointsWithoutAuthReturnUnauthorized() throws Exception {
+        // Create one txn
+        Transaction t = new Transaction();
+        t.setTransactionType(1);
+        t.setName("CatAcc");
+        t.setAmount(5.00);
+        t.setDate(new Date());
+        t.setAccountId(testAccount.getId());
+        t.setCategoryId(testCategory.getId());
+        transactionRepository.save(t);
+
+        // account/{id} without auth
+        mockMvc.perform(get("/api/transactions/account/" + testAccount.getId()))
+                .andExpect(status().isUnauthorized());
+
+        // category/{id} without auth
+        mockMvc.perform(get("/api/transactions/category/" + testCategory.getId()))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void testDateRangeParsesMessyAccountIdsGracefully() throws Exception {
+        // Add two accounts; filter should only include one valid id among messy input
+        Account another = new Account();
+        another.setName("Alt");
+        another.setUserId(testUser.getId());
+        another = accountRepository.save(another);
+
+        Transaction t1 = new Transaction();
+        t1.setTransactionType(1);
+        t1.setName("KeepMe");
+        t1.setAmount(1.00);
+        t1.setDate(new Date());
+        t1.setAccountId(testAccount.getId());
+        t1.setCategoryId(testCategory.getId());
+        transactionRepository.save(t1);
+
+        Transaction t2 = new Transaction();
+        t2.setTransactionType(1);
+        t2.setName("DropMe");
+        t2.setAmount(2.00);
+        t2.setDate(new Date());
+        t2.setAccountId(another.getId());
+        t2.setCategoryId(testCategory.getId());
+        transactionRepository.save(t2);
+
+        String messy = "  , ,abc,  " + testAccount.getId() + " , x ,";
+        mockMvc.perform(get("/api/transactions/date-range")
+                        .header("Authorization", bearerToken)
+                        .param("startDate", "2020-01-01")
+                        .param("endDate", "2030-12-31")
+                        .param("accountIds", messy))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result", hasSize(1)))
+                .andExpect(jsonPath("$.result[0].name").value("KeepMe"));
+    }
+
+    @Test
+    public void testGetByUserIdAndDateRangeHappyPath() throws Exception {
+        Transaction t = new Transaction();
+        t.setTransactionType(1);
+        t.setName("UserRange");
+        t.setAmount(11.00);
+        t.setDate(new Date());
+        t.setAccountId(testAccount.getId());
+        t.setCategoryId(testCategory.getId());
+        transactionRepository.save(t);
+
+        mockMvc.perform(get("/api/transactions/user/" + testUser.getId() + "/date-range")
+                        .header("Authorization", bearerToken)
+                        .param("startDate", "2020-01-01")
+                        .param("endDate", "2030-12-31"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result", hasSize(1)))
+                .andExpect(jsonPath("$.result[0].name").value("UserRange"));
+    }
+
+    @Test
+    public void testGetByIdNotFound() throws Exception {
+        mockMvc.perform(get("/api/transactions/999999")
+                        .header("Authorization", bearerToken))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void testUpdateNotFound() throws Exception {
+        Transaction payload = new Transaction();
+        payload.setTransactionType(1);
+        payload.setName("Missing");
+        payload.setAmount(1.0);
+        payload.setDate(new Date());
+        payload.setAccountId(testAccount.getId());
+        payload.setCategoryId(testCategory.getId());
+
+        mockMvc.perform(put("/api/transactions/999999")
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(payload)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void testDeleteNotFound() throws Exception {
+        mockMvc.perform(delete("/api/transactions/999999")
+                        .header("Authorization", bearerToken))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void testCreateTransactionWithForeignCategoryUnauthorized() throws Exception {
+        // Create foreign category under another user
+        User other = new User();
+        other.setName("OtherCatUser");
+        other.setPhoneNo("5550005555");
+        other.setEmail("other5@example.com");
+        other.setFireBaseId("other5_pass");
+        other = usersRepository.save(other);
+
+        Category foreignCat = new Category();
+        foreignCat.setName("ForeignCat");
+        foreignCat.setUserId(other.getId());
+        foreignCat = categoryRepository.save(foreignCat);
+
+        Transaction tx = new Transaction();
+        tx.setTransactionType(1);
+        tx.setName("BadCat");
+        tx.setAmount(9.0);
+        tx.setDate(new Date());
+        tx.setAccountId(testAccount.getId());
+        tx.setCategoryId(foreignCat.getId());
+
+        mockMvc.perform(post("/api/transactions")
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(tx)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void testUpdateUnauthorizedForForeignAccountAndCategory() throws Exception {
+        // Existing txn owned by user
+        Transaction existing = new Transaction();
+        existing.setTransactionType(1);
+        existing.setName("ToUpdate");
+        existing.setAmount(7.0);
+        existing.setDate(new Date());
+        existing.setAccountId(testAccount.getId());
+        existing.setCategoryId(testCategory.getId());
+        existing = transactionRepository.save(existing);
+
+        // Create another user and their account/category
+        User other = new User();
+        other.setName("UpdOther");
+        other.setPhoneNo("5550006666");
+        other.setEmail("other6@example.com");
+        other.setFireBaseId("other6_pass");
+        other = usersRepository.save(other);
+
+        Account foreignAcc = new Account();
+        foreignAcc.setName("UpdForeignAcc");
+        foreignAcc.setUserId(other.getId());
+        foreignAcc = accountRepository.save(foreignAcc);
+
+        Category foreignCat = new Category();
+        foreignCat.setName("UpdForeignCat");
+        foreignCat.setUserId(other.getId());
+        foreignCat = categoryRepository.save(foreignCat);
+
+        // Try to update moving to foreign account
+        Transaction payload = new Transaction();
+        payload.setTransactionType(1);
+        payload.setName("ToUpdate2");
+        payload.setAmount(8.0);
+        payload.setDate(new Date());
+        payload.setAccountId(foreignAcc.getId());
+        payload.setCategoryId(testCategory.getId());
+
+        mockMvc.perform(put("/api/transactions/" + existing.getId())
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(payload)))
+                .andExpect(status().isUnauthorized());
+
+        // Try to update moving to foreign category (with owned account)
+        payload.setAccountId(testAccount.getId());
+        payload.setCategoryId(foreignCat.getId());
+
+        mockMvc.perform(put("/api/transactions/" + existing.getId())
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(payload)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void testDeleteUnauthorizedForForeignUser() throws Exception {
+        // Create a transaction under another user's account
+        User other = new User();
+        other.setName("DelOther");
+        other.setPhoneNo("5550007777");
+        other.setEmail("other7@example.com");
+        other.setFireBaseId("other7_pass");
+        other = usersRepository.save(other);
+
+        Account otherAcc = new Account();
+        otherAcc.setName("DelAcc");
+        otherAcc.setUserId(other.getId());
+        otherAcc = accountRepository.save(otherAcc);
+
+        Category otherCat = new Category();
+        otherCat.setName("DelCat");
+        otherCat.setUserId(other.getId());
+        otherCat = categoryRepository.save(otherCat);
+
+        Transaction otherTxn = new Transaction();
+        otherTxn.setTransactionType(1);
+        otherTxn.setName("DelTxn");
+        otherTxn.setAmount(4.0);
+        otherTxn.setDate(new Date());
+        otherTxn.setAccountId(otherAcc.getId());
+        otherTxn.setCategoryId(otherCat.getId());
+        otherTxn = transactionRepository.save(otherTxn);
+
+        mockMvc.perform(delete("/api/transactions/" + otherTxn.getId())
+                        .header("Authorization", bearerToken))
+                .andExpect(status().isUnauthorized());
+    }
 }

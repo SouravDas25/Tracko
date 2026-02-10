@@ -220,6 +220,66 @@
                     <target>17</target>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.11</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>jacoco-check</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <rule>
+                                    <element>BUNDLE</element>
+                                    <includes>
+                                        <include>com/trako/controllers/*</include>
+                                        <include>com/trako/services/*</include>
+                                    </includes>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.70</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.60</minimum>
+                                        </limit>
+                                    </limits>
+                                    <excludes>
+                                        <exclude>com/trako/config/*</exclude>
+                                        <exclude>com/trako/configs/*</exclude>
+                                        <exclude>com/trako/filters/*</exclude>
+                                        <exclude>com/trako/models/*</exclude>
+                                        <exclude>com/trako/models/**</exclude>
+                                        <exclude>com/trako/entities/*</exclude>
+                                        <exclude>com/trako/dtos/*</exclude>
+                                        <exclude>com/trako/util/*</exclude>
+                                        <exclude>com/trako/web/*</exclude>
+                                    </excludes>
+                                </rule>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
 
         </plugins>
         <resources>
