@@ -76,12 +76,20 @@ tasks:
   # Run tests
   test:
     desc: Run tests (Flutter and Backend)
+    deps: [test:backend, test:flutter]
+
+  test:backend:
+    desc: Run Backend tests (Maven verify)
+    dir: "{{.BACKEND_DIR}}"
+    cmds:
+      - cmd: mvn verify
+
+  test:flutter:
+    desc: Run Flutter tests
+    dir: "{{.FRONTEND_DIR}}"
     cmds:
       - cmd: flutter test
-        dir: "{{.FRONTEND_DIR}}"
-      
-      - cmd: mvn -B test
-        dir: "{{.BACKEND_DIR}}"
+        
       
 
   # Install dependencies

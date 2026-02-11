@@ -211,6 +211,29 @@ public class TransferIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(missingFrom)))
                 .andExpect(status().isBadRequest());
+
+        // missing toAccountId
+        TransferRequest missingTo = new TransferRequest();
+        missingTo.setFromAccountId(fromAccount.getId());
+        missingTo.setAmount(5.0);
+
+        mockMvc.perform(post("/api/transfers")
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(missingTo)))
+                .andExpect(status().isBadRequest());
+
+        // negative amount
+        TransferRequest negativeAmount = new TransferRequest();
+        negativeAmount.setFromAccountId(fromAccount.getId());
+        negativeAmount.setToAccountId(toAccount.getId());
+        negativeAmount.setAmount(-10.0);
+
+        mockMvc.perform(post("/api/transfers")
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(negativeAmount)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -253,6 +276,80 @@ public class TransferIntegrationTest {
         req.setAmount(10.0);
 
         mockMvc.perform(post("/api/transfers")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void shouldRejectWhenOnlyFromOwned() throws Exception {
+        // Create another user's destination account
+        User other = new User();
+        other.setName("Other2");
+        other.setPhoneNo("2223334444");
+        other.setEmail("other2@example.com");
+        other.setFireBaseId("other2_pass");
+        other = usersRepository.save(other);
+
+        Account othersDest = new Account();
+        othersDest.setName("Other To");
+        othersDest.setCurrency("USD");
+        othersDest.setUserId(other.getId());
+        othersDest = accountRepository.save(othersDest);
+
+        TransferRequest req = new TransferRequest();
+        req.setFromAccountId(fromAccount.getId()); // owned
+        req.setToAccountId(othersDest.getId());    // not owned
+        req.setAmount(10.0);
+
+        mockMvc.perform(post("/api/transfers")
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void shouldRejectWhenOnlyToOwned() throws Exception {
+        // Create another user's source account
+        User other = new User();
+        other.setName("Other3");
+        other.setPhoneNo("3334445555");
+        other.setEmail("other3@example.com");
+        other.setFireBaseId("other3_pass");
+        other = usersRepository.save(other);
+
+        Account othersSource = new Account();
+        othersSource.setName("Other From");
+        othersSource.setCurrency("USD");
+        othersSource.setUserId(other.getId());
+        othersSource = accountRepository.save(othersSource);
+
+        TransferRequest req = new TransferRequest();
+        req.setFromAccountId(othersSource.getId()); // not owned
+        req.setToAccountId(toAccount.getId());       // owned
+        req.setAmount(15.0);
+
+        mockMvc.perform(post("/api/transfers")
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void shouldReturnUnauthorizedForNonexistentAccountIds() throws Exception {
+        // Controller checks ownership by user accounts list; nonexistent IDs are not owned -> 401
+        long fakeFromId = 999999L;
+        long fakeToId = 888888L;
+
+        TransferRequest req = new TransferRequest();
+        req.setFromAccountId(fakeFromId);
+        req.setToAccountId(fakeToId);
+        req.setAmount(20.0);
+
+        mockMvc.perform(post("/api/transfers")
+                        .header("Authorization", bearerToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isUnauthorized());

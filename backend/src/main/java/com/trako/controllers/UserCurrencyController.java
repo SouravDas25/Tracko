@@ -10,6 +10,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -39,7 +42,7 @@ public class UserCurrencyController {
     }
 
     @PostMapping
-    public ResponseEntity<?> save(@RequestBody UserCurrencyRequest request) {
+    public ResponseEntity<?> save(@Valid @RequestBody UserCurrencyRequest request) {
         try {
             User user = userService.loggedInUser();
             if (user.getSecondaryCurrencies() == null) {
@@ -83,5 +86,10 @@ public class UserCurrencyController {
         } catch (Exception e) {
             return Response.unauthorized();
         }
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<?> handleValidationErrors(MethodArgumentNotValidException ex) {
+        return Response.badRequest("Invalid request");
     }
 }

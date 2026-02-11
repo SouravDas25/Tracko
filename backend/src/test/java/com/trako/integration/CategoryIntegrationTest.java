@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trako.config.TestJwtSecurityConfig;
 import com.trako.entities.Category;
 import com.trako.entities.User;
+import com.trako.models.request.CategorySaveRequest;
 import com.trako.repositories.CategoryRepository;
 import com.trako.repositories.UsersRepository;
 import com.trako.util.JwtTokenUtil;
@@ -67,6 +68,129 @@ public class CategoryIntegrationTest {
                 Collections.emptyList()
         );
         bearerToken = "Bearer " + jwtTokenUtil.generateToken(principal);
+    }
+
+    @Test
+    public void testCreateCategoryWithoutNameReturnsBadRequest() throws Exception {
+        CategorySaveRequest req = new CategorySaveRequest();
+        // name is null -> @NotNull should trigger 400
+
+        mockMvc.perform(post("/api/categories")
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void testUpdateCategoryWithoutNameReturnsBadRequest() throws Exception {
+        Category saved = new Category();
+        saved.setName("HasName");
+        saved.setUserId(testUser.getId());
+        saved = categoryRepository.save(saved);
+
+        CategorySaveRequest req = new CategorySaveRequest();
+        // name not set -> should 400
+
+        mockMvc.perform(put("/api/categories/" + saved.getId())
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void testCreateCategoryWithoutAuthReturnsUnauthorized() throws Exception {
+        var body = new java.util.HashMap<String, Object>();
+        body.put("name", "NoAuthCat");
+
+        mockMvc.perform(post("/api/categories")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(body)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void testGetCategoriesByOtherUserUnauthorized() throws Exception {
+        User other = new User();
+        other.setName("OtherU");
+        other.setPhoneNo("7777777777");
+        other.setEmail("otheru@example.com");
+        other.setFireBaseId("other_pass");
+        other = usersRepository.save(other);
+
+        mockMvc.perform(get("/api/categories/user/" + other.getId())
+                        .header("Authorization", bearerToken))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void testGetCategoryByIdUnauthorizedForForeignUser() throws Exception {
+        User other = new User();
+        other.setName("OtherCat");
+        other.setPhoneNo("8888888888");
+        other.setEmail("othercat@example.com");
+        other.setFireBaseId("othercat_pass");
+        other = usersRepository.save(other);
+
+        Category foreign = new Category();
+        foreign.setName("ForeignCat");
+        foreign.setUserId(other.getId());
+        foreign = categoryRepository.save(foreign);
+
+        mockMvc.perform(get("/api/categories/" + foreign.getId())
+                        .header("Authorization", bearerToken))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void testUpdateCategoryUnauthorizedForForeignUser() throws Exception {
+        User other = new User();
+        other.setName("UpdOtherCat");
+        other.setPhoneNo("9999999999");
+        other.setEmail("updothercat@example.com");
+        other.setFireBaseId("updothercat_pass");
+        other = usersRepository.save(other);
+
+        Category foreign = new Category();
+        foreign.setName("ForeignUpdCat");
+        foreign.setUserId(other.getId());
+        foreign = categoryRepository.save(foreign);
+
+        var body = new java.util.HashMap<String, Object>();
+        body.put("name", "TryUpdate");
+
+        mockMvc.perform(put("/api/categories/" + foreign.getId())
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(body)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void testDeleteCategoryUnauthorizedForForeignUser() throws Exception {
+        User other = new User();
+        other.setName("DelOtherCat");
+        other.setPhoneNo("6666666666");
+        other.setEmail("delothercat@example.com");
+        other.setFireBaseId("delothercat_pass");
+        other = usersRepository.save(other);
+
+        Category foreign = new Category();
+        foreign.setName("ForeignDelCat");
+        foreign.setUserId(other.getId());
+        foreign = categoryRepository.save(foreign);
+
+        mockMvc.perform(delete("/api/categories/" + foreign.getId())
+                        .header("Authorization", bearerToken))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void testGetCategoryByIdNotFound() throws Exception {
+        mockMvc.perform(get("/api/categories/999999")
+                        .header("Authorization", bearerToken))
+                .andExpect(status().isNotFound());
     }
 
     @Test

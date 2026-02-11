@@ -85,7 +85,11 @@ class ApiClient {
           _isAutoSigningOut = true;
           _suppressAuthHeader = true;
           try {
-            SessionService.clearCache();
+            // Perform a full logout to remove any persisted tokens and
+            // reset in-memory/session state. This prevents the login
+            // page from immediately redirecting back to home due to a
+            // lingering token, which can cause a navigation loop.
+            await SessionService.logout();
           } catch (_) {
             // ignore
           }

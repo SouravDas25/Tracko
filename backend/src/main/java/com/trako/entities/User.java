@@ -1,6 +1,5 @@
 package com.trako.entities;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import jakarta.persistence.*;
@@ -52,10 +51,6 @@ public class User extends AbstractBaseEntity {
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "updated_at")
     private Date updatedAt;
-
-    @JsonIgnore
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
-    private List<NlpData> nlpData;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserCurrency> secondaryCurrencies;
@@ -146,14 +141,6 @@ public class User extends AbstractBaseEntity {
 
     public boolean isAdmin() {
         return isAdmin != null && isAdmin == 1;
-    }
-
-    public List<NlpData> getNlpData() {
-        return nlpData;
-    }
-
-    public void setNlpData(List<NlpData> nlpData) {
-        this.nlpData = nlpData;
     }
 
     public List<UserCurrency> getSecondaryCurrencies() {

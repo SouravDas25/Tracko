@@ -1,0 +1,261 @@
+package com.trako.integration;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.trako.config.TestJwtSecurityConfig;
+import com.trako.entities.Contact;
+import com.trako.entities.User;
+import com.trako.models.request.ContactSaveRequest;
+import com.trako.repositories.ContactRepository;
+import com.trako.repositories.UsersRepository;
+import com.trako.util.JwtTokenUtil;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Collections;
+
+import static org.hamcrest.Matchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
+@Import(TestJwtSecurityConfig.class)
+@Transactional
+public class ContactIntegrationTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Autowired
+    private UsersRepository usersRepository;
+
+    @Autowired
+    private ContactRepository contactRepository;
+
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
+
+    private User testUser;
+    private String bearerToken;
+
+    @BeforeEach
+    public void setup() {
+        contactRepository.deleteAll();
+        usersRepository.deleteAll();
+
+        testUser = new User();
+        testUser.setName("Test User");
+        testUser.setPhoneNo("1234567890");
+        testUser.setEmail("test@example.com");
+        testUser.setFireBaseId("password");
+        testUser = usersRepository.save(testUser);
+
+        UserDetails principal = new org.springframework.security.core.userdetails.User(
+                testUser.getPhoneNo(),
+                testUser.getFireBaseId(),
+                Collections.emptyList()
+        );
+        bearerToken = "Bearer " + jwtTokenUtil.generateToken(principal);
+    }
+
+    @Test
+    public void listMineWithoutAuthReturnsUnauthorized() throws Exception {
+        mockMvc.perform(get("/api/contacts"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void getOneWithoutAuthReturnsUnauthorized() throws Exception {
+        mockMvc.perform(get("/api/contacts/1"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void createWithoutAuthReturnsUnauthorized() throws Exception {
+        ContactSaveRequest req = new ContactSaveRequest();
+        req.setName("NoAuth");
+
+        mockMvc.perform(post("/api/contacts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void updateWithoutAuthReturnsUnauthorized() throws Exception {
+        ContactSaveRequest req = new ContactSaveRequest();
+        req.setName("NoAuth");
+
+        mockMvc.perform(put("/api/contacts/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void deleteWithoutAuthReturnsUnauthorized() throws Exception {
+        mockMvc.perform(delete("/api/contacts/1"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void createListGetUpdateDeleteHappyPath() throws Exception {
+        ContactSaveRequest create = new ContactSaveRequest();
+        create.setName("Alice");
+        create.setPhoneNo("1112223333");
+        create.setEmail("alice@example.com");
+
+        String createResponse = mockMvc.perform(post("/api/contacts")
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(create)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Contact created successfully"))
+                .andExpect(jsonPath("$.result.id").isNotEmpty())
+                .andExpect(jsonPath("$.result.userId").value(testUser.getId()))
+                .andExpect(jsonPath("$.result.name").value("Alice"))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        Long createdId = objectMapper.readTree(createResponse).path("result").path("id").asLong();
+
+        mockMvc.perform(get("/api/contacts")
+                        .header("Authorization", bearerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result", hasSize(1)))
+                .andExpect(jsonPath("$.result[0].id").value(createdId))
+                .andExpect(jsonPath("$.result[0].name").value("Alice"));
+
+        mockMvc.perform(get("/api/contacts/" + createdId)
+                        .header("Authorization", bearerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.id").value(createdId))
+                .andExpect(jsonPath("$.result.name").value("Alice"));
+
+        ContactSaveRequest update = new ContactSaveRequest();
+        update.setName("Alice Updated");
+        update.setPhoneNo("9998887777");
+        update.setEmail("alice2@example.com");
+
+        mockMvc.perform(put("/api/contacts/" + createdId)
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(update)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Contact updated successfully"))
+                .andExpect(jsonPath("$.result.id").value(createdId))
+                .andExpect(jsonPath("$.result.name").value("Alice Updated"))
+                .andExpect(jsonPath("$.result.phoneNo").value("9998887777"))
+                .andExpect(jsonPath("$.result.email").value("alice2@example.com"));
+
+        mockMvc.perform(delete("/api/contacts/" + createdId)
+                        .header("Authorization", bearerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Contact deleted successfully"));
+
+        mockMvc.perform(get("/api/contacts/" + createdId)
+                        .header("Authorization", bearerToken))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Contact not found"));
+    }
+
+    @Test
+    public void createWithMissingNameReturnsBadRequest() throws Exception {
+        ContactSaveRequest req = new ContactSaveRequest();
+        req.setPhoneNo("1112223333");
+
+        mockMvc.perform(post("/api/contacts")
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void updateWithMissingNameReturnsBadRequest() throws Exception {
+        Contact contact = new Contact();
+        contact.setUserId(testUser.getId());
+        contact.setName("Bob");
+        contact.setPhoneNo("2223334444");
+        contact = contactRepository.save(contact);
+
+        ContactSaveRequest req = new ContactSaveRequest();
+        req.setEmail("bob@example.com");
+
+        mockMvc.perform(put("/api/contacts/" + contact.getId())
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void getUpdateDeleteForeignContactReturnsNotFound() throws Exception {
+        User other = new User();
+        other.setName("Other");
+        other.setPhoneNo("2002002000");
+        other.setEmail("other@example.com");
+        other.setFireBaseId("other_pass");
+        other = usersRepository.save(other);
+
+        Contact foreign = new Contact();
+        foreign.setUserId(other.getId());
+        foreign.setName("Foreign");
+        foreign.setPhoneNo("7776665555");
+        foreign = contactRepository.save(foreign);
+
+        mockMvc.perform(get("/api/contacts/" + foreign.getId())
+                        .header("Authorization", bearerToken))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Contact not found"));
+
+        ContactSaveRequest update = new ContactSaveRequest();
+        update.setName("Try Update");
+
+        mockMvc.perform(put("/api/contacts/" + foreign.getId())
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(update)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Contact not found"));
+
+        mockMvc.perform(delete("/api/contacts/" + foreign.getId())
+                        .header("Authorization", bearerToken))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Contact not found"));
+    }
+
+    @Test
+    public void getUpdateDeleteNotFoundReturnsNotFound() throws Exception {
+        mockMvc.perform(get("/api/contacts/999999")
+                        .header("Authorization", bearerToken))
+                .andExpect(status().isNotFound());
+
+        ContactSaveRequest update = new ContactSaveRequest();
+        update.setName("Missing");
+
+        mockMvc.perform(put("/api/contacts/999999")
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(update)))
+                .andExpect(status().isNotFound());
+
+        mockMvc.perform(delete("/api/contacts/999999")
+                        .header("Authorization", bearerToken))
+                .andExpect(status().isNotFound());
+    }
+}

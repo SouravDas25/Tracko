@@ -16,6 +16,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -38,13 +39,8 @@ public class SessionController {
     @Autowired
     private AuthenticationManager authenticationManager;
 
-    @Autowired(required = false)
-    @Qualifier("devUserDetailsService")
-    private UserDetailsService devUserDetailsService;
-
-    @Autowired(required = false)
-    @Qualifier("jwtUserDetailsService")
-    private UserDetailsService jwtUserDetailsService;
+    @Autowired
+    private UserDetailsService userDetailsService;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -64,12 +60,13 @@ public class SessionController {
     @PostMapping("/api/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
         try {
-            UserDetailsService uds = jwtUserDetailsService != null ? jwtUserDetailsService : devUserDetailsService;
-            if (uds == null) {
+            UserDetails user = userDetailsService.loadUserByUsername(loginRequest.getUsername());
+
+            if (user == null) {
                 return Response.unauthorized();
             }
-            UserDetails user = uds.loadUserByUsername(loginRequest.getUsername());
-            boolean ok = user != null && passwordEncoder.matches(loginRequest.getPassword(), user.getPassword());
+
+            boolean ok = passwordEncoder.matches(loginRequest.getPassword(), user.getPassword());
             if (!ok && user != null) {
                 ok = loginRequest.getPassword() != null && loginRequest.getPassword().equals(user.getPassword());
             }
@@ -93,7 +90,7 @@ public class SessionController {
         if (id == null)
             Response.badRequest("Phone Number Incorrect");
         log.info("User Saved : {}", id);
-        UserDetails userDetails = jwtUserDetailsService.loadUserByUsername(userSaveRequest.getPhoneNo());
+        UserDetails userDetails = userDetailsService.loadUserByUsername(userSaveRequest.getPhoneNo());
         String jwtToken = jwtTokenUtil.generateToken(userDetails);
         HttpHeaders responseHeaders = new HttpHeaders();
         responseHeaders.set("Jwt-Token", jwtToken);

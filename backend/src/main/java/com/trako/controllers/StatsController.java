@@ -64,7 +64,7 @@ public class StatsController {
             Date date
     ) {
         try {
-            String currentUserId = userService.loggedInUser().getId();
+            var currentUserId = userService.loggedInUser().getId();
             StatsService.Range r;
             try {
                 r = StatsService.Range.valueOf(range.toLowerCase());

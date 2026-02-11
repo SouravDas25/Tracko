@@ -1,6 +1,9 @@
 package com.trako.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.trako.entities.User;
+import com.trako.repositories.UsersRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -27,8 +30,54 @@ class SessionControllerIT {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private UsersRepository usersRepository;
+
+    @Autowired
+    private com.trako.repositories.BudgetCategoryAllocationRepository budgetCategoryAllocationRepository;
+
+    @Autowired
+    private com.trako.repositories.TransactionRepository transactionRepository;
+
+    @Autowired
+    private com.trako.repositories.CategoryRepository categoryRepository;
+
+    @Autowired
+    private com.trako.repositories.BudgetMonthRepository budgetMonthRepository;
+
+    @Autowired
+    private com.trako.repositories.AccountRepository accountRepository;
+
+    @Autowired
+    private com.trako.repositories.SplitRepository splitRepository;
+
+    @Autowired
+    private com.trako.repositories.ContactRepository contactRepository;
+
+    @Autowired
+    private com.trako.repositories.AllocationRuleRepository allocationRuleRepository;
+
+    @BeforeEach
+    void setUp() {
+        splitRepository.deleteAll();
+        budgetCategoryAllocationRepository.deleteAll();
+        transactionRepository.deleteAll();
+        allocationRuleRepository.deleteAll();
+        contactRepository.deleteAll();
+        accountRepository.deleteAll();
+        budgetMonthRepository.deleteAll();
+        categoryRepository.deleteAll();
+        usersRepository.deleteAll();
+    }
+
     @Test
     void login_withValidDevUser_returnsToken() throws Exception {
+        User user = new User();
+        user.setName("user");
+        user.setPhoneNo("user");
+        user.setFireBaseId("password");
+        usersRepository.save(user);
+
         Map<String, Object> body = new HashMap<>();
         body.put("username", "user");
         body.put("password", "password");
@@ -42,6 +91,12 @@ class SessionControllerIT {
 
     @Test
     void login_withInvalidPassword_returnsUnauthorized() throws Exception {
+        User user = new User();
+        user.setName("user");
+        user.setPhoneNo("user");
+        user.setFireBaseId("password");
+        usersRepository.save(user);
+
         Map<String, Object> body = new HashMap<>();
         body.put("username", "user");
         body.put("password", "wrong");

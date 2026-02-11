@@ -77,16 +77,6 @@ public class SecurityConfig {
         return http.build();
     }
 
-    @Bean
-    @Profile("dev")
-    public UserDetailsService devUserDetailsService() {
-        UserDetails user = User.builder()
-                .username("user")
-                .password(passwordEncoder().encode("password"))
-                .roles("USER")
-                .build();
-        return new InMemoryUserDetailsManager(user);
-    }
 
     @Bean
     @Profile("prod")
