@@ -386,11 +386,11 @@ class TransactionController {
       transaction.name = entity['name'];
       transaction.category =
           await CategoryController.findOrCreateByName(entity['category']);
-      transaction.categoryId = transaction.category?.id ?? 1;
+      transaction.categoryId = transaction.category?.id ?? 0;
 //      transaction.logo = entity['logo'];
     } else {
-      transaction.categoryId = Category.defaultCategoryId();
-      transaction.category = await CategoryController.getDefaultCategory();
+      transaction.categoryId = 0;
+      transaction.category = null;
     }
     transaction.contacts = Set();
     TransactionController._preloadTransactions(transaction);

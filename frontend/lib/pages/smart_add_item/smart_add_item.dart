@@ -92,7 +92,7 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
     final filtered = _filteredCategoriesForCurrentType();
     final ids = filtered.map((c) => c.id).whereType<int>().toSet();
     if (categoryId != 0 && ids.contains(categoryId)) return;
-    categoryId = filtered.isNotEmpty ? (filtered.first.id ?? 0) : 0;
+    categoryId = 0;
   }
 
   String _normalizePhone(String? phone) {
@@ -190,15 +190,8 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
 
       _ensureValidCategorySelection();
 
-      if (accountId == 0) {
-        accountId = accounts.isNotEmpty ? (accounts[0].id ?? 0) : 0;
-      }
-      if (transferFromAccountId == 0) {
-        transferFromAccountId = accounts.isNotEmpty ? (accounts[0].id ?? 0) : 0;
-      }
-      if (transferToAccountId == 0) {
-        transferToAccountId = accounts.isNotEmpty ? (accounts[0].id ?? 0) : 0;
-      }
+      // Do not auto-select account/category; require explicit user selection.
+      // For transfers, the user must explicitly pick both accounts.
 
       final loadedContacts =
           await TransactionController.loadSplits(widget.transaction);
@@ -239,6 +232,11 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
       if (inputAmount <= 0) {
         throw Exception("Amount should be non-zero and non-negative");
       }
+
+      if (name.text.trim().isEmpty) {
+        throw Exception("Description has to be specified");
+      }
+
       if (transactionType == TransactionType.TRANSFER) {
         if (transferFromAccountId == 0 || transferToAccountId == 0) {
           throw Exception("From Account and To Account has to be specified");
@@ -378,7 +376,7 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
             ? Colors.redAccent
             : (transactionType == TransactionType.TRANSFER
                 ? Colors.blueGrey
-                : Colors.green),
+                : Colors.teal),
         actions: transactionType == TransactionType.DEBIT
             ? <Widget>[
                 IconButton(
@@ -420,7 +418,7 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
                           ? Colors.redAccent
                           : (transactionType == TransactionType.TRANSFER
                               ? Colors.blueGrey
-                              : Colors.green),
+                              : Colors.teal),
                       padding: EdgeInsets.symmetric(vertical: 16),
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
@@ -467,7 +465,7 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
           children: [
             Expanded(
               child: _buildTypeButton(
-                  TransactionType.CREDIT, "Income", Colors.green),
+                  TransactionType.CREDIT, "Income", Colors.teal),
             ),
             Expanded(
               child: _buildTypeButton(
@@ -525,7 +523,7 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
     } else if (transactionType == TransactionType.TRANSFER) {
       typeColor = isDarkMode ? Colors.lightBlueAccent : Colors.blueGrey;
     } else {
-      typeColor = isDarkMode ? Colors.greenAccent : Colors.green;
+      typeColor = isDarkMode ? Colors.tealAccent : Colors.teal;
     }
 
     return Card(
@@ -668,9 +666,8 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
   Widget _buildAccountDropdown(
       String label, int? value, Function(int?) onChanged) {
     final ids = accounts.map((a) => a.id).whereType<int>().toSet();
-    final int? safeValue = (value != null && ids.contains(value))
-        ? value
-        : (ids.isNotEmpty ? ids.first : null);
+    final int? safeValue =
+        (value != null && value != 0 && ids.contains(value)) ? value : null;
     return DropdownButtonFormField<int>(
       value: safeValue,
       decoration: InputDecoration(
@@ -761,9 +758,7 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
                               .whereType<int>()
                               .contains(categoryId)
                           ? categoryId
-                          : (filteredCategories.isNotEmpty
-                              ? filteredCategories.first.id
-                              : null),
+                          : null,
                       decoration: InputDecoration(
                         labelText: 'Category',
                         prefixIcon: Icon(Icons.category_outlined),

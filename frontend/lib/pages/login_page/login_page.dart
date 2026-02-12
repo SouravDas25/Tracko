@@ -114,9 +114,20 @@ class _LoginPage extends State<LoginForm> {
       key: _formKey,
       child: Column(
         children: <Widget>[
+          const SizedBox(height: 20),
           TextFormField(
             controller: _usernameController,
-            decoration: const InputDecoration(labelText: 'Email'),
+            decoration: InputDecoration(
+              labelText: 'Email',
+              prefixIcon: const Icon(Icons.email_outlined),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade400),
+              ),
+            ),
             keyboardType: TextInputType.emailAddress,
             textInputAction: TextInputAction.next,
             autofillHints: const [AutofillHints.username, AutofillHints.email],
@@ -129,10 +140,19 @@ class _LoginPage extends State<LoginForm> {
               return null;
             },
           ),
+          const SizedBox(height: 20),
           TextFormField(
             controller: _passwordController,
             decoration: InputDecoration(
               labelText: 'Password',
+              prefixIcon: const Icon(Icons.lock_outline),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade400),
+              ),
               suffixIcon: IconButton(
                 onPressed: () =>
                     setState(() => _obscurePassword = !_obscurePassword),
@@ -153,29 +173,49 @@ class _LoginPage extends State<LoginForm> {
               return null;
             },
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16.0),
+          const SizedBox(height: 30),
+          SizedBox(
+            width: double.infinity,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.teal,
                 foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16.0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 2,
               ),
               onPressed: _submitting ? null : _submit,
               child: _submitting
                   ? const SizedBox(
-                      width: 18,
-                      height: 18,
+                      width: 24,
+                      height: 24,
                       child: CircularProgressIndicator(
                           strokeWidth: 2, color: Colors.white),
                     )
-                  : const Text('Login'),
+                  : const Text(
+                      'Login',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
             ),
           ),
+          const SizedBox(height: 16),
           TextButton(
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.teal,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            ),
             onPressed: _submitting
                 ? null
                 : () => Navigator.pushNamed(context, '/phone_login'),
-            child: const Text('Login with phone instead'),
+            child: const Text(
+              'Login with phone instead',
+              style: TextStyle(fontSize: 16),
+            ),
           ),
         ],
       ),

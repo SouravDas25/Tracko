@@ -88,13 +88,7 @@ class _WelcomePage extends State<WelcomePage> {
                 padding: EdgeInsets.symmetric(vertical: 20.0),
               ),
               onPressed: () {
-                setState(() {
-                  isUserValid = true; // Prevent re-check
-                });
-                Navigator.pushReplacementNamed(
-                  context,
-                  "/phone_login",
-                );
+                Navigator.pushNamed(context, '/login');
               },
               child: Text(
                 'Login',
@@ -112,11 +106,17 @@ class _WelcomePage extends State<WelcomePage> {
                 padding: const EdgeInsets.symmetric(vertical: 18.0),
               ),
               onPressed: () {
-                Navigator.pushNamed(context, '/login');
+                setState(() {
+                  isUserValid = true; // Prevent re-check
+                });
+                Navigator.pushReplacementNamed(
+                  context,
+                  "/phone_login",
+                );
               },
-              child: const Text(
-                'Login with username/password',
-                style: TextStyle(fontSize: 16.0),
+              child: Text(
+                'Login with Phone Number',
+                style: TextStyle(fontSize: 18.0),
               ),
             ),
           ),

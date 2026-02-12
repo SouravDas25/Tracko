@@ -20,7 +20,15 @@ class _PhoneLoginPage extends State<PhoneLoginPage> {
   @override
   Widget build(BuildContext context) {
     return Screen(
-      titleName: "Verify Phone Number",
+      title: AppBar(
+        title: Text("Verify Phone Number"),
+        centerTitle: true,
+        backgroundColor: Colors.teal,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pushReplacementNamed(context, '/welcome'),
+        ),
+      ),
       body: Padding(
           padding: EdgeInsets.symmetric(horizontal: 20.0),
           child: ListView(
@@ -65,25 +73,45 @@ class _PhoneLoginPage extends State<PhoneLoginPage> {
               ),
               Padding(
                 padding: EdgeInsets.all(30.0),
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.teal,
-                    foregroundColor: Colors.white,
-                    padding: EdgeInsets.symmetric(vertical: 20.0),
-                  ),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            OtpPage(phoneNumber: phoneNumberController.text),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.teal,
+                        foregroundColor: Colors.white,
+                        padding: EdgeInsets.symmetric(vertical: 20.0),
                       ),
-                    );
-                  },
-                  child: Text(
-                    'Verify',
-                    style: TextStyle(fontSize: 20.0),
-                  ),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => OtpPage(
+                                phoneNumber: phoneNumberController.text),
+                          ),
+                        );
+                      },
+                      child: Text(
+                        'Verify',
+                        style: TextStyle(fontSize: 20.0),
+                      ),
+                    ),
+                    SizedBox(height: 20),
+                    OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.teal,
+                        side: BorderSide(color: Colors.teal),
+                        padding: EdgeInsets.symmetric(vertical: 20.0),
+                      ),
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/login');
+                      },
+                      child: Text(
+                        'Login with username/password',
+                        style: TextStyle(fontSize: 16.0),
+                      ),
+                    ),
+                  ],
                 ),
               )
             ],

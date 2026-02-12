@@ -10,6 +10,8 @@ import com.trako.services.TransactionService;
 import com.trako.dtos.TransactionSummaryDTO;
 import com.trako.services.UserService;
 import com.trako.util.Response;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +26,8 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/transactions")
 public class TransactionController {
+
+    private static final Logger log = LoggerFactory.getLogger(TransactionController.class);
 
     @Autowired
     private TransactionService transactionService;
@@ -243,16 +247,31 @@ public class TransactionController {
         try {
             String currentUserId = userService.loggedInUser().getId();
             Account acc = accountRepository.findById(transaction.getAccountId()).orElse(null);
-            if (acc == null || !currentUserId.equals(acc.getUserId())) {
+            if (acc == null) {
+                log.warn("Transaction create failed: Account {} not found", transaction.getAccountId());
                 return Response.unauthorized();
             }
+            if (!currentUserId.equals(acc.getUserId())) {
+                log.warn("Transaction create failed: Account {} owner mismatch. User: {}, Account Owner: {}", 
+                        transaction.getAccountId(), currentUserId, acc.getUserId());
+                return Response.unauthorized();
+            }
+            
             Category cat = categoryRepository.findById(transaction.getCategoryId()).orElse(null);
-            if (cat == null || !currentUserId.equals(cat.getUserId())) {
+            if (cat == null) {
+                log.warn("Transaction create failed: Category {} not found", transaction.getCategoryId());
                 return Response.unauthorized();
             }
+            if (!currentUserId.equals(cat.getUserId())) {
+                log.warn("Transaction create failed: Category {} owner mismatch. User: {}, Category Owner: {}", 
+                        transaction.getCategoryId(), currentUserId, cat.getUserId());
+                return Response.unauthorized();
+            }
+            
             Transaction saved = transactionService.save(transaction);
             return Response.ok(saved, "Transaction created successfully");
         } catch (UserNotLoggedInException e) {
+            log.warn("Transaction create failed: User not logged in");
             return Response.unauthorized();
         }
     }

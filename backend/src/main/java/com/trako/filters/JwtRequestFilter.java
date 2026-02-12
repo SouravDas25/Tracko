@@ -41,6 +41,8 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest httpServletRequest, @NonNull HttpServletResponse httpServletResponse, @NonNull FilterChain filterChain) throws ServletException, IOException {
 
+        logger.info("JwtRequestFilter: Processing request " + httpServletRequest.getMethod() + " " + httpServletRequest.getRequestURI());
+
         try {
             final String requestTokenHeader = httpServletRequest.getHeader("Authorization");
 
@@ -50,30 +52,39 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             // only the Token
             if (requestTokenHeader != null && requestTokenHeader.startsWith("Bearer ")) {
                 jwtToken = requestTokenHeader.substring(7);
+                logger.info("JwtRequestFilter: Token found (prefix): " + (jwtToken.length() > 10 ? jwtToken.substring(0, 10) + "..." : jwtToken));
+
                 if (jwtToken.isBlank()) {
+                    logger.warn("JwtRequestFilter: Token is blank");
                     filterChain.doFilter(httpServletRequest, httpServletResponse);
                     return;
                 }
                 try {
                     username = jwtTokenUtil.getUserNameFromToken(jwtToken);
+                    logger.info("JwtRequestFilter: Username from token: " + username);
                 } catch (IllegalArgumentException e) {
-                    logger.warn("Unable to get JWT Token");
+                    logger.error("JwtRequestFilter: Unable to get JWT Token", e);
                 } catch (ExpiredJwtException e) {
-                    logger.warn("JWT Token has expired");
+                    logger.warn("JwtRequestFilter: JWT Token has expired", e);
                 } catch (JwtException e) {
-                    logger.warn("Invalid JWT Token");
+                    logger.error("JwtRequestFilter: Invalid JWT Token", e);
                 }
+            } else {
+                logger.info("JwtRequestFilter: No Bearer token found in Authorization header");
             }
 
             // Once we get the token, validate it.
             if (username != null && (SecurityContextHolder.getContext().getAuthentication() == null
                     || SecurityContextHolder.getContext().getAuthentication() instanceof AnonymousAuthenticationToken)) {
 
+                logger.info("JwtRequestFilter: Loading details for user: " + username);
                 UserDetails userDetails = jwtUserDetailsService.loadUserByUsername(username);
 
                 // if token is valid configure Spring Security to manually set
                 // authentication
-                if (jwtTokenUtil.validateToken(jwtToken, userDetails)) {
+                boolean isValid = jwtTokenUtil.validateToken(jwtToken, userDetails);
+                if (isValid) {
+                    logger.info("JwtRequestFilter: Token is valid. Setting authentication.");
 
                     UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(
                             userDetails, null, userDetails.getAuthorities());
@@ -83,7 +94,13 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                     // that the current user is authenticated. So it passes the
                     // Spring Security Configurations successfully.
                     SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
+                } else {
+                    logger.warn("JwtRequestFilter: Token validation failed for user: " + username);
                 }
+            } else {
+                 if (username != null) {
+                     logger.info("JwtRequestFilter: SecurityContext already has authentication: " + SecurityContextHolder.getContext().getAuthentication());
+                 }
             }
             filterChain.doFilter(httpServletRequest, httpServletResponse);
         } catch (Exception e) {

@@ -14,10 +14,10 @@ class Transaction {
   DateTime date = DateTime.now();
   double amount = 0.0;
   int isCountable = 1;
-  int accountId = 1;
+  int accountId = 0;
   int? transferFromAccountId;
   int? transferToAccountId;
-  int categoryId = 1;
+  int categoryId = 0;
   List<Split> splits = [];
   Set<TrakoContact> contacts = {};
   Category? category;
@@ -42,8 +42,8 @@ class Transaction {
     this.comments = "";
     this.amount = 0.0;
     this.date = DateTime.now();
-    this.name = "Item";
-    this.accountId = Account.defaultAccountId();
-    this.categoryId = Category.defaultCategoryId();
+    this.name = "";
+    this.accountId = 0;
+    this.categoryId = 0;
   }
 }
