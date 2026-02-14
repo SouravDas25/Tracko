@@ -7,6 +7,7 @@ import com.trako.exceptions.UserNotLoggedInException;
 import com.trako.repositories.AccountRepository;
 import com.trako.repositories.CategoryRepository;
 import com.trako.services.TransactionService;
+import com.trako.dtos.TransactionDetailDTO;
 import com.trako.dtos.TransactionSummaryDTO;
 import com.trako.services.UserService;
 import com.trako.util.Response;
@@ -75,6 +76,37 @@ public class TransactionController {
             }
         }
         return transactions;
+    }
+
+    private List<TransactionDetailDTO> hideTransferCreditsForDTO(List<TransactionDetailDTO> dtos, String userId) {
+        var transferCats = categoryRepository.findByUserIdAndName(userId, "TRANSFER");
+        if (transferCats == null || transferCats.isEmpty()) {
+            return dtos;
+        }
+        Long transferCategoryId = transferCats.get(0).getId();
+        return dtos.stream()
+                .filter(dto -> {
+                    return !(dto.getCategoryId() != null
+                            && dto.getCategoryId().equals(transferCategoryId)
+                            && dto.getIsCountable() != null && dto.getIsCountable() == 0
+                            && dto.getTransactionType() != null && dto.getTransactionType() == 2);
+                })
+                .collect(Collectors.toList());
+    }
+
+    private List<TransactionDetailDTO> markTransferTypeAsTransferForDTO(List<TransactionDetailDTO> dtos, String userId) {
+        var transferCats = categoryRepository.findByUserIdAndName(userId, "TRANSFER");
+        if (transferCats == null || transferCats.isEmpty()) {
+            return dtos;
+        }
+        Long transferCategoryId = transferCats.get(0).getId();
+        for (var dto : dtos) {
+            if (dto.getCategoryId() != null && dto.getCategoryId().equals(transferCategoryId)
+                    && dto.getIsCountable() != null && dto.getIsCountable() == 0) {
+                dto.setTransactionType(3); // mark as TRANSFER for response rendering
+            }
+        }
+        return dtos;
     }
 
     /**
@@ -217,15 +249,25 @@ public class TransactionController {
      * Returns authenticated user's transactions between startDate and endDate.
      * If accountIds is provided (comma-separated), results are filtered by those accounts.
      * Transfer credit-side entries are hidden, and transfer transactions are labeled as type=TRANSFER.
+     * If expand=true, returns full details (Account, Category, Splits) to avoid N+1 queries.
      */
     @GetMapping("/date-range")
     public ResponseEntity<?> getMyTransactionsByDateRange(
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate,
-            @RequestParam(required = false) String accountIds) {
+            @RequestParam(required = false) String accountIds,
+            @RequestParam(defaultValue = "false") boolean expand) {
         try {
             String currentUserId = userService.loggedInUser().getId();
             List<Long> ids = parseAccountIds(accountIds);
+            
+            if (expand) {
+                List<TransactionDetailDTO> dtos = transactionService.findWithDetailsByUserIdAndDateBetween(currentUserId, startDate, endDate, ids);
+                dtos = hideTransferCreditsForDTO(dtos, currentUserId);
+                dtos = markTransferTypeAsTransferForDTO(dtos, currentUserId);
+                return Response.ok(dtos);
+            }
+
             List<Transaction> transactions;
             if (ids == null || ids.isEmpty()) {
                 transactions = transactionService.findByUserIdAndDateBetween(currentUserId, startDate, endDate);

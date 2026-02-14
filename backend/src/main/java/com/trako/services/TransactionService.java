@@ -1,19 +1,19 @@
 package com.trako.services;
 
-import com.trako.entities.Transaction;
-import com.trako.entities.UserCurrency;
+import com.trako.dtos.SplitDetailDTO;
+import com.trako.dtos.TransactionDetailDTO;
+import com.trako.entities.*;
 import com.trako.exceptions.UserNotLoggedInException;
-import com.trako.repositories.TransactionRepository;
-import com.trako.repositories.UserCurrencyRepository;
+import com.trako.repositories.*;
 import com.trako.dtos.TransactionSummaryDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 public class TransactionService {
@@ -26,6 +26,18 @@ public class TransactionService {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private AccountRepository accountRepository;
+
+    @Autowired
+    private CategoryRepository categoryRepository;
+
+    @Autowired
+    private ContactRepository contactRepository;
+
+    @Autowired
+    private SplitRepository splitRepository;
 
     public List<Transaction> findAll() {
         return transactionRepository.findAll();
@@ -49,6 +61,65 @@ public class TransactionService {
 
     public List<Transaction> findByUserIdAndDateBetweenAndAccountIds(String userId, Date startDate, Date endDate, List<Long> accountIds) {
         return transactionRepository.findByUserIdAndDateBetweenAndAccountIds(userId, startDate, endDate, accountIds);
+    }
+
+    public List<TransactionDetailDTO> findWithDetailsByUserIdAndDateBetween(String userId, Date startDate, Date endDate, List<Long> accountIds) {
+        List<Transaction> transactions;
+        if (accountIds == null || accountIds.isEmpty()) {
+            transactions = transactionRepository.findByUserIdAndDateBetween(userId, startDate, endDate);
+        } else {
+            transactions = transactionRepository.findByUserIdAndDateBetweenAndAccountIds(userId, startDate, endDate, accountIds);
+        }
+
+        if (transactions.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // Collect IDs
+        Set<Long> acctIds = new HashSet<>();
+        Set<Long> catIds = new HashSet<>();
+        List<Long> txIds = new ArrayList<>();
+
+        for (Transaction t : transactions) {
+            acctIds.add(t.getAccountId());
+            catIds.add(t.getCategoryId());
+            txIds.add(t.getId());
+        }
+
+        // Batch Fetch
+        List<Account> accounts = accountRepository.findAllById(acctIds);
+        Map<Long, Account> accountMap = accounts.stream().collect(Collectors.toMap(Account::getId, Function.identity()));
+
+        List<Category> categories = categoryRepository.findAllById(catIds);
+        Map<Long, Category> categoryMap = categories.stream().collect(Collectors.toMap(Category::getId, Function.identity()));
+
+        List<Split> splits = splitRepository.findByTransactionIdIn(txIds);
+        Map<Long, List<Split>> splitsByTxId = splits.stream().collect(Collectors.groupingBy(Split::getTransactionId));
+
+        // Fetch Contacts for Splits
+        Set<Long> contactIds = splits.stream()
+                .map(Split::getContactId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        List<Contact> contacts = contactRepository.findAllById(contactIds);
+        Map<Long, Contact> contactMap = contacts.stream().collect(Collectors.toMap(Contact::getId, Function.identity()));
+
+        // Assemble DTOs
+        List<TransactionDetailDTO> dtos = new ArrayList<>();
+        for (Transaction t : transactions) {
+            Account acct = accountMap.get(t.getAccountId());
+            Category cat = categoryMap.get(t.getCategoryId());
+            List<Split> txSplits = splitsByTxId.getOrDefault(t.getId(), Collections.emptyList());
+
+            List<SplitDetailDTO> splitdtos = txSplits.stream().map(s -> {
+                Contact c = (s.getContactId() != null) ? contactMap.get(s.getContactId()) : null;
+                return new SplitDetailDTO(s, c);
+            }).collect(Collectors.toList());
+
+            dtos.add(new TransactionDetailDTO(t, cat, acct, splitdtos));
+        }
+
+        return dtos;
     }
 
     public List<Transaction> findByAccountId(Long accountId) {

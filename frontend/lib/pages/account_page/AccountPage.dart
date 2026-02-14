@@ -111,7 +111,6 @@ class AccountPageState extends AsyncLoadState<AccountPage> {
                       MaterialPageRoute(
                         builder: (_) => TransactionListPage(
                           initialAccountIds: id == 0 ? null : [id],
-                          showAccountFilter: false,
                         ),
                       ),
                     );

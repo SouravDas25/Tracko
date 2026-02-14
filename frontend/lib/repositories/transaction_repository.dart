@@ -1,7 +1,13 @@
 import '../config/api_config.dart';
 import '../models/transaction.dart' as legacy;
+import '../models/account.dart' as legacy_account;
+import '../models/category.dart' as legacy_category;
+import '../models/contact.dart' as legacy_contact;
+import '../models/split.dart' as legacy_split;
+import '../dtos/TrackoContact.dart';
 import '../services/api_client.dart';
 import '../Utils/enums.dart';
+import '../Utils/AppLog.dart';
 
 class TransactionRepository {
   final _api = ApiClient();
@@ -61,16 +67,100 @@ class TransactionRepository {
     required DateTime endDate,
     List<int>? accountIds,
   }) async {
+    AppLog.d(
+        '[TRACE][TransactionRepository] getByUserIdAndDateRange userId=$userId start=${startDate.toIso8601String()} end=${endDate.toIso8601String()} accountIds=$accountIds');
     final res = await _api.get<List<dynamic>>(
       "${ApiConfig.transactions}/date-range",
       query: {
         'startDate': startDate.toIso8601String().split('T').first,
         'endDate': endDate.toIso8601String().split('T').first,
+        'expand': true,
         if (accountIds != null && accountIds.isNotEmpty)
           'accountIds': accountIds.join(','),
       },
     );
-    return res.map((e) => _toLegacy(e as Map<String, dynamic>)).toList();
+    AppLog.d(
+        '[TRACE][TransactionRepository] date-range raw response count=${res.length}');
+    return res.map((e) {
+      final row = e as Map<String, dynamic>;
+      if (row['transaction'] is Map<String, dynamic> ||
+          row.containsKey('category') ||
+          row.containsKey('account') ||
+          row.containsKey('splits')) {
+        return _toLegacyFromExpanded(row);
+      }
+      return _toLegacy(row);
+    }).toList();
+  }
+
+  legacy.Transaction _toLegacyFromExpanded(Map<String, dynamic> json) {
+    final txJson = (json['transaction'] as Map<String, dynamic>?) ?? json;
+    final t = _toLegacy(txJson);
+
+    final catJson = json['category'] as Map<String, dynamic>?;
+    if (catJson != null) {
+      t.category = _toLegacyCategory(catJson);
+    }
+
+    final accJson = json['account'] as Map<String, dynamic>?;
+    if (accJson != null) {
+      t.account = _toLegacyAccount(accJson);
+    }
+
+    final splitRows = (json['splits'] as List<dynamic>?) ?? const <dynamic>[];
+    t.splits = splitRows.map((row) {
+      final m = row as Map<String, dynamic>;
+      final splitJson = (m['split'] as Map<String, dynamic>?) ?? m;
+      final s = _toLegacySplit(splitJson);
+
+      final contactJson = m['contact'] as Map<String, dynamic>?;
+      if (contactJson != null) {
+        final c = legacy_contact.Contact.fromJson(contactJson);
+        s.contact = c;
+
+        final tc = TrakoContact();
+        tc.contactId = c.id;
+        tc.name = c.name;
+        tc.phoneNo = c.phoneNo;
+        tc.email = c.email;
+        t.contacts.add(tc);
+      }
+      return s;
+    }).toList();
+
+    return t;
+  }
+
+  legacy_category.Category _toLegacyCategory(Map<String, dynamic> json) {
+    final c = legacy_category.Category();
+    c.id = (json['id'] as num?)?.toInt();
+    c.name = (json['name'] as String?) ?? '';
+    c.categoryType = (json['categoryType'] as String?) ?? 'EXPENSE';
+    return c;
+  }
+
+  legacy_account.Account _toLegacyAccount(Map<String, dynamic> json) {
+    final a = legacy_account.Account();
+    a.id = (json['id'] as num?)?.toInt();
+    a.name = (json['name'] as String?) ?? '';
+    a.currency = (json['currency'] as String?) ?? 'INR';
+    return a;
+  }
+
+  legacy_split.Split _toLegacySplit(Map<String, dynamic> json) {
+    final s = legacy_split.Split();
+    s.id = (json['id'] as num?)?.toInt();
+    s.transactionId = (json['transactionId'] as num?)?.toInt() ??
+        (json['transaction_id'] as num?)?.toInt() ??
+        0;
+    s.userId =
+        int.tryParse((json['userId'] ?? json['user_id'] ?? '0').toString()) ??
+            0;
+    s.contactId = (json['contactId'] as num?)?.toInt() ??
+        (json['contact_id'] as num?)?.toInt();
+    s.amount = ((json['amount'] as num?) ?? 0).toDouble();
+    s.isSettled = (json['isSettled'] ?? json['is_settled'] ?? 0) as int;
+    return s;
   }
 
   Future<legacy.Transaction> create(legacy.Transaction t) async {
