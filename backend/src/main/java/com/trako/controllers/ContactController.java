@@ -1,16 +1,16 @@
 package com.trako.controllers;
 
 import com.trako.entities.Contact;
+import com.trako.exceptions.UserNotLoggedInException;
 import com.trako.models.request.ContactSaveRequest;
 import com.trako.services.ContactService;
 import com.trako.services.UserService;
 import com.trako.util.Response;
-import com.trako.exceptions.UserNotLoggedInException;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.validation.Valid;
 import java.util.List;
 
 @RestController

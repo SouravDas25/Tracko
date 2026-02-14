@@ -1,5 +1,6 @@
 package com.trako.services;
 
+import com.trako.repositories.UsersRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -10,7 +11,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import com.trako.repositories.UsersRepository;
 
 @Service
 public class JwtUserDetailsService implements UserDetailsService {

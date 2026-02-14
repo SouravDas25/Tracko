@@ -3,7 +3,6 @@ package com.trako.integration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trako.config.TestJwtSecurityConfig;
 import com.trako.entities.User;
-import com.trako.entities.UserCurrency;
 import com.trako.models.request.UserCurrencyRequest;
 import com.trako.repositories.UserCurrencyRepository;
 import com.trako.repositories.UsersRepository;
@@ -22,9 +21,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
