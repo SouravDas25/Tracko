@@ -162,7 +162,8 @@ public class StatsServiceIntegrationTest {
         assertNotNull(dto);
         assertEquals("monthly", dto.getRange());
         assertNotNull(dto.getSeries());
-        assertEquals(12, dto.getSeries().size());
+        // Continuous buckets from first month with data to anchor month (inclusive)
+        assertTrue(dto.getSeries().size() >= 12);
     }
 
     @Test
@@ -179,6 +180,8 @@ public class StatsServiceIntegrationTest {
         assertNotNull(dto.getSeries());
         assertTrue(dto.getSeries().stream().anyMatch(p -> "2025".equals(p.getLabel())));
         assertTrue(dto.getSeries().stream().anyMatch(p -> "2026".equals(p.getLabel())));
+        // Continuous buckets from first year with data to anchor year (inclusive)
+        assertTrue(dto.getSeries().size() >= 2);
     }
 
     @Test
@@ -192,6 +195,7 @@ public class StatsServiceIntegrationTest {
 
         assertNotNull(dto);
         assertNotNull(dto.getSeries());
+        // No matching DEBIT transactions => no buckets
         assertEquals(0, dto.getSeries().size());
         assertNotNull(dto.getCategories());
         assertEquals(0, dto.getCategories().size());
