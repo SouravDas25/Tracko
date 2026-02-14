@@ -1,17 +1,3 @@
 databaseChangeLog:
   - include:
-      file: db/changelog/001-initial-schema.yaml
-  - include:
-      file: db/changelog/002-add-timestamp-defaults.yaml
-  - include:
-      file: db/changelog/003-add-missing-tables.yaml
-  - include:
-      file: db/changelog/004-create-contacts.yaml
-  - include:
-      file: db/changelog/005-add-contactid-to-splits.yaml
-  - include:
-      file: db/changelog/009-add-category-type.yaml
-  - include:
-      file: db/changelog/008-drop-chat-tables.yaml
-  - include:
-      file: db/changelog/010-add-users-is-admin.yaml
+      file: db/changelog/000-consolidated-changelog.yaml
