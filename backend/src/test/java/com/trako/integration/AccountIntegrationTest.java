@@ -3,8 +3,8 @@ package com.trako.integration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trako.config.TestJwtSecurityConfig;
 import com.trako.entities.Account;
-import com.trako.models.request.AccountSaveRequest;
 import com.trako.entities.User;
+import com.trako.models.request.AccountSaveRequest;
 import com.trako.repositories.AccountRepository;
 import com.trako.repositories.UsersRepository;
 import com.trako.util.JwtTokenUtil;
@@ -24,7 +24,8 @@ import java.util.Collections;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc

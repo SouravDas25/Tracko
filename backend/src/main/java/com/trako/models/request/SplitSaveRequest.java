@@ -2,9 +2,9 @@ package com.trako.models.request;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+
 import java.util.Date;
 
 public class SplitSaveRequest {

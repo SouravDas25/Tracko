@@ -1,10 +1,6 @@
 package com.trako.config;
 
-import com.trako.entities.Account;
-import com.trako.entities.Category;
-import com.trako.entities.CategoryType;
-import com.trako.entities.JsonStore;
-import com.trako.entities.User;
+import com.trako.entities.*;
 import com.trako.repositories.AccountRepository;
 import com.trako.repositories.CategoryRepository;
 import com.trako.repositories.UsersRepository;

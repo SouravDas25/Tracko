@@ -4,11 +4,11 @@ import com.trako.entities.JsonStore;
 import com.trako.services.JsonStoreService;
 import com.trako.services.UserService;
 import com.trako.util.Response;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.validation.Valid;
 import java.util.List;
 
 @RestController
