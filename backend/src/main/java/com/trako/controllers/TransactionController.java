@@ -13,14 +13,21 @@ import com.trako.util.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -70,19 +77,91 @@ public class TransactionController {
         return transactions;
     }
 
+    /**
+     * GET /api/transactions
+     * Returns paginated transactions for the authenticated user for a specific month/year.
+     * Transfer credit-side entries are hidden, and transfer transactions are labeled as type=TRANSFER in response.
+     */
     @GetMapping
-    public ResponseEntity<?> getAll() {
+    public ResponseEntity<?> getAll(
+            @RequestParam Integer month,
+            @RequestParam(required = false) Integer year,
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "500") Integer size) {
         try {
+            if (month == null || month < 1 || month > 12) {
+                return Response.badRequest("month must be between 1 and 12");
+            }
+            if (page == null || page < 0) {
+                return Response.badRequest("page must be 0 or greater");
+            }
+            if (size == null || size < 1 || size > 500) {
+                return Response.badRequest("size must be between 1 and 500");
+            }
+
+            int resolvedYear = (year == null) ? Calendar.getInstance().get(Calendar.YEAR) : year;
+            Date startDate = getStartOfMonth(resolvedYear, month);
+            Date endDate = getStartOfNextMonth(resolvedYear, month);
+
             String currentUserId = userService.loggedInUser().getId();
-            List<Transaction> transactions = transactionService.findByUserId(currentUserId);
+            Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "date"));
+            Page<Transaction> transactionPage = transactionService.findByUserIdAndDateBetween(
+                    currentUserId,
+                    startDate,
+                    endDate,
+                    pageable
+            );
+
+            List<Transaction> transactions = new ArrayList<>(transactionPage.getContent());
             transactions = hideTransferCredits(transactions, currentUserId);
             transactions = markTransferTypeAsTransfer(transactions, currentUserId);
-            return Response.ok(transactions);
+
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("month", month);
+            payload.put("year", resolvedYear);
+            payload.put("page", transactionPage.getNumber());
+            payload.put("size", transactionPage.getSize());
+            payload.put("totalElements", transactionPage.getTotalElements());
+            payload.put("totalPages", transactionPage.getTotalPages());
+            payload.put("hasNext", transactionPage.hasNext());
+            payload.put("hasPrevious", transactionPage.hasPrevious());
+            payload.put("transactions", transactions);
+
+            return Response.ok(payload);
         } catch (UserNotLoggedInException e) {
             return Response.unauthorized();
         }
     }
 
+    private Date getStartOfMonth(int year, int month) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.YEAR, year);
+        calendar.set(Calendar.MONTH, month - 1);
+        calendar.set(Calendar.DAY_OF_MONTH, 1);
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        return calendar.getTime();
+    }
+
+    private Date getStartOfNextMonth(int year, int month) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.YEAR, year);
+        calendar.set(Calendar.MONTH, month - 1);
+        calendar.set(Calendar.DAY_OF_MONTH, 1);
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        calendar.add(Calendar.MONTH, 1);
+        return calendar.getTime();
+    }
+
+    /**
+     * GET /api/transactions/total-income
+     * Returns total income for the currently authenticated user within the provided date range (inclusive).
+     */
     @GetMapping("/total-income")
     public ResponseEntity<?> getMyTotalIncome(
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
@@ -96,6 +175,10 @@ public class TransactionController {
         }
     }
 
+    /**
+     * GET /api/transactions/total-expense
+     * Returns total expense for the currently authenticated user within the provided date range (inclusive).
+     */
     @GetMapping("/total-expense")
     public ResponseEntity<?> getMyTotalExpense(
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
@@ -109,6 +192,11 @@ public class TransactionController {
         }
     }
 
+    /**
+     * GET /api/transactions/summary
+     * Returns income/expense/balance summary for the authenticated user in the date range.
+     * If accountIds is provided (comma-separated), summary is limited to those accounts.
+     */
     @GetMapping("/summary")
     public ResponseEntity<?> getMySummary(
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
@@ -124,6 +212,12 @@ public class TransactionController {
         }
     }
 
+    /**
+     * GET /api/transactions/date-range
+     * Returns authenticated user's transactions between startDate and endDate.
+     * If accountIds is provided (comma-separated), results are filtered by those accounts.
+     * Transfer credit-side entries are hidden, and transfer transactions are labeled as type=TRANSFER.
+     */
     @GetMapping("/date-range")
     public ResponseEntity<?> getMyTransactionsByDateRange(
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
@@ -163,6 +257,11 @@ public class TransactionController {
         return out;
     }
 
+    /**
+     * GET /api/transactions/{id}
+     * Returns a single transaction by id only if it belongs to the authenticated user
+     * (ownership verified through the transaction's account).
+     */
     @GetMapping("/{id}")
     public ResponseEntity<?> getById(@PathVariable Long id) {
         try {
@@ -181,6 +280,11 @@ public class TransactionController {
         }
     }
 
+    /**
+     * GET /api/transactions/user/{userId}
+     * Returns all transactions for the specified user, but only when userId matches the authenticated user.
+     * Transfer credit-side entries are hidden, and transfer transactions are labeled as type=TRANSFER.
+     */
     @GetMapping("/user/{userId}")
     public ResponseEntity<?> getByUserId(@PathVariable String userId) {
         try {
@@ -197,6 +301,11 @@ public class TransactionController {
         }
     }
 
+    /**
+     * GET /api/transactions/user/{userId}/date-range
+     * Returns transactions in the date range for the specified user, only when userId matches the authenticated user.
+     * Transfer credit-side entries are hidden, and transfer transactions are labeled as type=TRANSFER.
+     */
     @GetMapping("/user/{userId}/date-range")
     public ResponseEntity<?> getByUserIdAndDateRange(
             @PathVariable String userId,
@@ -216,6 +325,11 @@ public class TransactionController {
         }
     }
 
+    /**
+     * GET /api/transactions/account/{accountId}
+     * Returns all transactions for the given account id.
+     * When a user is authenticated, transfer entries are normalized for UI (hide credit side, mark transfer type).
+     */
     @GetMapping("/account/{accountId}")
     public ResponseEntity<?> getByAccountId(@PathVariable Long accountId) {
         List<Transaction> transactions = transactionService.findByAccountId(accountId);
@@ -229,6 +343,11 @@ public class TransactionController {
         return Response.ok(transactions);
     }
 
+    /**
+     * GET /api/transactions/category/{categoryId}
+     * Returns all transactions for the given category id.
+     * When a user is authenticated, transfer entries are normalized for UI (hide credit side, mark transfer type).
+     */
     @GetMapping("/category/{categoryId}")
     public ResponseEntity<?> getByCategoryId(@PathVariable Long categoryId) {
         List<Transaction> transactions = transactionService.findByCategoryId(categoryId);
@@ -242,6 +361,11 @@ public class TransactionController {
         return Response.ok(transactions);
     }
 
+    /**
+     * POST /api/transactions
+     * Creates a new transaction for the authenticated user.
+     * Validates that both account and category exist and are owned by the current user before saving.
+     */
     @PostMapping
     public ResponseEntity<?> create(@Valid @RequestBody Transaction transaction) {
         try {
@@ -276,6 +400,11 @@ public class TransactionController {
         }
     }
 
+    /**
+     * PUT /api/transactions/{id}
+     * Updates an existing transaction by id.
+     * Verifies transaction exists and that existing/new account plus category are all owned by authenticated user.
+     */
     @PutMapping("/{id}")
     public ResponseEntity<?> update(@PathVariable Long id, @Valid @RequestBody Transaction transaction) {
         transaction.setId(id);
@@ -304,6 +433,11 @@ public class TransactionController {
         }
     }
 
+    /**
+     * DELETE /api/transactions/{id}
+     * Deletes a transaction only if it exists and belongs to the authenticated user
+     * (ownership verified through the transaction's account).
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable Long id) {
         try {
@@ -323,6 +457,10 @@ public class TransactionController {
         }
     }
 
+    /**
+     * GET /api/transactions/user/{userId}/summary
+     * Returns summary for the specified user and date range, only when userId matches authenticated user.
+     */
     @GetMapping("/user/{userId}/summary")
     public ResponseEntity<?> getSummary(
             @PathVariable String userId,
@@ -340,6 +478,10 @@ public class TransactionController {
         }
     }
 
+    /**
+     * GET /api/transactions/user/{userId}/total-income
+     * Returns total income for the specified user in the date range, only when userId matches authenticated user.
+     */
     @GetMapping("/user/{userId}/total-income")
     public ResponseEntity<?> getTotalIncome(
             @PathVariable String userId,
@@ -357,6 +499,10 @@ public class TransactionController {
         }
     }
 
+    /**
+     * GET /api/transactions/user/{userId}/total-expense
+     * Returns total expense for the specified user in the date range, only when userId matches authenticated user.
+     */
     @GetMapping("/user/{userId}/total-expense")
     public ResponseEntity<?> getTotalExpense(
             @PathVariable String userId,
