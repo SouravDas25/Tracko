@@ -21,6 +21,7 @@ class Transaction {
   List<Split> splits = [];
   Set<TrakoContact> contacts = {};
   Category? category;
+  Account? account;
 
   // Currency Support
   String? originalCurrency;

@@ -11,6 +11,8 @@ import java.util.List;
 public interface SplitRepository extends JpaRepository<Split, Long>, JpaSpecificationExecutor<Split> {
 
     List<Split> findByTransactionId(Long transactionId);
+
+    List<Split> findByTransactionIdIn(List<Long> transactionIds);
     
     List<Split> findByUserId(String userId);
     
