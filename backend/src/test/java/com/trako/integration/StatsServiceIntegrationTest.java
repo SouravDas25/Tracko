@@ -3,11 +3,13 @@ package com.trako.integration;
 import com.trako.config.TestJwtSecurityConfig;
 import com.trako.dtos.StatsResponseDTO;
 import com.trako.entities.*;
+import com.trako.repositories.AccountMonthSummaryRepository;
 import com.trako.repositories.AccountRepository;
 import com.trako.repositories.CategoryRepository;
 import com.trako.repositories.TransactionRepository;
 import com.trako.repositories.UsersRepository;
 import com.trako.services.StatsService;
+import com.trako.services.TransactionWriteService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,6 +47,12 @@ public class StatsServiceIntegrationTest {
     @Autowired
     private TransactionRepository transactionRepository;
 
+    @Autowired
+    private TransactionWriteService transactionWriteService;
+
+    @Autowired
+    private AccountMonthSummaryRepository accountMonthSummaryRepository;
+
     private User user;
     private Account account;
     private Category food;
@@ -52,6 +60,7 @@ public class StatsServiceIntegrationTest {
 
     @BeforeEach
     public void setup() {
+        accountMonthSummaryRepository.deleteAll();
         transactionRepository.deleteAll();
         categoryRepository.deleteAll();
         accountRepository.deleteAll();
@@ -307,7 +316,7 @@ public class StatsServiceIntegrationTest {
 
     private void saveTx(Long categoryId, Integer transactionType, Integer isCountable, Double amount, Date d) {
         Transaction t = newTx(categoryId, transactionType, isCountable, amount, d);
-        transactionRepository.save(t);
+        transactionWriteService.saveForUser(user.getId(), t);
     }
 
     private Transaction newTx(Long categoryId, Integer transactionType, Integer isCountable, Double amount, Date d) {
@@ -316,8 +325,14 @@ public class StatsServiceIntegrationTest {
         t.setCategoryId(categoryId);
         t.setName("t-" + categoryId + "-" + amount);
         t.setTransactionType(transactionType);
-        t.setIsCountable(isCountable);
-        t.setAmount(amount);
+        if (amount == null) {
+            // Keep TransactionWriteService happy while ensuring this row doesn't impact stats totals.
+            t.setIsCountable(0);
+            t.setAmount(0.0);
+        } else {
+            t.setIsCountable(isCountable);
+            t.setAmount(amount);
+        }
         t.setDate(d);
         return t;
     }

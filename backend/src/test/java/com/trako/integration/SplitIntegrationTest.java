@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trako.config.TestJwtSecurityConfig;
 import com.trako.entities.*;
 import com.trako.repositories.*;
+import com.trako.services.TransactionWriteService;
 import com.trako.util.JwtTokenUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -45,6 +46,12 @@ public class SplitIntegrationTest {
     private TransactionRepository transactionRepository;
 
     @Autowired
+    private TransactionWriteService transactionWriteService;
+
+    @Autowired
+    private AccountMonthSummaryRepository accountMonthSummaryRepository;
+
+    @Autowired
     private AccountRepository accountRepository;
 
     @Autowired
@@ -72,6 +79,7 @@ public class SplitIntegrationTest {
     @BeforeEach
     public void setup() {
         splitRepository.deleteAll();
+        accountMonthSummaryRepository.deleteAll();
         transactionRepository.deleteAll();
         contactRepository.deleteAll();
         accountRepository.deleteAll();
@@ -123,7 +131,7 @@ public class SplitIntegrationTest {
         testTransaction.setDate(new Date());
         testTransaction.setAccountId(testAccount.getId());
         testTransaction.setCategoryId(testCategory.getId());
-        testTransaction = transactionRepository.save(testTransaction);
+        testTransaction = transactionWriteService.saveForUser(testUser.getId(), testTransaction);
 
         testContact = new Contact();
         testContact.setUserId(testUser.getId());

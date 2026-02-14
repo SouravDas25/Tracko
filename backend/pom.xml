@@ -4,12 +4,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.github.souravdas25</groupId>
-    <artifactId>expense-manager</artifactId>
+    <artifactId>tracko</artifactId>
     <version>0.0.1</version>
     <packaging>${packaging.type}</packaging>
 
-    <name>Expense Manager</name>
-    <description></description>
+    <name>Tracko</name>
+    <description>A comprehensive expense tracking and budget management application with multi-currency support, transaction splitting, and budget allocation features.</description>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -24,8 +24,6 @@
         <java.version>17</java.version>
         <packaging.type>jar</packaging.type>
         <m2eclipse.wtp.contextRoot>/</m2eclipse.wtp.contextRoot>
-
-        <com.sap.hana.cloud-version>1.0.4.RELEASE</com.sap.hana.cloud-version>
 
     </properties>
 
@@ -64,16 +62,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-logging</artifactId>
-            <!--            <exclusions>-->
-            <!--                <exclusion>-->
-            <!--                    <groupId>ch.qos.logback</groupId>-->
-            <!--                    <artifactId>logback-classic</artifactId>-->
-            <!--                </exclusion>-->
-            <!--                <exclusion>-->
-            <!--                    <groupId>org.slf4j</groupId>-->
-            <!--                    <artifactId>slf4j-api</artifactId>-->
-            <!--                </exclusion>-->
-            <!--            </exclusions>-->
         </dependency>
 
         <dependency>
@@ -84,33 +72,14 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-thymeleaf</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-api</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
 
-        <!-- https://mvnrepository.com/artifact/org.liquibase.ext/liquibase-hanadb -->
-        <dependency>
-            <groupId>org.liquibase.ext</groupId>
-            <artifactId>liquibase-hanadb</artifactId>
-            <version>2.0</version>
-        </dependency>
 
-        <!--		 Apache Commons Db Connection Pool-->
-        <dependency>
-            <groupId>commons-dbcp</groupId>
-            <artifactId>commons-dbcp</artifactId>
-            <version>1.4</version>
-        </dependency>
-
-        <!--		 https://mvnrepository.com/artifact/com.google.guava/guava-->
+        <!-- Google Guava for utilities -->
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>27.1-jre</version>
+            <version>33.2.0-jre</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -144,7 +113,7 @@
         <dependency>
             <groupId>org.modelmapper</groupId>
             <artifactId>modelmapper</artifactId>
-            <version>2.3.5</version>
+            <version>3.2.0</version>
         </dependency>
 
         <dependency>
@@ -170,11 +139,11 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- Apache HttpClient for HTTP requests -->
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
-            <!--Version is not needed when used with Spring Boot parent pom file -->
-            <version>4.5.1</version>
+            <version>4.5.14</version>
         </dependency>
 
 
@@ -199,14 +168,13 @@
                 <dependency>
                     <groupId>org.postgresql</groupId>
                     <artifactId>postgresql</artifactId>
-                    <version>42.7.3</version>
                 </dependency>
             </dependencies>
         </profile>
     </profiles>
 
     <build>
-        <finalName>expensemanager</finalName>
+        <finalName>tracko</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
@@ -247,8 +215,6 @@
                             <rules>
                                 <rule>
                                     <element>BUNDLE</element>
-                                    <includes>
-                                    </includes>
                                     <limits>
                                         <limit>
                                             <counter>LINE</counter>
@@ -261,8 +227,6 @@
                                             <minimum>0.60</minimum>
                                         </limit>
                                     </limits>
-                                    <excludes>
-                                    </excludes>
                                 </rule>
                             </rules>
                         </configuration>
@@ -272,9 +236,25 @@
 
         </plugins>
         <resources>
+            <!-- Application configuration with filtering enabled -->
             <resource>
                 <directory>src/main/resources</directory>
+                <includes>
+                    <include>**/*.properties</include>
+                    <include>**/*.yml</include>
+                    <include>**/*.yaml</include>
+                </includes>
                 <filtering>true</filtering>
+            </resource>
+            <!-- Other resources without filtering to avoid corrupting binaries -->
+            <resource>
+                <directory>src/main/resources</directory>
+                <excludes>
+                    <exclude>**/*.properties</exclude>
+                    <exclude>**/*.yml</exclude>
+                    <exclude>**/*.yaml</exclude>
+                </excludes>
+                <filtering>false</filtering>
             </resource>
         </resources>
     </build>

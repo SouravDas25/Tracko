@@ -6,6 +6,7 @@ import com.trako.dtos.BudgetResponseDTO;
 import com.trako.entities.*;
 import com.trako.repositories.*;
 import com.trako.services.BudgetCalculationService;
+import com.trako.services.TransactionWriteService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +38,9 @@ public class BudgetServiceIntegrationTest {
 
     @Autowired
     private TransactionRepository transactionRepository;
+
+    @Autowired
+    private TransactionWriteService transactionWriteService;
 
     @Autowired
     private BudgetMonthRepository budgetMonthRepository;
@@ -111,7 +115,7 @@ public class BudgetServiceIntegrationTest {
         income.setIsCountable(1);
         income.setDate(date(2026, 1, 5));
         income.setName("Salary");
-        transactionRepository.save(income);
+        transactionWriteService.saveForUser(testUser.getId(), income);
 
         // 2. Add Expense (should NOT affect Available to Assign directly, only Actual Spent)
         // Available = (Income + Rollover) - Total Allocated
@@ -124,7 +128,7 @@ public class BudgetServiceIntegrationTest {
         expense.setIsCountable(1);
         expense.setDate(date(2026, 1, 10));
         expense.setName("Grocery Run");
-        transactionRepository.save(expense);
+        transactionWriteService.saveForUser(testUser.getId(), expense);
 
         // 3. Verify Initial State (No allocations yet)
         // Available should be 1000 (Income) - 0 (Allocated) = 1000
@@ -165,7 +169,7 @@ public class BudgetServiceIntegrationTest {
         incomeJan.setIsCountable(1);
         incomeJan.setDate(date(2026, 1, 5));
         incomeJan.setName("Jan Salary");
-        transactionRepository.save(incomeJan);
+        transactionWriteService.saveForUser(testUser.getId(), incomeJan);
 
         // Actual Spent: 100 (create before allocation so allocateFunds can compute actualSpent)
         Transaction expenseJan = new Transaction();
@@ -177,7 +181,7 @@ public class BudgetServiceIntegrationTest {
         expenseJan.setIsCountable(1);
         expenseJan.setDate(date(2026, 1, 10));
         expenseJan.setName("Jan Expense");
-        transactionRepository.save(expenseJan);
+        transactionWriteService.saveForUser(testUser.getId(), expenseJan);
 
         // Allocation: 400 to Groceries (Rollover Enabled)
         BudgetAllocationRequestDTO reqJan = new BudgetAllocationRequestDTO();
@@ -216,7 +220,7 @@ public class BudgetServiceIntegrationTest {
         income.setIsCountable(1);
         income.setDate(date(2026, 1, 1));
         income.setName("Small Salary");
-        transactionRepository.save(income);
+        transactionWriteService.saveForUser(testUser.getId(), income);
 
         // Try to allocate 150
         BudgetAllocationRequestDTO req = new BudgetAllocationRequestDTO();

@@ -5,6 +5,7 @@ import com.trako.dtos.TransactionSummaryDTO;
 import com.trako.entities.*;
 import com.trako.repositories.*;
 import com.trako.services.TransactionService;
+import com.trako.services.TransactionWriteService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +33,9 @@ public class TransactionServiceIntegrationTest {
 
     @Autowired
     private TransactionService transactionService;
+
+    @Autowired
+    private TransactionWriteService transactionWriteService;
 
     @Autowired
     private TransactionRepository transactionRepository;
@@ -92,6 +96,13 @@ public class TransactionServiceIntegrationTest {
         return c.getTime();
     }
 
+    private Date monthStart(int year, int month) {
+        Calendar c = Calendar.getInstance();
+        c.set(year, month - 1, 1, 0, 0, 0);
+        c.set(Calendar.MILLISECOND, 0);
+        return c.getTime();
+    }
+
     @Test
     public void testFindAllReturnsSortedByDateDesc() {
         // Create 3 transactions with different dates
@@ -120,7 +131,7 @@ public class TransactionServiceIntegrationTest {
         t.setOriginalCurrency("EUR");
         // amount is null
 
-        Transaction saved = transactionService.save(t);
+        Transaction saved = transactionWriteService.saveForUser(testUser.getId(), t);
         
         assertNotNull(saved.getAmount());
         assertEquals(150.0, saved.getAmount(), 0.01);
@@ -145,7 +156,7 @@ public class TransactionServiceIntegrationTest {
         t.setOriginalCurrency("GBP");
         // amount and exchangeRate null
 
-        Transaction saved = transactionService.save(t);
+        Transaction saved = transactionWriteService.saveForUser(testUser.getId(), t);
 
         assertNotNull(saved.getAmount());
         assertEquals(100.0, saved.getAmount(), 0.01); // 50 * 2.0
@@ -163,7 +174,7 @@ public class TransactionServiceIntegrationTest {
         income.setTransactionType(2); // Credit
         income.setAmount(500.0);
         income.setIsCountable(1);
-        transactionRepository.save(income);
+        transactionWriteService.saveForUser(testUser.getId(), income);
 
         // Expense: 200
         Transaction expense = new Transaction();
@@ -174,7 +185,7 @@ public class TransactionServiceIntegrationTest {
         expense.setTransactionType(1); // Debit
         expense.setAmount(200.0);
         expense.setIsCountable(1);
-        transactionRepository.save(expense);
+        transactionWriteService.saveForUser(testUser.getId(), expense);
 
         // Excluded (not countable): 1000
         Transaction ignored = new Transaction();
@@ -185,10 +196,10 @@ public class TransactionServiceIntegrationTest {
         ignored.setTransactionType(1);
         ignored.setAmount(1000.0);
         ignored.setIsCountable(0);
-        transactionRepository.save(ignored);
+        transactionWriteService.saveForUser(testUser.getId(), ignored);
 
-        Date start = date(2026, 2, 1);
-        Date end = date(2026, 3, 1);
+        Date start = monthStart(2026, 2);
+        Date end = monthStart(2026, 3);
 
         TransactionSummaryDTO summary = transactionService.getSummary(testUser.getId(), start, end);
         
@@ -209,7 +220,7 @@ public class TransactionServiceIntegrationTest {
         janIncome.setTransactionType(2);
         janIncome.setAmount(300.0);
         janIncome.setIsCountable(1);
-        transactionRepository.save(janIncome);
+        transactionWriteService.saveForUser(testUser.getId(), janIncome);
 
         Transaction janExpense = new Transaction();
         janExpense.setAccountId(testAccount.getId());
@@ -219,7 +230,7 @@ public class TransactionServiceIntegrationTest {
         janExpense.setTransactionType(1);
         janExpense.setAmount(200.0);
         janExpense.setIsCountable(1);
-        transactionRepository.save(janExpense);
+        transactionWriteService.saveForUser(testUser.getId(), janExpense);
 
         // Dec 2025: Net -50 (income 100, expense 150)
         Transaction decIncome = new Transaction();
@@ -230,7 +241,7 @@ public class TransactionServiceIntegrationTest {
         decIncome.setTransactionType(2);
         decIncome.setAmount(100.0);
         decIncome.setIsCountable(1);
-        transactionRepository.save(decIncome);
+        transactionWriteService.saveForUser(testUser.getId(), decIncome);
 
         Transaction decExpense = new Transaction();
         decExpense.setAccountId(testAccount.getId());
@@ -240,7 +251,7 @@ public class TransactionServiceIntegrationTest {
         decExpense.setTransactionType(1);
         decExpense.setAmount(150.0);
         decExpense.setIsCountable(1);
-        transactionRepository.save(decExpense);
+        transactionWriteService.saveForUser(testUser.getId(), decExpense);
 
         // Nov 2025: Net +250 (income 400, expense 150)
         Transaction novIncome = new Transaction();
@@ -251,7 +262,7 @@ public class TransactionServiceIntegrationTest {
         novIncome.setTransactionType(2);
         novIncome.setAmount(400.0);
         novIncome.setIsCountable(1);
-        transactionRepository.save(novIncome);
+        transactionWriteService.saveForUser(testUser.getId(), novIncome);
 
         Transaction novExpense = new Transaction();
         novExpense.setAccountId(testAccount.getId());
@@ -261,7 +272,7 @@ public class TransactionServiceIntegrationTest {
         novExpense.setTransactionType(1);
         novExpense.setAmount(150.0);
         novExpense.setIsCountable(1);
-        transactionRepository.save(novExpense);
+        transactionWriteService.saveForUser(testUser.getId(), novExpense);
 
         // Feb 2026 current period: Net +300 (income 500, expense 200)
         Transaction febIncome = new Transaction();
@@ -272,7 +283,7 @@ public class TransactionServiceIntegrationTest {
         febIncome.setTransactionType(2);
         febIncome.setAmount(500.0);
         febIncome.setIsCountable(1);
-        transactionRepository.save(febIncome);
+        transactionWriteService.saveForUser(testUser.getId(), febIncome);
 
         Transaction febExpense = new Transaction();
         febExpense.setAccountId(testAccount.getId());
@@ -282,10 +293,10 @@ public class TransactionServiceIntegrationTest {
         febExpense.setTransactionType(1);
         febExpense.setAmount(200.0);
         febExpense.setIsCountable(1);
-        transactionRepository.save(febExpense);
+        transactionWriteService.saveForUser(testUser.getId(), febExpense);
 
-        Date start = date(2026, 2, 1);
-        Date end = date(2026, 3, 1);
+        Date start = monthStart(2026, 2);
+        Date end = monthStart(2026, 3);
 
         TransactionSummaryDTO summary = transactionService.getSummaryWithRollover(testUser.getId(), start, end, null);
 
@@ -308,6 +319,6 @@ public class TransactionServiceIntegrationTest {
         t.setTransactionType(1);
         t.setAmount(10.0);
         t.setIsCountable(1);
-        transactionRepository.save(t);
+        transactionWriteService.saveForUser(testUser.getId(), t);
     }
 }

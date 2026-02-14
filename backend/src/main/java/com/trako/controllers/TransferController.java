@@ -5,7 +5,7 @@ import com.trako.exceptions.UserNotLoggedInException;
 import com.trako.models.request.TransferRequest;
 import com.trako.repositories.AccountRepository;
 import com.trako.repositories.CategoryRepository;
-import com.trako.repositories.TransactionRepository;
+import com.trako.services.TransactionWriteService;
 import com.trako.services.UserService;
 import com.trako.util.Response;
 import jakarta.validation.Valid;
@@ -35,7 +35,7 @@ public class TransferController {
     private CategoryRepository categoryRepository;
 
     @Autowired
-    private TransactionRepository transactionRepository;
+    private TransactionWriteService transactionWriteService;
 
     @PostMapping
     public ResponseEntity<?> create(@Valid @RequestBody TransferRequest req) {
@@ -73,7 +73,7 @@ public class TransferController {
             debit.setIsCountable(0);
             debit.setName(req.getName() != null ? req.getName() : "Transfer Out");
             debit.setComments(req.getComments());
-            transactionRepository.save(debit);
+            transactionWriteService.saveForUser(currentUserId, debit);
             // create CREDIT on destination
             Transaction credit = new Transaction();
             credit.setAccountId(req.getToAccountId());
@@ -84,7 +84,7 @@ public class TransferController {
             credit.setIsCountable(0);
             credit.setName(req.getName() != null ? req.getName() : "Transfer In");
             credit.setComments(req.getComments());
-            transactionRepository.save(credit);
+            transactionWriteService.saveForUser(currentUserId, credit);
 
             return Response.ok("Transfer created successfully");
         } catch (UserNotLoggedInException e) {

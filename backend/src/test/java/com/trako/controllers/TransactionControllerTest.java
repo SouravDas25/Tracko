@@ -8,6 +8,7 @@ import com.trako.repositories.AccountRepository;
 import com.trako.repositories.CategoryRepository;
 import com.trako.services.JwtUserDetailsService;
 import com.trako.services.TransactionService;
+import com.trako.services.TransactionWriteService;
 import com.trako.services.UserService;
 import com.trako.util.JwtTokenUtil;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,6 +45,9 @@ public class TransactionControllerTest {
 
     @MockBean
     private TransactionService transactionService;
+
+    @MockBean
+    private TransactionWriteService transactionWriteService;
 
     @MockBean
     private UserService userService;
@@ -134,7 +138,7 @@ public class TransactionControllerTest {
     @Test
     @WithMockUser
     public void testCreate() throws Exception {
-        when(transactionService.save(any(Transaction.class))).thenReturn(testTransaction);
+        when(transactionWriteService.saveForUser(anyString(), any(Transaction.class))).thenReturn(testTransaction);
 
         mockMvc.perform(post("/api/transactions")
                 .with(csrf())
@@ -143,19 +147,19 @@ public class TransactionControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.name").value("Lunch"));
 
-        verify(transactionService, times(1)).save(any(Transaction.class));
+        verify(transactionWriteService, times(1)).saveForUser(anyString(), any(Transaction.class));
     }
 
     @Test
     @WithMockUser
     public void testDelete() throws Exception {
         when(transactionService.findById(1L)).thenReturn(Optional.of(testTransaction));
-        doNothing().when(transactionService).delete(1L);
+        doNothing().when(transactionWriteService).deleteForUser(anyString(), eq(1L));
 
         mockMvc.perform(delete("/api/transactions/1")
                 .with(csrf()))
                 .andExpect(status().isOk());
 
-        verify(transactionService, times(1)).delete(1L);
+        verify(transactionWriteService, times(1)).deleteForUser(anyString(), eq(1L));
     }
 }

@@ -10,6 +10,7 @@ import com.trako.repositories.AccountRepository;
 import com.trako.repositories.CategoryRepository;
 import com.trako.repositories.TransactionRepository;
 import com.trako.repositories.UsersRepository;
+import com.trako.services.TransactionWriteService;
 import com.trako.util.JwtTokenUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -48,6 +49,9 @@ public class TransactionIntegrationTest {
 
     @Autowired
     private TransactionRepository transactionRepository;
+
+    @Autowired
+    private TransactionWriteService transactionWriteService;
 
     @Autowired
     private AccountRepository accountRepository;
@@ -128,7 +132,7 @@ public class TransactionIntegrationTest {
         transaction1.setDate(new Date());
         transaction1.setAccountId(testAccount.getId());
         transaction1.setCategoryId(testCategory.getId());
-        transactionRepository.save(transaction1);
+        transactionWriteService.saveForUser(testUser.getId(), transaction1);
 
         Transaction transaction2 = new Transaction();
         transaction2.setTransactionType(1);
@@ -137,7 +141,7 @@ public class TransactionIntegrationTest {
         transaction2.setDate(new Date());
         transaction2.setAccountId(testAccount.getId());
         transaction2.setCategoryId(testCategory.getId());
-        transactionRepository.save(transaction2);
+        transactionWriteService.saveForUser(testUser.getId(), transaction2);
 
         Calendar now = Calendar.getInstance();
         String month = String.valueOf(now.get(Calendar.MONTH) + 1);
@@ -161,7 +165,7 @@ public class TransactionIntegrationTest {
         transaction.setDate(new Date());
         transaction.setAccountId(testAccount.getId());
         transaction.setCategoryId(testCategory.getId());
-        Transaction saved = transactionRepository.save(transaction);
+        Transaction saved = transactionWriteService.saveForUser(testUser.getId(), transaction);
 
         mockMvc.perform(get("/api/transactions/" + saved.getId())
                         .header("Authorization", bearerToken))
@@ -179,7 +183,7 @@ public class TransactionIntegrationTest {
         transaction.setDate(new Date());
         transaction.setAccountId(testAccount.getId());
         transaction.setCategoryId(testCategory.getId());
-        transactionRepository.save(transaction);
+        transactionWriteService.saveForUser(testUser.getId(), transaction);
 
         mockMvc.perform(get("/api/transactions/user/" + testUser.getId())
                         .header("Authorization", bearerToken))
@@ -197,7 +201,7 @@ public class TransactionIntegrationTest {
         transaction.setDate(new Date());
         transaction.setAccountId(testAccount.getId());
         transaction.setCategoryId(testCategory.getId());
-        transactionRepository.save(transaction);
+        transactionWriteService.saveForUser(testUser.getId(), transaction);
 
         mockMvc.perform(get("/api/transactions/account/" + testAccount.getId())
                         .header("Authorization", bearerToken))
@@ -215,7 +219,7 @@ public class TransactionIntegrationTest {
         transaction.setDate(new Date());
         transaction.setAccountId(testAccount.getId());
         transaction.setCategoryId(testCategory.getId());
-        transactionRepository.save(transaction);
+        transactionWriteService.saveForUser(testUser.getId(), transaction);
 
         mockMvc.perform(get("/api/transactions/category/" + testCategory.getId())
                         .header("Authorization", bearerToken))
@@ -233,7 +237,7 @@ public class TransactionIntegrationTest {
         transaction.setDate(new Date());
         transaction.setAccountId(testAccount.getId());
         transaction.setCategoryId(testCategory.getId());
-        Transaction saved = transactionRepository.save(transaction);
+        Transaction saved = transactionWriteService.saveForUser(testUser.getId(), transaction);
 
         saved.setName("Updated Name");
         saved.setAmount(15.00);
@@ -256,7 +260,7 @@ public class TransactionIntegrationTest {
         transaction.setDate(new Date());
         transaction.setAccountId(testAccount.getId());
         transaction.setCategoryId(testCategory.getId());
-        Transaction saved = transactionRepository.save(transaction);
+        Transaction saved = transactionWriteService.saveForUser(testUser.getId(), transaction);
 
         mockMvc.perform(delete("/api/transactions/" + saved.getId())
                         .header("Authorization", bearerToken))
@@ -278,7 +282,7 @@ public class TransactionIntegrationTest {
         income.setAccountId(testAccount.getId());
         income.setCategoryId(testCategory.getId());
         income.setIsCountable(1);
-        transactionRepository.save(income);
+        transactionWriteService.saveForUser(testUser.getId(), income);
 
         // Create expense transaction
         Transaction expense = new Transaction();
@@ -289,7 +293,7 @@ public class TransactionIntegrationTest {
         expense.setAccountId(testAccount.getId());
         expense.setCategoryId(testCategory.getId());
         expense.setIsCountable(1);
-        transactionRepository.save(expense);
+        transactionWriteService.saveForUser(testUser.getId(), expense);
 
         // Create non-countable transaction (should be excluded)
         Transaction nonCountable = new Transaction();
@@ -300,7 +304,7 @@ public class TransactionIntegrationTest {
         nonCountable.setAccountId(testAccount.getId());
         nonCountable.setCategoryId(testCategory.getId());
         nonCountable.setIsCountable(0);
-        transactionRepository.save(nonCountable);
+        transactionWriteService.saveForUser(testUser.getId(), nonCountable);
 
         mockMvc.perform(get("/api/transactions/user/" + testUser.getId() + "/summary")
                 .header("Authorization", bearerToken)
@@ -323,7 +327,7 @@ public class TransactionIntegrationTest {
         income1.setAccountId(testAccount.getId());
         income1.setCategoryId(testCategory.getId());
         income1.setIsCountable(1);
-        transactionRepository.save(income1);
+        transactionWriteService.saveForUser(testUser.getId(), income1);
 
         Transaction income2 = new Transaction();
         income2.setTransactionType(2); // CREDIT = income
@@ -333,7 +337,7 @@ public class TransactionIntegrationTest {
         income2.setAccountId(testAccount.getId());
         income2.setCategoryId(testCategory.getId());
         income2.setIsCountable(1);
-        transactionRepository.save(income2);
+        transactionWriteService.saveForUser(testUser.getId(), income2);
 
         mockMvc.perform(get("/api/transactions/user/" + testUser.getId() + "/total-income")
                 .header("Authorization", bearerToken)
@@ -353,7 +357,7 @@ public class TransactionIntegrationTest {
         expense1.setAccountId(testAccount.getId());
         expense1.setCategoryId(testCategory.getId());
         expense1.setIsCountable(1);
-        transactionRepository.save(expense1);
+        transactionWriteService.saveForUser(testUser.getId(), expense1);
 
         Transaction expense2 = new Transaction();
         expense2.setTransactionType(1); // DEBIT = expense
@@ -363,7 +367,7 @@ public class TransactionIntegrationTest {
         expense2.setAccountId(testAccount.getId());
         expense2.setCategoryId(testCategory.getId());
         expense2.setIsCountable(1);
-        transactionRepository.save(expense2);
+        transactionWriteService.saveForUser(testUser.getId(), expense2);
 
         mockMvc.perform(get("/api/transactions/user/" + testUser.getId() + "/total-expense")
                 .header("Authorization", bearerToken)
@@ -384,7 +388,7 @@ public class TransactionIntegrationTest {
         nonCountable1.setAccountId(testAccount.getId());
         nonCountable1.setCategoryId(testCategory.getId());
         nonCountable1.setIsCountable(0);
-        transactionRepository.save(nonCountable1);
+        transactionWriteService.saveForUser(testUser.getId(), nonCountable1);
 
         Transaction nonCountable2 = new Transaction();
         nonCountable2.setTransactionType(1); // DEBIT = expense
@@ -394,7 +398,7 @@ public class TransactionIntegrationTest {
         nonCountable2.setAccountId(testAccount.getId());
         nonCountable2.setCategoryId(testCategory.getId());
         nonCountable2.setIsCountable(0);
-        transactionRepository.save(nonCountable2);
+        transactionWriteService.saveForUser(testUser.getId(), nonCountable2);
 
         mockMvc.perform(get("/api/transactions/user/" + testUser.getId() + "/summary")
                 .header("Authorization", bearerToken)
@@ -516,7 +520,7 @@ public class TransactionIntegrationTest {
         otherTxn.setDate(new Date());
         otherTxn.setAccountId(otherAcc.getId());
         otherTxn.setCategoryId(otherCat.getId());
-        otherTxn = transactionRepository.save(otherTxn);
+        otherTxn = transactionWriteService.saveForUser(other.getId(), otherTxn);
 
         mockMvc.perform(get("/api/transactions/" + otherTxn.getId())
                         .header("Authorization", bearerToken))
@@ -567,7 +571,7 @@ public class TransactionIntegrationTest {
         t1.setDate(new Date());
         t1.setAccountId(testAccount.getId());
         t1.setCategoryId(testCategory.getId());
-        transactionRepository.save(t1);
+        transactionWriteService.saveForUser(testUser.getId(), t1);
 
         Transaction t2 = new Transaction();
         t2.setTransactionType(1);
@@ -576,7 +580,7 @@ public class TransactionIntegrationTest {
         t2.setDate(new Date());
         t2.setAccountId(secondAcc.getId());
         t2.setCategoryId(testCategory.getId());
-        transactionRepository.save(t2);
+        transactionWriteService.saveForUser(testUser.getId(), t2);
 
         mockMvc.perform(get("/api/transactions/date-range")
                         .header("Authorization", bearerToken)
@@ -605,7 +609,7 @@ public class TransactionIntegrationTest {
         debit.setAccountId(testAccount.getId());
         debit.setCategoryId(transfer.getId());
         debit.setIsCountable(0);
-        transactionRepository.save(debit);
+        transactionWriteService.saveForUser(testUser.getId(), debit);
 
         Transaction credit = new Transaction();
         credit.setTransactionType(2);
@@ -615,7 +619,7 @@ public class TransactionIntegrationTest {
         credit.setAccountId(testAccount.getId());
         credit.setCategoryId(transfer.getId());
         credit.setIsCountable(0);
-        transactionRepository.save(credit);
+        transactionWriteService.saveForUser(testUser.getId(), credit);
 
         Calendar now = Calendar.getInstance();
         String month = String.valueOf(now.get(Calendar.MONTH) + 1);
@@ -641,7 +645,7 @@ public class TransactionIntegrationTest {
         janOlder.setDate(new GregorianCalendar(2026, Calendar.JANUARY, 5).getTime());
         janOlder.setAccountId(testAccount.getId());
         janOlder.setCategoryId(testCategory.getId());
-        transactionRepository.save(janOlder);
+        transactionWriteService.saveForUser(testUser.getId(), janOlder);
 
         Transaction janNewer = new Transaction();
         janNewer.setTransactionType(1);
@@ -650,7 +654,7 @@ public class TransactionIntegrationTest {
         janNewer.setDate(new GregorianCalendar(2026, Calendar.JANUARY, 20).getTime());
         janNewer.setAccountId(testAccount.getId());
         janNewer.setCategoryId(testCategory.getId());
-        transactionRepository.save(janNewer);
+        transactionWriteService.saveForUser(testUser.getId(), janNewer);
 
         Transaction febTransaction = new Transaction();
         febTransaction.setTransactionType(1);
@@ -659,7 +663,7 @@ public class TransactionIntegrationTest {
         febTransaction.setDate(new GregorianCalendar(2026, Calendar.FEBRUARY, 10).getTime());
         febTransaction.setAccountId(testAccount.getId());
         febTransaction.setCategoryId(testCategory.getId());
-        transactionRepository.save(febTransaction);
+        transactionWriteService.saveForUser(testUser.getId(), febTransaction);
 
         mockMvc.perform(get("/api/transactions")
                         .header("Authorization", bearerToken)
@@ -703,7 +707,7 @@ public class TransactionIntegrationTest {
         income.setAccountId(testAccount.getId());
         income.setCategoryId(testCategory.getId());
         income.setIsCountable(1);
-        transactionRepository.save(income);
+        transactionWriteService.saveForUser(testUser.getId(), income);
 
         // expense
         Transaction expense = new Transaction();
@@ -714,7 +718,7 @@ public class TransactionIntegrationTest {
         expense.setAccountId(testAccount.getId());
         expense.setCategoryId(testCategory.getId());
         expense.setIsCountable(1);
-        transactionRepository.save(expense);
+        transactionWriteService.saveForUser(testUser.getId(), expense);
 
         // /summary
         mockMvc.perform(get("/api/transactions/summary")
@@ -752,7 +756,7 @@ public class TransactionIntegrationTest {
         t.setDate(new Date());
         t.setAccountId(testAccount.getId());
         t.setCategoryId(testCategory.getId());
-        transactionRepository.save(t);
+        transactionWriteService.saveForUser(testUser.getId(), t);
 
         // account/{id} without auth
         mockMvc.perform(get("/api/transactions/account/" + testAccount.getId()))
@@ -778,7 +782,7 @@ public class TransactionIntegrationTest {
         t1.setDate(new Date());
         t1.setAccountId(testAccount.getId());
         t1.setCategoryId(testCategory.getId());
-        transactionRepository.save(t1);
+        transactionWriteService.saveForUser(testUser.getId(), t1);
 
         Transaction t2 = new Transaction();
         t2.setTransactionType(1);
@@ -787,7 +791,7 @@ public class TransactionIntegrationTest {
         t2.setDate(new Date());
         t2.setAccountId(another.getId());
         t2.setCategoryId(testCategory.getId());
-        transactionRepository.save(t2);
+        transactionWriteService.saveForUser(testUser.getId(), t2);
 
         String messy = "  , ,abc,  " + testAccount.getId() + " , x ,";
         mockMvc.perform(get("/api/transactions/date-range")
@@ -809,7 +813,7 @@ public class TransactionIntegrationTest {
         t.setDate(new Date());
         t.setAccountId(testAccount.getId());
         t.setCategoryId(testCategory.getId());
-        transactionRepository.save(t);
+        transactionWriteService.saveForUser(testUser.getId(), t);
 
         mockMvc.perform(get("/api/transactions/user/" + testUser.getId() + "/date-range")
                         .header("Authorization", bearerToken)
@@ -891,7 +895,7 @@ public class TransactionIntegrationTest {
         existing.setDate(new Date());
         existing.setAccountId(testAccount.getId());
         existing.setCategoryId(testCategory.getId());
-        existing = transactionRepository.save(existing);
+        existing = transactionWriteService.saveForUser(testUser.getId(), existing);
 
         // Create another user and their account/category
         User other = new User();
@@ -964,7 +968,7 @@ public class TransactionIntegrationTest {
         otherTxn.setDate(new Date());
         otherTxn.setAccountId(otherAcc.getId());
         otherTxn.setCategoryId(otherCat.getId());
-        otherTxn = transactionRepository.save(otherTxn);
+        otherTxn = transactionWriteService.saveForUser(other.getId(), otherTxn);
 
         mockMvc.perform(delete("/api/transactions/" + otherTxn.getId())
                         .header("Authorization", bearerToken))
