@@ -4,7 +4,6 @@ import com.trako.dtos.SplitDetailDTO;
 import com.trako.dtos.TransactionDetailDTO;
 import com.trako.dtos.TransactionSummaryDTO;
 import com.trako.entities.*;
-import com.trako.exceptions.UserNotLoggedInException;
 import com.trako.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -15,17 +14,24 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * Read-oriented service for {@link Transaction} queries.
+ *
+ * <p><b>Important:</b> this service is intentionally read-only. All transaction mutations must go
+ * through {@link TransactionWriteService} so {@code account_month_summary} remains consistent.
+ */
 @Service
 public class TransactionService {
+
+    // Read-only service.
+    // All transaction mutations must go through TransactionWriteService so that
+    // account_month_summary stays consistent (used for fast summary + rollover queries).
 
     @Autowired
     private TransactionRepository transactionRepository;
 
     @Autowired
-    private UserCurrencyRepository userCurrencyRepository;
-
-    @Autowired
-    private UserService userService;
+    private AccountSummaryReadOnlyService accountSummaryReadOnlyService;
 
     @Autowired
     private AccountRepository accountRepository;
@@ -130,152 +136,76 @@ public class TransactionService {
         return transactionRepository.findByCategoryId(categoryId);
     }
 
-    public Transaction save(Transaction transaction) {
-        if (transaction.getAmount() == null) {
-            if (transaction.getOriginalAmount() != null && transaction.getExchangeRate() != null) {
-                // Calculate amount based on original amount and exchange rate
-                // Assuming exchangeRate is: 1 Unit of Original = X Units of Base
-                double calculatedAmount = transaction.getOriginalAmount() * transaction.getExchangeRate();
-                // Round to 2 decimal places
-                transaction.setAmount(Math.round(calculatedAmount * 100.0) / 100.0);
-            } else if (transaction.getOriginalAmount() != null && transaction.getOriginalCurrency() != null) {
-                // No exchangeRate provided: fetch from user's configured rates
-                String userId;
-                try {
-                    userId = userService.loggedInUser().getId();
-                } catch (UserNotLoggedInException e) {
-                    throw new RuntimeException("User not logged in", e);
-                }
-                String currencyCode = transaction.getOriginalCurrency().toUpperCase();
-                UserCurrency uc = userCurrencyRepository.findByUserIdAndCurrencyCode(userId, currencyCode);
-                if (uc != null && uc.getExchangeRate() != null) {
-                    double calculatedAmount = transaction.getOriginalAmount() * uc.getExchangeRate();
-                    transaction.setAmount(Math.round(calculatedAmount * 100.0) / 100.0);
-                    transaction.setExchangeRate(uc.getExchangeRate());
-                } else {
-                    throw new IllegalArgumentException("No exchange rate configured for currency: " + currencyCode);
-                }
-            } else {
-                throw new IllegalArgumentException("Amount cannot be null unless originalAmount and either exchangeRate or originalCurrency are provided");
-            }
-        }
-        
-        // Ensure consistency if both are provided? 
-        // For now, trust the calculated or provided amount, but maybe we should re-calculate if original is present?
-        // Let's stick to: if original info is present, ensure amount matches?
-        // Or just lenient: if amount is present, use it. If not, calculate.
-        
-        return transactionRepository.save(transaction);
-    }
-
-    public void delete(Long id) {
-        transactionRepository.deleteById(id);
-    }
-
     public TransactionSummaryDTO getSummary(String userId, Date startDate, Date endDate) {
-        List<Transaction> transactions = transactionRepository.findByUserIdAndDateBetween(userId, startDate, endDate);
-        
-        double totalIncome = 0.0;
-        double totalExpense = 0.0;
-        int count = 0;
-        
-        for (Transaction t : transactions) {
-            if (t.getIsCountable() == 1) {
-                count++;
-                if (t.getTransactionType() == 2) { // CREDIT = income
-                    totalIncome += t.getAmount();
-                } else if (t.getTransactionType() == 1) { // DEBIT = expense
-                    totalExpense += t.getAmount();
-                }
-            }
-        }
-        
-        double netTotal = totalIncome - totalExpense;
-        return new TransactionSummaryDTO(totalIncome, totalExpense, netTotal, count);
+        return getSummary(userId, startDate, endDate, null);
     }
 
+    /**
+     * Returns a transaction summary for the given range and also includes a rollover value.
+     *
+     * <p>Rollover is defined as the sum of net totals for all months strictly before the month of
+     * {@code startDate}. When {@code startDate} cannot be mapped to a month, this returns the base
+     * summary with no rollover.
+     *
+     * @param userId     user id
+     * @param startDate  range start (inclusive)
+     * @param endDate    range end (exclusive)
+     * @param accountIds optional account filter
+     * @return summary DTO including rollover fields
+     */
     public TransactionSummaryDTO getSummaryWithRollover(String userId, Date startDate, Date endDate, List<Long> accountIds) {
-        List<Transaction> transactions;
-        if (accountIds == null || accountIds.isEmpty()) {
-            transactions = transactionRepository.findByUserIdAndDateBetween(userId, startDate, endDate);
-        } else {
-            transactions = transactionRepository.findByUserIdAndDateBetweenAndAccountIds(userId, startDate, endDate, accountIds);
+        // Summary for the requested range (month fast-path when possible).
+        TransactionSummaryDTO base = getSummary(userId, startDate, endDate, accountIds);
+
+        YearMonthKey ym = toYearMonthKey(startDate);
+        if (ym == null) {
+            return base;
         }
 
-        double totalIncome = 0.0;
-        double totalExpense = 0.0;
-        int count = 0;
+        Double rolloverNet;
+        // Rollover is defined as the sum of net totals for all months strictly before the start month.
+        rolloverNet = accountSummaryReadOnlyService.getRolloverNetBeforeMonth(userId, ym.year, ym.month, accountIds);
 
-        for (Transaction t : transactions) {
-            if (t.getIsCountable() == 1) {
-                count++;
-                if (t.getTransactionType() == 2) { // CREDIT = income
-                    totalIncome += t.getAmount();
-                } else if (t.getTransactionType() == 1) { // DEBIT = expense
-                    totalExpense += t.getAmount();
-                }
-            }
-        }
-
-        double netTotal = totalIncome - totalExpense;
-        double rolloverNet = calculateRolloverNet(userId, startDate, accountIds);
-        double netTotalWithRollover = netTotal + rolloverNet;
-        return new TransactionSummaryDTO(totalIncome, totalExpense, netTotal, rolloverNet, netTotalWithRollover, count);
+        double withRollover = safe(base.getNetTotal()) + safe(rolloverNet);
+        return new TransactionSummaryDTO(
+                safe(base.getTotalIncome()),
+                safe(base.getTotalExpense()),
+                safe(base.getNetTotal()),
+                safe(rolloverNet),
+                withRollover,
+                base.getTransactionCount()
+        );
     }
 
-    private double calculateRolloverNet(String userId, Date periodStartDate, List<Long> accountIds) {
-        return calculateRolloverNetInternal(userId, periodStartDate, accountIds, 36);
-    }
-
-    private double calculateRolloverNetInternal(String userId, Date periodStartDate, List<Long> accountIds, int maxDepth) {
-        if (maxDepth <= 0) return 0.0;
-        if (periodStartDate == null) return 0.0;
-
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(periodStartDate);
-        cal.set(Calendar.HOUR_OF_DAY, 0);
-        cal.set(Calendar.MINUTE, 0);
-        cal.set(Calendar.SECOND, 0);
-        cal.set(Calendar.MILLISECOND, 0);
-        cal.add(Calendar.MONTH, -1);
-        cal.set(Calendar.DAY_OF_MONTH, 1);
-        Date prevStart = cal.getTime();
-
-        Calendar calEnd = Calendar.getInstance();
-        calEnd.setTime(prevStart);
-        calEnd.add(Calendar.MONTH, 1);
-        Date prevEnd = calEnd.getTime();
-
-        List<Transaction> prevTransactions;
-        if (accountIds == null || accountIds.isEmpty()) {
-            prevTransactions = transactionRepository.findByUserIdAndDateBetween(userId, prevStart, prevEnd);
-        } else {
-            prevTransactions = transactionRepository.findByUserIdAndDateBetweenAndAccountIds(userId, prevStart, prevEnd, accountIds);
-        }
-
-        if (prevTransactions == null || prevTransactions.isEmpty()) {
-            return 0.0;
-        }
-
-        double prevIncome = 0.0;
-        double prevExpense = 0.0;
-
-        for (Transaction t : prevTransactions) {
-            if (t.getIsCountable() == 1) {
-                if (t.getTransactionType() == 2) {
-                    prevIncome += t.getAmount();
-                } else if (t.getTransactionType() == 1) {
-                    prevExpense += t.getAmount();
-                }
-            }
-        }
-
-        double prevNet = prevIncome - prevExpense;
-        double earlier = calculateRolloverNetInternal(userId, prevStart, accountIds, maxDepth - 1);
-        return prevNet + earlier;
-    }
-
+    /**
+     * Returns a transaction summary for the given date range.
+     *
+     * <p>Fast path: if the range is exactly a full calendar month (start at first-day midnight,
+     * end at the start of the next month), the result is computed from the pre-aggregated
+     * {@code account_month_summary} table.
+     *
+     * <p>Fallback: otherwise, the result is computed by scanning raw transactions in the range.
+     *
+     * @param userId     user id
+     * @param startDate  range start (inclusive)
+     * @param endDate    range end (exclusive)
+     * @param accountIds optional account filter
+     * @return summary DTO
+     */
     public TransactionSummaryDTO getSummary(String userId, Date startDate, Date endDate, List<Long> accountIds) {
+        YearMonthKey ym = toYearMonthKey(startDate);
+        boolean fullMonth = isFullMonthRange(startDate, endDate);
+
+        if (ym != null && fullMonth) {
+            // Fast-path: when the requested range is exactly a full calendar month, use the
+            // pre-aggregated account_month_summary table instead of scanning raw transactions.
+            AccountSummaryReadOnlyService.MonthTotals totals =
+                    accountSummaryReadOnlyService.getMonthTotals(userId, ym.year, ym.month, accountIds);
+            return new TransactionSummaryDTO(totals.income(), totals.expense(), totals.net(), totals.count());
+        }
+
+        // Fallback for arbitrary date ranges (preserve old behavior): scan raw transactions
+        // since account_month_summary is only maintained at month granularity.
         List<Transaction> transactions;
         if (accountIds == null || accountIds.isEmpty()) {
             transactions = transactionRepository.findByUserIdAndDateBetween(userId, startDate, endDate);
@@ -290,9 +220,9 @@ public class TransactionService {
         for (Transaction t : transactions) {
             if (t.getIsCountable() == 1) {
                 count++;
-                if (t.getTransactionType() == 2) { // CREDIT = income
+                if (t.getTransactionType() == 2) {
                     totalIncome += t.getAmount();
-                } else if (t.getTransactionType() == 1) { // DEBIT = expense
+                } else if (t.getTransactionType() == 1) {
                     totalExpense += t.getAmount();
                 }
             }
@@ -300,6 +230,67 @@ public class TransactionService {
 
         double netTotal = totalIncome - totalExpense;
         return new TransactionSummaryDTO(totalIncome, totalExpense, netTotal, count);
+    }
+
+    private static class YearMonthKey {
+        final int year;
+        final int month;
+
+        YearMonthKey(int year, int month) {
+            this.year = year;
+            this.month = month;
+        }
+    }
+
+    private YearMonthKey toYearMonthKey(Date date) {
+        if (date == null) return null;
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(date);
+        int year = cal.get(Calendar.YEAR);
+        int month = cal.get(Calendar.MONTH) + 1;
+        return new YearMonthKey(year, month);
+    }
+
+    private boolean isFullMonthRange(Date startDate, Date endDate) {
+        if (startDate == null || endDate == null) return false;
+
+        Calendar s = Calendar.getInstance();
+        s.setTime(startDate);
+
+        Calendar e = Calendar.getInstance();
+        e.setTime(endDate);
+
+        boolean startIsFirstDayMidnight =
+                s.get(Calendar.DAY_OF_MONTH) == 1 &&
+                        s.get(Calendar.HOUR_OF_DAY) == 0 &&
+                        s.get(Calendar.MINUTE) == 0 &&
+                        s.get(Calendar.SECOND) == 0;
+
+        if (!startIsFirstDayMidnight) return false;
+
+        Calendar expectedEnd = (Calendar) s.clone();
+        expectedEnd.add(Calendar.MONTH, 1);
+
+        // End is treated as an exclusive boundary (start of next month at the same time as startDate).
+
+        return expectedEnd.get(Calendar.YEAR) == e.get(Calendar.YEAR)
+                && expectedEnd.get(Calendar.MONTH) == e.get(Calendar.MONTH)
+                && expectedEnd.get(Calendar.DAY_OF_MONTH) == e.get(Calendar.DAY_OF_MONTH);
+    }
+
+    private double safe(Double v) {
+        return v == null ? 0.0 : v;
+    }
+
+    private Object[] normalizeAggregateRow(Object[] row) {
+        if (row == null) return new Object[]{0.0, 0.0, 0.0, 0};
+        // Some JPA providers / dialects (notably H2 in tests) may wrap the projected tuple
+        // inside a single-element Object[].
+        // Example: row == [ Object[]{income, expense, net, count} ]
+        if (row.length == 1 && row[0] instanceof Object[]) {
+            return (Object[]) row[0];
+        }
+        return row;
     }
 
     public Double getTotalIncome(String userId, Date startDate, Date endDate) {

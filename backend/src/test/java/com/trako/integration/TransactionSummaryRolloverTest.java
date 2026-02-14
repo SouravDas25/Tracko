@@ -7,6 +7,7 @@ import com.trako.entities.*;
 import com.trako.repositories.*;
 import com.trako.services.BudgetCalculationService;
 import com.trako.services.TransactionService;
+import com.trako.services.TransactionWriteService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,6 +51,12 @@ public class TransactionSummaryRolloverTest {
     @Autowired
     private BudgetCategoryAllocationRepository budgetCategoryAllocationRepository;
 
+    @Autowired
+    private AccountMonthSummaryRepository accountMonthSummaryRepository;
+
+    @Autowired
+    private TransactionWriteService transactionWriteService;
+
     private User testUser;
     private Account accountA;
     private Account accountB;
@@ -61,6 +68,7 @@ public class TransactionSummaryRolloverTest {
         // Cleanup
         budgetCategoryAllocationRepository.deleteAll();
         budgetMonthRepository.deleteAll();
+        accountMonthSummaryRepository.deleteAll();
         transactionRepository.deleteAll();
         categoryRepository.deleteAll();
         accountRepository.deleteAll();
@@ -252,6 +260,6 @@ public class TransactionSummaryRolloverTest {
         t.setDate(date);
         t.setName("Test Txn");
         t.setIsCountable(1);
-        transactionRepository.save(t);
+        transactionWriteService.saveForUser(testUser.getId(), t);
     }
 }

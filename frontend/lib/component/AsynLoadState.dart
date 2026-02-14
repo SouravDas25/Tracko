@@ -23,7 +23,7 @@ abstract class AsyncLoadState<T extends StatefulWidget> extends State<T> {
 
   Widget __loadingWidget() {
     return Container(
-      color: Colors.white,
+      color: Theme.of(context).scaffoldBackgroundColor,
       child: Center(
         child: CircularProgressIndicator(),
       ),

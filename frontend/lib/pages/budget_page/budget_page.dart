@@ -20,6 +20,8 @@ class _BudgetPageState extends State<BudgetPage> {
   BudgetResponse? _budgetData;
   bool _isLoading = true;
   final RefreshController _refreshController = RefreshController();
+  final DateTime _minDate = DateTime(2020, 1);
+  final DateTime _maxDate = DateTime(2030, 12);
 
   @override
   void initState() {
@@ -77,6 +79,27 @@ class _BudgetPageState extends State<BudgetPage> {
     }
   }
 
+  void _changeMonth(int delta) {
+    int y = _selectedDate.year;
+    int m = _selectedDate.month + delta;
+    while (m <= 0) {
+      m += 12;
+      y -= 1;
+    }
+    while (m > 12) {
+      m -= 12;
+      y += 1;
+    }
+    final candidate = DateTime(y, m, 1);
+    if (candidate.isBefore(_minDate) || candidate.isAfter(_maxDate)) {
+      return;
+    }
+    setState(() {
+      _selectedDate = candidate;
+    });
+    _loadBudgetData();
+  }
+
   void _showAllocationDialog(
       int categoryId, String categoryName, double currentAllocation) {
     if (_budgetData == null) return;
@@ -100,10 +123,16 @@ class _BudgetPageState extends State<BudgetPage> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: Icon(Icons.chevron_left),
+          tooltip: 'Previous month',
+          onPressed: () => _changeMonth(-1),
+        ),
         title: GestureDetector(
           onTap: _selectMonth,
           child: Row(
             mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
                 DateFormat('MMMM yyyy').format(_selectedDate),
@@ -113,9 +142,15 @@ class _BudgetPageState extends State<BudgetPage> {
             ],
           ),
         ),
-        centerTitle: false,
+        centerTitle: true,
         titleSpacing: 16,
-        actions: [],
+        actions: [
+          IconButton(
+            icon: Icon(Icons.chevron_right),
+            tooltip: 'Next month',
+            onPressed: () => _changeMonth(1),
+          ),
+        ],
       ),
       body: _isLoading
           ? Center(child: WidgetUtil.spinLoader())

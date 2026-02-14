@@ -275,7 +275,7 @@ public class BudgetCalculationService {
         return (totalIncome + rollover) - totalAllocated;
     }
 
-    private Double calculateRolloverAmount(String userId, Integer currentMonth, Integer currentYear) {
+    public Double calculateRolloverAmount(String userId, Integer currentMonth, Integer currentYear) {
         return calculateRolloverAmountInternal(userId, currentMonth, currentYear, 36);
     }
 

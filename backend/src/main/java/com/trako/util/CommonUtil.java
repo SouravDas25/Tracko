@@ -10,7 +10,63 @@ import java.util.stream.Collectors;
 
 public class CommonUtil {
 
-    private static ModelMapper modelMapper;
+    // ObjectMapper for parsing JSON arrays of accountIds
+    private static final com.fasterxml.jackson.databind.ObjectMapper ACCOUNT_ID_MAPPER = new com.fasterxml.jackson.databind.ObjectMapper();
+
+    /**
+     * Parses a string that may contain account IDs as a JSON array (e.g. "[1, 2, 3]")
+     * or as comma-separated values (e.g. "1,2,3" or " 1 , 2, 3 ").
+     * Returns an empty list on null/blank input or malformed JSON and silently ignores
+     * elements that cannot be parsed as Long.
+     */
+    public static List<Long> parseAccountIds(String accountIdsStr) {
+        java.util.List<Long> out = new java.util.ArrayList<>();
+        if (accountIdsStr == null || accountIdsStr.trim().isEmpty()) {
+            return out;
+        }
+        
+        String trimmed = accountIdsStr.trim();
+        
+        // First, try to parse as a JSON array
+        if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+            try {
+                com.fasterxml.jackson.databind.JsonNode node = ACCOUNT_ID_MAPPER.readTree(trimmed);
+                if (node != null && node.isArray()) {
+                    for (com.fasterxml.jackson.databind.JsonNode elem : node) {
+                        try {
+                            if (elem.isNumber()) {
+                                out.add(elem.longValue());
+                            } else if (elem.isTextual()) {
+                                String s = elem.asText();
+                                if (s != null && !s.trim().isEmpty()) {
+                                    out.add(Long.parseLong(s.trim()));
+                                }
+                            }
+                        } catch (Exception ignored) {
+                        }
+                    }
+                }
+                return out;
+            } catch (Exception ignored) {
+            }
+        }
+        
+        // If JSON parse failed, try to parse as comma-separated values
+        String[] parts = trimmed.split(",");
+        for (String part : parts) {
+            try {
+                String s = part.trim();
+                if (!s.isEmpty()) {
+                    out.add(Long.parseLong(s));
+                }
+            } catch (Exception ignored) {
+            }
+        }
+        
+        return out;
+    }
+
+    private static final ModelMapper modelMapper;
 
     static {
         modelMapper = new ModelMapper();

@@ -5,6 +5,7 @@ import com.trako.config.TestJwtSecurityConfig;
 import com.trako.dtos.BudgetAllocationRequestDTO;
 import com.trako.entities.*;
 import com.trako.repositories.*;
+import com.trako.services.TransactionWriteService;
 import com.trako.util.JwtTokenUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -51,6 +52,12 @@ public class BudgetIntegrationTest {
     
     @Autowired
     private TransactionRepository transactionRepository;
+
+    @Autowired
+    private TransactionWriteService transactionWriteService;
+
+    @Autowired
+    private AccountMonthSummaryRepository accountMonthSummaryRepository;
     
     @Autowired
     private BudgetMonthRepository budgetMonthRepository;
@@ -71,6 +78,7 @@ public class BudgetIntegrationTest {
         // Clear data
         budgetCategoryAllocationRepository.deleteAll();
         budgetMonthRepository.deleteAll();
+        accountMonthSummaryRepository.deleteAll();
         transactionRepository.deleteAll();
         categoryRepository.deleteAll();
         accountRepository.deleteAll();
@@ -121,7 +129,7 @@ public class BudgetIntegrationTest {
         income.setAccountId(testAccount.getId());
         income.setCategoryId(testCategory.getId());
         income.setIsCountable(1);
-        transactionRepository.save(income);
+        transactionWriteService.saveForUser(testUser.getId(), income);
 
         BudgetAllocationRequestDTO request = new BudgetAllocationRequestDTO();
         request.setMonth(1);
@@ -150,7 +158,7 @@ public class BudgetIntegrationTest {
         income.setAccountId(testAccount.getId());
         income.setCategoryId(testCategory.getId()); 
         income.setIsCountable(1);
-        transactionRepository.save(income);
+        transactionWriteService.saveForUser(testUser.getId(), income);
         
         // 2. Allocate some funds
         BudgetAllocationRequestDTO request = new BudgetAllocationRequestDTO();
@@ -189,7 +197,7 @@ public class BudgetIntegrationTest {
         prevIncome.setAccountId(testAccount.getId());
         prevIncome.setCategoryId(testCategory.getId());
         prevIncome.setIsCountable(1);
-        transactionRepository.save(prevIncome);
+        transactionWriteService.saveForUser(testUser.getId(), prevIncome);
 
         // Allocate in Previous Month
         BudgetMonth prevBudgetMonth = new BudgetMonth();
@@ -233,7 +241,7 @@ public class BudgetIntegrationTest {
         income.setAccountId(testAccount.getId());
         income.setCategoryId(testCategory.getId());
         income.setIsCountable(1);
-        transactionRepository.save(income);
+        transactionWriteService.saveForUser(testUser.getId(), income);
 
         // 1. Add Expense Transaction (Type 1)
         Transaction expense = new Transaction();
@@ -244,7 +252,7 @@ public class BudgetIntegrationTest {
         expense.setAccountId(testAccount.getId());
         expense.setCategoryId(testCategory.getId());
         expense.setIsCountable(1);
-        transactionRepository.save(expense);
+        transactionWriteService.saveForUser(testUser.getId(), expense);
         
         // 2. Allocate funds
         BudgetAllocationRequestDTO request = new BudgetAllocationRequestDTO();
@@ -287,7 +295,7 @@ public class BudgetIntegrationTest {
         income.setAccountId(testAccount.getId());
         income.setCategoryId(testCategory.getId());
         income.setIsCountable(1);
-        transactionRepository.save(income);
+        transactionWriteService.saveForUser(testUser.getId(), income);
 
         // 2. Allocate Funds in Prev Month
         BudgetAllocationRequestDTO allocRequest = new BudgetAllocationRequestDTO();
@@ -311,7 +319,7 @@ public class BudgetIntegrationTest {
         expense.setAccountId(testAccount.getId());
         expense.setCategoryId(testCategory.getId());
         expense.setIsCountable(1);
-        transactionRepository.save(expense);
+        transactionWriteService.saveForUser(testUser.getId(), expense);
 
         // 4. Trigger Actuals Update by fetching Prev Month Budget
         mockMvc.perform(get("/api/budget")
@@ -347,7 +355,7 @@ public class BudgetIntegrationTest {
         income.setAccountId(testAccount.getId());
         income.setCategoryId(testCategory.getId());
         income.setIsCountable(1);
-        transactionRepository.save(income);
+        transactionWriteService.saveForUser(testUser.getId(), income);
 
         // 2. Allocate 800 (OK)
         BudgetAllocationRequestDTO request1 = new BudgetAllocationRequestDTO();
@@ -399,25 +407,21 @@ public class BudgetIntegrationTest {
         // 1. Setup Previous Month (Income: 1000, Allocated: 800) -> Unallocated = 200
         LocalDate prev = LocalDate.now().minusMonths(1);
         int prevMonth = prev.getMonthValue();
-        int prevYear = prev.getYear();
+        BudgetAllocationRequestDTO prevAlloc = new BudgetAllocationRequestDTO();
+        prevAlloc.setMonth(prevMonth);
+        prevAlloc.setYear(prev.getYear());
+        prevAlloc.setCategoryId(testCategory.getId());
+        prevAlloc.setAmount(800.0);
 
-        // Previous Month Income
         Transaction prevIncome = new Transaction();
-        prevIncome.setTransactionType(2); // Income
-        prevIncome.setName("Prev Salary");
+        prevIncome.setTransactionType(2);
+        prevIncome.setName("Income Prev");
         prevIncome.setAmount(1000.0);
         prevIncome.setDate(java.sql.Date.valueOf(prev.withDayOfMonth(1)));
         prevIncome.setAccountId(testAccount.getId());
         prevIncome.setCategoryId(testCategory.getId());
         prevIncome.setIsCountable(1);
-        transactionRepository.save(prevIncome);
-
-        // Previous Month Allocation
-        BudgetAllocationRequestDTO prevAlloc = new BudgetAllocationRequestDTO();
-        prevAlloc.setMonth(prevMonth);
-        prevAlloc.setYear(prevYear);
-        prevAlloc.setCategoryId(testCategory.getId());
-        prevAlloc.setAmount(800.0);
+        transactionWriteService.saveForUser(testUser.getId(), prevIncome);
 
         mockMvc.perform(post("/api/budget/allocate")
                 .header("Authorization", bearerToken)

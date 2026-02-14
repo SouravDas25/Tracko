@@ -9,8 +9,11 @@ import com.trako.exceptions.UserNotLoggedInException;
 import com.trako.repositories.AccountRepository;
 import com.trako.repositories.CategoryRepository;
 import com.trako.services.TransactionService;
+import com.trako.services.TransactionWriteService;
 import com.trako.services.UserService;
 import com.trako.util.Response;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +39,9 @@ public class TransactionController {
     private TransactionService transactionService;
 
     @Autowired
+    private TransactionWriteService transactionWriteService;
+
+    @Autowired
     private UserService userService;
 
     @Autowired
@@ -43,6 +49,8 @@ public class TransactionController {
 
     @Autowired
     private CategoryRepository categoryRepository;
+
+    private static final ObjectMapper ACCOUNT_IDS_OBJECT_MAPPER = new ObjectMapper();
 
     private List<Transaction> hideTransferCredits(List<Transaction> transactions, String userId) {
         var transferCats = categoryRepository.findByUserIdAndName(userId, "TRANSFER");
@@ -222,7 +230,7 @@ public class TransactionController {
     /**
      * GET /api/transactions/summary
      * Returns income/expense/balance summary for the authenticated user in the date range.
-     * If accountIds is provided (comma-separated), summary is limited to those accounts.
+     * If accountIds are provided (comma-separated), the summary is limited to those accounts.
      */
     @GetMapping("/summary")
     public ResponseEntity<?> getMySummary(
@@ -232,7 +240,7 @@ public class TransactionController {
             @RequestParam(required = false, defaultValue = "true") boolean includeRollover) {
         try {
             String currentUserId = userService.loggedInUser().getId();
-            List<Long> ids = parseAccountIds(accountIds);
+            List<Long> ids = com.trako.util.CommonUtil.parseAccountIds(accountIds);
             TransactionSummaryDTO summary;
             if (includeRollover) {
                 summary = transactionService.getSummaryWithRollover(currentUserId, startDate, endDate, ids);
@@ -260,7 +268,7 @@ public class TransactionController {
             @RequestParam(defaultValue = "false") boolean expand) {
         try {
             String currentUserId = userService.loggedInUser().getId();
-            List<Long> ids = parseAccountIds(accountIds);
+            List<Long> ids = com.trako.util.CommonUtil.parseAccountIds(accountIds);
             
             if (expand) {
                 List<TransactionDetailDTO> dtos = transactionService.findWithDetailsByUserIdAndDateBetween(currentUserId, startDate, endDate, ids);
@@ -270,7 +278,7 @@ public class TransactionController {
             }
 
             List<Transaction> transactions;
-            if (ids == null || ids.isEmpty()) {
+            if (ids.isEmpty()) {
                 transactions = transactionService.findByUserIdAndDateBetween(currentUserId, startDate, endDate);
             } else {
                 transactions = transactionService.findByUserIdAndDateBetweenAndAccountIds(currentUserId, startDate, endDate, ids);
@@ -281,23 +289,6 @@ public class TransactionController {
         } catch (UserNotLoggedInException e) {
             return Response.unauthorized();
         }
-    }
-
-    private List<Long> parseAccountIds(String accountIds) {
-        if (accountIds == null || accountIds.trim().isEmpty()) return new ArrayList<>();
-        List<Long> out = new ArrayList<>();
-        String[] parts = accountIds.split(",");
-        for (String p : parts) {
-            if (p == null) continue;
-            String s = p.trim();
-            if (s.isEmpty()) continue;
-            try {
-                out.add(Long.parseLong(s));
-            } catch (Exception ignored) {
-                // ignore invalid entries
-            }
-        }
-        return out;
     }
 
     /**
@@ -435,7 +426,7 @@ public class TransactionController {
                 return Response.unauthorized();
             }
             
-            Transaction saved = transactionService.save(transaction);
+            Transaction saved = transactionWriteService.saveForUser(currentUserId, transaction);
             return Response.ok(saved, "Transaction created successfully");
         } catch (UserNotLoggedInException e) {
             log.warn("Transaction create failed: User not logged in");
@@ -469,7 +460,7 @@ public class TransactionController {
             if (cat == null || !currentUserId.equals(cat.getUserId())) {
                 return Response.unauthorized();
             }
-            Transaction updated = transactionService.save(transaction);
+            Transaction updated = transactionWriteService.saveForUser(currentUserId, transaction);
             return Response.ok(updated, "Transaction updated successfully");
         } catch (UserNotLoggedInException e) {
             return Response.unauthorized();
@@ -493,7 +484,7 @@ public class TransactionController {
             if (acc == null || !currentUserId.equals(acc.getUserId())) {
                 return Response.unauthorized();
             }
-            transactionService.delete(id);
+            transactionWriteService.deleteForUser(currentUserId, id);
             return Response.ok("Transaction deleted successfully");
         } catch (UserNotLoggedInException e) {
             return Response.unauthorized();
