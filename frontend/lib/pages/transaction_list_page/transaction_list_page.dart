@@ -151,27 +151,23 @@ class _TransactionListPageState extends RefreshableState<TransactionListPage> {
 
     totalAmount = incomeAmount = expenseAmount = 0;
 
-    incomeAmount = await TransactionController.getMonthIncome(selectedMonth,
-        accountIds: accountIds);
-    expenseAmount = await TransactionController.getMonthExpense(selectedMonth,
-        accountIds: accountIds);
-    AppLog.d(
-        '[TRACE][TransactionListPage] summary income=$incomeAmount expense=$expenseAmount');
-
-    // Calculate previous month relative to selectedMonth
-    final prevMonthDate =
-        DateTime.utc(selectedMonth.year, selectedMonth.month - 1);
     final currentMonthDate =
         DateTime.utc(selectedMonth.year, selectedMonth.month);
+    final nextMonthDate =
+        DateTime.utc(selectedMonth.year, selectedMonth.month + 1);
 
-    final prevSummary = await TransactionController.getSummaryBetween(
-      prevMonthDate,
+    final summary = await TransactionController.getSummaryBetween(
       currentMonthDate,
+      nextMonthDate,
       accountIds: accountIds,
     );
-    previousMonthAmount = (prevSummary['netTotal'] as num?)?.toDouble() ?? 0.0;
 
-    totalAmount = incomeAmount - expenseAmount + previousMonthAmount;
+    incomeAmount = (summary['totalIncome'] as num?)?.toDouble() ?? 0.0;
+    expenseAmount = (summary['totalExpense'] as num?)?.toDouble() ?? 0.0;
+    previousMonthAmount = (summary['rolloverNet'] as num?)?.toDouble() ?? 0.0;
+    totalAmount = (summary['netTotalWithRollover'] as num?)?.toDouble() ??
+        (incomeAmount - expenseAmount + previousMonthAmount);
+
     AppLog.d(
         '[TRACE][TransactionListPage] totals previous=$previousMonthAmount balance=$totalAmount');
   }

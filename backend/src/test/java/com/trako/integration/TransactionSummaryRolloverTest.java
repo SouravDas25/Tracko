@@ -204,6 +204,48 @@ public class TransactionSummaryRolloverTest {
         assertEquals(500.0, available, 0.001, "Available to assign should include unallocated funds from previous month");
     }
 
+    @Test
+    public void testBudgetRolloverAccumulatesUnusedFundsAcrossMultipleMonths() {
+        int yearA = 2024;
+        int monthA = 11;
+        int yearB = 2024;
+        int monthB = 12;
+        int yearC = 2025;
+        int monthC = 1;
+        int currYear = 2025;
+        int currMonth = 2;
+
+        createTransaction(accountA, incomeCategory, 1000.0, 2, getDate(yearA, monthA, 5));
+        createTransaction(accountA, expenseCategory, 400.0, 1, getDate(yearA, monthA, 10));
+        BudgetAllocationRequestDTO allocA = new BudgetAllocationRequestDTO();
+        allocA.setCategoryId(expenseCategory.getId());
+        allocA.setAmount(400.0);
+        allocA.setMonth(monthA);
+        allocA.setYear(yearA);
+        budgetCalculationService.allocateFunds(testUser.getId(), allocA);
+
+        createTransaction(accountA, incomeCategory, 500.0, 2, getDate(yearB, monthB, 5));
+        createTransaction(accountA, expenseCategory, 100.0, 1, getDate(yearB, monthB, 10));
+        BudgetAllocationRequestDTO allocB = new BudgetAllocationRequestDTO();
+        allocB.setCategoryId(expenseCategory.getId());
+        allocB.setAmount(100.0);
+        allocB.setMonth(monthB);
+        allocB.setYear(yearB);
+        budgetCalculationService.allocateFunds(testUser.getId(), allocB);
+
+        createTransaction(accountA, incomeCategory, 800.0, 2, getDate(yearC, monthC, 5));
+        createTransaction(accountA, expenseCategory, 300.0, 1, getDate(yearC, monthC, 10));
+        BudgetAllocationRequestDTO allocC = new BudgetAllocationRequestDTO();
+        allocC.setCategoryId(expenseCategory.getId());
+        allocC.setAmount(300.0);
+        allocC.setMonth(monthC);
+        allocC.setYear(yearC);
+        budgetCalculationService.allocateFunds(testUser.getId(), allocC);
+
+        Double available = budgetCalculationService.calculateAvailableToAssign(testUser.getId(), currMonth, currYear);
+        assertEquals(1500.0, available, 0.001);
+    }
+
     private void createTransaction(Account account, Category category, Double amount, Integer type, Date date) {
         Transaction t = new Transaction();
         t.setAccountId(account.getId());

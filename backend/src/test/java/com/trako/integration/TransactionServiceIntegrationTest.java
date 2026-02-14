@@ -197,6 +197,107 @@ public class TransactionServiceIntegrationTest {
         assertEquals(2, summary.getTransactionCount()); // Ignored one doesn't count
     }
 
+    @Test
+    public void testGetSummaryWithRolloverAccumulatesAcrossMultipleMonths() {
+        // Jan 2026: Net +100 (income 300, expense 200)
+        Transaction janIncome = new Transaction();
+        janIncome.setAccountId(testAccount.getId());
+        janIncome.setCategoryId(testCategory.getId());
+        janIncome.setName("Jan Income");
+        janIncome.setDate(date(2026, 1, 5));
+        janIncome.setTransactionType(2);
+        janIncome.setAmount(300.0);
+        janIncome.setIsCountable(1);
+        transactionRepository.save(janIncome);
+
+        Transaction janExpense = new Transaction();
+        janExpense.setAccountId(testAccount.getId());
+        janExpense.setCategoryId(testCategory.getId());
+        janExpense.setName("Jan Expense");
+        janExpense.setDate(date(2026, 1, 10));
+        janExpense.setTransactionType(1);
+        janExpense.setAmount(200.0);
+        janExpense.setIsCountable(1);
+        transactionRepository.save(janExpense);
+
+        // Dec 2025: Net -50 (income 100, expense 150)
+        Transaction decIncome = new Transaction();
+        decIncome.setAccountId(testAccount.getId());
+        decIncome.setCategoryId(testCategory.getId());
+        decIncome.setName("Dec Income");
+        decIncome.setDate(date(2025, 12, 5));
+        decIncome.setTransactionType(2);
+        decIncome.setAmount(100.0);
+        decIncome.setIsCountable(1);
+        transactionRepository.save(decIncome);
+
+        Transaction decExpense = new Transaction();
+        decExpense.setAccountId(testAccount.getId());
+        decExpense.setCategoryId(testCategory.getId());
+        decExpense.setName("Dec Expense");
+        decExpense.setDate(date(2025, 12, 10));
+        decExpense.setTransactionType(1);
+        decExpense.setAmount(150.0);
+        decExpense.setIsCountable(1);
+        transactionRepository.save(decExpense);
+
+        // Nov 2025: Net +250 (income 400, expense 150)
+        Transaction novIncome = new Transaction();
+        novIncome.setAccountId(testAccount.getId());
+        novIncome.setCategoryId(testCategory.getId());
+        novIncome.setName("Nov Income");
+        novIncome.setDate(date(2025, 11, 5));
+        novIncome.setTransactionType(2);
+        novIncome.setAmount(400.0);
+        novIncome.setIsCountable(1);
+        transactionRepository.save(novIncome);
+
+        Transaction novExpense = new Transaction();
+        novExpense.setAccountId(testAccount.getId());
+        novExpense.setCategoryId(testCategory.getId());
+        novExpense.setName("Nov Expense");
+        novExpense.setDate(date(2025, 11, 10));
+        novExpense.setTransactionType(1);
+        novExpense.setAmount(150.0);
+        novExpense.setIsCountable(1);
+        transactionRepository.save(novExpense);
+
+        // Feb 2026 current period: Net +300 (income 500, expense 200)
+        Transaction febIncome = new Transaction();
+        febIncome.setAccountId(testAccount.getId());
+        febIncome.setCategoryId(testCategory.getId());
+        febIncome.setName("Feb Income");
+        febIncome.setDate(date(2026, 2, 1));
+        febIncome.setTransactionType(2);
+        febIncome.setAmount(500.0);
+        febIncome.setIsCountable(1);
+        transactionRepository.save(febIncome);
+
+        Transaction febExpense = new Transaction();
+        febExpense.setAccountId(testAccount.getId());
+        febExpense.setCategoryId(testCategory.getId());
+        febExpense.setName("Feb Expense");
+        febExpense.setDate(date(2026, 2, 3));
+        febExpense.setTransactionType(1);
+        febExpense.setAmount(200.0);
+        febExpense.setIsCountable(1);
+        transactionRepository.save(febExpense);
+
+        Date start = date(2026, 2, 1);
+        Date end = date(2026, 3, 1);
+
+        TransactionSummaryDTO summary = transactionService.getSummaryWithRollover(testUser.getId(), start, end, null);
+
+        assertEquals(500.0, summary.getTotalIncome(), 0.01);
+        assertEquals(200.0, summary.getTotalExpense(), 0.01);
+        assertEquals(300.0, summary.getNetTotal(), 0.01);
+
+        // Rollover should include Nov + Dec + Jan nets
+        // Nov: +250, Dec: -50, Jan: +100 => +300
+        assertEquals(300.0, summary.getRolloverNet(), 0.01);
+        assertEquals(600.0, summary.getNetTotalWithRollover(), 0.01);
+    }
+
     private void createTxn(Date date, String name) {
         Transaction t = new Transaction();
         t.setAccountId(testAccount.getId());

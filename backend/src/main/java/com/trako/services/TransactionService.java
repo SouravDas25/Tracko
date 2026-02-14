@@ -194,6 +194,87 @@ public class TransactionService {
         return new TransactionSummaryDTO(totalIncome, totalExpense, netTotal, count);
     }
 
+    public TransactionSummaryDTO getSummaryWithRollover(String userId, Date startDate, Date endDate, List<Long> accountIds) {
+        List<Transaction> transactions;
+        if (accountIds == null || accountIds.isEmpty()) {
+            transactions = transactionRepository.findByUserIdAndDateBetween(userId, startDate, endDate);
+        } else {
+            transactions = transactionRepository.findByUserIdAndDateBetweenAndAccountIds(userId, startDate, endDate, accountIds);
+        }
+
+        double totalIncome = 0.0;
+        double totalExpense = 0.0;
+        int count = 0;
+
+        for (Transaction t : transactions) {
+            if (t.getIsCountable() == 1) {
+                count++;
+                if (t.getTransactionType() == 2) { // CREDIT = income
+                    totalIncome += t.getAmount();
+                } else if (t.getTransactionType() == 1) { // DEBIT = expense
+                    totalExpense += t.getAmount();
+                }
+            }
+        }
+
+        double netTotal = totalIncome - totalExpense;
+        double rolloverNet = calculateRolloverNet(userId, startDate, accountIds);
+        double netTotalWithRollover = netTotal + rolloverNet;
+        return new TransactionSummaryDTO(totalIncome, totalExpense, netTotal, rolloverNet, netTotalWithRollover, count);
+    }
+
+    private double calculateRolloverNet(String userId, Date periodStartDate, List<Long> accountIds) {
+        return calculateRolloverNetInternal(userId, periodStartDate, accountIds, 36);
+    }
+
+    private double calculateRolloverNetInternal(String userId, Date periodStartDate, List<Long> accountIds, int maxDepth) {
+        if (maxDepth <= 0) return 0.0;
+        if (periodStartDate == null) return 0.0;
+
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(periodStartDate);
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        cal.add(Calendar.MONTH, -1);
+        cal.set(Calendar.DAY_OF_MONTH, 1);
+        Date prevStart = cal.getTime();
+
+        Calendar calEnd = Calendar.getInstance();
+        calEnd.setTime(prevStart);
+        calEnd.add(Calendar.MONTH, 1);
+        Date prevEnd = calEnd.getTime();
+
+        List<Transaction> prevTransactions;
+        if (accountIds == null || accountIds.isEmpty()) {
+            prevTransactions = transactionRepository.findByUserIdAndDateBetween(userId, prevStart, prevEnd);
+        } else {
+            prevTransactions = transactionRepository.findByUserIdAndDateBetweenAndAccountIds(userId, prevStart, prevEnd, accountIds);
+        }
+
+        if (prevTransactions == null || prevTransactions.isEmpty()) {
+            return 0.0;
+        }
+
+        double prevIncome = 0.0;
+        double prevExpense = 0.0;
+
+        for (Transaction t : prevTransactions) {
+            if (t.getIsCountable() == 1) {
+                if (t.getTransactionType() == 2) {
+                    prevIncome += t.getAmount();
+                } else if (t.getTransactionType() == 1) {
+                    prevExpense += t.getAmount();
+                }
+            }
+        }
+
+        double prevNet = prevIncome - prevExpense;
+        double earlier = calculateRolloverNetInternal(userId, prevStart, accountIds, maxDepth - 1);
+        return prevNet + earlier;
+    }
+
     public TransactionSummaryDTO getSummary(String userId, Date startDate, Date endDate, List<Long> accountIds) {
         List<Transaction> transactions;
         if (accountIds == null || accountIds.isEmpty()) {

@@ -233,11 +233,17 @@ public class TransactionController {
     public ResponseEntity<?> getMySummary(
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate,
-            @RequestParam(required = false) String accountIds) {
+            @RequestParam(required = false) String accountIds,
+            @RequestParam(required = false, defaultValue = "true") boolean includeRollover) {
         try {
             String currentUserId = userService.loggedInUser().getId();
             List<Long> ids = parseAccountIds(accountIds);
-            TransactionSummaryDTO summary = transactionService.getSummary(currentUserId, startDate, endDate, ids);
+            TransactionSummaryDTO summary;
+            if (includeRollover) {
+                summary = transactionService.getSummaryWithRollover(currentUserId, startDate, endDate, ids);
+            } else {
+                summary = transactionService.getSummary(currentUserId, startDate, endDate, ids);
+            }
             return Response.ok(summary);
         } catch (UserNotLoggedInException e) {
             return Response.unauthorized();
@@ -507,13 +513,19 @@ public class TransactionController {
     public ResponseEntity<?> getSummary(
             @PathVariable String userId,
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
-            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate) {
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate,
+            @RequestParam(required = false, defaultValue = "true") boolean includeRollover) {
         try {
             String currentUserId = userService.loggedInUser().getId();
             if (!currentUserId.equals(userId)) {
                 return Response.unauthorized();
             }
-            TransactionSummaryDTO summary = transactionService.getSummary(currentUserId, startDate, endDate);
+            TransactionSummaryDTO summary;
+            if (includeRollover) {
+                summary = transactionService.getSummaryWithRollover(currentUserId, startDate, endDate, null);
+            } else {
+                summary = transactionService.getSummary(currentUserId, startDate, endDate);
+            }
             return Response.ok(summary);
         } catch (UserNotLoggedInException e) {
             return Response.unauthorized();

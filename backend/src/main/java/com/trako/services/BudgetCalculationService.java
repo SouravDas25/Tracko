@@ -274,57 +274,48 @@ public class BudgetCalculationService {
     }
 
     private Double calculateRolloverAmount(String userId, Integer currentMonth, Integer currentYear) {
-        // Simple logic: Find the previous month
+        return calculateRolloverAmountInternal(userId, currentMonth, currentYear, 36);
+    }
+
+    private Double calculateRolloverAmountInternal(String userId, Integer currentMonth, Integer currentYear, int maxDepth) {
+        if (maxDepth <= 0) return 0.0;
+
         YearMonth current = YearMonth.of(currentYear, currentMonth);
         YearMonth previous = current.minusMonths(1);
-        
+
         Optional<BudgetMonth> prevBudgetOpt = budgetMonthRepository.findByUserIdAndMonthAndYear(
                 userId, previous.getMonthValue(), previous.getYear());
-        
-        if (prevBudgetOpt.isPresent()) {
-            BudgetMonth prevBudget = prevBudgetOpt.get();
-            // Calculate unallocated from previous month
-            Date startDate = getStartDate(previous.getMonthValue(), previous.getYear());
-            Date endDate = getEndDate(previous.getMonthValue(), previous.getYear());
-            
-            Double prevIncome = transactionService.getTotalIncome(userId, startDate, endDate);
-            Double prevAllocated = prevBudget.getTotalBudget();
-            
-            // Also add rollover from the month BEFORE that (recursive chain)
-            // Note: To avoid infinite recursion or heavy calculation, we should probably store "final_rollover" in BudgetMonth when it closes.
-            // For now, we'll assume dynamic calculation but limit depth or assume closed months have correct state.
-            // A better ZBB approach is that unallocated funds naturally sit in "Available to Assign".
-            
-            // If we strictly follow the requirement: "calculate roll over unallocated fund from the previous month"
-            // We need: (Prev Month Income + Prev Month Rollover) - Prev Month Allocated
-            
-            // To prevent recursion, we could look up the stored rollover if we added a field, but we didn't.
-            // Let's implement a shallow lookup for now or rely on the fact that if months are processed sequentially, it works.
-            // For this implementation, let's just look at (Income - Allocated) of previous month. 
-            // Truly recursive rollover calculation can be expensive.
-            
-            Double unallocated = prevIncome - prevAllocated;
-            
-            // Plus: Sum of remaining balances of categories that have rollover enabled
-            Double categoryRollovers = 0.0;
-            List<BudgetCategoryAllocation> prevAllocations = budgetCategoryAllocationRepository
-                    .findByUserIdAndBudgetMonthId(userId, prevBudget.getId());
-            
-            for (BudgetCategoryAllocation alloc : prevAllocations) {
-                Category cat = categoryRepository.findById(alloc.getCategoryId()).orElse(null);
-                if (cat != null
-                        && isBudgetableExpenseCategory(cat)
-                        && Boolean.TRUE.equals(cat.getIsRollOverEnabled())) {
-                    if (alloc.getRemainingBalance() > 0) {
-                        categoryRollovers += alloc.getRemainingBalance();
-                    }
+
+        if (prevBudgetOpt.isEmpty()) {
+            return 0.0;
+        }
+
+        BudgetMonth prevBudget = prevBudgetOpt.get();
+        Date startDate = getStartDate(previous.getMonthValue(), previous.getYear());
+        Date endDate = getEndDate(previous.getMonthValue(), previous.getYear());
+
+        Double prevIncome = transactionService.getTotalIncome(userId, startDate, endDate);
+        Double prevAllocated = prevBudget.getTotalBudget();
+
+        Double prevRollover = calculateRolloverAmountInternal(userId, previous.getMonthValue(), previous.getYear(), maxDepth - 1);
+        Double unallocated = (prevIncome + prevRollover) - prevAllocated;
+
+        Double categoryRollovers = 0.0;
+        List<BudgetCategoryAllocation> prevAllocations = budgetCategoryAllocationRepository
+                .findByUserIdAndBudgetMonthId(userId, prevBudget.getId());
+
+        for (BudgetCategoryAllocation alloc : prevAllocations) {
+            Category cat = categoryRepository.findById(alloc.getCategoryId()).orElse(null);
+            if (cat != null
+                    && isBudgetableExpenseCategory(cat)
+                    && Boolean.TRUE.equals(cat.getIsRollOverEnabled())) {
+                if (alloc.getRemainingBalance() > 0) {
+                    categoryRollovers += alloc.getRemainingBalance();
                 }
             }
-            
-            return Math.max(0.0, unallocated + categoryRollovers);
         }
-        
-        return 0.0;
+
+        return Math.max(0.0, unallocated + categoryRollovers);
     }
 
     private BudgetMonth getOrCreateBudgetMonth(String userId, Integer month, Integer year) {
