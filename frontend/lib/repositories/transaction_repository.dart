@@ -6,9 +6,25 @@ import '../Utils/enums.dart';
 class TransactionRepository {
   final _api = ApiClient();
 
-  Future<List<legacy.Transaction>> getAll() async {
-    final res = await _api.get<List<dynamic>>(ApiConfig.transactions);
-    return res.map((e) => _toLegacy(e as Map<String, dynamic>)).toList();
+  Future<List<legacy.Transaction>> getAll({
+    int? month,
+    int? year,
+    int page = 0,
+    int size = 500,
+  }) async {
+    final now = DateTime.now();
+    final res = await _api.get<Map<String, dynamic>>(
+      ApiConfig.transactions,
+      query: {
+        'month': month ?? now.month,
+        'year': year ?? now.year,
+        'page': page,
+        'size': size,
+      },
+    );
+
+    final rows = (res['transactions'] as List<dynamic>?) ?? const <dynamic>[];
+    return rows.map((e) => _toLegacy(e as Map<String, dynamic>)).toList();
   }
 
   Future<void> deleteById(int id) async {

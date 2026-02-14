@@ -15,6 +15,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
@@ -24,6 +26,7 @@ import java.util.Date;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -90,14 +93,17 @@ public class TransactionControllerTest {
     @Test
     @WithMockUser
     public void testGetAll() throws Exception {
-        when(transactionService.findAll()).thenReturn(Arrays.asList(testTransaction));
-        when(transactionService.findByUserId("user123")).thenReturn(Arrays.asList(testTransaction));
+        when(transactionService.findByUserIdAndDateBetween(anyString(), any(Date.class), any(Date.class), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(Arrays.asList(testTransaction)));
 
-        mockMvc.perform(get("/api/transactions"))
+        mockMvc.perform(get("/api/transactions")
+                .param("month", "1")
+                .param("year", "2026"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result[0].name").value("Lunch"));
+                .andExpect(jsonPath("$.result.transactions[0].name").value("Lunch"));
 
-        verify(transactionService, times(1)).findByUserId("user123");
+        verify(transactionService, times(1))
+                .findByUserIdAndDateBetween(anyString(), any(Date.class), any(Date.class), any(Pageable.class));
     }
 
     @Test

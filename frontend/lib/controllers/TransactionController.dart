@@ -423,7 +423,16 @@ class TransactionController {
   static void clear() async {
     // Backend route doesn't expose bulk delete; perform best-effort by fetching and deleting
     final txRepo = TransactionRepository();
-    final all = await txRepo.getAll();
+    String userId;
+    try {
+      final user = SessionService.currentUser();
+      userId = (user.id ?? '').toString();
+      if (userId.isEmpty) return;
+    } catch (_) {
+      return;
+    }
+
+    final all = await txRepo.getByUserId(userId);
     for (final t in all) {
       if (t.id != null) {
         await txRepo.deleteById(t.id!);

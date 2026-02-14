@@ -22,8 +22,10 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Collections;
+import java.util.GregorianCalendar;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -135,11 +137,17 @@ public class TransactionIntegrationTest {
         transaction2.setCategoryId(testCategory.getId());
         transactionRepository.save(transaction2);
 
+        Calendar now = Calendar.getInstance();
+        String month = String.valueOf(now.get(Calendar.MONTH) + 1);
+        String year = String.valueOf(now.get(Calendar.YEAR));
+
         mockMvc.perform(get("/api/transactions")
-                        .header("Authorization", bearerToken))
+                        .header("Authorization", bearerToken)
+                        .param("month", month)
+                        .param("year", year))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result", hasSize(2)))
-                .andExpect(jsonPath("$.result[*].name", containsInAnyOrder("Lunch", "Dinner")));
+                .andExpect(jsonPath("$.result.transactions", hasSize(2)))
+                .andExpect(jsonPath("$.result.transactions[*].name", containsInAnyOrder("Lunch", "Dinner")));
     }
 
     @Test
@@ -607,13 +615,79 @@ public class TransactionIntegrationTest {
         credit.setIsCountable(0);
         transactionRepository.save(credit);
 
+        Calendar now = Calendar.getInstance();
+        String month = String.valueOf(now.get(Calendar.MONTH) + 1);
+        String year = String.valueOf(now.get(Calendar.YEAR));
+
         mockMvc.perform(get("/api/transactions")
-                        .header("Authorization", bearerToken))
+                        .header("Authorization", bearerToken)
+                        .param("month", month)
+                        .param("year", year))
                 .andExpect(status().isOk())
                 // CREDIT side should be hidden, only one entry returned
-                .andExpect(jsonPath("$.result", hasSize(1)))
+                .andExpect(jsonPath("$.result.transactions", hasSize(1)))
                 // transactionType should be marked as 3 (TRANSFER)
-                .andExpect(jsonPath("$.result[0].transactionType").value(3));
+                .andExpect(jsonPath("$.result.transactions[0].transactionType").value(3));
+    }
+
+    @Test
+    public void testGetAllTransactionsPaginatedByMonth() throws Exception {
+        Transaction janOlder = new Transaction();
+        janOlder.setTransactionType(1);
+        janOlder.setName("Jan Old");
+        janOlder.setAmount(15.00);
+        janOlder.setDate(new GregorianCalendar(2026, Calendar.JANUARY, 5).getTime());
+        janOlder.setAccountId(testAccount.getId());
+        janOlder.setCategoryId(testCategory.getId());
+        transactionRepository.save(janOlder);
+
+        Transaction janNewer = new Transaction();
+        janNewer.setTransactionType(1);
+        janNewer.setName("Jan New");
+        janNewer.setAmount(25.00);
+        janNewer.setDate(new GregorianCalendar(2026, Calendar.JANUARY, 20).getTime());
+        janNewer.setAccountId(testAccount.getId());
+        janNewer.setCategoryId(testCategory.getId());
+        transactionRepository.save(janNewer);
+
+        Transaction febTransaction = new Transaction();
+        febTransaction.setTransactionType(1);
+        febTransaction.setName("Feb Tx");
+        febTransaction.setAmount(35.00);
+        febTransaction.setDate(new GregorianCalendar(2026, Calendar.FEBRUARY, 10).getTime());
+        febTransaction.setAccountId(testAccount.getId());
+        febTransaction.setCategoryId(testCategory.getId());
+        transactionRepository.save(febTransaction);
+
+        mockMvc.perform(get("/api/transactions")
+                        .header("Authorization", bearerToken)
+                        .param("month", "1")
+                        .param("year", "2026")
+                        .param("page", "0")
+                        .param("size", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.month").value(1))
+                .andExpect(jsonPath("$.result.year").value(2026))
+                .andExpect(jsonPath("$.result.page").value(0))
+                .andExpect(jsonPath("$.result.size").value(1))
+                .andExpect(jsonPath("$.result.totalElements").value(2))
+                .andExpect(jsonPath("$.result.totalPages").value(2))
+                .andExpect(jsonPath("$.result.hasNext").value(true))
+                .andExpect(jsonPath("$.result.transactions", hasSize(1)))
+                .andExpect(jsonPath("$.result.transactions[0].name").value("Jan New"));
+
+        mockMvc.perform(get("/api/transactions")
+                        .header("Authorization", bearerToken)
+                        .param("month", "1")
+                        .param("year", "2026")
+                        .param("page", "1")
+                        .param("size", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.page").value(1))
+                .andExpect(jsonPath("$.result.hasPrevious").value(true))
+                .andExpect(jsonPath("$.result.hasNext").value(false))
+                .andExpect(jsonPath("$.result.transactions", hasSize(1)))
+                .andExpect(jsonPath("$.result.transactions[0].name").value("Jan Old"));
     }
 
     @Test

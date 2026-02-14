@@ -683,7 +683,19 @@ def cmd_categories_list(args: argparse.Namespace) -> int:
 
 def cmd_transactions_list(args: argparse.Namespace) -> int:
     token, base_url = _get_token_from_args_or_config(args)
-    url = _join_url(base_url, "/api/transactions")
+    now = datetime.datetime.now()
+    month = args.month if args.month is not None else now.month
+    year = args.year if args.year is not None else now.year
+    page = args.page if args.page is not None else 0
+    size = args.size if args.size is not None else 500
+
+    query = urllib.parse.urlencode({
+        "month": month,
+        "year": year,
+        "page": page,
+        "size": size,
+    })
+    url = _join_url(base_url, "/api/transactions") + "?" + query
     result = http_request("GET", url, token=token)
     if args.raw:
         print_result(result, raw=True)
@@ -691,11 +703,21 @@ def cmd_transactions_list(args: argparse.Namespace) -> int:
 
     payload = result.get("json")
     txs = None
+    meta = None
     if isinstance(payload, dict):
-        txs = payload.get("result")
+        result_payload = payload.get("result")
+        if isinstance(result_payload, dict):
+            txs = result_payload.get("transactions")
+            meta = result_payload
 
     if result.get("ok") and isinstance(txs, list):
         print(f"HTTP {result.get('status')} ({result.get('elapsed_ms')}ms)")
+        if isinstance(meta, dict):
+            print(
+                f"Month={meta.get('month')} Year={meta.get('year')} "
+                f"Page={meta.get('page')} Size={meta.get('size')} "
+                f"Total={meta.get('totalElements')}"
+            )
         def fmt_type(v):
             if v == 1 or str(v) == "1":
                 return "DEBIT"
@@ -1178,6 +1200,10 @@ def build_parser() -> argparse.ArgumentParser:
     sp = sub.add_parser("transactions")
     sub_tx = sp.add_subparsers(dest="transactions_cmd", required=True)
     sp2 = sub_tx.add_parser("list")
+    sp2.add_argument("--month", type=int, help="Month (1-12). Defaults to current month.")
+    sp2.add_argument("--year", type=int, help="Year (YYYY). Defaults to current year.")
+    sp2.add_argument("--page", type=int, default=0, help="Zero-based page index (default: 0).")
+    sp2.add_argument("--size", type=int, default=500, help="Page size (default: 500).")
     sp2.set_defaults(func=cmd_transactions_list)
 
     sp2 = sub_tx.add_parser("add")

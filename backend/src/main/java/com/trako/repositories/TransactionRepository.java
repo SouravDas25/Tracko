@@ -1,6 +1,8 @@
 package com.trako.repositories;
 
 import com.trako.entities.Transaction;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -26,6 +28,16 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
         @Param("userId") String userId,
         @Param("startDate") Date startDate,
         @Param("endDate") Date endDate
+    );
+
+    @Query("SELECT t FROM Transaction t WHERE t.accountId IN " +
+           "(SELECT a.id FROM Account a WHERE a.userId = :userId) " +
+           "AND t.date >= :startDate AND t.date < :endDate")
+    Page<Transaction> findByUserIdAndDateBetween(
+        @Param("userId") String userId,
+        @Param("startDate") Date startDate,
+        @Param("endDate") Date endDate,
+        Pageable pageable
     );
 
     @Query("SELECT t FROM Transaction t WHERE t.accountId IN " +

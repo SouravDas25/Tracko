@@ -6,6 +6,8 @@ import com.trako.exceptions.UserNotLoggedInException;
 import com.trako.repositories.TransactionRepository;
 import com.trako.repositories.UserCurrencyRepository;
 import com.trako.dtos.TransactionSummaryDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -39,6 +41,10 @@ public class TransactionService {
 
     public List<Transaction> findByUserIdAndDateBetween(String userId, Date startDate, Date endDate) {
         return transactionRepository.findByUserIdAndDateBetween(userId, startDate, endDate);
+    }
+
+    public Page<Transaction> findByUserIdAndDateBetween(String userId, Date startDate, Date endDate, Pageable pageable) {
+        return transactionRepository.findByUserIdAndDateBetween(userId, startDate, endDate, pageable);
     }
 
     public List<Transaction> findByUserIdAndDateBetweenAndAccountIds(String userId, Date startDate, Date endDate, List<Long> accountIds) {
