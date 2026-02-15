@@ -1,4 +1,6 @@
+import 'package:tracko/Utils/CommonUtil.dart';
 import 'package:tracko/Utils/WidgetUtil.dart';
+import 'package:tracko/Utils/enums.dart';
 import 'package:tracko/controllers/TransactionController.dart';
 import 'package:tracko/models/transaction.dart';
 import 'package:tracko/pages/add_item_page/add_item.dart';
@@ -55,49 +57,143 @@ class TransactionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Slidable(
-      endActionPane: ActionPane(
-        motion: ScrollMotion(),
-        children: [
-          SlidableAction(
-            onPressed: (context) {
-              _showDialog();
-            },
-            backgroundColor: Colors.red,
-            foregroundColor: Colors.white,
-            icon: Icons.delete,
-            label: 'Delete',
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
+      child: Slidable(
+        endActionPane: ActionPane(
+          motion: ScrollMotion(),
+          children: [
+            SlidableAction(
+              onPressed: (context) {
+                _showDialog();
+              },
+              backgroundColor: Colors.red.shade400,
+              foregroundColor: Colors.white,
+              icon: Icons.delete_outline,
+              label: 'Delete',
+              borderRadius: BorderRadius.circular(16),
+            ),
+          ],
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 10,
+                offset: Offset(0, 4),
+              ),
+            ],
+            border: Border.all(
+              color: Theme.of(context).dividerColor.withOpacity(0.05),
+            ),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: () async {
+                await Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) =>
+                        AddItemPage(transaction: transaction)));
+                try {
+                  (parent as dynamic).refresh();
+                } catch (e) {
+                  print("Parent refresh failed: $e");
+                }
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  children: [
+                    _buildAvatar(context),
+                    SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            transaction.name,
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color:
+                                  Theme.of(context).textTheme.bodyLarge?.color,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            transaction.contacts.length > 1
+                                ? "${transaction.category?.name ?? ''} • ${transaction.contacts.length} contacts"
+                                : "${transaction.category?.name ?? 'Uncategorized'}",
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Theme.of(context).hintColor,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                    _buildAmount(context),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAvatar(BuildContext context) {
+    return Container(
+      width: 48,
+      height: 48,
+      decoration: BoxDecoration(
+        color: Theme.of(context).primaryColor,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).primaryColor.withOpacity(0.3),
+            blurRadius: 8,
+            offset: Offset(0, 2),
           ),
         ],
       ),
-      child: Card(
-          elevation: 1,
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16.0),
-              side: BorderSide(
-                  color: Theme.of(context).dividerColor.withOpacity(0.1))),
-          child: ListTile(
-            onTap: () async {
-              await Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) => AddItemPage(transaction: transaction)));
-              try {
-                // Refresh parent list to show updated amounts/data
-                (parent as dynamic).refresh();
-              } catch (e) {
-                print("Parent refresh failed: $e");
-              }
-            },
-            leading: WidgetUtil.textAvatar(transaction.name),
-            title: Text(
-              transaction.name,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 20.0),
-            ),
-            subtitle: Text(transaction.contacts.length > 1
-                ? "${transaction.category?.name ?? ''} / ${transaction.contacts?.length}"
-                : "${transaction.category?.name ?? ''}"),
-            trailing: WidgetUtil.transformTransaction2TextWidget(transaction),
-          )),
+      child: Center(
+        child: Text(
+          CommonUtil.getInitials(transaction.name),
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAmount(BuildContext context) {
+    final bool isDebit = transaction.transactionType == TransactionType.DEBIT;
+    final color = isDebit ? Colors.red.shade400 : Colors.green.shade600;
+    final sign = isDebit ? "- " : "+ ";
+    String amountText = CommonUtil.toCurrency(transaction.amount);
+
+    return Text(
+      "$sign$amountText",
+      style: TextStyle(
+        color: color,
+        fontWeight: FontWeight.bold,
+        fontSize: 15,
+      ),
     );
   }
 }

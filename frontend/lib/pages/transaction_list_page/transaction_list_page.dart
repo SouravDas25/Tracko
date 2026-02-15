@@ -260,114 +260,117 @@ class _TransactionListPageState extends RefreshableState<TransactionListPage> {
       },
       child: CustomScrollView(
         slivers: <Widget>[
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.only(top: 4.0),
-              child: DefaultTextStyle.merge(
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
-                child: Card(
-                  child: ListTile(
-                    leading: IconButton(
-                      icon: const Icon(Icons.arrow_back),
-                      onPressed:
-                          _isProgrammaticLoading ? null : _goToPreviousMonth,
-                    ),
-                    title: GestureDetector(
-                      onTap: _selectMonth,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            DateFormatter.DateFormat('MMMM yyyy')
-                                .format(selectedMonth),
-                            style: const TextStyle(fontSize: 18),
-                          ),
-                          const Icon(Icons.arrow_drop_down),
-                        ],
-                      ),
-                    ),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.arrow_forward),
-                      onPressed: _isProgrammaticLoading ? null : _goToNextMonth,
-                    ),
-                  ),
-                ),
-              ),
+          SliverPersistentHeader(
+            pinned: true,
+            floating: true,
+            delegate: _StickyMonthHeaderDelegate(
+              context: context,
+              selectedMonth: selectedMonth,
+              onPrevious: _isProgrammaticLoading ? null : _goToPreviousMonth,
+              onNext: _isProgrammaticLoading ? null : _goToNextMonth,
+              onSelect: _selectMonth,
             ),
           ),
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.only(top: 4.0),
-              child: Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16.0),
-                    side: BorderSide(
-                        color:
-                            Theme.of(context).dividerColor.withOpacity(0.1))),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Theme.of(context).cardColor,
+                      Theme.of(context).cardColor.withOpacity(0.95),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.03),
+                      blurRadius: 15,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                  border: Border.all(
+                    color: Theme.of(context).dividerColor.withOpacity(0.05),
+                  ),
+                ),
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    ListTile(
-                      trailing: Text(
-                        CommonUtil.toCurrency(previousMonthAmount),
-                        style: TextStyle(
-                            fontSize: 18.0, fontWeight: FontWeight.w500),
-                      ),
-                      dense: true,
-                      title: Text(
-                        "Last Month (${DateFormatter.DateFormat("MMM").format(DateTime.utc(selectedMonth.year, selectedMonth.month - 1))})",
-                        style: TextStyle(fontSize: 18.0),
-                      ),
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "Total Balance",
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                            color: Theme.of(context).hintColor,
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color:
+                                Theme.of(context).primaryColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            "Net",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).primaryColor,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    ListTile(
-                      trailing: Text(
-                        CommonUtil.toCurrency(incomeAmount),
-                        style: TextStyle(
-                            fontSize: 18.0, fontWeight: FontWeight.w500),
-                      ),
-                      dense: true,
-                      title: Text(
-                        "Income",
-                        style: TextStyle(fontSize: 18.0),
-                      ),
-                    ),
-                    ListTile(
-                      trailing: Text(
-                        CommonUtil.toCurrency(expenseAmount),
-                        style: TextStyle(
-                            fontSize: 18.0, fontWeight: FontWeight.w500),
-                      ),
-                      dense: true,
-                      title: Text(
-                        "Expense",
-                        style: TextStyle(fontSize: 18.0),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 15.0, vertical: 0.0),
-                      child: Container(
-                        height: 0.5,
-                        color:
-                            Theme.of(context).dividerColor.withOpacity(0.075),
-                      ),
-                    ),
-                    ListTile(
-                      trailing: Text(
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
                         CommonUtil.toCurrency(totalAmount),
                         style: TextStyle(
-                            fontSize: 18.0, fontWeight: FontWeight.w500),
+                          fontSize: 32,
+                          fontWeight: FontWeight.w800,
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
+                          letterSpacing: -0.5,
+                        ),
                       ),
-                      dense: true,
-                      title: Text(
-                        "Balance",
-                        style: TextStyle(fontSize: 18.0),
-                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildSummaryItem(
+                            context,
+                            "Income",
+                            incomeAmount,
+                            Colors.green.shade500,
+                            Icons.arrow_downward_rounded,
+                          ),
+                        ),
+                        Container(
+                          width: 1,
+                          height: 40,
+                          color:
+                              Theme.of(context).dividerColor.withOpacity(0.2),
+                        ),
+                        Expanded(
+                          child: _buildSummaryItem(
+                            context,
+                            "Expense",
+                            expenseAmount,
+                            Colors.red.shade400,
+                            Icons.arrow_upward_rounded,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -377,22 +380,54 @@ class _TransactionListPageState extends RefreshableState<TransactionListPage> {
           if (_isProgrammaticLoading)
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: SizedBox(
-                  height: 120,
-                  child: Center(child: CircularProgressIndicator()),
+                padding: const EdgeInsets.all(32.0),
+                child: Center(
+                  child: SizedBox(
+                    width: 32,
+                    height: 32,
+                    child: CircularProgressIndicator(strokeWidth: 3),
+                  ),
                 ),
               ),
             )
           else if (transactions.isEmpty)
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.all(32.0),
-                child: Center(
-                  child: Text(
-                    "No transactions found for this month.",
-                    style: TextStyle(color: Colors.grey, fontSize: 16),
-                  ),
+                padding: const EdgeInsets.only(top: 48.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color:
+                            Theme.of(context).disabledColor.withOpacity(0.05),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.receipt_long_rounded,
+                        size: 48,
+                        color: Theme.of(context).disabledColor.withOpacity(0.5),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      "No transactions yet",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).hintColor,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      "Tap + to add a new one",
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Theme.of(context).disabledColor,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             )
@@ -414,10 +449,17 @@ class _TransactionListPageState extends RefreshableState<TransactionListPage> {
                   final List<Widget> children = [];
                   if (index == 0 || prevHuman != currentHuman) {
                     children.add(
-                      PaddedText(
-                        currentHuman,
-                        horizontal: 10.0,
-                        vertical: 10.0,
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
+                        child: Text(
+                          currentHuman,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).hintColor,
+                            letterSpacing: 1.0,
+                          ),
+                        ),
                       ),
                     );
                   }
@@ -439,8 +481,48 @@ class _TransactionListPageState extends RefreshableState<TransactionListPage> {
                 childCount: transactions.length,
               ),
             ),
+          const SliverPadding(padding: EdgeInsets.only(bottom: 80)),
         ],
       ),
+    );
+  }
+
+  Widget _buildSummaryItem(BuildContext context, String label, double amount,
+      Color color, IconData icon) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 12, color: color),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: Theme.of(context).hintColor,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          CommonUtil.toCurrency(amount),
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+      ],
     );
   }
 
@@ -470,5 +552,88 @@ class _TransactionListPageState extends RefreshableState<TransactionListPage> {
     return Center(
       child: Text("No Data Available."),
     );
+  }
+}
+
+class _StickyMonthHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final BuildContext context;
+  final DateTime selectedMonth;
+  final VoidCallback? onPrevious;
+  final VoidCallback? onNext;
+  final VoidCallback onSelect;
+
+  _StickyMonthHeaderDelegate({
+    required this.context,
+    required this.selectedMonth,
+    this.onPrevious,
+    this.onNext,
+    required this.onSelect,
+  });
+
+  @override
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return Container(
+      color: Theme.of(context).appBarTheme.backgroundColor ??
+          Theme.of(context).primaryColor,
+      child: SafeArea(
+        top: false,
+        bottom: false,
+        child: SizedBox(
+          height: 56.0, // Standard AppBar height
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              IconButton(
+                icon: Icon(Icons.chevron_left, color: Colors.white),
+                onPressed: onPrevious,
+                tooltip: 'Previous month',
+              ),
+              Expanded(
+                child: GestureDetector(
+                  onTap: onSelect,
+                  behavior: HitTestBehavior.opaque,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        DateFormatter.DateFormat('MMMM yyyy')
+                            .format(selectedMonth),
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(Icons.arrow_drop_down, color: Colors.white),
+                    ],
+                  ),
+                ),
+              ),
+              IconButton(
+                icon: Icon(Icons.chevron_right, color: Colors.white),
+                onPressed: onNext,
+                tooltip: 'Next month',
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  double get maxExtent => 56.0;
+
+  @override
+  double get minExtent => 56.0;
+
+  @override
+  bool shouldRebuild(_StickyMonthHeaderDelegate oldDelegate) {
+    return selectedMonth != oldDelegate.selectedMonth ||
+        onPrevious != oldDelegate.onPrevious ||
+        onNext != oldDelegate.onNext;
   }
 }

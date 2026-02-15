@@ -120,14 +120,24 @@ class _SplitPage extends RefreshableState<SplitPage> {
       child: ListView.builder(
         itemBuilder: (_, int index) {
           final row = this.contacts[index];
-          return Card(
-            elevation: 1,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16.0),
-              side: BorderSide(
-                  color: Theme.of(context).dividerColor.withOpacity(0.1)),
+          return Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardColor,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.04),
+                  blurRadius: 10,
+                  offset: Offset(0, 4),
+                ),
+              ],
+              border: Border.all(
+                color: Theme.of(context).dividerColor.withOpacity(0.05),
+              ),
             ),
+            margin: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
             child: ListTile(
+              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
@@ -137,29 +147,62 @@ class _SplitPage extends RefreshableState<SplitPage> {
               },
               title: Text(
                 row.contact.name,
-                style: TextStyle(fontSize: 20.0),
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                ),
               ),
-              subtitle: Text(
-                row.contact.phoneNo.isNotEmpty
-                    ? row.contact.phoneNo
-                    : row.contact.email,
+              subtitle: Padding(
+                padding: const EdgeInsets.only(top: 4.0),
+                child: Text(
+                  row.contact.phoneNo.isNotEmpty
+                      ? row.contact.phoneNo
+                      : row.contact.email,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Theme.of(context).hintColor,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ),
               trailing: Text(
                 CommonUtil.toCurrency(row.dueAmount),
                 style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  color: row.dueAmount > 0 ? Colors.red : Colors.green,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                  color: row.dueAmount > 0
+                      ? Colors.red.shade400
+                      : Colors.green.shade600,
                 ),
               ),
-              leading: CircleAvatar(
-                radius: 24.0,
-                child: Text(
-                  row.contact.name.isNotEmpty
-                      ? row.contact.name.substring(0, 1).toUpperCase()
-                      : '?',
+              leading: Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).primaryColor,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Theme.of(context).primaryColor.withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: Text(
+                    row.contact.name.isNotEmpty
+                        ? row.contact.name.substring(0, 1).toUpperCase()
+                        : '?',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
+                  ),
                 ),
               ),
-              contentPadding: EdgeInsets.all(8.0),
             ),
           );
         },

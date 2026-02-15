@@ -36,7 +36,7 @@ RUN apt-get update \
 
 # Backend
 WORKDIR /app
-COPY --from=backend-build /workspace/backend/target/expensemanager.jar /app/app.jar
+COPY --from=backend-build /workspace/backend/target/tracko.jar /app/app.jar
 
 # TLS certs
 RUN mkdir -p /etc/nginx/certs

@@ -170,8 +170,8 @@ class _HomeTab extends State<HomeTab> with SingleTickerProviderStateMixin {
                       'label': 'Budget',
                       'tab': 1
                     },
-                    {'icon': Icons.call_split, 'label': 'Split', 'tab': 2},
-                    {'icon': Icons.home, 'label': 'Home', 'tab': 3},
+                    {'icon': Icons.home, 'label': 'Home', 'tab': 2},
+                    {'icon': Icons.call_split, 'label': 'Split', 'tab': 3},
                     {'icon': Icons.bar_chart, 'label': 'Stats', 'tab': 4},
                   ];
                   int railSelected =
@@ -207,8 +207,8 @@ class _HomeTab extends State<HomeTab> with SingleTickerProviderStateMixin {
                       children: <Widget>[
                         AccountsOverviewPage(),
                         BudgetPage(),
-                        SplitPage(),
                         TransactionListPage(embedded: true),
+                        SplitPage(),
                         StatsPage(),
                       ]),
                 ),
@@ -220,8 +220,8 @@ class _HomeTab extends State<HomeTab> with SingleTickerProviderStateMixin {
               children: <Widget>[
                   AccountsOverviewPage(),
                   BudgetPage(),
-                  SplitPage(),
                   TransactionListPage(embedded: true),
+                  SplitPage(),
                   StatsPage(),
                 ]),
     );
