@@ -11,9 +11,6 @@ class StatsLineChart extends StatelessWidget {
   final double seriesMaxY;
   final Color kindColor;
 
-  // Internal controller for the scrollable chart
-  final ScrollController _chartScrollController = ScrollController();
-
   StatsLineChart({
     Key? key,
     required this.loading,
@@ -46,24 +43,18 @@ class StatsLineChart extends StatelessWidget {
 
     // fl_chart won't render a useful line if minX == maxX (single point).
     final spots = (() {
-      final initial = baseSpots.length == 1
-          ? <FlSpot>[baseSpots[0], FlSpot(baseSpots[0].x + 1, baseSpots[0].y)]
-          : baseSpots;
-      if (initial.isEmpty) return initial;
-      // Add a trailing zero point so the chart visually ends at baseline.
-      return <FlSpot>[...initial, FlSpot(initial.last.x + 1, 0)];
+      if (baseSpots.isEmpty) return <FlSpot>[];
+      if (baseSpots.length == 1) {
+        return <FlSpot>[baseSpots[0], FlSpot(baseSpots[0].x + 1, baseSpots[0].y)];
+      }
+      return baseSpots;
     })();
 
     final maxX = spots.length == 1 ? 1.0 : spots.last.x;
     final maxY = seriesMaxY <= 0 ? 1.0 : seriesMaxY;
     final leftInterval = maxY <= 0 ? 1.0 : (maxY / 4);
 
-    // Calculate dynamic width: minimum 60px per datapoint for readable spacing
-    final chartWidth = (series.length * 60.0).clamp(300.0, double.infinity);
-
-    return HorizontalScrollContainer(
-      controller: _chartScrollController,
-      width: chartWidth,
+    return SizedBox(
       height: 220,
       child: LineChart(
         LineChartData(
@@ -109,8 +100,13 @@ class StatsLineChart extends StatelessWidget {
           gridData: FlGridData(show: true, drawVerticalLine: false),
           borderData: FlBorderData(show: false),
           titlesData: FlTitlesData(
-            rightTitles:
-                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            rightTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: 64,
+                getTitlesWidget: (value, meta) => const SizedBox.shrink(),
+              ),
+            ),
             topTitles:
                 const AxisTitles(sideTitles: SideTitles(showTitles: false)),
             leftTitles: AxisTitles(
@@ -135,7 +131,7 @@ class StatsLineChart extends StatelessWidget {
             bottomTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
-                reservedSize: 52,
+                reservedSize: 32,
                 interval: 1,
                 getTitlesWidget: (value, meta) {
                   // fl_chart may call this for non-integer tick values; only label exact indices.
@@ -147,15 +143,12 @@ class StatsLineChart extends StatelessWidget {
                     return const SizedBox.shrink();
                   return SideTitleWidget(
                     axisSide: meta.axisSide,
-                    space: 6,
-                    child: Transform.rotate(
-                      angle: -0.6,
-                      child: Text(
-                        series[idx].label,
-                        style: const TextStyle(fontSize: 9),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                    space: 8,
+                    child: Text(
+                      series[idx].label,
+                      style: const TextStyle(fontSize: 10),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   );
                 },

@@ -92,11 +92,7 @@ class _CategoryTransactionsPageState extends State<CategoryTransactionsPage> {
     final maxY = _seriesMaxY <= 0 ? 1.0 : _seriesMaxY;
     final leftInterval = maxY <= 0 ? 1.0 : (maxY / 4);
 
-    final chartWidth = (_series.length * 60.0).clamp(300.0, double.infinity);
-
-    return HorizontalScrollContainer(
-      controller: _chartScrollController,
-      width: chartWidth,
+    return SizedBox(
       height: 220,
       child: LineChart(
         LineChartData(
@@ -108,8 +104,13 @@ class _CategoryTransactionsPageState extends State<CategoryTransactionsPage> {
           gridData: FlGridData(show: true, drawVerticalLine: false),
           borderData: FlBorderData(show: false),
           titlesData: FlTitlesData(
-            rightTitles:
-                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            rightTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: 64,
+                getTitlesWidget: (value, meta) => const SizedBox.shrink(),
+              ),
+            ),
             topTitles:
                 const AxisTitles(sideTitles: SideTitles(showTitles: false)),
             leftTitles: AxisTitles(

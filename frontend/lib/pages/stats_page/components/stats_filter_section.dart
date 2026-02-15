@@ -57,6 +57,7 @@ class StatsFilterSection extends StatelessWidget {
                       size: 20, color: Theme.of(context).primaryColor),
                 ),
                 isDense: true,
+                dropdownColor: Theme.of(context).cardColor,
                 style: TextStyle(
                   color: Theme.of(context).textTheme.bodyLarge?.color,
                   fontWeight: FontWeight.w600,

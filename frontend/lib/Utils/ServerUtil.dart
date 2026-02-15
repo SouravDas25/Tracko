@@ -5,7 +5,8 @@ import 'package:tracko/controllers/TransactionController.dart';
 import 'package:tracko/dtos/GlobalAccountResponse.dart';
 import 'package:tracko/models/transaction.dart';
 import 'package:tracko/models/user.dart';
-import 'package:http/http.dart' as http;
+import 'package:tracko/services/api_client.dart';
+import 'package:dio/dio.dart';
 
 class ServerUtil {
   static String? authJwtToken;
@@ -31,9 +32,13 @@ class ServerUtil {
     var headers = {"Content-Type": "application/json"};
     var body = {"phoneNo": user.phoneNo, "firebaseUuid": user.fireBaseId};
     String data = convert.jsonEncode(body);
-    var response = await http.post(url, headers: headers, body: data);
+    final dio = ApiClient().dio;
+    final response =
+        await dio.postUri(url, data: data, options: Options(headers: headers));
     if (response.statusCode == 200) {
-      var jsonResponse = convert.jsonDecode(response.body);
+      final jsonResponse = response.data is String
+          ? convert.jsonDecode(response.data as String)
+          : response.data as Map<String, dynamic>;
       String? token = jsonResponse["token"];
       if (token != null && token.length > 1) {
         ServerUtil.authJwtToken = token;
@@ -54,19 +59,19 @@ class ServerUtil {
     print(data);
 //    data = Uri.encodeQueryComponent(data);
     var header = {"Content-Type": "application/json"};
-    var response = await http.post(
-      url,
-      body: data,
-      headers: header,
-    );
-    print(response.headers);
-    print(response.body);
+    final dio = ApiClient().dio;
+    final response =
+        await dio.postUri(url, data: data, options: Options(headers: header));
+    print(response.headers.map);
+    print(response.data);
     if (response.statusCode == 200) {
-      var token = response.headers['jwt-token'];
+      var token = response.headers.map['jwt-token']?.first;
       if (token != null && token.length > 1) {
         ServerUtil.authJwtToken = token;
       }
-      var jsonResponse = convert.jsonDecode(response.body);
+      final jsonResponse = response.data is String
+          ? convert.jsonDecode(response.data as String)
+          : response.data as Map<String, dynamic>;
       return jsonResponse["result"];
     }
     return null;
@@ -77,9 +82,12 @@ class ServerUtil {
     var url = Uri.parse(DestinationUtil.javaBackend() +
         "api/user/byPhoneNo?phone_no=" +
         Uri.encodeQueryComponent(phoneNumber));
-    var response = await http.get(url, headers: authHeader);
+    final dio = ApiClient().dio;
+    var response = await dio.getUri(url, options: Options(headers: authHeader));
     if (response.statusCode == 200) {
-      var jsonResponse = convert.jsonDecode(response.body);
+      final jsonResponse = response.data is String
+          ? convert.jsonDecode(response.data as String)
+          : response.data as Map<String, dynamic>;
       var result = jsonResponse["result"];
       if (result == null) {
         return null;
@@ -104,14 +112,14 @@ class ServerUtil {
 //    data = Uri.encodeQueryComponent(data);
     var header = {"Content-Type": "application/json"};
     header.addAll(authHeader);
-    var response = await http.post(
-      url,
-      body: data,
-      headers: header,
-    );
-    print(response.body);
+    final dio = ApiClient().dio;
+    final response =
+        await dio.postUri(url, data: data, options: Options(headers: header));
+    print(response.data);
     if (response.statusCode == 200) {
-      var jsonResponse = convert.jsonDecode(response.body);
+      final jsonResponse = response.data is String
+          ? convert.jsonDecode(response.data as String)
+          : response.data as Map<String, dynamic>;
       return jsonResponse["result"];
     }
     return null;
@@ -130,14 +138,14 @@ class ServerUtil {
 //    data = Uri.encodeQueryComponent(data);
     var header = {"Content-Type": "application/json"};
     header.addAll(authHeader);
-    var response = await http.post(
-      url,
-      body: data,
-      headers: header,
-    );
+    final dio = ApiClient().dio;
+    final response =
+        await dio.postUri(url, data: data, options: Options(headers: header));
 
     if (response.statusCode == 200) {
-      var jsonResponse = convert.jsonDecode(response.body);
+      final jsonResponse = response.data is String
+          ? convert.jsonDecode(response.data as String)
+          : response.data as Map<String, dynamic>;
 //      print(jsonResponse);
       Transaction transaction =
           await TransactionController.fromJson(jsonResponse);
@@ -167,14 +175,14 @@ class ServerUtil {
 //    data = Uri.encodeQueryComponent(data);
     var headers = {"Content-Type": "application/json"};
     headers.addAll(authHeader);
-    var response = await http.post(
-      url,
-      body: data,
-      headers: headers,
-    );
-    print(response.body);
+    final dio = ApiClient().dio;
+    final response =
+        await dio.postUri(url, data: data, options: Options(headers: headers));
+    print(response.data);
     if (response.statusCode == 200) {
-      var jsonResponse = convert.jsonDecode(response.body);
+      final jsonResponse = response.data is String
+          ? convert.jsonDecode(response.data as String)
+          : response.data as Map<String, dynamic>;
       return jsonResponse['result'] == user.globalId;
     }
     return false;

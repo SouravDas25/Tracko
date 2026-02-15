@@ -473,19 +473,24 @@ def cmd_contacts_delete(args: argparse.Namespace) -> int:
 
 def cmd_transfers_create(args: argparse.Namespace) -> int:
     token, base_url = _get_token_from_args_or_config(args)
-    url = _join_url(base_url, "/api/transfers")
+    url = _join_url(base_url, "/api/transactions")
+    
+    # Create transfer using the unified transaction API
+    # Transfer is indicated by presence of toAccountId field
     body = {
-        "fromAccountId": int(args.from_account_id),
-        "toAccountId": int(args.to_account_id),
+        "accountId": int(args.from_account_id),  # Source account
+        "toAccountId": int(args.to_account_id),   # Destination account indicates transfer
         "amount": float(args.amount),
+        "transactionType": 1,  # DEBIT for source account
+        "name": args.name or "Transfer",
+        "comments": args.comments,
+        "isCountable": 0,  # Transfers are typically not countable
     }
-    if args.name:
-        body["name"] = args.name
-    if args.comments:
-        body["comments"] = args.comments
+    
     result = http_request("POST", url, token=token, json_body=body)
     print_result(result, raw=args.raw)
-    return 0 if result.get("ok") else 1
+    return 0 if result["ok"] else 1
+
 
 def cmd_login(args: argparse.Namespace) -> int:
     url = _join_url(args.base_url, "/api/login")
@@ -876,10 +881,7 @@ def cmd_transactions_add(args: argparse.Namespace) -> int:
         print("Invalid --type. Use income or expense.", file=sys.stderr)
         return 2
 
-    # Build request body. By default, --amount is treated as normalized/base amount.
-    # If --currency is provided, we treat --amount as the original foreign amount.
-    # Per request, we DO NOT send any exchange rate to the backend; the server should
-    # fetch the correct live rate and compute normalized amount.
+    # Build request body following the unified TransactionRequest structure
     body = {
         "transactionType": transaction_type,
         "name": args.name,
@@ -890,10 +892,10 @@ def cmd_transactions_add(args: argparse.Namespace) -> int:
         "isCountable": 1 if args.countable else 0,
     }
 
+    # Handle multi-currency support
     currency = getattr(args, "currency", None)
     if currency:
-        # Backend will fetch the exchange rate from user's configured currencies.
-        # We only send originalCurrency and originalAmount.
+        # When currency is provided, amount is treated as original amount
         try:
             original_amount = float(args.amount)
         except Exception:
@@ -903,8 +905,12 @@ def cmd_transactions_add(args: argparse.Namespace) -> int:
             "originalCurrency": str(currency).upper(),
             "originalAmount": original_amount,
         })
+        # Add exchange rate if provided
+        exchange_rate = getattr(args, "exchange_rate", None)
+        if exchange_rate:
+            body["exchangeRate"] = float(exchange_rate)
     else:
-        # Backwards compatible: amount is already normalized/base amount
+        # Backwards compatible: amount is normalized/base amount
         body["amount"] = float(args.amount)
 
     result = http_request("POST", url, token=token, json_body=body)
@@ -994,6 +1000,56 @@ def cmd_budget_allocate(args: argparse.Namespace) -> int:
     return 0 if result["ok"] else 1
 
 
+def cmd_budget_available(args: argparse.Namespace) -> int:
+    token, base_url = _get_token_from_args_or_config(args)
+    
+    now = datetime.datetime.now()
+    month = int(args.month) if args.month else now.month
+    year = int(args.year) if args.year else now.year
+    
+    params = {
+        "month": month,
+        "year": year,
+    }
+    query = urllib.parse.urlencode(params)
+    url = _join_url(base_url, "/api/budget/available") + "?" + query
+    
+    result = http_request("GET", url, token=token)
+    print_result(result, raw=args.raw)
+    return 0 if result["ok"] else 1
+
+
+def cmd_accounts_balances(args: argparse.Namespace) -> int:
+    token, base_url = _get_token_from_args_or_config(args)
+    url = _join_url(base_url, "/api/accounts/balances")
+    result = http_request("GET", url, token=token)
+    print_result(result, raw=args.raw)
+    return 0 if result["ok"] else 1
+
+
+def cmd_transactions_summary(args: argparse.Namespace) -> int:
+    token, base_url = _get_token_from_args_or_config(args)
+    
+    # Parse dates
+    start_date = args.start_date or f"{datetime.datetime.now().year}-01-01"
+    end_date = args.end_date or f"{datetime.datetime.now().year}-12-31"
+    
+    params = {
+        "startDate": start_date,
+        "endDate": end_date,
+        "includeRollover": "true" if args.include_rollover else "false"
+    }
+    if args.account_ids:
+        params["accountIds"] = args.account_ids
+    
+    query = urllib.parse.urlencode(params)
+    url = _join_url(base_url, "/api/transactions/summary") + "?" + query
+    
+    result = http_request("GET", url, token=token)
+    print_result(result, raw=args.raw)
+    return 0 if result["ok"] else 1
+
+
 def cmd_request(args: argparse.Namespace) -> int:
     token, base_url = _get_token_from_args_or_config(args)
     path = args.path
@@ -1026,6 +1082,7 @@ def build_parser() -> argparse.ArgumentParser:
         "  tracko_cli users list\n\n"
         "  # Accounts\n"
         "  tracko_cli accounts list\n"
+        "  tracko_cli accounts balances\n"
         "  tracko_cli accounts add --name HDFC\n\n"
         "  # Categories\n"
         "  tracko_cli categories list\n"
@@ -1037,8 +1094,9 @@ def build_parser() -> argparse.ArgumentParser:
         "  tracko_cli contacts delete --id 1\n\n"
         "  # Transactions\n"
         "  tracko_cli transactions list\n"
+        "  tracko_cli transactions summary --start-date 2026-01-01 --end-date 2026-12-31\n"
         "  tracko_cli transactions add --account-id 2 --category-id 2 --amount 250 --type expense --name Lunch --comments 'Team lunch'\n\n"
-        "  # Transfers (dual-record: debit source, credit destination)\n"
+        "  # Transfers (now uses unified transactions API)\n"
         "  tracko_cli transfers create --from-account-id 2 --to-account-id 3 --amount 500 --name 'Move to Savings' --comments 'Feb savings'\n\n"
         "  # Splits (list)\n"
         "  tracko_cli splits list\n"
@@ -1051,7 +1109,11 @@ def build_parser() -> argparse.ArgumentParser:
         "  tracko_cli splits create --transaction-id 6 --user-id 575e15bc-... --amount 125 --contact-id 1\n\n"
         "  # Budget\n"
         "  tracko_cli budget view --month 2 --year 2026\n"
-        "  tracko_cli budget allocate --category-id 1 --amount 500 --month 2 --year 2026\n\n"
+        "  tracko_cli budget allocate --category-id 1 --amount 500 --month 2 --year 2026\n"
+        "  tracko_cli budget available --month 2 --year 2026\n\n"
+        "  # Currencies\n"
+        "  tracko_cli currencies list\n"
+        "  tracko_cli currencies add --code USD --rate 0.85\n\n"
         "  # Generic request\n"
         "  tracko_cli request --method GET --path /api/health\n"
         "  tracko_cli request --method POST --path /api/contacts --json '{\"name\":\"Bob\"}'\n"
@@ -1119,6 +1181,9 @@ def build_parser() -> argparse.ArgumentParser:
     sp2 = sub_acc.add_parser("add")
     sp2.add_argument("--name", required=True)
     sp2.set_defaults(func=cmd_accounts_add)
+
+    sp2 = sub_acc.add_parser("balances")
+    sp2.set_defaults(func=cmd_accounts_balances)
 
     sp = sub.add_parser("categories")
     sub_cat = sp.add_subparsers(dest="categories_cmd", required=True)
@@ -1221,6 +1286,13 @@ def build_parser() -> argparse.ArgumentParser:
     sp2.add_argument("--exchange-rate", type=float, help="Optional: explicit exchange rate. If omitted, backend uses user's configured rate.")
     sp2.set_defaults(func=cmd_transactions_add)
 
+    sp2 = sub_tx.add_parser("summary")
+    sp2.add_argument("--start-date", help="Start date (YYYY-MM-DD). Defaults to current year start.")
+    sp2.add_argument("--end-date", help="End date (YYYY-MM-DD). Defaults to current year end.")
+    sp2.add_argument("--account-ids", help="Comma-separated account IDs to filter by")
+    sp2.add_argument("--include-rollover", action="store_true", help="Include rollover in calculations")
+    sp2.set_defaults(func=cmd_transactions_summary)
+
     # budget
     sp = sub.add_parser("budget")
     sub_budget = sp.add_subparsers(dest="budget_cmd", required=True)
@@ -1236,6 +1308,11 @@ def build_parser() -> argparse.ArgumentParser:
     sp2.add_argument("--month", type=int, help="Month (1-12)")
     sp2.add_argument("--year", type=int, help="Year (YYYY)")
     sp2.set_defaults(func=cmd_budget_allocate)
+
+    sp2 = sub_budget.add_parser("available")
+    sp2.add_argument("--month", type=int, help="Month (1-12)")
+    sp2.add_argument("--year", type=int, help="Year (YYYY)")
+    sp2.set_defaults(func=cmd_budget_available)
 
     # user currencies
     sp = sub.add_parser("currencies")

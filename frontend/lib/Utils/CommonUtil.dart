@@ -68,21 +68,25 @@ class CommonUtil {
     double absAmount = amount.abs();
     if (absAmount >= million && absAmount < billion) {
       amount = amount / million;
+      bool hasFraction = (amount * 100).round() % 100 != 0;
       formatCurrency = NumberFormat.currency(
-        decimalDigits: 0,
+        decimalDigits: hasFraction ? 2 : 0,
         symbol: symbol,
       );
       tail = " million";
     } else if (absAmount >= billion) {
       amount = amount / billion;
+      bool hasFraction = (amount * 100).round() % 100 != 0;
       formatCurrency = NumberFormat.currency(
-        decimalDigits: 0,
+        decimalDigits: hasFraction ? 2 : 0,
         symbol: symbol,
       );
       tail = " billion";
     } else {
+      // Check if amount has significant fractional part
+      bool hasFraction = (amount * 100).round() % 100 != 0;
       formatCurrency = NumberFormat.currency(
-        decimalDigits: amount - amount.round() > 0.0 ? 2 : 0,
+        decimalDigits: hasFraction ? 2 : 0,
         symbol: symbol,
       );
     }

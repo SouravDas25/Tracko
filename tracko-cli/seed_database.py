@@ -361,49 +361,64 @@ def create_transfers(base_url: str, token: str, account_ids: list):
 
     transfers = [
         {
-            "fromAccountId": valid_account_ids[0],
+            "accountId": valid_account_ids[0],        # Source account
             "toAccountId": valid_account_ids[2] if len(valid_account_ids) > 2 else valid_account_ids[1],
+            "transactionType": 1,                     # DEBIT for source account
             "amount": 500.0,
             "name": "Weekly Cash Withdrawal",
             "comments": "Cash for weekly expenses",
+            "date": int((datetime.now() - timedelta(days=7)).timestamp() * 1000),
+            "isCountable": 0,                         # Transfers typically not countable
         },
         {
-            "fromAccountId": valid_account_ids[0],
+            "accountId": valid_account_ids[0],        # Source account
             "toAccountId": valid_account_ids[4] if len(valid_account_ids) > 4 else valid_account_ids[-1],
+            "transactionType": 1,                     # DEBIT for source account
             "amount": 1000.0,
             "name": "Monthly Investment",
             "comments": "Monthly investment contribution",
+            "date": int((datetime.now() - timedelta(days=3)).timestamp() * 1000),
+            "isCountable": 0,                         # Transfers typically not countable
         },
         {
-            "fromAccountId": valid_account_ids[1],
+            "accountId": valid_account_ids[1],        # Source account
             "toAccountId": valid_account_ids[0],
+            "transactionType": 1,                     # DEBIT for source account
             "amount": 2000.0,
             "name": "Credit Card Payment",
             "comments": "Monthly credit card bill payment",
+            "date": int((datetime.now() - timedelta(days=10)).timestamp() * 1000),
+            "isCountable": 0,                         # Transfers typically not countable
         },
         {
-            "fromAccountId": valid_account_ids[0],
+            "accountId": valid_account_ids[0],        # Source account
             "toAccountId": valid_account_ids[3] if len(valid_account_ids) > 3 else valid_account_ids[-1],
+            "transactionType": 1,                     # DEBIT for source account
             "amount": 300.0,
             "name": "Mobile Recharge",
             "comments": "Loading Paytm wallet",
+            "date": int((datetime.now() - timedelta(days=2)).timestamp() * 1000),
+            "isCountable": 0,                         # Transfers typically not countable
         },
         {
-            "fromAccountId": valid_account_ids[2] if len(valid_account_ids) > 2 else valid_account_ids[0],
+            "accountId": valid_account_ids[2] if len(valid_account_ids) > 2 else valid_account_ids[0],  # Source account
             "toAccountId": valid_account_ids[0],
+            "transactionType": 1,                     # DEBIT for source account
             "amount": 150.0,
             "name": "Cash Deposit",
             "comments": "Depositing excess cash",
+            "date": int((datetime.now() - timedelta(days=1)).timestamp() * 1000),
+            "isCountable": 0,                         # Transfers typically not countable
         },
     ]
 
-    url = tracko_cli._join_url(base_url, "/api/transfers")
+    url = tracko_cli._join_url(base_url, "/api/transactions")
     created_count = 0
     for tr in transfers:
         result = tracko_cli.http_request("POST", url, token=token, json_body=tr)
         if result.get("ok"):
             created_count += 1
-            log(f"Created transfer: {tr['name']} (${tr['amount']} from {tr['fromAccountId']} to {tr['toAccountId']})")
+            log(f"Created transfer: {tr['name']} (${tr['amount']} from {tr['accountId']} to {tr['toAccountId']})")
         else:
             log(f"Failed to create transfer {tr['name']}: {result.get('text', 'Unknown error')}")
     log(f"Created {created_count} transfers total")
@@ -481,18 +496,30 @@ def create_currencies(base_url: str, token: str):
     return created_count
 
 
-def create_sample_splits(base_url: str, token: str, contact_ids: list, account_ids: list, category_ids: list):
+def get_current_user_id(base_url: str, token: str):
+    """Get the current user's ID from the API"""
+    url = tracko_cli._join_url(base_url, "/api/user/me")
+    result = tracko_cli.http_request("GET", url, token=token)
+    
+    if result.get("ok"):
+        user_data = result.get("json", {})
+        # The user ID is nested under result.id
+        if "result" in user_data and user_data["result"]:
+            return user_data["result"].get("id")
+        elif "id" in user_data:
+            return user_data.get("id")
+    
+    log("Failed to get current user ID")
+    return None
+
+
+def create_sample_splits(base_url: str, token: str, account_ids: list, category_ids: list):
     """Create sample split transactions"""
     log("Creating sample split transactions...")
     
     # Filter out None IDs and get valid ones
-    valid_contact_ids = [cid for cid in contact_ids if cid is not None]
     valid_account_ids = [aid for aid in account_ids if aid is not None]
     valid_category_ids = [cid for cid in category_ids if cid is not None]
-    
-    if not valid_contact_ids:
-        log("No valid contact IDs available, skipping splits")
-        return 0
     
     if not valid_account_ids:
         log("No valid account IDs available, skipping splits")
@@ -532,27 +559,31 @@ def create_sample_splits(base_url: str, token: str, contact_ids: list, account_i
         log("No transaction ID returned")
         return 0
     
-    # Now create splits for this transaction
+    # Now create splits for this transaction using the current user's ID
     splits_url = tracko_cli._join_url(base_url, "/api/splits")
     split_count = 0
     
-    # Create splits with different contacts
+    # Get the current user's ID dynamically
+    user_id = get_current_user_id(base_url, token)
+    if not user_id:
+        log("Failed to get current user ID, skipping splits")
+        return 0
+    
     split_amounts = [100.0, 75.0, 125.0]  # Should sum to 300
     
-    for i, contact_id in enumerate(valid_contact_ids[:3]):
+    for i, amount in enumerate(split_amounts):
         split_data = {
             "transactionId": transaction_id,
-            "userId": None,  # Can be null for contact splits
-            "amount": split_amounts[i],
-            "contactId": contact_id,
-            "isSettled": i % 2 == 0  # Alternate settled/unsettled
+            "userId": user_id,  # Use current user's ID
+            "amount": amount,
+            "isSettled": 1 if i % 2 == 0 else 0  # Alternate settled/unsettled as int
         }
         
         result = tracko_cli.http_request("POST", splits_url, token=token, json_body=split_data)
         if result.get("ok"):
             split_count += 1
             status = "settled" if split_data["isSettled"] else "unsettled"
-            log(f"Created split: ${split_amounts[i]} for contact {contact_id} ({status})")
+            log(f"Created split: ${amount} for user {user_id} ({status})")
         else:
             log(f"Failed to create split: {result.get('text', 'Unknown error')}")
     
@@ -608,12 +639,12 @@ def main():
         transfer_count = 0
         log("Skipping transfers due to missing accounts")
     
-    # Create sample splits (requires contacts, accounts, categories)
-    if contact_ids and account_ids and category_ids:
-        split_count = create_sample_splits(base_url, token, contact_ids, account_ids, category_ids)
+    # Create sample splits (requires accounts, categories)
+    if account_ids and category_ids:
+        split_count = create_sample_splits(base_url, token, account_ids, category_ids)
     else:
         split_count = 0
-        log("Skipping splits due to missing contacts, accounts, or categories")
+        log("Skipping splits due to missing accounts or categories")
     
     # Summary
     log("\n" + "="*60)
