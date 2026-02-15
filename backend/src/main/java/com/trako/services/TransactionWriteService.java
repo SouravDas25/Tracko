@@ -356,6 +356,7 @@ public class TransactionWriteService {
      * @param userId authenticated user id
      * @param fromAccountId source account
      * @param toAccountId destination account
+     * @param date transfer date (applied to both sides). If null, defaults to current date.
      * @param amount transfer amount
      * @param name optional transfer name/description
      * @param comments optional comments
@@ -363,7 +364,7 @@ public class TransactionWriteService {
      */
     @Transactional
     public Transaction[] createTransfer(String userId, Long fromAccountId, Long toAccountId, 
-                                       Double amount, String name, String comments) {
+                                       Date date, Double amount, String name, String comments) {
         logger.info("Creating transfer: {} from account {} to account {} for user {}", 
                    amount, fromAccountId, toAccountId, userId);
 
@@ -389,7 +390,7 @@ public class TransactionWriteService {
         Long transferCategoryId = getOrCreateTransferCategory(userId);
 
         // Use same date for both transactions (ensures consistency)
-        Date transferDate = new Date();
+        Date transferDate = (date != null) ? date : new Date();
 
         // Create DEBIT transaction (money out from source account)
         Transaction debit = new Transaction();
@@ -530,6 +531,7 @@ public class TransactionWriteService {
                 transaction.getId(),
                 fromAccountId,
                 toAccountId,
+                transaction.getDate(),
                 transaction.getAmount(),
                 transaction.getName(),
                 transaction.getComments()
@@ -577,6 +579,7 @@ public class TransactionWriteService {
      * @param transactionId id of either the debit or credit transaction
      * @param fromAccountId new source account (or null to keep existing)
      * @param toAccountId new destination account (or null to keep existing)
+     * @param date new transfer date (or null to keep existing)
      * @param amount new transfer amount (or null to keep existing)
      * @param name new transfer name/description (or null to keep existing)
      * @param comments new comments (or null to keep existing)
@@ -584,7 +587,8 @@ public class TransactionWriteService {
      */
     @Transactional
     public Transaction[] updateTransfer(String userId, Long transactionId, 
-                                       Long fromAccountId, Long toAccountId, 
+                                       Long fromAccountId, Long toAccountId,
+                                       Date date,
                                        Double amount, String name, String comments) {
         logger.info("Updating transfer containing transaction {} for user {}", transactionId, userId);
 
@@ -615,7 +619,12 @@ public class TransactionWriteService {
         }
 
         // Update fields if provided
-        Date newDate = transaction.getDate(); // Keep same date for both sides
+        Date newDate = (date != null) ? date : transaction.getDate(); // Keep same date for both sides
+
+        if (date != null) {
+            debit.setDate(newDate);
+            credit.setDate(newDate);
+        }
         
         if (amount != null && amount > 0) {
             debit.setAmount(amount);

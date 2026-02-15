@@ -427,6 +427,7 @@ public class TransactionController {
                     currentUserId,
                     fromAccountId,
                     request.toAccountId(),
+                    request.date(),
                     request.amount(),
                     request.name(),
                     request.comments()

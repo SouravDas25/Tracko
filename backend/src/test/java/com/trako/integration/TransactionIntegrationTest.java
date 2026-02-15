@@ -34,6 +34,8 @@ import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -135,6 +137,90 @@ public class TransactionIntegrationTest {
                 .andExpect(jsonPath("$.result.name").value("Lunch"))
                 .andExpect(jsonPath("$.result.amount").value(25.50))
                 .andExpect(jsonPath("$.result.comments").value("Pizza"));
+    }
+
+    @Test
+    public void testCreateTransfer_usesProvidedDateForBothSides() throws Exception {
+        Account toAccount = new Account();
+        toAccount.setName("Checking");
+        toAccount.setUserId(testUser.getId());
+        toAccount = accountRepository.save(toAccount);
+
+        Date transferDate = new GregorianCalendar(2020, Calendar.JANUARY, 15).getTime();
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("accountId", testAccount.getId());
+        payload.put("toAccountId", toAccount.getId());
+        payload.put("amount", 123.45);
+        payload.put("date", transferDate);
+        payload.put("name", "My Transfer");
+        payload.put("comments", "date-check");
+
+        var mvcResult = mockMvc.perform(post("/api/transactions")
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(payload)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.id").exists())
+                .andReturn();
+
+        var root = objectMapper.readTree(mvcResult.getResponse().getContentAsString());
+        long debitId = root.path("result").path("id").asLong();
+
+        Transaction debit = transactionRepository.findById(debitId).orElseThrow();
+        assertNotNull(debit.getLinkedTransactionId(), "Debit side must link to credit transaction");
+
+        Transaction credit = transactionRepository.findById(debit.getLinkedTransactionId()).orElseThrow();
+
+        assertNotNull(debit.getDate());
+        assertNotNull(credit.getDate());
+        assertEquals(transferDate.getTime(), debit.getDate().getTime(), "Debit date must match provided transfer date");
+        assertEquals(transferDate.getTime(), credit.getDate().getTime(), "Credit date must match provided transfer date");
+    }
+
+    @Test
+    public void testUpdateTransferDate_updatesBothSides() throws Exception {
+        Account toAccount = new Account();
+        toAccount.setName("Wallet");
+        toAccount.setUserId(testUser.getId());
+        toAccount = accountRepository.save(toAccount);
+
+        Date initialDate = new GregorianCalendar(2020, Calendar.FEBRUARY, 1).getTime();
+        Transaction[] created = transactionWriteService.createTransfer(
+                testUser.getId(),
+                testAccount.getId(),
+                toAccount.getId(),
+                initialDate,
+                50.00,
+                "Init Transfer",
+                "init"
+        );
+
+        Transaction debit = created[0];
+        assertNotNull(debit.getId());
+        assertNotNull(debit.getLinkedTransactionId());
+
+        Date newDate = new GregorianCalendar(2021, Calendar.MARCH, 10).getTime();
+
+        Map<String, Object> updatePayload = new HashMap<>();
+        updatePayload.put("accountId", debit.getAccountId());
+        updatePayload.put("date", newDate);
+        updatePayload.put("amount", debit.getAmount());
+        updatePayload.put("name", "Updated Transfer");
+        updatePayload.put("comments", "updated");
+        updatePayload.put("transactionType", debit.getTransactionType());
+
+        mockMvc.perform(put("/api/transactions/{id}", debit.getId())
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updatePayload)))
+                .andExpect(status().isOk());
+
+        Transaction updatedDebit = transactionRepository.findById(debit.getId()).orElseThrow();
+        Transaction updatedCredit = transactionRepository.findById(updatedDebit.getLinkedTransactionId()).orElseThrow();
+
+        assertEquals(newDate.getTime(), updatedDebit.getDate().getTime(), "Debit date must update to new date");
+        assertEquals(newDate.getTime(), updatedCredit.getDate().getTime(), "Credit date must update to new date");
     }
 
     @Test
