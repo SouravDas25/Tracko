@@ -83,23 +83,50 @@ class _SplitPage extends RefreshableState<SplitPage> {
   Widget fallbackWidget(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(32.0),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text("No Splits Available"),
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Theme.of(context).disabledColor.withOpacity(0.05),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.call_split_rounded,
+                size: 48,
+                color: Theme.of(context).disabledColor.withOpacity(0.5),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              "No Splits Available",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).hintColor,
+              ),
+            ),
             if (_error != null && _error!.isNotEmpty) ...[
               const SizedBox(height: 12),
               Text(
                 _error!,
                 textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.red),
               ),
             ],
-            const SizedBox(height: 12),
+            const SizedBox(height: 24),
             ElevatedButton(
               onPressed: () async {
                 await _load();
               },
+              style: ElevatedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
               child: const Text('Retry'),
             )
           ],

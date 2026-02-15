@@ -237,10 +237,40 @@ class AccountPageState extends AsyncLoadState<AccountPage> {
 
   @override
   Widget fallbackWidget(BuildContext context) {
-    return Screen(
-      titleName: "Accounts",
-      body: Center(
-        child: Text("No accounts found."),
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Theme.of(context).disabledColor.withOpacity(0.05),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.account_balance_wallet_rounded,
+              size: 48,
+              color: Theme.of(context).disabledColor.withOpacity(0.5),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            "No accounts found",
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Theme.of(context).hintColor,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            "Tap + to create a new account",
+            style: TextStyle(
+              fontSize: 14,
+              color: Theme.of(context).disabledColor,
+            ),
+          ),
+        ],
       ),
     );
   }

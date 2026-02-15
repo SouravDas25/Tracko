@@ -367,7 +367,32 @@ class _SplitByContactState extends AsyncLoadState<SplitByContact> {
   @override
   Widget fallbackWidget(BuildContext context) {
     return Center(
-      child: Text("No Split Data Found."),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Theme.of(context).disabledColor.withOpacity(0.05),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.receipt_long_rounded,
+              size: 48,
+              color: Theme.of(context).disabledColor.withOpacity(0.5),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            "No Split Data Found",
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Theme.of(context).hintColor,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
