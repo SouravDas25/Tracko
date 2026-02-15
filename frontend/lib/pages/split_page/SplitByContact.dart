@@ -200,119 +200,158 @@ class _SplitByContactState extends AsyncLoadState<SplitByContact> {
               itemCount: splits.length,
               itemBuilder: (context, index) {
                 final item = splits[index];
-                return ListTile(
-                  dense: true,
-                  visualDensity: VisualDensity.compact,
-                  onTap: () async {
-                    if (item.id == null) return;
-                    try {
-                      if (item.isSettled == 1) {
-                        await _splitRepo.unsettle(item.id!);
-                      } else {
-                        await _splitRepo.settle(item.id!);
+                return Container(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).cardColor,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.04),
+                        blurRadius: 10,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
+                    border: Border.all(
+                      color: Theme.of(context).dividerColor.withOpacity(0.05),
+                    ),
+                  ),
+                  margin: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  child: ListTile(
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    dense: true,
+                    visualDensity: VisualDensity.compact,
+                    onTap: () async {
+                      if (item.id == null) return;
+                      try {
+                        if (item.isSettled == 1) {
+                          await _splitRepo.unsettle(item.id!);
+                        } else {
+                          await _splitRepo.settle(item.id!);
+                        }
+                      } catch (e) {
+                        // ignore
                       }
-                    } catch (e) {
-                      // ignore
-                    }
-                    await loadData();
-                    if (mounted) setState(() {});
-                  },
-                  leading: WidgetUtil.textAvatar(item.transaction?.name ?? ''),
-                  title: Text(
-                    item.transaction?.name ?? '',
-                    style: TextStyle(fontSize: 18.0),
-                  ),
-                  subtitle: Row(
-                    children: <Widget>[
-                      Padding(
-                        padding: EdgeInsets.symmetric(vertical: 2.0),
-                        child: item.isSettled == 1
-                            ? Icon(
-                                Icons.check,
-                                size: 15.0,
-                                color: Colors.green,
-                              )
-                            : Icon(
-                                Icons.alarm,
-                                size: 15.0,
-                                color: Colors.red,
-                              ),
-                      ),
-                      Text(
-                        item.isSettled == 1 ? "Settled" : "Pending",
-                        style: TextStyle(
+                      await loadData();
+                      if (mounted) setState(() {});
+                    },
+                    leading: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).primaryColor,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
                             color:
-                                item.isSettled == 1 ? Colors.green : Colors.red,
-                            fontWeight: FontWeight.w600),
-                      )
-                    ],
-                  ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      WidgetUtil.transformAmount2TextWidget(
-                          item.isSettled == 1
-                              ? TransactionType.CREDIT
-                              : TransactionType.DEBIT,
-                          item.amount,
-                          addSign: false),
-                      const SizedBox(width: 8),
-                      IconButton(
-                        visualDensity: VisualDensity.compact,
-                        padding: EdgeInsets.zero,
-                        constraints:
-                            const BoxConstraints(minWidth: 28, minHeight: 28),
-                        tooltip: 'Settle',
-                        icon: const Icon(Icons.check_circle, size: 18),
-                        color: Colors.green,
-                        onPressed: item.isSettled == 1
-                            ? null
-                            : () async {
-                                if (item.id == null) return;
-                                await _splitRepo.settle(item.id!);
-                                await loadData();
-                                if (mounted) setState(() {});
-                              },
+                                Theme.of(context).primaryColor.withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
                       ),
-                      IconButton(
-                        visualDensity: VisualDensity.compact,
-                        padding: EdgeInsets.zero,
-                        constraints:
-                            const BoxConstraints(minWidth: 28, minHeight: 28),
-                        tooltip: 'Unsettle',
-                        icon: const Icon(Icons.undo, size: 18),
-                        color: Colors.red,
-                        onPressed: item.isSettled == 0
-                            ? null
-                            : () async {
-                                if (item.id == null) return;
-                                await _splitRepo.unsettle(item.id!);
-                                await loadData();
-                                if (mounted) setState(() {});
-                              },
+                      child: Center(
+                        child: Text(
+                          CommonUtil.getInitials(item.transaction?.name ?? ''),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
                       ),
-                    ],
+                    ),
+                    title: Text(
+                      item.transaction?.name ?? '',
+                      style: TextStyle(
+                        fontSize: 16.0,
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
+                      ),
+                    ),
+                    subtitle: Row(
+                      children: <Widget>[
+                        Padding(
+                          padding: EdgeInsets.symmetric(vertical: 2.0),
+                          child: item.isSettled == 1
+                              ? Icon(
+                                  Icons.check_circle,
+                                  size: 14.0,
+                                  color: Colors.green,
+                                )
+                              : Icon(
+                                  Icons.schedule,
+                                  size: 14.0,
+                                  color: Colors.red,
+                                ),
+                        ),
+                        SizedBox(width: 4),
+                        Text(
+                          item.isSettled == 1 ? "Settled" : "Pending",
+                          style: TextStyle(
+                              fontSize: 13,
+                              color: item.isSettled == 1
+                                  ? Colors.green
+                                  : Colors.red,
+                              fontWeight: FontWeight.w600),
+                        )
+                      ],
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        WidgetUtil.transformAmount2TextWidget(
+                            item.isSettled == 1
+                                ? TransactionType.CREDIT
+                                : TransactionType.DEBIT,
+                            item.amount,
+                            addSign: false),
+                        const SizedBox(width: 8),
+                      ],
+                    ),
                   ),
                 );
               },
             ),
-            new Divider(
-              height: 1.0,
-            ),
-            new Container(
-              decoration: new BoxDecoration(
+            Container(
+              decoration: BoxDecoration(
                 color: Theme.of(context).cardColor,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 10,
+                    offset: Offset(0, 4),
+                  ),
+                ],
+                border: Border.all(
+                  color: Theme.of(context).dividerColor.withOpacity(0.05),
+                ),
               ),
+              margin: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: ListTile(
+                contentPadding:
+                    EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 leading: Text(
                   "Total Amount Due ",
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18.0),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 18.0,
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
+                  ),
                 ),
                 trailing: dueAmount <= 0.0
-                    ? Icon(
-                        Icons.check,
-                        size: 35.0,
-                        color: Colors.green,
+                    ? Container(
+                        padding: EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.check,
+                          size: 24.0,
+                          color: Colors.green,
+                        ),
                       )
                     : WidgetUtil.transformAmount2TextWidget(
                         TransactionType.DEBIT, dueAmount,
