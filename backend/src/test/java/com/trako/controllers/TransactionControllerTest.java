@@ -138,7 +138,7 @@ public class TransactionControllerTest {
     @Test
     @WithMockUser
     public void testCreate() throws Exception {
-        when(transactionWriteService.saveForUser(anyString(), any(Transaction.class))).thenReturn(testTransaction);
+        when(transactionWriteService.createTransaction(anyString(), any(com.trako.models.request.TransactionRequest.class))).thenReturn(testTransaction);
 
         mockMvc.perform(post("/api/transactions")
                 .with(csrf())
@@ -147,7 +147,7 @@ public class TransactionControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.name").value("Lunch"));
 
-        verify(transactionWriteService, times(1)).saveForUser(anyString(), any(Transaction.class));
+        verify(transactionWriteService, times(1)).createTransaction(anyString(), any(com.trako.models.request.TransactionRequest.class));
     }
 
     @Test

@@ -127,9 +127,7 @@ class TransactionTile extends StatelessWidget {
                           ),
                           SizedBox(height: 4),
                           Text(
-                            transaction.contacts.length > 1
-                                ? "${transaction.category?.name ?? ''} • ${transaction.contacts.length} contacts"
-                                : "${transaction.category?.name ?? 'Uncategorized'}",
+                            _getSubtitle(transaction),
                             style: TextStyle(
                               fontSize: 13,
                               color: Theme.of(context).hintColor,
@@ -151,6 +149,25 @@ class TransactionTile extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _getSubtitle(Transaction t) {
+    if (t.isTransfer) {
+      // For now we might not have the linked account name loaded in the transaction list
+      // unless we expand or fetch it.
+      // But we can show "Transfer" at least.
+      if (t.transactionType == TransactionType.DEBIT) {
+        return "Transfer Out";
+      } else if (t.transactionType == TransactionType.CREDIT) {
+        return "Transfer In";
+      } else {
+        return "Transfer";
+      }
+    }
+
+    return t.contacts.length > 1
+        ? "${t.category?.name ?? ''} • ${t.contacts.length} contacts"
+        : "${t.category?.name ?? 'Uncategorized'}";
   }
 
   Widget _buildAvatar(BuildContext context) {
@@ -183,8 +200,32 @@ class TransactionTile extends StatelessWidget {
 
   Widget _buildAmount(BuildContext context) {
     final bool isDebit = transaction.transactionType == TransactionType.DEBIT;
-    final color = isDebit ? Colors.red.shade400 : Colors.green.shade600;
-    final sign = isDebit ? "- " : "+ ";
+    final bool isTransfer = transaction.isTransfer;
+
+    Color color;
+    String sign;
+
+    if (isTransfer) {
+      // Transfers usually blue or distinctive
+      color = Colors.blue.shade600;
+      // If it's the debit side (out), maybe red or blue?
+      // Typically transfers are neutral or blue in UI to distinguish from expense.
+      // But let's stick to logic:
+      // Transfer Out (Debit) -> -
+      // Transfer In (Credit) -> +
+      // But user might prefer neutral. Let's use blue for both but keep sign.
+      if (transaction.transactionType == TransactionType.DEBIT) {
+        sign = "- ";
+      } else if (transaction.transactionType == TransactionType.CREDIT) {
+        sign = "+ ";
+      } else {
+        sign = ""; // Type 3 (Transfer parent/wrapper?)
+      }
+    } else {
+      color = isDebit ? Colors.red.shade400 : Colors.green.shade600;
+      sign = isDebit ? "- " : "+ ";
+    }
+
     String amountText = CommonUtil.toCurrency(transaction.amount);
 
     return Text(

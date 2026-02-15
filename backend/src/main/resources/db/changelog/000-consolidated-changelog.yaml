@@ -28,6 +28,47 @@ databaseChangeLog:
             constraintName: uq_users_global_id
 
   - changeSet:
+      id: 002-user-currencies-table
+      author: sd25
+      changes:
+        - createTable:
+            tableName: user_currencies
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: currency_code
+                  type: VARCHAR(3)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: exchange_rate
+                  type: DOUBLE
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: user_currencies
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_user_currencies_user
+            onDelete: CASCADE
+        - addUniqueConstraint:
+            tableName: user_currencies
+            columnNames: user_id, currency_code
+            constraintName: uq_user_currencies_user_code
+
+  - changeSet:
       id: 004-contacts-create-table
       author: sd25
       changes:
@@ -111,6 +152,7 @@ databaseChangeLog:
               - column: { name: name, type: varchar(250), constraints: { nullable: false } }
               - column: { name: user_id, type: varchar(36), constraints: { nullable: false } }
               - column: { name: category_type, type: varchar(16), defaultValue: EXPENSE, constraints: { nullable: false } }
+              - column: { name: is_roll_over_enabled, type: boolean, defaultValueBoolean: false }
               - column: { name: parent_category_id, type: bigint }
         - addForeignKeyConstraint:
             baseTableName: categories
@@ -379,3 +421,55 @@ databaseChangeLog:
                   name: user_id
               - column:
                   name: account_id
+        - addForeignKeyConstraint:
+            baseTableName: account_month_summary
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_account_month_summary_user
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: account_month_summary
+            baseColumnNames: account_id
+            referencedTableName: accounts
+            referencedColumnNames: id
+            constraintName: fk_account_month_summary_account
+            onDelete: CASCADE
+
+  - changeSet:
+      id: 012a-add-linked-transaction-id-column
+      author: sd25
+      preConditions:
+        - onFail: MARK_RAN
+        - onError: MARK_RAN
+        - not:
+            - columnExists:
+                tableName: transactions
+                columnName: linked_transaction_id
+      changes:
+        - addColumn:
+            tableName: transactions
+            columns:
+              - column:
+                  name: linked_transaction_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+
+  - changeSet:
+      id: 012b-create-index-linked-transaction-id
+      author: sd25
+      preConditions:
+        - onFail: MARK_RAN
+        - onError: MARK_RAN
+        - not:
+            - indexExists:
+                tableName: transactions
+                indexName: idx_transactions_linked
+      changes:
+        - createIndex:
+            tableName: transactions
+            indexName: idx_transactions_linked
+            columns:
+              - column:
+                  name: linked_transaction_id

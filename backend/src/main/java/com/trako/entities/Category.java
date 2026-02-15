@@ -22,7 +22,7 @@ public class Category {
     private String userId;
 
     @Column(name = "is_roll_over_enabled")
-    private Boolean isRollOverEnabled = false;
+    private Boolean isRollOverEnabled;
 
     @Column(name = "parent_category_id")
     private Long parentCategoryId;

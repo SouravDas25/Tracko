@@ -77,10 +77,8 @@ class SmartAddItemController extends ChangeNotifier {
     commentsController.text = transaction.comments;
     categoryId = transaction.categoryId;
     accountId = transaction.accountId;
-    transferFromAccountId =
-        transaction.transferFromAccountId ?? transaction.accountId;
-    transferToAccountId =
-        transaction.transferToAccountId ?? transaction.accountId;
+    transferFromAccountId = transaction.fromAccountId ?? transaction.accountId;
+    transferToAccountId = transaction.toAccountId ?? transaction.accountId;
     nameController.text = transaction.name;
     transactionType = transaction.transactionType;
 
@@ -135,6 +133,36 @@ class SmartAddItemController extends ChangeNotifier {
     }
 
     try {
+      if (isEdit && transaction.id != null) {
+        // Reload transaction to get full details (like linkedTransactionId) which might be missing from list DTO
+        final fullTx = await TransactionController.findById(transaction.id!);
+        if (fullTx != null) {
+          // Update local state from full transaction
+          transaction.linkedTransactionId = fullTx.linkedTransactionId;
+          transaction.transactionType = fullTx.transactionType;
+          transaction.accountId = fullTx.accountId;
+
+          if (transaction.isTransfer &&
+              transaction.linkedTransactionId != null) {
+            try {
+              final linkedTx = await TransactionController.findById(
+                  transaction.linkedTransactionId!);
+              if (linkedTx != null) {
+                if (transaction.transactionType == TransactionType.DEBIT) {
+                  transferFromAccountId = transaction.accountId;
+                  transferToAccountId = linkedTx.accountId;
+                } else {
+                  transferFromAccountId = linkedTx.accountId;
+                  transferToAccountId = transaction.accountId;
+                }
+              }
+            } catch (e) {
+              print("Error loading linked transaction: $e");
+            }
+          }
+        }
+      }
+
       categories = await CategoryController.getAllCategories();
       accounts = await AccountController.getAllAccounts();
       myContacts = await _contactRepo.listMine();
@@ -350,12 +378,19 @@ class SmartAddItemController extends ChangeNotifier {
     transaction.name = nameController.text.trim();
 
     if (transactionType == TransactionType.TRANSFER) {
-      transaction.transferFromAccountId = transferFromAccountId;
-      transaction.transferToAccountId = transferToAccountId;
-      transaction.accountId = transferFromAccountId;
+      transaction.fromAccountId = transferFromAccountId;
+      transaction.toAccountId = transferToAccountId;
+      transaction.accountId =
+          transferFromAccountId; // Source is the main account
+      // Ensure category is TRANSFER
+      // We might need to fetch it or let backend handle it, but for UI state:
+      // transaction.categoryId = transferCategory (if available)
     } else {
       transaction.categoryId = categoryId;
       transaction.accountId = accountId;
+      // Clear transfer fields if switching back
+      transaction.fromAccountId = null;
+      transaction.toAccountId = null;
     }
 
     transaction.comments = commentsController.text;

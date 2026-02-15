@@ -5,7 +5,6 @@ import com.trako.exceptions.UserNotLoggedInException;
 import com.trako.models.request.UserSaveRequest;
 import com.trako.repositories.UsersRepository;
 import com.trako.util.CommonUtil;
-import com.trako.util.JwtTokenUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,9 +22,6 @@ public class UserService {
 
     @Autowired
     UsersRepository usersRepository;
-
-    @Autowired
-    private JwtTokenUtil jwtTokenUtil;
 
     public User loggedInUser() throws UserNotLoggedInException {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();

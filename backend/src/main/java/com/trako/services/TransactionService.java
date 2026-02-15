@@ -282,17 +282,6 @@ public class TransactionService {
         return v == null ? 0.0 : v;
     }
 
-    private Object[] normalizeAggregateRow(Object[] row) {
-        if (row == null) return new Object[]{0.0, 0.0, 0.0, 0};
-        // Some JPA providers / dialects (notably H2 in tests) may wrap the projected tuple
-        // inside a single-element Object[].
-        // Example: row == [ Object[]{income, expense, net, count} ]
-        if (row.length == 1 && row[0] instanceof Object[]) {
-            return (Object[]) row[0];
-        }
-        return row;
-    }
-
     public Double getTotalIncome(String userId, Date startDate, Date endDate) {
         List<Transaction> transactions = transactionRepository.findByUserIdAndDateBetween(userId, startDate, endDate);
         return transactions.stream()

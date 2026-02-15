@@ -30,7 +30,7 @@ public class StatsService {
     private CategoryRepository categoryRepository;
 
     private static final SimpleDateFormat DATE_FMT = new SimpleDateFormat("yyyy-MM-dd");
-    private static final SimpleDateFormat DOW_FMT = new SimpleDateFormat("EEE", Locale.ENGLISH);
+    // private static final SimpleDateFormat DOW_FMT = new SimpleDateFormat("EEE", Locale.ENGLISH);
 
     /**
      * Normalizes a Date to 00:00:00.000 in the server timezone.
@@ -159,17 +159,17 @@ public class StatsService {
     /**
      * Sums transaction amounts for a transaction type inside [start, endExclusive).
      */
-    private double sumInRange(List<Transaction> txs, Date start, Date endExclusive, int transactionType) {
-        double total = 0.0;
-        for (Transaction t : txs) {
-            if (t.getIsCountable() == null || t.getIsCountable() != 1) continue;
-            if (t.getTransactionType() == null || t.getTransactionType() != transactionType) continue;
-            Date d = t.getDate();
-            if (d.before(start) || !d.before(endExclusive)) continue;
-            total += (t.getAmount() == null ? 0.0 : t.getAmount());
-        }
-        return total;
-    }
+    // private double sumInRange(List<Transaction> txs, Date start, Date endExclusive, int transactionType) {
+    //     double total = 0.0;
+    //     for (Transaction t : txs) {
+    //         if (t.getIsCountable() == null || t.getIsCountable() != 1) continue;
+    //         if (t.getTransactionType() == null || t.getTransactionType() != transactionType) continue;
+    //         Date d = t.getDate();
+    //         if (d.before(start) || !d.before(endExclusive)) continue;
+    //         total += (t.getAmount() == null ? 0.0 : t.getAmount());
+    //     }
+    //     return total;
+    // }
 
     /**
      * Filters transactions by countable=1 and the requested transaction type.
@@ -188,75 +188,75 @@ public class StatsService {
      * Builds fixed-size current-period buckets for charts.
      * yearly -> 12 months, monthly -> days in month, weekly -> 7 days.
      */
-    private List<StatsPointDTO> buildSeriesForPeriod(Range range, List<Transaction> kindTxs, Date start, Date endExclusive) {
-        List<StatsPointDTO> out = new ArrayList<>();
-        if (start == null || endExclusive == null) return out;
+    // private List<StatsPointDTO> buildSeriesForPeriod(Range range, List<Transaction> kindTxs, Date start, Date endExclusive) {
+    //     List<StatsPointDTO> out = new ArrayList<>();
+    //     if (start == null || endExclusive == null) return out;
 
-        if (range == Range.yearly) {
-            // 12 months: Jan..Dec
-            double[] buckets = new double[12];
-            if (kindTxs != null) {
-                for (Transaction t : kindTxs) {
-                    Date d = t.getDate();
-                    if (d == null) continue;
-                    if (d.before(start) || !d.before(endExclusive)) continue;
-                    Calendar c = Calendar.getInstance();
-                    c.setTime(d);
-                    int m = c.get(Calendar.MONTH); // 0-11
-                    buckets[m] += (t.getAmount() == null ? 0.0 : t.getAmount());
-                }
-            }
-            for (int m = 0; m < 12; m++) {
-                out.add(new StatsPointDTO(monthLabel(m + 1), buckets[m]));
-            }
-            return out;
-        }
+    //     if (range == Range.yearly) {
+    //         // 12 months: Jan..Dec
+    //         double[] buckets = new double[12];
+    //         if (kindTxs != null) {
+    //             for (Transaction t : kindTxs) {
+    //                 Date d = t.getDate();
+    //                 if (d == null) continue;
+    //                 if (d.before(start) || !d.before(endExclusive)) continue;
+    //                 Calendar c = Calendar.getInstance();
+    //                 c.setTime(d);
+    //                 int m = c.get(Calendar.MONTH); // 0-11
+    //                 buckets[m] += (t.getAmount() == null ? 0.0 : t.getAmount());
+    //             }
+    //         }
+    //         for (int m = 0; m < 12; m++) {
+    //             out.add(new StatsPointDTO(monthLabel(m + 1), buckets[m]));
+    //         }
+    //         return out;
+    //     }
 
-        if (range == Range.monthly) {
-            // Days of month: 1..N
-            Calendar c = Calendar.getInstance();
-            c.setTime(start);
-            int daysInMonth = c.getActualMaximum(Calendar.DAY_OF_MONTH);
-            double[] buckets = new double[daysInMonth];
-            if (kindTxs != null) {
-                for (Transaction t : kindTxs) {
-                    Date d = t.getDate();
-                    if (d == null) continue;
-                    if (d.before(start) || !d.before(endExclusive)) continue;
-                    Calendar tc = Calendar.getInstance();
-                    tc.setTime(d);
-                    int dom = tc.get(Calendar.DAY_OF_MONTH); // 1..N
-                    if (dom >= 1 && dom <= daysInMonth) {
-                        buckets[dom - 1] += (t.getAmount() == null ? 0.0 : t.getAmount());
-                    }
-                }
-            }
-            for (int i = 1; i <= daysInMonth; i++) {
-                out.add(new StatsPointDTO(String.valueOf(i), buckets[i - 1]));
-            }
-            return out;
-        }
+    //     if (range == Range.monthly) {
+    //         // Days of month: 1..N
+    //         Calendar c = Calendar.getInstance();
+    //         c.setTime(start);
+    //         int daysInMonth = c.getActualMaximum(Calendar.DAY_OF_MONTH);
+    //         double[] buckets = new double[daysInMonth];
+    //         if (kindTxs != null) {
+    //             for (Transaction t : kindTxs) {
+    //                 Date d = t.getDate();
+    //                 if (d == null) continue;
+    //                 if (d.before(start) || !d.before(endExclusive)) continue;
+    //                 Calendar tc = Calendar.getInstance();
+    //                 tc.setTime(d);
+    //                 int dom = tc.get(Calendar.DAY_OF_MONTH); // 1..N
+    //                 if (dom >= 1 && dom <= daysInMonth) {
+    //                     buckets[dom - 1] += (t.getAmount() == null ? 0.0 : t.getAmount());
+    //                 }
+    //             }
+    //         }
+    //         for (int i = 1; i <= daysInMonth; i++) {
+    //             out.add(new StatsPointDTO(String.valueOf(i), buckets[i - 1]));
+    //         }
+    //         return out;
+    //     }
 
-        // weekly: 7 days starting from computed week start (Mon)
-        double[] buckets = new double[7];
-        if (kindTxs != null) {
-            for (Transaction t : kindTxs) {
-                Date d = t.getDate();
-                if (d == null) continue;
-                if (d.before(start) || !d.before(endExclusive)) continue;
-                long diffMs = d.getTime() - start.getTime();
-                int idx = (int) (diffMs / (24L * 60L * 60L * 1000L));
-                if (idx >= 0 && idx < 7) {
-                    buckets[idx] += (t.getAmount() == null ? 0.0 : t.getAmount());
-                }
-            }
-        }
-        for (int i = 0; i < 7; i++) {
-            Date d = addDays(start, i);
-            out.add(new StatsPointDTO(DOW_FMT.format(d), buckets[i]));
-        }
-        return out;
-    }
+    //     // weekly: 7 days starting from computed week start (Mon)
+    //     double[] buckets = new double[7];
+    //     if (kindTxs != null) {
+    //         for (Transaction t : kindTxs) {
+    //             Date d = t.getDate();
+    //             if (d == null) continue;
+    //             if (d.before(start) || !d.before(endExclusive)) continue;
+    //             long diffMs = d.getTime() - start.getTime();
+    //             int idx = (int) (diffMs / (24L * 60L * 60L * 1000L));
+    //             if (idx >= 0 && idx < 7) {
+    //                 buckets[idx] += (t.getAmount() == null ? 0.0 : t.getAmount());
+    //             }
+    //         }
+    //     }
+    //     for (int i = 0; i < 7; i++) {
+    //         Date d = addDays(start, i);
+    //         out.add(new StatsPointDTO(DOW_FMT.format(d), buckets[i]));
+    //     }
+    //     return out;
+    // }
 
     /**
      * Filters transactions by a specific category id.

@@ -245,32 +245,6 @@ public class StatsServiceIntegrationTest {
         assertEquals(0.0, dto.getTotal(), 0.001);
     }
 
-    @Test
-    public void sumInRangeIsCoveredViaReflection() throws Exception {
-        Method m = StatsService.class.getDeclaredMethod(
-                "sumInRange",
-                List.class,
-                Date.class,
-                Date.class,
-                int.class
-        );
-        m.setAccessible(true);
-
-        Date start = date(2026, 1, 1);
-        Date endExclusive = date(2026, 1, 8);
-
-        List<Transaction> txs = new ArrayList<>();
-
-        txs.add(newTx(food.getId(), null, 1, 10.0, date(2026, 1, 2)));
-        txs.add(newTx(food.getId(), 1, null, 10.0, date(2026, 1, 2)));
-        txs.add(newTx(food.getId(), 1, 1, 10.0, date(2025, 12, 31)));
-        txs.add(newTx(food.getId(), 1, 1, 10.0, endExclusive));
-        txs.add(newTx(food.getId(), 1, 1, null, date(2026, 1, 2)));
-        txs.add(newTx(food.getId(), 1, 1, 7.0, date(2026, 1, 3)));
-
-        double sum = (double) m.invoke(statsService, txs, start, endExclusive, 1);
-        assertEquals(7.0, sum, 0.001);
-    }
 
     @Test
     public void filterCategoryAndMonthLabelUnreachableBranchesAreCoveredViaReflection() throws Exception {

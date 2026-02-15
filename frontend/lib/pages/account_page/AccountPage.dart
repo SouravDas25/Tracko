@@ -73,6 +73,15 @@ class AccountPageState extends AsyncLoadState<AccountPage> {
       appBar: AppBar(
         title: Text("Accounts"),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.swap_horiz),
+            tooltip: 'Transfer Money',
+            onPressed: () {
+              Navigator.pushNamed(context, '/transfer');
+            },
+          ),
+        ],
       ),
       body: SmartRefresher(
         controller: refreshController,

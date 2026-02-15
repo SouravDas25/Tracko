@@ -1,3 +1,5 @@
+import 'package:tracko/Utils/enums.dart';
+import 'package:tracko/models/transaction.dart';
 import 'package:tracko/pages/add_item_page/add_item.dart';
 import 'package:tracko/pages/home_page/home_tab.dart';
 import 'package:tracko/pages/login_page/login_page.dart';
@@ -14,5 +16,11 @@ class Routes {
     '/phone_login': (BuildContext context) => new PhoneLoginPage(),
     '/welcome': (BuildContext context) => new WelcomePage(),
     '/add_item': (BuildContext context) => new AddItemPage(),
+    '/transfer': (BuildContext context) {
+      final t = Transaction.defaultObject();
+      t.transactionType = TransactionType.TRANSFER;
+      t.isCountable = 0;
+      return AddItemPage(transaction: t);
+    },
   };
 }

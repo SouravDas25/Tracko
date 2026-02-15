@@ -58,12 +58,8 @@ class TransactionController {
     bool isUserCountable = true;
 
     if (transaction.transactionType == TransactionType.TRANSFER) {
-      if (transaction.id != null && transaction.id != 0) {
-        throw Exception(
-            "Editing transfer transactions is not supported. Create a new transfer instead.");
-      }
-      final fromId = transaction.transferFromAccountId;
-      final toId = transaction.transferToAccountId;
+      final fromId = transaction.fromAccountId;
+      final toId = transaction.toAccountId;
       if (fromId == null || toId == null) {
         throw Exception(
             "From Account and To Account must be specified for transfer");
@@ -71,13 +67,12 @@ class TransactionController {
       if (fromId == toId) {
         throw Exception("From Account and To Account cannot be same");
       }
-      await txRepo.createTransfer(
-        fromAccountId: fromId,
-        toAccountId: toId,
-        amount: transaction.amount,
-        name: transaction.name,
-        comments: transaction.comments,
-      );
+
+      if (transaction.id == null || transaction.id == 0) {
+        await txRepo.create(transaction);
+      } else {
+        await txRepo.update(transaction.id!, transaction);
+      }
       return true;
     }
 
@@ -397,6 +392,11 @@ class TransactionController {
 //    }
 
     return transaction;
+  }
+
+  static Future<Transaction> findById(int id) async {
+    final txRepo = TransactionRepository();
+    return await txRepo.getById(id);
   }
 
   static Future<int> deleteById(int transactionId) async {

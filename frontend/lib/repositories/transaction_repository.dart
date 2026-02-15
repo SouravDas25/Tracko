@@ -176,25 +176,6 @@ class TransactionRepository {
     return _toLegacy(res);
   }
 
-  Future<void> createTransfer({
-    required int fromAccountId,
-    required int toAccountId,
-    required double amount,
-    String? name,
-    String? comments,
-  }) async {
-    await _api.post<void>(
-      ApiConfig.transfers,
-      data: {
-        'fromAccountId': fromAccountId,
-        'toAccountId': toAccountId,
-        'amount': amount,
-        'name': name,
-        'comments': comments,
-      },
-    );
-  }
-
   legacy.Transaction _toLegacy(Map<String, dynamic> json) {
     final t = legacy.Transaction();
     t.id = (json['id'] as num?)?.toInt();
@@ -225,6 +206,11 @@ class TransactionRepository {
     t.originalAmount = (json['originalAmount'] as num?)?.toDouble();
     t.exchangeRate = (json['exchangeRate'] as num?)?.toDouble();
 
+    // Transfer fields
+    t.toAccountId = (json['toAccountId'] as num?)?.toInt();
+    t.fromAccountId = (json['fromAccountId'] as num?)?.toInt();
+    t.linkedTransactionId = (json['linkedTransactionId'] as num?)?.toInt();
+
     return t;
   }
 
@@ -236,10 +222,17 @@ class TransactionRepository {
       'accountId': t.accountId,
       'categoryId': t.categoryId,
       'isCountable': t.isCountable,
-      'description': t.comments,
+      'comments': t.comments, // mapped from description/comments
       'originalCurrency': t.originalCurrency,
       'originalAmount': t.originalAmount,
     };
+
+    // Transfer fields
+    if (t.toAccountId != null) payload['toAccountId'] = t.toAccountId;
+    if (t.fromAccountId != null) payload['fromAccountId'] = t.fromAccountId;
+    if (t.linkedTransactionId != null)
+      payload['linkedTransactionId'] = t.linkedTransactionId;
+
     final hasOriginalCurrency =
         (t.originalCurrency != null && t.originalCurrency!.isNotEmpty);
     final hasOriginalAmount = (t.originalAmount != null);

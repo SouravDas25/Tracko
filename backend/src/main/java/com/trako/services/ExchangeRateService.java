@@ -1,8 +1,10 @@
 package com.trako.services;
 
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.core.ParameterizedTypeReference;
 
 import java.util.Map;
 
@@ -13,13 +15,9 @@ public class ExchangeRateService {
     private final RestTemplate restTemplate = new RestTemplate();
 
     public Map<String, Object> getRates(String baseCurrency) {
-        try {
-            ResponseEntity<Map> response = restTemplate.getForEntity(API_URL + baseCurrency, Map.class);
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                return (Map<String, Object>) response.getBody();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+        ResponseEntity<Map<String, Object>> response = restTemplate.exchange(API_URL + baseCurrency, HttpMethod.GET, null, new ParameterizedTypeReference<Map<String, Object>>() {});
+        if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+            return response.getBody();
         }
         return null;
     }

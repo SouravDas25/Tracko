@@ -5,7 +5,10 @@ import com.trako.dtos.TransactionSummaryDTO;
 import com.trako.entities.Account;
 import com.trako.entities.Category;
 import com.trako.entities.Transaction;
+import com.trako.exceptions.AuthorizationException;
+import com.trako.exceptions.NotFoundException;
 import com.trako.exceptions.UserNotLoggedInException;
+import com.trako.models.request.TransactionRequest;
 import com.trako.repositories.AccountRepository;
 import com.trako.repositories.CategoryRepository;
 import com.trako.services.TransactionService;
@@ -397,80 +400,129 @@ public class TransactionController {
 
     /**
      * POST /api/transactions
-     * Creates a new transaction for the authenticated user.
-     * Validates that both account and category exist and are owned by the current user before saving.
+     * Creates a new transaction OR transfer for the authenticated user.
+     * 
+     * <p>For regular transactions: Include accountId, categoryId, transactionType, amount, etc.
+     * <p>For transfers: Include accountId (or fromAccountId), toAccountId, and amount.
+     * The presence of toAccountId indicates this is a transfer request.
+     * 
+     * <p>Validates that accounts and categories exist and are owned by the current user before saving.
      */
     @PostMapping
-    public ResponseEntity<?> create(@Valid @RequestBody Transaction transaction) {
+    public ResponseEntity<?> create(@Valid @RequestBody TransactionRequest request) {
         try {
             String currentUserId = userService.loggedInUser().getId();
-            Account acc = accountRepository.findById(transaction.getAccountId()).orElse(null);
-            if (acc == null) {
-                log.warn("Transaction create failed: Account {} not found", transaction.getAccountId());
-                return Response.unauthorized();
-            }
-            if (!currentUserId.equals(acc.getUserId())) {
-                log.warn("Transaction create failed: Account {} owner mismatch. User: {}, Account Owner: {}", 
-                        transaction.getAccountId(), currentUserId, acc.getUserId());
-                return Response.unauthorized();
-            }
             
-            Category cat = categoryRepository.findById(transaction.getCategoryId()).orElse(null);
-            if (cat == null) {
-                log.warn("Transaction create failed: Category {} not found", transaction.getCategoryId());
-                return Response.unauthorized();
+            // Check if this is a transfer request (has toAccountId field)
+            if (request.isTransfer()) {
+                // This is a TRANSFER request
+                log.info("Processing transfer request from account {} to account {}", 
+                        request.getSourceAccountId(), request.toAccountId());
+                
+                // Validate required fields
+                Long fromAccountId = request.getSourceAccountId();
+                if (fromAccountId == null) {
+                    return Response.badRequest("Transfer requires fromAccountId or accountId");
+                }
+                if (request.toAccountId() == null) {
+                    return Response.badRequest("Transfer requires toAccountId");
+                }
+                if (request.amount() == null || request.amount() <= 0) {
+                    return Response.badRequest("Transfer amount must be greater than 0");
+                }
+                
+                // Delegate to service layer for transfer creation
+                Transaction[] result = transactionWriteService.createTransfer(
+                    currentUserId,
+                    fromAccountId,
+                    request.toAccountId(),
+                    request.amount(),
+                    request.name(),
+                    request.comments()
+                );
+                
+                // Return the debit side (represents the transfer in UI)
+                return Response.ok(result[0], "Transfer created successfully");
+                
+            } else {
+                // This is a REGULAR TRANSACTION request
+                Transaction saved = transactionWriteService.createTransaction(currentUserId, request);
+                return Response.ok(saved, "Transaction created successfully");
             }
-            if (!currentUserId.equals(cat.getUserId())) {
-                log.warn("Transaction create failed: Category {} owner mismatch. User: {}, Category Owner: {}", 
-                        transaction.getCategoryId(), currentUserId, cat.getUserId());
-                return Response.unauthorized();
-            }
-            
-            Transaction saved = transactionWriteService.saveForUser(currentUserId, transaction);
-            return Response.ok(saved, "Transaction created successfully");
         } catch (UserNotLoggedInException e) {
-            log.warn("Transaction create failed: User not logged in");
+            log.warn("Transaction/Transfer create failed: User not logged in");
             return Response.unauthorized();
+        } catch (NotFoundException e) {
+            return Response.notFound(e.getMessage());
+        } catch (AuthorizationException e) {
+            return Response.unauthorized();
+        } catch (IllegalArgumentException e) {
+            log.warn("Transaction/Transfer create failed with validation error: {}", e.getMessage());
+            return Response.badRequest(e.getMessage());
+        } catch (Exception e) {
+            log.error("Transaction/Transfer create failed with exception: {}", e.getMessage(), e);
+            return Response.badRequest("Failed to create transaction: " + e.getMessage());
         }
     }
 
     /**
      * PUT /api/transactions/{id}
-     * Updates an existing transaction by id.
-     * Verifies transaction exists and that existing/new account plus category are all owned by authenticated user.
+     * Updates an existing transaction or transfer by id.
+     * 
+     * <p>Delegates all write logic to TransactionWriteService.
+     * <p>If the transaction is part of a transfer (has linkedTransactionId), both sides are updated atomically.
+     * <p>For regular transactions, verifies that existing/new account plus category are all owned by authenticated user.
      */
     @PutMapping("/{id}")
-    public ResponseEntity<?> update(@PathVariable Long id, @Valid @RequestBody Transaction transaction) {
-        transaction.setId(id);
+    public ResponseEntity<?> update(@PathVariable Long id, @Valid @RequestBody TransactionRequest request) {
         try {
             String currentUserId = userService.loggedInUser().getId();
-            Transaction existing = transactionService.findById(id).orElse(null);
-            if (existing == null) {
-                return Response.notFound("Transaction not found");
-            }
-            Account existingAcc = accountRepository.findById(existing.getAccountId()).orElse(null);
-            if (existingAcc == null || !currentUserId.equals(existingAcc.getUserId())) {
-                return Response.unauthorized();
-            }
-            Account acc = accountRepository.findById(transaction.getAccountId()).orElse(null);
-            if (acc == null || !currentUserId.equals(acc.getUserId())) {
-                return Response.unauthorized();
-            }
-            Category cat = categoryRepository.findById(transaction.getCategoryId()).orElse(null);
-            if (cat == null || !currentUserId.equals(cat.getUserId())) {
-                return Response.unauthorized();
-            }
-            Transaction updated = transactionWriteService.saveForUser(currentUserId, transaction);
-            return Response.ok(updated, "Transaction updated successfully");
+
+            // Map request to entity for the write service
+            Transaction tx = new Transaction();
+            tx.setId(id);
+            tx.setAccountId(request.accountId());
+            tx.setCategoryId(request.categoryId());
+            tx.setTransactionType(request.transactionType());
+            tx.setAmount(request.amount());
+            tx.setName(request.name());
+            tx.setComments(request.comments());
+            tx.setDate(request.date());
+            tx.setIsCountable(request.isCountable());
+            tx.setOriginalCurrency(request.originalCurrency());
+            tx.setOriginalAmount(request.originalAmount());
+            tx.setExchangeRate(request.exchangeRate());
+            tx.setLinkedTransactionId(request.linkedTransactionId());
+
+            // Delegate to write service - it handles both regular transactions and transfers
+            Transaction updated = transactionWriteService.updateTransaction(currentUserId, tx);
+            
+            // Determine the success message based on whether it's a transfer
+            String message = transactionWriteService.isTransfer(id) ? 
+                "Transfer updated successfully" : "Transaction updated successfully";
+            
+            return Response.ok(updated, message);
+            
         } catch (UserNotLoggedInException e) {
+            log.warn("Transaction update failed: User not logged in");
             return Response.unauthorized();
+        } catch (NotFoundException e) {
+            return Response.notFound(e.getMessage());
+        } catch (AuthorizationException e) {
+            return Response.unauthorized();
+        } catch (IllegalArgumentException e) {
+            log.warn("Transaction update failed with validation error: {}", e.getMessage());
+            return Response.badRequest(e.getMessage());
+        } catch (Exception e) {
+            log.error("Transaction update failed with exception: {}", e.getMessage(), e);
+            return Response.badRequest("Failed to update transaction: " + e.getMessage());
         }
     }
 
     /**
      * DELETE /api/transactions/{id}
-     * Deletes a transaction only if it exists and belongs to the authenticated user
-     * (ownership verified through the transaction's account).
+     * Deletes a transaction only if it exists and belongs to the authenticated user.
+     * If the transaction is part of a transfer (has linkedTransactionId), both sides are deleted atomically.
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable Long id) {
@@ -484,10 +536,28 @@ public class TransactionController {
             if (acc == null || !currentUserId.equals(acc.getUserId())) {
                 return Response.unauthorized();
             }
+            
+            // Check if this is part of a transfer - delegate to service
+            if (transactionWriteService.isTransfer(id)) {
+                transactionWriteService.deleteTransfer(currentUserId, id);
+                return Response.ok("Transfer deleted successfully");
+            }
+            
+            // Regular transaction (not a transfer)
             transactionWriteService.deleteForUser(currentUserId, id);
             return Response.ok("Transaction deleted successfully");
         } catch (UserNotLoggedInException e) {
             return Response.unauthorized();
+        } catch (NotFoundException e) {
+            return Response.notFound(e.getMessage());
+        } catch (AuthorizationException e) {
+            return Response.unauthorized();
+        } catch (IllegalArgumentException e) {
+            log.warn("Delete failed with validation error: {}", e.getMessage());
+            return Response.badRequest(e.getMessage());
+        } catch (Exception e) {
+            log.error("Error deleting transaction {}: {}", id, e.getMessage(), e);
+            return Response.badRequest("Failed to delete transaction: " + e.getMessage());
         }
     }
 

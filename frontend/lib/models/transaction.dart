@@ -15,9 +15,13 @@ class Transaction {
   double amount = 0.0;
   int isCountable = 1;
   int accountId = 0;
-  int? transferFromAccountId;
-  int? transferToAccountId;
   int categoryId = 0;
+
+  // Transfer Support
+  int? toAccountId;
+  int? fromAccountId;
+  int? linkedTransactionId;
+
   List<Split> splits = [];
   Set<TrakoContact> contacts = {};
   Category? category;
@@ -27,6 +31,18 @@ class Transaction {
   String? originalCurrency;
   double? originalAmount;
   double? exchangeRate;
+
+  // Helpers
+  bool get isTransfer =>
+      transactionType == TransactionType.TRANSFER ||
+      toAccountId != null ||
+      linkedTransactionId != null;
+  bool get isTransferDebit =>
+      isTransfer &&
+      (transactionType == TransactionType.DEBIT ||
+          transactionType == TransactionType.TRANSFER);
+  bool get isTransferCredit =>
+      isTransfer && transactionType == TransactionType.CREDIT;
 
   Transaction();
 

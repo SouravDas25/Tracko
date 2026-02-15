@@ -54,6 +54,9 @@ public class Transaction {
     @Column(name = "is_countable")
     private Integer isCountable = 1;
 
+    @Column(name = "linked_transaction_id")
+    private Long linkedTransactionId;
+
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_id", insertable = false, updatable = false)
@@ -158,6 +161,14 @@ public class Transaction {
 
     public void setIsCountable(Integer isCountable) {
         this.isCountable = isCountable;
+    }
+
+    public Long getLinkedTransactionId() {
+        return linkedTransactionId;
+    }
+
+    public void setLinkedTransactionId(Long linkedTransactionId) {
+        this.linkedTransactionId = linkedTransactionId;
     }
 
     public Account getAccount() {
