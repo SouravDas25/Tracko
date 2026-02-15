@@ -221,10 +221,13 @@ class _CategoryTransactionsPageState extends State<CategoryTransactionsPage> {
           ? 0.0
           : series.map((p) => p.y).reduce((a, b) => a > b ? a : b);
 
-      final txs = await txRepo.getByUserIdAndDateRange(
-        userId,
+      final txs = await txRepo.getAll(
         startDate: widget.startDate,
         endDate: widget.endDate,
+        categoryId: catId,
+        page: 0,
+        size: 2000,
+        expand: false,
       );
 
       final filtered = <Transaction>[];

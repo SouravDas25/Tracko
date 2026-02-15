@@ -7,6 +7,7 @@ import com.trako.entities.*;
 import com.trako.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -69,6 +70,25 @@ public class TransactionService {
         return transactionRepository.findByUserIdAndDateBetweenAndAccountIds(userId, startDate, endDate, accountIds);
     }
 
+    public Page<Transaction> findByUserIdAndDateBetweenAndAccountIds(String userId, Date startDate, Date endDate, List<Long> accountIds, Pageable pageable) {
+        return transactionRepository.findByUserIdAndDateBetweenAndAccountIds(userId, startDate, endDate, accountIds, pageable);
+    }
+
+    public Page<Transaction> findByUserIdAndCategoryIdAndDateBetween(String userId, Long categoryId, Date startDate, Date endDate, Pageable pageable) {
+        return transactionRepository.findByUserIdAndCategoryIdAndDateBetween(userId, categoryId, startDate, endDate, pageable);
+    }
+
+    public Page<TransactionDetailDTO> findWithDetailsByUserIdAndCategoryIdAndDateBetween(String userId, Long categoryId, Date startDate, Date endDate, Pageable pageable) {
+        Page<Transaction> page = transactionRepository.findByUserIdAndCategoryIdAndDateBetween(userId, categoryId, startDate, endDate, pageable);
+
+        if (page.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        List<TransactionDetailDTO> dtos = fetchDetailsForTransactions(page.getContent());
+        return new PageImpl<>(dtos, pageable, page.getTotalElements());
+    }
+
     public List<TransactionDetailDTO> findWithDetailsByUserIdAndDateBetween(String userId, Date startDate, Date endDate, List<Long> accountIds) {
         List<Transaction> transactions;
         if (accountIds == null || accountIds.isEmpty()) {
@@ -77,6 +97,26 @@ public class TransactionService {
             transactions = transactionRepository.findByUserIdAndDateBetweenAndAccountIds(userId, startDate, endDate, accountIds);
         }
 
+        return fetchDetailsForTransactions(transactions);
+    }
+
+    public Page<TransactionDetailDTO> findWithDetailsByUserIdAndDateBetween(String userId, Date startDate, Date endDate, List<Long> accountIds, Pageable pageable) {
+        Page<Transaction> page;
+        if (accountIds == null || accountIds.isEmpty()) {
+            page = transactionRepository.findByUserIdAndDateBetween(userId, startDate, endDate, pageable);
+        } else {
+            page = transactionRepository.findByUserIdAndDateBetweenAndAccountIds(userId, startDate, endDate, accountIds, pageable);
+        }
+
+        if (page.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        List<TransactionDetailDTO> dtos = fetchDetailsForTransactions(page.getContent());
+        return new PageImpl<>(dtos, pageable, page.getTotalElements());
+    }
+
+    private List<TransactionDetailDTO> fetchDetailsForTransactions(List<Transaction> transactions) {
         if (transactions.isEmpty()) {
             return Collections.emptyList();
         }

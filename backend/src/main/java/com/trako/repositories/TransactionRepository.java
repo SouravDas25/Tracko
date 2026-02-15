@@ -52,6 +52,17 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     );
 
     @Query("SELECT t FROM Transaction t WHERE t.accountId IN " +
+           "(SELECT a.id FROM Account a WHERE a.userId = :userId AND a.id IN :accountIds) " +
+           "AND t.date >= :startDate AND t.date < :endDate")
+    Page<Transaction> findByUserIdAndDateBetweenAndAccountIds(
+        @Param("userId") String userId,
+        @Param("startDate") Date startDate,
+        @Param("endDate") Date endDate,
+        @Param("accountIds") List<Long> accountIds,
+        Pageable pageable
+    );
+
+    @Query("SELECT t FROM Transaction t WHERE t.accountId IN " +
            "(SELECT a.id FROM Account a WHERE a.userId = :userId) " +
            "AND t.categoryId = :categoryId " +
            "AND t.date >= :startDate AND t.date < :endDate " +
@@ -61,6 +72,18 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
         @Param("categoryId") Long categoryId,
         @Param("startDate") Date startDate,
         @Param("endDate") Date endDate
+    );
+
+    @Query("SELECT t FROM Transaction t WHERE t.accountId IN " +
+           "(SELECT a.id FROM Account a WHERE a.userId = :userId) " +
+           "AND t.categoryId = :categoryId " +
+           "AND t.date >= :startDate AND t.date < :endDate")
+    Page<Transaction> findByUserIdAndCategoryIdAndDateBetween(
+        @Param("userId") String userId,
+        @Param("categoryId") Long categoryId,
+        @Param("startDate") Date startDate,
+        @Param("endDate") Date endDate,
+        Pageable pageable
     );
 
     @Query("SELECT t.accountId AS accountId, " +

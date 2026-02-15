@@ -75,7 +75,7 @@ class SessionService {
   }
 
   static loginUser(User user) async {
-    // Bypassing Firebase auth. For integration testing, we assume any user with a phone number is valid.
+    // For integration testing, we assume any user with a phone number is valid.
     if (user.phoneNo != null && user.phoneNo.isNotEmpty) {
       return true;
     }
@@ -89,8 +89,6 @@ class SessionService {
     user.name = "Default Username";
     user.email = "";
     user.phoneNo = phoneNo;
-    // Firebase ID is no longer used for authentication
-    user.fireBaseId = 'bypass-auth';
     user.globalId = '';
 
     _loggedInUser = user;

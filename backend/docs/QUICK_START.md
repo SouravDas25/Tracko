@@ -97,10 +97,8 @@ DELETE /api/categories/{id}             // Delete
 
 ### Transactions
 ```dart
-GET    /api/transactions                              // List all
+GET    /api/transactions                              // List all (supports pagination, date range, filters)
 GET    /api/transactions/{id}                         // Get by ID
-GET    /api/transactions/user/{userId}                // List by user
-GET    /api/transactions/user/{userId}/date-range     // Date range
 GET    /api/transactions/account/{accountId}          // By account
 GET    /api/transactions/category/{categoryId}        // By category
 POST   /api/transactions                              // Create

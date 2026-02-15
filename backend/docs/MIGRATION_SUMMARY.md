@@ -55,10 +55,8 @@ Successfully migrated all business logic and data persistence from Flutter UI's 
 - `DELETE /api/categories/{id}` - Delete
 
 #### Transactions
-- `GET /api/transactions` - List all
+- `GET /api/transactions` - List all (supports pagination, date range, filters)
 - `GET /api/transactions/{id}` - Get by ID
-- `GET /api/transactions/user/{userId}` - List by user
-- `GET /api/transactions/user/{userId}/date-range` - Filter by date range
 - `GET /api/transactions/account/{accountId}` - List by account
 - `GET /api/transactions/category/{categoryId}` - List by category
 - `POST /api/transactions` - Create

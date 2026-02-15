@@ -96,30 +96,6 @@ class _WelcomePage extends State<WelcomePage> {
               ),
             ),
           ),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton(
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.teal,
-                side: const BorderSide(color: Colors.teal),
-                padding: const EdgeInsets.symmetric(vertical: 18.0),
-              ),
-              onPressed: () {
-                setState(() {
-                  isUserValid = true; // Prevent re-check
-                });
-                Navigator.pushReplacementNamed(
-                  context,
-                  "/phone_login",
-                );
-              },
-              child: Text(
-                'Login with Phone Number',
-                style: TextStyle(fontSize: 18.0),
-              ),
-            ),
-          ),
         ],
       );
     }

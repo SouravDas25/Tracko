@@ -30,7 +30,7 @@ class ServerUtil {
   static Future<String?> getAuthToken(User user) async {
     var url = Uri.parse(DestinationUtil.javaBackend() + "api/oauth/token");
     var headers = {"Content-Type": "application/json"};
-    var body = {"phoneNo": user.phoneNo, "firebaseUuid": user.fireBaseId};
+    var body = {"phoneNo": user.phoneNo};
     String data = convert.jsonEncode(body);
     final dio = ApiClient().dio;
     final response =
@@ -50,11 +50,7 @@ class ServerUtil {
 
   static Future<String?> signUp(User user) async {
     var url = Uri.parse(DestinationUtil.javaBackend() + "api/signUp");
-    var requestBody = {
-      "phoneNo": user.phoneNo,
-      "uuid": user.fireBaseId,
-      "isShadow": 0
-    };
+    var requestBody = {"phoneNo": user.phoneNo, "isShadow": 0};
     String data = convert.jsonEncode(requestBody);
     print(data);
 //    data = Uri.encodeQueryComponent(data);
@@ -105,7 +101,6 @@ class ServerUtil {
       "phoneNo": user.phoneNo,
       "email": user.email,
       "profilePic": user.profilePic,
-      "uuid": user.fireBaseId,
       "isShadow": 0
     };
     String data = convert.jsonEncode(requestBody);
@@ -168,7 +163,6 @@ class ServerUtil {
       "phoneNo": user.phoneNo,
       "email": user.email,
       "profilePic": user.profilePic,
-      "uuid": user.fireBaseId,
       "isShadow": isShadow ? 1 : 0
     };
     String data = convert.jsonEncode(requestBody);

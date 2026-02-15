@@ -36,7 +36,6 @@ class AuthService {
 
   Future<String> signUp({
     required String phoneNo,
-    required String firebaseUuid,
     required String name,
     String? email,
     String? profilePic,
@@ -45,7 +44,6 @@ class AuthService {
     final res =
         await _api.post<Map<String, dynamic>>(ApiConfig.authSignUp, data: {
       'phoneNo': phoneNo,
-      'uuid': firebaseUuid, // backend maps to fireBaseId
       'name': name,
       'email': email,
       'profilePic': profilePic,
@@ -62,12 +60,10 @@ class AuthService {
 
   Future<String?> signIn({
     required String phoneNo,
-    required String firebaseUuid,
   }) async {
     final res =
         await _api.post<Map<String, dynamic>>(ApiConfig.authLogin, data: {
       'phoneNo': phoneNo,
-      'uuid': firebaseUuid,
     });
     final token = res['token'] ?? res['jwtToken'];
     if (token is String) {

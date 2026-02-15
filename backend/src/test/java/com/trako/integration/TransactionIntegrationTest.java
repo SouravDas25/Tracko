@@ -174,23 +174,6 @@ public class TransactionIntegrationTest {
                 .andExpect(jsonPath("$.result.amount").value(5.00));
     }
 
-    @Test
-    public void testGetTransactionsByUserId() throws Exception {
-        Transaction transaction = new Transaction();
-        transaction.setTransactionType(1);
-        transaction.setName("Groceries");
-        transaction.setAmount(100.00);
-        transaction.setDate(new Date());
-        transaction.setAccountId(testAccount.getId());
-        transaction.setCategoryId(testCategory.getId());
-        transactionWriteService.saveForUser(testUser.getId(), transaction);
-
-        mockMvc.perform(get("/api/transactions/user/" + testUser.getId())
-                        .header("Authorization", bearerToken))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result", hasSize(1)))
-                .andExpect(jsonPath("$.result[0].name").value("Groceries"));
-    }
 
     @Test
     public void testGetTransactionsByAccountId() throws Exception {
@@ -306,7 +289,7 @@ public class TransactionIntegrationTest {
         nonCountable.setIsCountable(0);
         transactionWriteService.saveForUser(testUser.getId(), nonCountable);
 
-        mockMvc.perform(get("/api/transactions/user/" + testUser.getId() + "/summary")
+        mockMvc.perform(get("/api/transactions/summary")
                 .header("Authorization", bearerToken)
                 .param("startDate", "2020-01-01")
                 .param("endDate", "2030-12-31"))
@@ -339,7 +322,7 @@ public class TransactionIntegrationTest {
         income2.setIsCountable(1);
         transactionWriteService.saveForUser(testUser.getId(), income2);
 
-        mockMvc.perform(get("/api/transactions/user/" + testUser.getId() + "/total-income")
+        mockMvc.perform(get("/api/transactions/total-income")
                 .header("Authorization", bearerToken)
                 .param("startDate", "2020-01-01")
                 .param("endDate", "2030-12-31"))
@@ -369,7 +352,7 @@ public class TransactionIntegrationTest {
         expense2.setIsCountable(1);
         transactionWriteService.saveForUser(testUser.getId(), expense2);
 
-        mockMvc.perform(get("/api/transactions/user/" + testUser.getId() + "/total-expense")
+        mockMvc.perform(get("/api/transactions/total-expense")
                 .header("Authorization", bearerToken)
                 .param("startDate", "2020-01-01")
                 .param("endDate", "2030-12-31"))
@@ -400,7 +383,7 @@ public class TransactionIntegrationTest {
         nonCountable2.setIsCountable(0);
         transactionWriteService.saveForUser(testUser.getId(), nonCountable2);
 
-        mockMvc.perform(get("/api/transactions/user/" + testUser.getId() + "/summary")
+        mockMvc.perform(get("/api/transactions/summary")
                 .header("Authorization", bearerToken)
                 .param("startDate", "2020-01-01")
                 .param("endDate", "2030-12-31"))
@@ -447,21 +430,13 @@ public class TransactionIntegrationTest {
 
     @Test
     public void testDateRangeWithInvalidDateReturnsBadRequest() throws Exception {
-        mockMvc.perform(get("/api/transactions/date-range")
+        mockMvc.perform(get("/api/transactions")
                         .header("Authorization", bearerToken)
                         .param("startDate", "2020/01/01")
                         .param("endDate", "2030-12-31"))
                 .andExpect(status().isBadRequest());
     }
 
-    @Test
-    public void testUserDateRangeWithInvalidDateReturnsBadRequest() throws Exception {
-        mockMvc.perform(get("/api/transactions/user/" + testUser.getId() + "/date-range")
-                        .header("Authorization", bearerToken)
-                        .param("startDate", "2020-13-01")
-                        .param("endDate", "2030-12-31"))
-                .andExpect(status().isBadRequest());
-    }
 
     @Test
     public void testCreateTransactionForForeignAccountUnauthorized() throws Exception {
@@ -527,35 +502,7 @@ public class TransactionIntegrationTest {
                 .andExpect(status().isUnauthorized());
     }
 
-    @Test
-    public void testGetTransactionsByOtherUserIdUnauthorized() throws Exception {
-        User other = new User();
-        other.setName("OtherUser");
-        other.setPhoneNo("5550003333");
-        other.setEmail("other3@example.com");
-        other.setFireBaseId("other3_pass");
-        other = usersRepository.save(other);
 
-        mockMvc.perform(get("/api/transactions/user/" + other.getId())
-                        .header("Authorization", bearerToken))
-                .andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    public void testGetTotalIncomeForOtherUserUnauthorized() throws Exception {
-        User other = new User();
-        other.setName("Other4");
-        other.setPhoneNo("5550004444");
-        other.setEmail("other4@example.com");
-        other.setFireBaseId("other4_pass");
-        other = usersRepository.save(other);
-
-        mockMvc.perform(get("/api/transactions/user/" + other.getId() + "/total-income")
-                        .header("Authorization", bearerToken)
-                        .param("startDate", "2020-01-01")
-                        .param("endDate", "2030-12-31"))
-                .andExpect(status().isUnauthorized());
-    }
 
     @Test
     public void testGetMyTransactionsByDateRangeWithAccountFilter() throws Exception {
@@ -582,14 +529,14 @@ public class TransactionIntegrationTest {
         t2.setCategoryId(testCategory.getId());
         transactionWriteService.saveForUser(testUser.getId(), t2);
 
-        mockMvc.perform(get("/api/transactions/date-range")
+        mockMvc.perform(get("/api/transactions")
                         .header("Authorization", bearerToken)
                         .param("startDate", "2020-01-01")
                         .param("endDate", "2030-12-31")
                         .param("accountIds", String.valueOf(testAccount.getId())))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result", hasSize(1)))
-                .andExpect(jsonPath("$.result[0].name").value("A1"));
+                .andExpect(jsonPath("$.result.transactions", hasSize(1)))
+                .andExpect(jsonPath("$.result.transactions[0].name").value("A1"));
     }
 
     @Test
@@ -794,34 +741,87 @@ public class TransactionIntegrationTest {
         transactionWriteService.saveForUser(testUser.getId(), t2);
 
         String messy = "  , ,abc,  " + testAccount.getId() + " , x ,";
-        mockMvc.perform(get("/api/transactions/date-range")
+        mockMvc.perform(get("/api/transactions")
                         .header("Authorization", bearerToken)
                         .param("startDate", "2020-01-01")
                         .param("endDate", "2030-12-31")
                         .param("accountIds", messy))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result", hasSize(1)))
-                .andExpect(jsonPath("$.result[0].name").value("KeepMe"));
+                .andExpect(jsonPath("$.result.transactions", hasSize(1)))
+                .andExpect(jsonPath("$.result.transactions[0].name").value("KeepMe"));
     }
 
     @Test
-    public void testGetByUserIdAndDateRangeHappyPath() throws Exception {
+    public void testGetAllByDateRange() throws Exception {
         Transaction t = new Transaction();
         t.setTransactionType(1);
-        t.setName("UserRange");
-        t.setAmount(11.00);
+        t.setName("DateRangeTx");
+        t.setAmount(50.00);
         t.setDate(new Date());
         t.setAccountId(testAccount.getId());
         t.setCategoryId(testCategory.getId());
         transactionWriteService.saveForUser(testUser.getId(), t);
 
-        mockMvc.perform(get("/api/transactions/user/" + testUser.getId() + "/date-range")
+        mockMvc.perform(get("/api/transactions")
                         .header("Authorization", bearerToken)
                         .param("startDate", "2020-01-01")
                         .param("endDate", "2030-12-31"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result", hasSize(1)))
-                .andExpect(jsonPath("$.result[0].name").value("UserRange"));
+                .andExpect(jsonPath("$.result.transactions", hasSize(1)))
+                .andExpect(jsonPath("$.result.transactions[0].name").value("DateRangeTx"));
+    }
+
+    @Test
+    public void testGetAllDoesNotReturnOtherUserTransactions() throws Exception {
+        // Create another user and transaction
+        User other = new User();
+        other.setName("Other");
+        other.setPhoneNo("5550009999");
+        other.setEmail("other99@example.com");
+        other.setFireBaseId("other99_pass");
+        other = usersRepository.save(other);
+
+        Account otherAcc = new Account();
+        otherAcc.setName("Other Acc");
+        otherAcc.setUserId(other.getId());
+        otherAcc = accountRepository.save(otherAcc);
+
+        Category otherCat = new Category();
+        otherCat.setName("Other Cat");
+        otherCat.setUserId(other.getId());
+        otherCat = categoryRepository.save(otherCat);
+
+        Transaction otherTx = new Transaction();
+        otherTx.setTransactionType(1);
+        otherTx.setName("Other Tx");
+        otherTx.setAmount(100.00);
+        otherTx.setDate(new Date());
+        otherTx.setAccountId(otherAcc.getId());
+        otherTx.setCategoryId(otherCat.getId());
+        transactionWriteService.saveForUser(other.getId(), otherTx);
+
+        // Own transaction
+        Transaction myTx = new Transaction();
+        myTx.setTransactionType(1);
+        myTx.setName("My Tx");
+        myTx.setAmount(50.00);
+        myTx.setDate(new Date());
+        myTx.setAccountId(testAccount.getId());
+        myTx.setCategoryId(testCategory.getId());
+        transactionWriteService.saveForUser(testUser.getId(), myTx);
+
+        // Request as testUser
+        Calendar now = Calendar.getInstance();
+        String month = String.valueOf(now.get(Calendar.MONTH) + 1);
+        String year = String.valueOf(now.get(Calendar.YEAR));
+
+        mockMvc.perform(get("/api/transactions")
+                        .header("Authorization", bearerToken)
+                        .param("month", month)
+                        .param("year", year))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.transactions", hasSize(1)))
+                .andExpect(jsonPath("$.result.transactions[0].name").value("My Tx"));
     }
 
     @Test
@@ -973,5 +973,25 @@ public class TransactionIntegrationTest {
         mockMvc.perform(delete("/api/transactions/" + otherTxn.getId())
                         .header("Authorization", bearerToken))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void testPageSizeLimit() throws Exception {
+        // Test size=10000 (valid)
+        mockMvc.perform(get("/api/transactions")
+                        .header("Authorization", bearerToken)
+                        .param("startDate", "2020-01-01")
+                        .param("endDate", "2030-12-31")
+                        .param("size", "10000"))
+                .andExpect(status().isOk());
+
+        // Test size=10001 (invalid)
+        mockMvc.perform(get("/api/transactions")
+                        .header("Authorization", bearerToken)
+                        .param("startDate", "2020-01-01")
+                        .param("endDate", "2030-12-31")
+                        .param("size", "10001"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("size must be between 1 and 10000"));
     }
 }

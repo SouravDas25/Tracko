@@ -50,10 +50,8 @@ All controllers follow RESTful conventions with proper JWT authentication:
 - DELETE `/api/categories/{id}` - Delete category
 
 #### TransactionController (`/api/transactions`)
-- GET `/api/transactions` - Get all transactions
+- GET `/api/transactions` - Get all transactions (supports pagination, date range, filters)
 - GET `/api/transactions/{id}` - Get transaction by ID
-- GET `/api/transactions/user/{userId}` - Get transactions for user
-- GET `/api/transactions/user/{userId}/date-range?startDate=&endDate=` - Get transactions by date range
 - GET `/api/transactions/account/{accountId}` - Get transactions by account
 - GET `/api/transactions/category/{categoryId}` - Get transactions by category
 - POST `/api/transactions` - Create transaction

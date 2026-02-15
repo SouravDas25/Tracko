@@ -561,18 +561,22 @@ class TransactionRepository {
   
   // Get transactions by date range
   Future<List<Transaction>> getTransactionsByDateRange({
-    required String userId,
     required DateTime startDate,
     required DateTime endDate,
   }) async {
-    final response = await _apiClient.get<List<dynamic>>(
-      '${ApiConfig.TRANSACTIONS}/user/$userId/date-range',
+    final response = await _apiClient.get<Map<String, dynamic>>(
+      ApiConfig.TRANSACTIONS,
       queryParameters: {
         'startDate': startDate.toIso8601String().split('T')[0],
         'endDate': endDate.toIso8601String().split('T')[0],
       },
     );
-    return response.map((json) => Transaction.fromJson(json)).toList();
+    // The unified endpoint returns a paginated structure: { "result": { "transactions": [...] } }
+    // But our ApiClient wrapper extracts 'result'. So response is the Map.
+    // If your ApiClient unwraps 'result', verify if it returns the Map containing 'transactions'.
+    // Assuming standard response for getAll:
+    final transactions = response['transactions'] as List;
+    return transactions.map((json) => Transaction.fromJson(json)).toList();
   }
   
   // Get transactions by account

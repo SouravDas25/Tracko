@@ -15,22 +15,39 @@ class TransactionRepository {
   Future<List<legacy.Transaction>> getAll({
     int? month,
     int? year,
+    DateTime? startDate,
+    DateTime? endDate,
+    List<int>? accountIds,
+    int? categoryId,
     int page = 0,
     int size = 500,
+    bool expand = false,
   }) async {
     final now = DateTime.now();
     final res = await _api.get<Map<String, dynamic>>(
       ApiConfig.transactions,
       query: {
-        'month': month ?? now.month,
-        'year': year ?? now.year,
+        if (month != null) 'month': month,
+        if (year != null) 'year': year,
+        if (startDate != null) 'startDate': startDate.toIso8601String().split('T').first,
+        if (endDate != null) 'endDate': endDate.toIso8601String().split('T').first,
         'page': page,
         'size': size,
+        'expand': expand,
+        if (accountIds != null && accountIds.isNotEmpty)
+          'accountIds': accountIds.join(','),
+        if (categoryId != null) 'categoryId': categoryId,
       },
     );
 
     final rows = (res['transactions'] as List<dynamic>?) ?? const <dynamic>[];
-    return rows.map((e) => _toLegacy(e as Map<String, dynamic>)).toList();
+    return rows.map((e) {
+      final row = e as Map<String, dynamic>;
+      if (expand) {
+        return _toLegacyFromExpanded(row);
+      }
+      return _toLegacy(row);
+    }).toList();
   }
 
   Future<void> deleteById(int id) async {

@@ -30,12 +30,15 @@ class CategoryController {
     final catRepo = CategoryRepository();
 
     final begin = SettingUtil.currentMonth;
-    final end = SettingUtil.nextMonth;
 
     // Backend authorizes from JWT; userId param is not required by API but retained in signature.
-    final userId = (SessionService.currentUser().id ?? '').toString();
-    final txs = await txRepo.getByUserIdAndDateRange(userId,
-        startDate: begin, endDate: end);
+    final txs = await txRepo.getAll(
+      month: begin.month,
+      year: begin.year,
+      page: 0,
+      size: 2000,
+      expand: false,
+    );
 
     final byCategory = <int, double>{};
     for (final t in txs) {

@@ -303,6 +303,28 @@ class TransactionController {
     return transactions;
   }
 
+  static Future<List<Transaction>> getTransactionsForSelectedMonthPaginated(
+      {List<int>? accountIds, DateTime? month, int page = 0, int size = 20}) async {
+    final txRepo = TransactionRepository();
+    final userId = await _resolveUserId();
+    if (userId == null) {
+      return <Transaction>[];
+    }
+
+    final DateTime start = month ?? SettingUtil.currentMonth;
+
+    List<Transaction> transactions = await txRepo.getAll(
+      month: start.month,
+      year: start.year,
+      accountIds: accountIds,
+      page: page,
+      size: size,
+      expand: true,
+    );
+
+    return transactions;
+  }
+
   static Future<double> getMonthIncome(DateTime month,
       {List<int>? accountIds}) async {
     final nextMonth = DateTime.utc(month.year, month.month + 1);
@@ -335,23 +357,18 @@ class TransactionController {
   static Future<List<Transaction>> getRecentTransaction() async {
     final txRepo = TransactionRepository();
     DateTime month = SettingUtil.currentMonth;
-    DateTime nextMonth = SettingUtil.nextMonth;
     final userId = await _resolveUserId();
     if (userId == null) {
       return <Transaction>[];
     }
 
-    List<Transaction> transactions = await txRepo.getByUserIdAndDateRange(
-      userId,
-      startDate: month,
-      endDate: nextMonth,
+    List<Transaction> transactions = await txRepo.getAll(
+      month: month.month,
+      year: month.year,
+      page: 0,
+      size: 5,
+      expand: true,
     );
-
-    // Sort by date desc and take top 5
-    transactions.sort((a, b) => b.date.compareTo(a.date));
-    if (transactions.length > 5) {
-      transactions = transactions.sublist(0, 5);
-    }
 
     return transactions;
   }

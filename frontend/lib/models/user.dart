@@ -26,6 +26,6 @@ class User {
 
   @override
   String toString() {
-    return "{$id , $name , $email , $phoneNo , $globalId, $fireBaseId}";
+    return "{$id , $name , $email , $phoneNo , $globalId}";
   }
 }

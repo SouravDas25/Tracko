@@ -39,6 +39,10 @@ class _TransactionListPageState extends RefreshableState<TransactionListPage> {
   DateTime selectedMonth = SettingUtil.currentMonth;
   bool _isProgrammaticLoading = false;
 
+  int _currentPage = 0;
+  static const int _pageSize = 20;
+  bool _hasMore = true;
+
   _TransactionListPageState();
 
   Future<void> _goToPreviousMonth() async {
@@ -172,7 +176,7 @@ class _TransactionListPageState extends RefreshableState<TransactionListPage> {
   Future<void> refresh() async {
     AppLog.d('[TransactionListPage] refresh start month=$selectedMonth');
     try {
-      await initTransactionData();
+      await initTransactionData(isRefresh: true);
       if (this.mounted) {
         setState(() {
           // Ensure any programmatic loader is cleared after successful data load
@@ -207,10 +211,33 @@ class _TransactionListPageState extends RefreshableState<TransactionListPage> {
     }
   }
 
-  initTransactionData() async {
+  Future<void> _onLoading() async {
+    if (!_hasMore) {
+      refreshController.loadNoData();
+      return;
+    }
+    try {
+      await initTransactionData(isRefresh: false);
+      if (mounted) {
+        setState(() {});
+      }
+      refreshController.loadComplete();
+    } catch (e) {
+      refreshController.loadFailed();
+    }
+  }
+
+  initTransactionData({bool isRefresh = true}) async {
     AppLog.d(
-        '[TransactionListPage] initTransactionData start selections=$selections');
-    transactions.clear();
+        '[TransactionListPage] initTransactionData start selections=$selections isRefresh=$isRefresh');
+    
+    if (isRefresh) {
+      _currentPage = 0;
+      _hasMore = true;
+      transactions.clear();
+      refreshController.resetNoData();
+    }
+
     List<int> accountIds = [];
     if (selections != null && selections.length > 0) {
       int accountId;
@@ -220,44 +247,65 @@ class _TransactionListPageState extends RefreshableState<TransactionListPage> {
       }
     }
     AppLog.d(
-        '[TransactionListPage] parsed accountIds=$accountIds month=$selectedMonth');
-    // Load all transactions for the selected month (no pagination)
-    transactions = await TransactionController.getTransactionsForSelectedMonth(
-        accountIds: accountIds, month: selectedMonth);
-    AppLog.d(
-        '[TransactionListPage] fetched transactions count=${transactions.length}');
+        '[TransactionListPage] parsed accountIds=$accountIds month=$selectedMonth page=$_currentPage');
+    
+    // Load transactions for the selected month with pagination
+    List<Transaction> newTransactions = await TransactionController.getTransactionsForSelectedMonthPaginated(
+        accountIds: accountIds, month: selectedMonth, page: _currentPage, size: _pageSize);
+    
+    if (newTransactions.length < _pageSize) {
+      _hasMore = false;
+      refreshController.loadNoData();
+    } else {
+      _hasMore = true;
+    }
 
-    totalAmount = incomeAmount = expenseAmount = 0;
-
-    final currentMonthDate =
-        DateTime.utc(selectedMonth.year, selectedMonth.month);
-    final nextMonthDate =
-        DateTime.utc(selectedMonth.year, selectedMonth.month + 1);
-
-    final summary = await TransactionController.getSummaryBetween(
-      currentMonthDate,
-      nextMonthDate,
-      accountIds: accountIds,
-    );
-
-    incomeAmount = (summary['totalIncome'] as num?)?.toDouble() ?? 0.0;
-    expenseAmount = (summary['totalExpense'] as num?)?.toDouble() ?? 0.0;
-    previousMonthAmount = (summary['rolloverNet'] as num?)?.toDouble() ?? 0.0;
-    totalAmount = (summary['netTotalWithRollover'] as num?)?.toDouble() ??
-        (incomeAmount - expenseAmount + previousMonthAmount);
+    if (isRefresh) {
+      transactions = newTransactions;
+    } else {
+      transactions.addAll(newTransactions);
+    }
+    
+    _currentPage++;
 
     AppLog.d(
-        '[TransactionListPage] totals previous=$previousMonthAmount balance=$totalAmount');
+        '[TransactionListPage] fetched transactions count=${newTransactions.length} total=${transactions.length}');
+
+    // Only fetch summary on refresh to avoid redundant calls
+    if (isRefresh) {
+      totalAmount = incomeAmount = expenseAmount = 0;
+
+      final currentMonthDate =
+          DateTime.utc(selectedMonth.year, selectedMonth.month);
+      final nextMonthDate =
+          DateTime.utc(selectedMonth.year, selectedMonth.month + 1);
+
+      final summary = await TransactionController.getSummaryBetween(
+        currentMonthDate,
+        nextMonthDate,
+        accountIds: accountIds,
+      );
+
+      incomeAmount = (summary['totalIncome'] as num?)?.toDouble() ?? 0.0;
+      expenseAmount = (summary['totalExpense'] as num?)?.toDouble() ?? 0.0;
+      previousMonthAmount = (summary['rolloverNet'] as num?)?.toDouble() ?? 0.0;
+      totalAmount = (summary['netTotalWithRollover'] as num?)?.toDouble() ??
+          (incomeAmount - expenseAmount + previousMonthAmount);
+
+      AppLog.d(
+          '[TransactionListPage] totals previous=$previousMonthAmount balance=$totalAmount');
+    }
   }
 
   Widget _buildContent() {
     return SmartRefresher(
       controller: refreshController,
       enablePullDown: true,
-      enablePullUp: false,
+      enablePullUp: true,
       onRefresh: () async {
         await refresh();
       },
+      onLoading: _onLoading,
       child: CustomScrollView(
         slivers: <Widget>[
           SliverPersistentHeader(

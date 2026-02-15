@@ -123,17 +123,6 @@ public class TransactionControllerTest {
         verify(transactionService, times(1)).findById(1L);
     }
 
-    @Test
-    @WithMockUser
-    public void testGetByUserId() throws Exception {
-        when(transactionService.findByUserId("user123")).thenReturn(Arrays.asList(testTransaction));
-
-        mockMvc.perform(get("/api/transactions/user/user123"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result[0].name").value("Lunch"));
-
-        verify(transactionService, times(1)).findByUserId("user123");
-    }
 
     @Test
     @WithMockUser

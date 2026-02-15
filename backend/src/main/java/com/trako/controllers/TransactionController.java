@@ -122,33 +122,106 @@ public class TransactionController {
      */
     @GetMapping
     public ResponseEntity<?> getAll(
-            @RequestParam Integer month,
+            @RequestParam(required = false) Integer month,
             @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate,
+            @RequestParam(required = false) String accountIds,
+            @RequestParam(required = false) Long categoryId,
             @RequestParam(defaultValue = "0") Integer page,
-            @RequestParam(defaultValue = "500") Integer size) {
+            @RequestParam(defaultValue = "500") Integer size,
+            @RequestParam(defaultValue = "false") boolean expand) {
         try {
-            if (month == null || month < 1 || month > 12) {
-                return Response.badRequest("month must be between 1 and 12");
-            }
             if (page == null || page < 0) {
                 return Response.badRequest("page must be 0 or greater");
             }
-            if (size == null || size < 1 || size > 500) {
-                return Response.badRequest("size must be between 1 and 500");
+            if (size == null || size < 1 || size > 10000) {
+                return Response.badRequest("size must be between 1 and 10000");
             }
 
+            Date start, end;
             int resolvedYear = (year == null) ? Calendar.getInstance().get(Calendar.YEAR) : year;
-            Date startDate = getStartOfMonth(resolvedYear, month);
-            Date endDate = getStartOfNextMonth(resolvedYear, month);
+
+            if (startDate != null && endDate != null) {
+                start = startDate;
+                end = endDate;
+            } else if (month != null) {
+                if (month < 1 || month > 12) {
+                    return Response.badRequest("month must be between 1 and 12");
+                }
+                start = getStartOfMonth(resolvedYear, month);
+                end = getStartOfNextMonth(resolvedYear, month);
+            } else {
+                return Response.badRequest("Either month or startDate/endDate must be provided");
+            }
 
             String currentUserId = userService.loggedInUser().getId();
+            List<Long> ids = com.trako.util.CommonUtil.parseAccountIds(accountIds);
             Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "date"));
-            Page<Transaction> transactionPage = transactionService.findByUserIdAndDateBetween(
-                    currentUserId,
-                    startDate,
-                    endDate,
-                    pageable
-            );
+            
+            if (expand) {
+                Page<TransactionDetailDTO> dtoPage;
+                if (categoryId != null && categoryId > 0) {
+                    dtoPage = transactionService.findWithDetailsByUserIdAndCategoryIdAndDateBetween(
+                            currentUserId,
+                            categoryId,
+                            start,
+                            end,
+                            pageable
+                    );
+                } else {
+                    dtoPage = transactionService.findWithDetailsByUserIdAndDateBetween(
+                            currentUserId,
+                            start,
+                            end,
+                            ids,
+                            pageable
+                    );
+                }
+                
+                List<TransactionDetailDTO> dtos = new ArrayList<>(dtoPage.getContent());
+                dtos = hideTransferCreditsForDTO(dtos, currentUserId);
+                dtos = markTransferTypeAsTransferForDTO(dtos, currentUserId);
+                
+                Map<String, Object> payload = new HashMap<>();
+                payload.put("month", month);
+                payload.put("year", resolvedYear);
+                payload.put("page", dtoPage.getNumber());
+                payload.put("size", dtoPage.getSize());
+                payload.put("totalElements", dtoPage.getTotalElements());
+                payload.put("totalPages", dtoPage.getTotalPages());
+                payload.put("hasNext", dtoPage.hasNext());
+                payload.put("hasPrevious", dtoPage.hasPrevious());
+                payload.put("transactions", dtos);
+                
+                return Response.ok(payload);
+            }
+
+            Page<Transaction> transactionPage;
+            if (categoryId != null && categoryId > 0) {
+                transactionPage = transactionService.findByUserIdAndCategoryIdAndDateBetween(
+                        currentUserId,
+                        categoryId,
+                        start,
+                        end,
+                        pageable
+                );
+            } else if (ids.isEmpty()) {
+                transactionPage = transactionService.findByUserIdAndDateBetween(
+                        currentUserId,
+                        start,
+                        end,
+                        pageable
+                );
+            } else {
+                transactionPage = transactionService.findByUserIdAndDateBetweenAndAccountIds(
+                        currentUserId,
+                        start,
+                        end,
+                        ids,
+                        pageable
+                );
+            }
 
             List<Transaction> transactions = new ArrayList<>(transactionPage.getContent());
             transactions = hideTransferCredits(transactions, currentUserId);
@@ -257,44 +330,6 @@ public class TransactionController {
     }
 
     /**
-     * GET /api/transactions/date-range
-     * Returns authenticated user's transactions between startDate and endDate.
-     * If accountIds is provided (comma-separated), results are filtered by those accounts.
-     * Transfer credit-side entries are hidden, and transfer transactions are labeled as type=TRANSFER.
-     * If expand=true, returns full details (Account, Category, Splits) to avoid N+1 queries.
-     */
-    @GetMapping("/date-range")
-    public ResponseEntity<?> getMyTransactionsByDateRange(
-            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
-            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate,
-            @RequestParam(required = false) String accountIds,
-            @RequestParam(defaultValue = "false") boolean expand) {
-        try {
-            String currentUserId = userService.loggedInUser().getId();
-            List<Long> ids = com.trako.util.CommonUtil.parseAccountIds(accountIds);
-            
-            if (expand) {
-                List<TransactionDetailDTO> dtos = transactionService.findWithDetailsByUserIdAndDateBetween(currentUserId, startDate, endDate, ids);
-                dtos = hideTransferCreditsForDTO(dtos, currentUserId);
-                dtos = markTransferTypeAsTransferForDTO(dtos, currentUserId);
-                return Response.ok(dtos);
-            }
-
-            List<Transaction> transactions;
-            if (ids.isEmpty()) {
-                transactions = transactionService.findByUserIdAndDateBetween(currentUserId, startDate, endDate);
-            } else {
-                transactions = transactionService.findByUserIdAndDateBetweenAndAccountIds(currentUserId, startDate, endDate, ids);
-            }
-            transactions = hideTransferCredits(transactions, currentUserId);
-            transactions = markTransferTypeAsTransfer(transactions, currentUserId);
-            return Response.ok(transactions);
-        } catch (UserNotLoggedInException e) {
-            return Response.unauthorized();
-        }
-    }
-
-    /**
      * GET /api/transactions/{id}
      * Returns a single transaction by id only if it belongs to the authenticated user
      * (ownership verified through the transaction's account).
@@ -317,50 +352,6 @@ public class TransactionController {
         }
     }
 
-    /**
-     * GET /api/transactions/user/{userId}
-     * Returns all transactions for the specified user, but only when userId matches the authenticated user.
-     * Transfer credit-side entries are hidden, and transfer transactions are labeled as type=TRANSFER.
-     */
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<?> getByUserId(@PathVariable String userId) {
-        try {
-            String currentUserId = userService.loggedInUser().getId();
-            if (!currentUserId.equals(userId)) {
-                return Response.unauthorized();
-            }
-            List<Transaction> transactions = transactionService.findByUserId(currentUserId);
-            transactions = hideTransferCredits(transactions, currentUserId);
-            transactions = markTransferTypeAsTransfer(transactions, currentUserId);
-            return Response.ok(transactions);
-        } catch (UserNotLoggedInException e) {
-            return Response.unauthorized();
-        }
-    }
-
-    /**
-     * GET /api/transactions/user/{userId}/date-range
-     * Returns transactions in the date range for the specified user, only when userId matches the authenticated user.
-     * Transfer credit-side entries are hidden, and transfer transactions are labeled as type=TRANSFER.
-     */
-    @GetMapping("/user/{userId}/date-range")
-    public ResponseEntity<?> getByUserIdAndDateRange(
-            @PathVariable String userId,
-            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
-            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate) {
-        try {
-            String currentUserId = userService.loggedInUser().getId();
-            if (!currentUserId.equals(userId)) {
-                return Response.unauthorized();
-            }
-            List<Transaction> transactions = transactionService.findByUserIdAndDateBetween(currentUserId, startDate, endDate);
-            transactions = hideTransferCredits(transactions, currentUserId);
-            transactions = markTransferTypeAsTransfer(transactions, currentUserId);
-            return Response.ok(transactions);
-        } catch (UserNotLoggedInException e) {
-            return Response.unauthorized();
-        }
-    }
 
     /**
      * GET /api/transactions/account/{accountId}
@@ -561,72 +552,4 @@ public class TransactionController {
         }
     }
 
-    /**
-     * GET /api/transactions/user/{userId}/summary
-     * Returns summary for the specified user and date range, only when userId matches authenticated user.
-     */
-    @GetMapping("/user/{userId}/summary")
-    public ResponseEntity<?> getSummary(
-            @PathVariable String userId,
-            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
-            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate,
-            @RequestParam(required = false, defaultValue = "true") boolean includeRollover) {
-        try {
-            String currentUserId = userService.loggedInUser().getId();
-            if (!currentUserId.equals(userId)) {
-                return Response.unauthorized();
-            }
-            TransactionSummaryDTO summary;
-            if (includeRollover) {
-                summary = transactionService.getSummaryWithRollover(currentUserId, startDate, endDate, null);
-            } else {
-                summary = transactionService.getSummary(currentUserId, startDate, endDate);
-            }
-            return Response.ok(summary);
-        } catch (UserNotLoggedInException e) {
-            return Response.unauthorized();
-        }
-    }
-
-    /**
-     * GET /api/transactions/user/{userId}/total-income
-     * Returns total income for the specified user in the date range, only when userId matches authenticated user.
-     */
-    @GetMapping("/user/{userId}/total-income")
-    public ResponseEntity<?> getTotalIncome(
-            @PathVariable String userId,
-            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
-            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate) {
-        try {
-            String currentUserId = userService.loggedInUser().getId();
-            if (!currentUserId.equals(userId)) {
-                return Response.unauthorized();
-            }
-            Double totalIncome = transactionService.getTotalIncome(currentUserId, startDate, endDate);
-            return Response.ok(totalIncome);
-        } catch (UserNotLoggedInException e) {
-            return Response.unauthorized();
-        }
-    }
-
-    /**
-     * GET /api/transactions/user/{userId}/total-expense
-     * Returns total expense for the specified user in the date range, only when userId matches authenticated user.
-     */
-    @GetMapping("/user/{userId}/total-expense")
-    public ResponseEntity<?> getTotalExpense(
-            @PathVariable String userId,
-            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
-            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate) {
-        try {
-            String currentUserId = userService.loggedInUser().getId();
-            if (!currentUserId.equals(userId)) {
-                return Response.unauthorized();
-            }
-            Double totalExpense = transactionService.getTotalExpense(currentUserId, startDate, endDate);
-            return Response.ok(totalExpense);
-        } catch (UserNotLoggedInException e) {
-            return Response.unauthorized();
-        }
-    }
 }
