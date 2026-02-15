@@ -16,11 +16,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.PageRequest;
 
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -87,6 +89,22 @@ public class TransactionServiceIntegrationTest {
                 testUser.getPhoneNo(), testUser.getFireBaseId(), Collections.emptyList());
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities()));
+    }
+
+    @Test
+    public void testFindAllCoversRepositoryDelegate() {
+        Transaction t = new Transaction();
+        t.setAccountId(testAccount.getId());
+        t.setCategoryId(testCategory.getId());
+        t.setName("Any");
+        t.setDate(new Date());
+        t.setTransactionType(1);
+        t.setAmount(1.0);
+        t.setIsCountable(1);
+        transactionWriteService.saveForUser(testUser.getId(), t);
+
+        List<Transaction> all = transactionService.findAll();
+        assertTrue(all.size() >= 1);
     }
 
     private Date date(int year, int month, int day) {
@@ -308,6 +326,289 @@ public class TransactionServiceIntegrationTest {
         // Nov: +250, Dec: -50, Jan: +100 => +300
         assertEquals(300.0, summary.getRolloverNet(), 0.01);
         assertEquals(600.0, summary.getNetTotalWithRollover(), 0.01);
+    }
+
+    @Test
+    public void testFindWithDetailsNonPaged_withNullAccountIds_coversListOverload() {
+        Transaction t = new Transaction();
+        t.setAccountId(testAccount.getId());
+        t.setCategoryId(testCategory.getId());
+        t.setName("DetailTxn");
+        t.setDate(date(2026, 2, 1));
+        t.setTransactionType(1);
+        t.setAmount(10.0);
+        t.setIsCountable(1);
+        transactionWriteService.saveForUser(testUser.getId(), t);
+
+        var details = transactionService.findWithDetailsByUserIdAndDateBetween(
+                testUser.getId(),
+                monthStart(2026, 2),
+                monthStart(2026, 3),
+                null
+        );
+
+        assertEquals(1, details.size());
+        assertNotNull(details.get(0).getAccount());
+        assertNotNull(details.get(0).getCategory());
+    }
+
+    @Test
+    public void testFindWithDetailsPaged_whenEmpty_returnsEmptyPage() {
+        var pageable = org.springframework.data.domain.PageRequest.of(0, 10);
+        var page = transactionService.findWithDetailsByUserIdAndDateBetween(
+                testUser.getId(),
+                monthStart(1990, 1),
+                monthStart(1990, 2),
+                null,
+                pageable
+        );
+
+        assertNotNull(page);
+        assertEquals(0, page.getTotalElements());
+        assertEquals(0, page.getContent().size());
+    }
+
+    @Test
+    public void testGetSummaryFallbackWithAccountFilter_usesAccountIdsBranch() {
+        Account otherAccount = new Account();
+        otherAccount.setName("Other");
+        otherAccount.setUserId(testUser.getId());
+        otherAccount = accountRepository.save(otherAccount);
+
+        Transaction inScope = new Transaction();
+        inScope.setAccountId(testAccount.getId());
+        inScope.setCategoryId(testCategory.getId());
+        inScope.setName("InScope");
+        inScope.setDate(date(2026, 2, 1));
+        inScope.setTransactionType(2);
+        inScope.setAmount(100.0);
+        inScope.setIsCountable(1);
+        transactionWriteService.saveForUser(testUser.getId(), inScope);
+
+        Transaction outOfScope = new Transaction();
+        outOfScope.setAccountId(otherAccount.getId());
+        outOfScope.setCategoryId(testCategory.getId());
+        outOfScope.setName("OutOfScope");
+        outOfScope.setDate(date(2026, 2, 2));
+        outOfScope.setTransactionType(2);
+        outOfScope.setAmount(999.0);
+        outOfScope.setIsCountable(1);
+        transactionWriteService.saveForUser(testUser.getId(), outOfScope);
+
+        // Not a full-month range (forces fallback scan), but includes accountIds (covers else branch).
+        Date start = date(2026, 2, 1);
+        Date end = date(2026, 2, 28);
+
+        TransactionSummaryDTO summary = transactionService.getSummary(
+                testUser.getId(),
+                start,
+                end,
+                List.of(testAccount.getId())
+        );
+        assertEquals(100.0, summary.getTotalIncome(), 0.01);
+    }
+
+    @Test
+    public void testGetSummaryWithRollover_whenStartDateNull_returnsBaseAndCoversNullBranch() {
+        Transaction income = new Transaction();
+        income.setAccountId(testAccount.getId());
+        income.setCategoryId(testCategory.getId());
+        income.setName("Income");
+        income.setDate(date(2026, 2, 1));
+        income.setTransactionType(2);
+        income.setAmount(123.0);
+        income.setIsCountable(1);
+        transactionWriteService.saveForUser(testUser.getId(), income);
+
+        TransactionSummaryDTO summary = transactionService.getSummaryWithRollover(
+                testUser.getId(),
+                null,
+                monthStart(2026, 3),
+                null
+        );
+
+        assertNotNull(summary);
+        assertEquals(0.0, summary.getRolloverNet(), 0.01);
+    }
+
+    @Test
+    public void testGetSummary_fullMonthFalseWhenStartDateNullOrEndDateNull() {
+        TransactionSummaryDTO s1 = transactionService.getSummary(testUser.getId(), null, monthStart(2026, 3), null);
+        TransactionSummaryDTO s2 = transactionService.getSummary(testUser.getId(), monthStart(2026, 2), null, null);
+        assertNotNull(s1);
+        assertNotNull(s2);
+    }
+
+    @Test
+    public void testFindByUserIdAndDateBetween_listOverload_coversDelegate() {
+        Transaction t = new Transaction();
+        t.setAccountId(testAccount.getId());
+        t.setCategoryId(testCategory.getId());
+        t.setName("Range");
+        t.setDate(date(2026, 2, 10));
+        t.setTransactionType(1);
+        t.setAmount(10.0);
+        t.setIsCountable(1);
+        transactionWriteService.saveForUser(testUser.getId(), t);
+
+        List<Transaction> txs = transactionService.findByUserIdAndDateBetween(
+                testUser.getId(),
+                monthStart(2026, 2),
+                monthStart(2026, 3)
+        );
+
+        assertEquals(1, txs.size());
+    }
+
+    @Test
+    public void testFindByUserIdAndDateBetweenAndAccountIds_listOverload_coversDelegate() {
+        Account other = new Account();
+        other.setName("Other");
+        other.setUserId(testUser.getId());
+        other = accountRepository.save(other);
+
+        Transaction t1 = new Transaction();
+        t1.setAccountId(testAccount.getId());
+        t1.setCategoryId(testCategory.getId());
+        t1.setName("A1");
+        t1.setDate(date(2026, 2, 10));
+        t1.setTransactionType(1);
+        t1.setAmount(10.0);
+        t1.setIsCountable(1);
+        transactionWriteService.saveForUser(testUser.getId(), t1);
+
+        Transaction t2 = new Transaction();
+        t2.setAccountId(other.getId());
+        t2.setCategoryId(testCategory.getId());
+        t2.setName("A2");
+        t2.setDate(date(2026, 2, 11));
+        t2.setTransactionType(1);
+        t2.setAmount(20.0);
+        t2.setIsCountable(1);
+        transactionWriteService.saveForUser(testUser.getId(), t2);
+
+        List<Transaction> txs = transactionService.findByUserIdAndDateBetweenAndAccountIds(
+                testUser.getId(),
+                monthStart(2026, 2),
+                monthStart(2026, 3),
+                List.of(testAccount.getId())
+        );
+
+        assertEquals(1, txs.size());
+        assertEquals("A1", txs.get(0).getName());
+    }
+
+    @Test
+    public void testFindByUserIdAndCategoryIdAndDateBetween_pageable_coversDelegate() {
+        Transaction t = new Transaction();
+        t.setAccountId(testAccount.getId());
+        t.setCategoryId(testCategory.getId());
+        t.setName("Cat");
+        t.setDate(date(2026, 2, 10));
+        t.setTransactionType(1);
+        t.setAmount(10.0);
+        t.setIsCountable(1);
+        transactionWriteService.saveForUser(testUser.getId(), t);
+
+        var page = transactionService.findByUserIdAndCategoryIdAndDateBetween(
+                testUser.getId(),
+                testCategory.getId(),
+                monthStart(2026, 2),
+                monthStart(2026, 3),
+                PageRequest.of(0, 10)
+        );
+
+        assertEquals(1, page.getTotalElements());
+    }
+
+    @Test
+    public void testFindWithDetailsByUserIdAndCategoryIdAndDateBetween_whenEmpty_returnsEmptyPage() {
+        var page = transactionService.findWithDetailsByUserIdAndCategoryIdAndDateBetween(
+                testUser.getId(),
+                testCategory.getId(),
+                monthStart(1990, 1),
+                monthStart(1990, 2),
+                PageRequest.of(0, 10)
+        );
+
+        assertNotNull(page);
+        assertEquals(0, page.getTotalElements());
+        assertEquals(0, page.getContent().size());
+    }
+
+    @Test
+    public void testFindWithDetailsByUserIdAndDateBetween_listOverload_withAccountIds_coversElseBranch() {
+        Account other = new Account();
+        other.setName("Other2");
+        other.setUserId(testUser.getId());
+        other = accountRepository.save(other);
+
+        Transaction t1 = new Transaction();
+        t1.setAccountId(testAccount.getId());
+        t1.setCategoryId(testCategory.getId());
+        t1.setName("Keep");
+        t1.setDate(date(2026, 2, 10));
+        t1.setTransactionType(1);
+        t1.setAmount(10.0);
+        t1.setIsCountable(1);
+        transactionWriteService.saveForUser(testUser.getId(), t1);
+
+        Transaction t2 = new Transaction();
+        t2.setAccountId(other.getId());
+        t2.setCategoryId(testCategory.getId());
+        t2.setName("Drop");
+        t2.setDate(date(2026, 2, 11));
+        t2.setTransactionType(1);
+        t2.setAmount(20.0);
+        t2.setIsCountable(1);
+        transactionWriteService.saveForUser(testUser.getId(), t2);
+
+        var details = transactionService.findWithDetailsByUserIdAndDateBetween(
+                testUser.getId(),
+                monthStart(2026, 2),
+                monthStart(2026, 3),
+                List.of(testAccount.getId())
+        );
+
+        assertEquals(1, details.size());
+        assertEquals("Keep", details.get(0).getName());
+    }
+
+    @Test
+    public void testFindWithDetailsByUserIdAndDateBetween_pageable_withAccountIds_coversElseBranch() {
+        Transaction t = new Transaction();
+        t.setAccountId(testAccount.getId());
+        t.setCategoryId(testCategory.getId());
+        t.setName("Paged");
+        t.setDate(date(2026, 2, 10));
+        t.setTransactionType(1);
+        t.setAmount(10.0);
+        t.setIsCountable(1);
+        transactionWriteService.saveForUser(testUser.getId(), t);
+
+        var page = transactionService.findWithDetailsByUserIdAndDateBetween(
+                testUser.getId(),
+                monthStart(2026, 2),
+                monthStart(2026, 3),
+                List.of(testAccount.getId()),
+                PageRequest.of(0, 10)
+        );
+
+        assertEquals(1, page.getTotalElements());
+        assertEquals(1, page.getContent().size());
+    }
+
+    @Test
+    public void testFindWithDetailsByUserIdAndDateBetween_listOverload_whenNoTransactions_returnsEmptyList() {
+        var details = transactionService.findWithDetailsByUserIdAndDateBetween(
+                testUser.getId(),
+                monthStart(1990, 1),
+                monthStart(1990, 2),
+                null
+        );
+
+        assertNotNull(details);
+        assertEquals(0, details.size());
     }
 
     private void createTxn(Date date, String name) {

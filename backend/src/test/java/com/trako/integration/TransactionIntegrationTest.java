@@ -4,10 +4,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trako.config.TestJwtSecurityConfig;
 import com.trako.entities.Account;
 import com.trako.entities.Category;
+import com.trako.entities.Contact;
+import com.trako.entities.Split;
 import com.trako.entities.Transaction;
 import com.trako.entities.User;
 import com.trako.repositories.AccountRepository;
 import com.trako.repositories.CategoryRepository;
+import com.trako.repositories.ContactRepository;
+import com.trako.repositories.SplitRepository;
 import com.trako.repositories.TransactionRepository;
 import com.trako.repositories.UsersRepository;
 import com.trako.services.TransactionWriteService;
@@ -27,6 +31,8 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
@@ -60,6 +66,12 @@ public class TransactionIntegrationTest {
     private CategoryRepository categoryRepository;
 
     @Autowired
+    private SplitRepository splitRepository;
+
+    @Autowired
+    private ContactRepository contactRepository;
+
+    @Autowired
     private UsersRepository usersRepository;
 
     @Autowired
@@ -72,7 +84,9 @@ public class TransactionIntegrationTest {
 
     @BeforeEach
     public void setup() {
+        splitRepository.deleteAll();
         transactionRepository.deleteAll();
+        contactRepository.deleteAll();
         accountRepository.deleteAll();
         categoryRepository.deleteAll();
         usersRepository.deleteAll();
@@ -154,6 +168,101 @@ public class TransactionIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.transactions", hasSize(2)))
                 .andExpect(jsonPath("$.result.transactions[*].name", containsInAnyOrder("Lunch", "Dinner")));
+    }
+
+    @Test
+    public void testGetAllTransactions_expandTrue_returnsDetailsWithSplitsAndContact() throws Exception {
+        Transaction transaction = new Transaction();
+        transaction.setTransactionType(1);
+        transaction.setName("Dinner");
+        transaction.setAmount(100.00);
+        transaction.setDate(new Date());
+        transaction.setAccountId(testAccount.getId());
+        transaction.setCategoryId(testCategory.getId());
+        Transaction saved = transactionWriteService.saveForUser(testUser.getId(), transaction);
+
+        Contact contact = new Contact();
+        contact.setUserId(testUser.getId());
+        contact.setName("Alice");
+        contact.setPhoneNo("9990001111");
+        contact = contactRepository.save(contact);
+
+        Split split = new Split();
+        split.setTransactionId(saved.getId());
+        split.setUserId(testUser.getId());
+        split.setContactId(contact.getId());
+        split.setAmount(40.00);
+        split.setIsSettled(0);
+        splitRepository.save(split);
+
+        Split splitNoContact = new Split();
+        splitNoContact.setTransactionId(saved.getId());
+        splitNoContact.setUserId(testUser.getId());
+        splitNoContact.setContactId(null);
+        splitNoContact.setAmount(60.00);
+        splitNoContact.setIsSettled(0);
+        splitRepository.save(splitNoContact);
+
+        Calendar now = Calendar.getInstance();
+        String month = String.valueOf(now.get(Calendar.MONTH) + 1);
+        String year = String.valueOf(now.get(Calendar.YEAR));
+
+        mockMvc.perform(get("/api/transactions")
+                        .header("Authorization", bearerToken)
+                        .param("month", month)
+                        .param("year", year)
+                        .param("expand", "true"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.transactions", hasSize(1)))
+                .andExpect(jsonPath("$.result.transactions[0].id").value(saved.getId().intValue()))
+                .andExpect(jsonPath("$.result.transactions[0].accountId").value(testAccount.getId().intValue()))
+                .andExpect(jsonPath("$.result.transactions[0].categoryId").value(testCategory.getId().intValue()))
+                .andExpect(jsonPath("$.result.transactions[0].account.id").value(testAccount.getId().intValue()))
+                .andExpect(jsonPath("$.result.transactions[0].category.id").value(testCategory.getId().intValue()))
+                .andExpect(jsonPath("$.result.transactions[0].splits", hasSize(2)))
+                .andExpect(jsonPath("$.result.transactions[0].splits[0].split.amount").value(40.00))
+                .andExpect(jsonPath("$.result.transactions[0].splits[0].contact.id").value(contact.getId().intValue()))
+                .andExpect(jsonPath("$.result.transactions[0].splits[0].contact.name").value("Alice"));
+    }
+
+    @Test
+    public void testGetAllTransactions_expandTrue_withCategoryId_usesDetailsCategoryPath() throws Exception {
+        Transaction transaction = new Transaction();
+        transaction.setTransactionType(1);
+        transaction.setName("CatDinner");
+        transaction.setAmount(55.00);
+        transaction.setDate(new Date());
+        transaction.setAccountId(testAccount.getId());
+        transaction.setCategoryId(testCategory.getId());
+        Transaction saved = transactionWriteService.saveForUser(testUser.getId(), transaction);
+
+        Calendar now = Calendar.getInstance();
+        String month = String.valueOf(now.get(Calendar.MONTH) + 1);
+        String year = String.valueOf(now.get(Calendar.YEAR));
+
+        mockMvc.perform(get("/api/transactions")
+                        .header("Authorization", bearerToken)
+                        .param("month", month)
+                        .param("year", year)
+                        .param("categoryId", String.valueOf(testCategory.getId()))
+                        .param("expand", "true"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.transactions", hasSize(1)))
+                .andExpect(jsonPath("$.result.transactions[0].id").value(saved.getId().intValue()))
+                .andExpect(jsonPath("$.result.transactions[0].category.id").value(testCategory.getId().intValue()))
+                .andExpect(jsonPath("$.result.transactions[0].account.id").value(testAccount.getId().intValue()));
+    }
+
+    @Test
+    public void testGetAllTransactions_expandTrue_whenEmpty_returnsEmptyTransactions() throws Exception {
+        mockMvc.perform(get("/api/transactions")
+                        .header("Authorization", bearerToken)
+                        .param("month", "1")
+                        .param("year", "1990")
+                        .param("expand", "true"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.transactions", hasSize(0)))
+                .andExpect(jsonPath("$.result.totalElements").value(0));
     }
 
     @Test
@@ -993,5 +1102,175 @@ public class TransactionIntegrationTest {
                         .param("size", "10001"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("size must be between 1 and 10000"));
+    }
+
+    @Test
+    public void testGetAllRejectsInvalidMonth() throws Exception {
+        mockMvc.perform(get("/api/transactions")
+                        .header("Authorization", bearerToken)
+                        .param("month", "13")
+                        .param("year", "2026"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("month must be between 1 and 12"));
+    }
+
+    @Test
+    public void testGetAllRejectsMissingMonthAndDateRange() throws Exception {
+        mockMvc.perform(get("/api/transactions")
+                        .header("Authorization", bearerToken))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Either month or startDate/endDate must be provided"));
+    }
+
+    @Test
+    public void testGetAllRejectsNegativePage() throws Exception {
+        mockMvc.perform(get("/api/transactions")
+                        .header("Authorization", bearerToken)
+                        .param("startDate", "2020-01-01")
+                        .param("endDate", "2030-12-31")
+                        .param("page", "-1"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("page must be 0 or greater"));
+    }
+
+    @Test
+    public void testGetAllNonExpandWithCategoryIdUsesCategoryBranch() throws Exception {
+        Transaction t = new Transaction();
+        t.setTransactionType(1);
+        t.setName("CatFiltered");
+        t.setAmount(12.34);
+        t.setDate(new Date());
+        t.setAccountId(testAccount.getId());
+        t.setCategoryId(testCategory.getId());
+        transactionWriteService.saveForUser(testUser.getId(), t);
+
+        Calendar now = Calendar.getInstance();
+        String month = String.valueOf(now.get(Calendar.MONTH) + 1);
+        String year = String.valueOf(now.get(Calendar.YEAR));
+
+        mockMvc.perform(get("/api/transactions")
+                        .header("Authorization", bearerToken)
+                        .param("month", month)
+                        .param("year", year)
+                        .param("categoryId", String.valueOf(testCategory.getId())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.transactions", hasSize(1)))
+                .andExpect(jsonPath("$.result.transactions[0].name").value("CatFiltered"));
+    }
+
+    @Test
+    public void testSummaryIncludeRolloverFalseBranch() throws Exception {
+        Transaction income = new Transaction();
+        income.setTransactionType(2);
+        income.setName("IncomeNoRoll");
+        income.setAmount(100.00);
+        income.setDate(new Date());
+        income.setAccountId(testAccount.getId());
+        income.setCategoryId(testCategory.getId());
+        income.setIsCountable(1);
+        transactionWriteService.saveForUser(testUser.getId(), income);
+
+        mockMvc.perform(get("/api/transactions/summary")
+                        .header("Authorization", bearerToken)
+                        .param("startDate", "2020-01-01")
+                        .param("endDate", "2030-12-31")
+                        .param("includeRollover", "false"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.totalIncome").value(100.00));
+    }
+
+    @Test
+    public void testCreateTransferValidationMissingAccountId_triggersBeanValidation() throws Exception {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("accountId", null);
+        payload.put("toAccountId", testAccount.getId());
+        payload.put("amount", 10.0);
+
+        mockMvc.perform(post("/api/transactions")
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(payload)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("accountId: must not be null"));
+    }
+
+    @Test
+    public void testCreateTransferMissingToAccountId_fallsBackToRegularTransactionValidation() throws Exception {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("accountId", testAccount.getId());
+        payload.put("toAccountId", null);
+        payload.put("amount", 10.0);
+
+        mockMvc.perform(post("/api/transactions")
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(payload)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Transaction requires categoryId"));
+    }
+
+    @Test
+    public void testCreateTransferValidationNonPositiveAmount() throws Exception {
+        Account toAcc = new Account();
+        toAcc.setName("ToAcc");
+        toAcc.setUserId(testUser.getId());
+        toAcc = accountRepository.save(toAcc);
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("accountId", testAccount.getId());
+        payload.put("toAccountId", toAcc.getId());
+        payload.put("amount", 0.0);
+
+        mockMvc.perform(post("/api/transactions")
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(payload)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Transfer amount must be greater than 0"));
+    }
+
+    @Test
+    public void testGetAllExpandTrue_hidesTransferCreditAndMarksTransferTypeForDTO() throws Exception {
+        // Ensure TRANSFER category exists
+        Category transfer = new Category();
+        transfer.setName("TRANSFER");
+        transfer.setUserId(testUser.getId());
+        transfer = categoryRepository.save(transfer);
+
+        // Create a transfer pair in the current month for DTO path
+        Transaction debit = new Transaction();
+        debit.setTransactionType(1);
+        debit.setName("DTO Transfer Out");
+        debit.setAmount(40.00);
+        debit.setDate(new Date());
+        debit.setAccountId(testAccount.getId());
+        debit.setCategoryId(transfer.getId());
+        debit.setIsCountable(0);
+        transactionWriteService.saveForUser(testUser.getId(), debit);
+
+        Transaction credit = new Transaction();
+        credit.setTransactionType(2);
+        credit.setName("DTO Transfer In");
+        credit.setAmount(40.00);
+        credit.setDate(new Date());
+        credit.setAccountId(testAccount.getId());
+        credit.setCategoryId(transfer.getId());
+        credit.setIsCountable(0);
+        transactionWriteService.saveForUser(testUser.getId(), credit);
+
+        Calendar now = Calendar.getInstance();
+        String month = String.valueOf(now.get(Calendar.MONTH) + 1);
+        String year = String.valueOf(now.get(Calendar.YEAR));
+
+        mockMvc.perform(get("/api/transactions")
+                        .header("Authorization", bearerToken)
+                        .param("month", month)
+                        .param("year", year)
+                        .param("expand", "true"))
+                .andExpect(status().isOk())
+                // credit side hidden, debit side returned
+                .andExpect(jsonPath("$.result.transactions", hasSize(1)))
+                // marked as type=3 for transfer rendering
+                .andExpect(jsonPath("$.result.transactions[0].transactionType").value(3));
     }
 }
