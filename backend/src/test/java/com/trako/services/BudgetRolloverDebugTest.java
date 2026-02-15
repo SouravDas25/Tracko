@@ -134,7 +134,7 @@ public class BudgetRolloverDebugTest {
         System.out.println("Prev Allocation Remaining Balance: " + prevAllocation.getRemainingBalance());
 
         // 5. Get Budget Details for Previous Month (this should update actual spent and remaining balance)
-        budgetCalculationService.getBudgetDetails(testUser.getId(), prevMonth, prevYear, true, true, null);
+        budgetCalculationService.getBudgetDetails(testUser.getId(), prevMonth, prevYear, true, null);
 
         // 6. Check BudgetCategoryAllocation state AFTER fetching budget details
         prevAllocation = budgetCategoryAllocationRepository

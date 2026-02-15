@@ -68,7 +68,7 @@ class TransactionRepository {
     List<int>? accountIds,
   }) async {
     AppLog.d(
-        '[TRACE][TransactionRepository] getByUserIdAndDateRange userId=$userId start=${startDate.toIso8601String()} end=${endDate.toIso8601String()} accountIds=$accountIds');
+        '[TransactionRepository] getByUserIdAndDateRange userId=$userId start=${startDate.toIso8601String()} end=${endDate.toIso8601String()} accountIds=$accountIds');
     final res = await _api.get<List<dynamic>>(
       "${ApiConfig.transactions}/date-range",
       query: {
@@ -80,7 +80,7 @@ class TransactionRepository {
       },
     );
     AppLog.d(
-        '[TRACE][TransactionRepository] date-range raw response count=${res.length}');
+        '[TransactionRepository] date-range raw response count=${res.length}');
     return res.map((e) {
       final row = e as Map<String, dynamic>;
       if (row['transaction'] is Map<String, dynamic> ||

@@ -6,7 +6,6 @@ public class BudgetCategoryDTO {
     private Double allocatedAmount;
     private Double actualSpent;
     private Double remainingBalance;
-    private Boolean isRollOverEnabled;
 
     public Long getCategoryId() {
         return categoryId;
@@ -48,11 +47,4 @@ public class BudgetCategoryDTO {
         this.remainingBalance = remainingBalance;
     }
 
-    public Boolean getIsRollOverEnabled() {
-        return isRollOverEnabled;
-    }
-
-    public void setIsRollOverEnabled(Boolean rollOverEnabled) {
-        isRollOverEnabled = rollOverEnabled;
-    }
 }
