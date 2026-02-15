@@ -55,10 +55,9 @@ class ApiClient {
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
         AppLog.d(
-            '[TRACE][ApiClient] onRequest method=${options.method} uri=${options.baseUrl}${options.path} query=${options.queryParameters} suppressAuth=$_suppressAuthHeader');
+            '[ApiClient] onRequest method=${options.method} uri=${options.baseUrl}${options.path} query=${options.queryParameters} suppressAuth=$_suppressAuthHeader');
         if (_suppressAuthHeader) {
-          AppLog.d(
-              '[TRACE][ApiClient] auth header suppressed for ${options.path}');
+          AppLog.d('[ApiClient] auth header suppressed for ${options.path}');
           handler.next(options);
           return;
         }
@@ -73,10 +72,9 @@ class ApiClient {
         }
         if (token != null && token.isNotEmpty) {
           options.headers['Authorization'] = 'Bearer $token';
-          AppLog.d(
-              '[TRACE][ApiClient] auth header attached for ${options.path}');
+          AppLog.d('[ApiClient] auth header attached for ${options.path}');
         } else {
-          AppLog.d('[TRACE][ApiClient] no token available for ${options.path}');
+          AppLog.d('[ApiClient] no token available for ${options.path}');
         }
         handler.next(options);
       },
@@ -126,10 +124,9 @@ class ApiClient {
 
   Future<T> get<T>(String path, {Map<String, dynamic>? query}) async {
     AppLog.d(
-        '[TRACE][ApiClient] GET dispatch path=$path query=$query baseUrl=${_dio.options.baseUrl}');
+        '[ApiClient] GET dispatch path=$path query=$query baseUrl=${_dio.options.baseUrl}');
     final res = await _dio.get(path, queryParameters: query);
-    AppLog.d(
-        '[TRACE][ApiClient] GET response path=$path status=${res.statusCode}');
+    AppLog.d('[ApiClient] GET response path=$path status=${res.statusCode}');
     return res.data as T;
   }
 

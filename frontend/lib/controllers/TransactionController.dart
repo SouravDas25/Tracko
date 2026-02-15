@@ -48,7 +48,7 @@ class TransactionController {
     }
 
     AppLog.d(
-        '[TRACE][TransactionController] _resolveUserId failed to resolve user id');
+        '[TransactionController] _resolveUserId failed to resolve user id');
     return null;
   }
 
@@ -278,10 +278,10 @@ class TransactionController {
     final txRepo = TransactionRepository();
     final userId = await _resolveUserId();
     AppLog.d(
-        '[TRACE][TransactionController] getTransactionsForSelectedMonth userId=$userId accountIds=$accountIds month=$month');
+        '[TransactionController] getTransactionsForSelectedMonth userId=$userId accountIds=$accountIds month=$month');
     if (userId == null) {
       AppLog.d(
-          '[TRACE][TransactionController] getTransactionsForSelectedMonth early return: userId is null');
+          '[TransactionController] getTransactionsForSelectedMonth early return: userId is null');
       return <Transaction>[];
     }
 
@@ -295,7 +295,7 @@ class TransactionController {
       accountIds: accountIds,
     );
     AppLog.d(
-        '[TRACE][TransactionController] date-range returned count=${transactions.length} start=$start end=$end');
+        '[TransactionController] date-range returned count=${transactions.length} start=$start end=$end');
 
     if (accountIds != null && accountIds.isNotEmpty) {
       final allowed = accountIds.toSet();

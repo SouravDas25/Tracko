@@ -3,6 +3,7 @@ package com.trako.services;
 import com.trako.dtos.BudgetAllocationRequestDTO;
 import com.trako.dtos.BudgetCategoryDTO;
 import com.trako.dtos.BudgetResponseDTO;
+import com.trako.dtos.TransactionSummaryDTO;
 import com.trako.entities.*;
 import com.trako.repositories.BudgetCategoryAllocationRepository;
 import com.trako.repositories.BudgetMonthRepository;
@@ -12,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.YearMonth;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -44,21 +44,24 @@ public class BudgetCalculationService {
 
     @Transactional
     public BudgetResponseDTO getBudgetDetails(String userId, Integer month, Integer year,
-                                              boolean includeActual, boolean includeRollover, Long categoryId) {
+                                              boolean includeActual, Long categoryId) {
         
         // 1. Get or Create BudgetMonth
         BudgetMonth budgetMonth = getOrCreateBudgetMonth(userId, month, year);
 
-        // 2. Calculate Income for the month
+        // 2. Calculate Income and Opening Balance (Rollover Net)
         Date startDate = getStartDate(month, year);
         Date endDate = getEndDate(month, year);
-        Double totalIncome = transactionService.getTotalIncome(userId, startDate, endDate);
-
-        // 3. Calculate Rollover (if requested)
-        Double rolloverAmount = 0.0;
-        if (includeRollover) {
-            rolloverAmount = calculateRolloverAmount(userId, month, year);
-        }
+        
+        // We use getSummaryWithRollover to get the Opening Balance (rolloverNet) which is the account balance before this month.
+        // Net Total before this month = (Total Income < Month) - (Total Expense < Month)
+        TransactionSummaryDTO summary = transactionService.getSummaryWithRollover(userId, startDate, endDate, null);
+        
+        Double totalIncome = summary.getTotalIncome(); // Income in this month
+        Double openingBalance = summary.getRolloverNet(); // Balance at start of month
+        
+        // 3. Rollover for UI = Previous month's ending balance = Opening balance of current month
+        Double rolloverAmount = openingBalance;
 
         // 4. Get Category Allocations
         List<BudgetCategoryAllocation> allocations = budgetCategoryAllocationRepository
@@ -98,7 +101,6 @@ public class BudgetCalculationService {
             BudgetCategoryDTO dto = new BudgetCategoryDTO();
             dto.setCategoryId(category.getId());
             dto.setCategoryName(category.getName());
-            dto.setIsRollOverEnabled(category.getIsRollOverEnabled());
             
             Double allocated = allocation != null ? allocation.getAllocatedAmount() : 0.0;
             dto.setAllocatedAmount(allocated);
@@ -175,10 +177,9 @@ public class BudgetCalculationService {
         
         response.setRolloverAmount(rolloverAmount);
         
-        // Available to Assign = (Income + Rollover) - Total Allocated (Month Total)
-        // If we filtered, totalAllocated in local var is partial. We need real total for Available calculation.
+        // Available to Assign = (Opening Balance + Income) - Total Allocated
         Double realTotalAllocated = budgetMonth.getTotalBudget();
-        response.setAvailableToAssign((totalIncome + rolloverAmount) - realTotalAllocated);
+        response.setAvailableToAssign((openingBalance + totalIncome) - realTotalAllocated);
         
         response.setIsClosed(budgetMonth.getIsClosed());
         response.setCategories(categoryDTOs);
@@ -204,27 +205,9 @@ public class BudgetCalculationService {
                 .findByBudgetMonthIdAndCategoryId(budgetMonth.getId(), request.getCategoryId())
                 .orElse(new BudgetCategoryAllocation());
 
-        // Validate available funds
-        Date startDate = getStartDate(request.getMonth(), request.getYear());
-        Date endDate = getEndDate(request.getMonth(), request.getYear());
-        Double totalIncome = transactionService.getTotalIncome(userId, startDate, endDate);
-        Double rollover = calculateRolloverAmount(userId, request.getMonth(), request.getYear());
+        // Simplification: Removed Over-Allocation Validation
+        // User is allowed to allocate more than available funds.
         
-        Double currentTotalBudget = budgetMonth.getTotalBudget();
-        // If we are updating an existing allocation, we must subtract its OLD amount from the total usage
-        // before adding the new amount to check feasibility.
-        Double oldAmount = allocation.getAllocatedAmount() != null ? allocation.getAllocatedAmount() : 0.0;
-        Double budgetUsedByOthers = currentTotalBudget - oldAmount;
-        
-        Double availableTotal = totalIncome + rollover;
-        Double newTotalBudget = budgetUsedByOthers + request.getAmount();
-        
-        // Use a small epsilon for float comparison if needed, or just standard double logic
-        if (newTotalBudget > availableTotal + 0.001) { // 0.001 tolerance
-             throw new IllegalArgumentException("Insufficient funds. Available: " + 
-                     (availableTotal - budgetUsedByOthers) + ", Requested: " + request.getAmount());
-        }
-
         if (allocation.getId() == null) {
             allocation.setBudgetMonthId(budgetMonth.getId());
             allocation.setCategoryId(request.getCategoryId());
@@ -237,6 +220,8 @@ public class BudgetCalculationService {
         // Recalculate remaining based on actuals if we have them, strictly speaking we should probably re-fetch actuals here 
         // but for performance we rely on the last known state or 0. In a real real-time system we might want to fetch.
         // Let's fetch actuals to be safe and accurate.
+        Date startDate = getStartDate(request.getMonth(), request.getYear());
+        Date endDate = getEndDate(request.getMonth(), request.getYear());
         List<Transaction> transactions = transactionRepository.findByUserIdAndCategoryIdAndDateBetween(
                 userId, category.getId(), startDate, endDate);
         Double actual = transactions.stream()
@@ -257,7 +242,6 @@ public class BudgetCalculationService {
         dto.setAllocatedAmount(saved.getAllocatedAmount());
         dto.setActualSpent(saved.getActualSpent());
         dto.setRemainingBalance(saved.getRemainingBalance());
-        dto.setIsRollOverEnabled(category.getIsRollOverEnabled());
         
         return dto;
     }
@@ -265,59 +249,21 @@ public class BudgetCalculationService {
     public Double calculateAvailableToAssign(String userId, Integer month, Integer year) {
         Date startDate = getStartDate(month, year);
         Date endDate = getEndDate(month, year);
-        Double totalIncome = transactionService.getTotalIncome(userId, startDate, endDate);
         
-        Double rollover = calculateRolloverAmount(userId, month, year);
+        TransactionSummaryDTO summary = transactionService.getSummaryWithRollover(userId, startDate, endDate, null);
+        
+        Double totalIncome = summary.getTotalIncome();
+        Double openingBalance = summary.getRolloverNet();
         
         BudgetMonth budgetMonth = getOrCreateBudgetMonth(userId, month, year);
         Double totalAllocated = budgetMonth.getTotalBudget();
         
-        return (totalIncome + rollover) - totalAllocated;
+        return (openingBalance + totalIncome) - totalAllocated;
     }
 
     public Double calculateRolloverAmount(String userId, Integer currentMonth, Integer currentYear) {
-        return calculateRolloverAmountInternal(userId, currentMonth, currentYear, 36);
-    }
-
-    private Double calculateRolloverAmountInternal(String userId, Integer currentMonth, Integer currentYear, int maxDepth) {
-        if (maxDepth <= 0) return 0.0;
-
-        YearMonth current = YearMonth.of(currentYear, currentMonth);
-        YearMonth previous = current.minusMonths(1);
-
-        Optional<BudgetMonth> prevBudgetOpt = budgetMonthRepository.findByUserIdAndMonthAndYear(
-                userId, previous.getMonthValue(), previous.getYear());
-
-        if (prevBudgetOpt.isEmpty()) {
-            return 0.0;
-        }
-
-        BudgetMonth prevBudget = prevBudgetOpt.get();
-        Date startDate = getStartDate(previous.getMonthValue(), previous.getYear());
-        Date endDate = getEndDate(previous.getMonthValue(), previous.getYear());
-
-        Double prevIncome = transactionService.getTotalIncome(userId, startDate, endDate);
-        Double prevAllocated = prevBudget.getTotalBudget();
-
-        Double prevRollover = calculateRolloverAmountInternal(userId, previous.getMonthValue(), previous.getYear(), maxDepth - 1);
-        Double unallocated = (prevIncome + prevRollover) - prevAllocated;
-
-        Double categoryRollovers = 0.0;
-        List<BudgetCategoryAllocation> prevAllocations = budgetCategoryAllocationRepository
-                .findByUserIdAndBudgetMonthId(userId, prevBudget.getId());
-
-        for (BudgetCategoryAllocation alloc : prevAllocations) {
-            Category cat = categoryRepository.findById(alloc.getCategoryId()).orElse(null);
-            if (cat != null
-                    && isBudgetableExpenseCategory(cat)
-                    && Boolean.TRUE.equals(cat.getIsRollOverEnabled())) {
-                if (alloc.getRemainingBalance() > 0) {
-                    categoryRollovers += alloc.getRemainingBalance();
-                }
-            }
-        }
-
-        return Math.max(0.0, unallocated + categoryRollovers);
+        // Deprecated in simplified model; retained for compatibility. Always return 0.0.
+        return 0.0;
     }
 
     private BudgetMonth getOrCreateBudgetMonth(String userId, Integer month, Integer year) {

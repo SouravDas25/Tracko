@@ -149,7 +149,7 @@ public class BudgetServiceIntegrationTest {
         assertEquals(600.0, available, 0.001);
 
         // Verify Budget Details
-        BudgetResponseDTO details = budgetCalculationService.getBudgetDetails(testUser.getId(), 1, 2026, true, true, null);
+        BudgetResponseDTO details = budgetCalculationService.getBudgetDetails(testUser.getId(), 1, 2026, true, null);
         assertEquals(1000.0, details.getTotalIncome(), 0.001);
         assertEquals(400.0, details.getTotalBudget(), 0.001); // Total Allocated
         assertEquals(50.0, details.getTotalSpent(), 0.001);    // Actual Spent
@@ -199,7 +199,7 @@ public class BudgetServiceIntegrationTest {
         // Verify Rollover Calculation
         // Total Rollover = Unallocated Prev Month (600) + Rollover Enabled Categories Remaining (300) = 900
 
-        BudgetResponseDTO febDetails = budgetCalculationService.getBudgetDetails(testUser.getId(), 2, 2026, false, true, null);
+        BudgetResponseDTO febDetails = budgetCalculationService.getBudgetDetails(testUser.getId(), 2, 2026, false, null);
         
         // Expected Rollover: 600 (Global) + 300 (Category) = 900
         assertEquals(900.0, febDetails.getRolloverAmount(), 0.001);
@@ -209,7 +209,7 @@ public class BudgetServiceIntegrationTest {
     }
 
     @Test
-    public void testOverAllocationThrowsException() {
+    public void testOverAllocationAllowedNow() {
         // Income: 100
         Transaction income = new Transaction();
         // income.setUserId(testUser.getId());
@@ -229,9 +229,7 @@ public class BudgetServiceIntegrationTest {
         req.setMonth(1);
         req.setYear(2026);
 
-        // Should throw exception
-        assertThrows(IllegalArgumentException.class, () -> {
-            budgetCalculationService.allocateFunds(testUser.getId(), req);
-        });
+        // Previously threw exception; now allowed. Ensure no exception thrown.
+        budgetCalculationService.allocateFunds(testUser.getId(), req);
     }
 }

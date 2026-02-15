@@ -14,34 +14,41 @@ class TimedList extends StatelessWidget {
       required this.itemCount,
       required this.timeField});
 
-  List<Widget> buildChildrens(BuildContext context) {
-    List<Widget> childs = [];
-    String humanDate = "";
-    for (int i = 0; i < itemCount; i++) {
-      Widget child = this.itemBuilder(context, i);
-      DateTime dt = this.timeField(i);
-      String nwDate = CommonUtil.humanDate(dt);
-      if (humanDate != nwDate) {
-        childs.add(
-          PaddedText(
-            nwDate.toUpperCase(),
-            horizontal: 10.0,
-            vertical: 10.0,
-          ),
-        );
-        humanDate = nwDate;
-      }
-      childs.add(child);
-    }
-    return childs;
-  }
-
   @override
   Widget build(BuildContext context) {
-    return ListView(
+    return ListView.builder(
       primary: false,
       shrinkWrap: true,
-      children: buildChildrens(context),
+      itemCount: itemCount,
+      itemBuilder: (context, index) {
+        final DateTime current = timeField(index);
+        final String currentHuman = CommonUtil.humanDate(current);
+        String? prevHuman;
+        if (index > 0) {
+          prevHuman = CommonUtil.humanDate(timeField(index - 1));
+        }
+
+        final List<Widget> children = [];
+        if (index == 0 || prevHuman != currentHuman) {
+          children.add(
+            PaddedText(
+              currentHuman.toUpperCase(),
+              horizontal: 10.0,
+              vertical: 10.0,
+            ),
+          );
+        }
+        children.add(itemBuilder(context, index));
+
+        if (children.length == 1) {
+          return children.first;
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: children,
+        );
+      },
     );
   }
 }

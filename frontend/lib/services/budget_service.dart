@@ -13,7 +13,6 @@ class BudgetService {
         'month': month.toString(),
         'year': year.toString(),
         'includeActual': 'true',
-        'includeRollover': 'true',
       },
     );
     return BudgetResponse.fromJson(data);

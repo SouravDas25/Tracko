@@ -32,7 +32,6 @@ public class BudgetController {
             @RequestParam(required = false) Integer year,
             @RequestParam(required = false) Long categoryId,
             @RequestParam(defaultValue = "true") boolean includeActual,
-            @RequestParam(defaultValue = "true") boolean includeRollover,
             @RequestParam(required = false) String sortBy,
             @RequestParam(defaultValue = "asc") String sortOrder) {
         
@@ -47,7 +46,7 @@ public class BudgetController {
             }
 
             BudgetResponseDTO budgetDetails = budgetCalculationService.getBudgetDetails(
-                    userId, month, year, includeActual, includeRollover, categoryId);
+                    userId, month, year, includeActual, categoryId);
 
             // Handle sorting of categories if requested
             if (sortBy != null && budgetDetails.getCategories() != null) {
@@ -64,7 +63,7 @@ public class BudgetController {
 
     @GetMapping("/current")
     public ResponseEntity<?> getCurrentBudget() {
-        return getBudget(null, null, null, true, true, null, "asc");
+        return getBudget(null, null, null, true, null, "asc");
     }
 
     @PostMapping("/allocate")
