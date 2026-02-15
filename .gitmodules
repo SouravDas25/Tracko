@@ -1,9 +1,0 @@
-[submodule "Tracko-Flutter-UI"]
-	path = Tracko-Flutter-UI
-	url = https://github.com/SouravDas25/Tracko-Flutter-UI.git
-[submodule "Tracko-Java-Backend"]
-	path = Tracko-Java-Backend
-	url = https://github.com/SouravDas25/Tracko-Java-Backend.git
-[submodule "Tracko-Python-Backend"]
-	path = Tracko-Python-Backend
-	url = https://github.com/SouravDas25/Tracko-Python-Backend.git

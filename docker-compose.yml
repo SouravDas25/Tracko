@@ -1,0 +1,35 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16
+    container_name: tracko_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-tracko_db}
+      POSTGRES_USER: ${DB_USER:-tracko}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-tracko}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - tracko_postgres_data:/var/lib/postgresql/data
+
+  app:
+    build:
+      context: .
+    container_name: tracko_app
+    restart: unless-stopped
+    depends_on:
+      - db
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${DB_NAME:-tracko_db}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER:-tracko}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-tracko}
+      JWT_SECRET: ${JWT_SECRET:-tracko_jwt_secret_change_me_to_32+_chars_min}
+
+volumes:
+  tracko_postgres_data:

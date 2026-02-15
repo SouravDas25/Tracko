@@ -1,0 +1,18 @@
+databaseChangeLog:
+  - changeSet:
+      id: 008-drop-chat-tables
+      author: cascade
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: chat_groups
+      changes:
+        - dropTable:
+            tableName: chat_messages
+            cascadeConstraints: true
+        - dropTable:
+            tableName: users_chat_groups
+            cascadeConstraints: true
+        - dropTable:
+            tableName: chat_groups
+            cascadeConstraints: true
