@@ -349,12 +349,13 @@ public class TransactionIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.transactions", hasSize(0)))
                 .andExpect(jsonPath("$.result.totalElements").value(0));
+
     }
 
     @Test
     public void testGetTransactionById() throws Exception {
         Transaction transaction = new Transaction();
-        transaction.setTransactionType(1);
+        transaction.setTransactionType(1); // DEBIT = expense
         transaction.setName("Coffee");
         transaction.setAmount(5.00);
         transaction.setDate(new Date());
@@ -367,43 +368,6 @@ public class TransactionIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.name").value("Coffee"))
                 .andExpect(jsonPath("$.result.amount").value(5.00));
-    }
-
-
-    @Test
-    public void testGetTransactionsByAccountId() throws Exception {
-        Transaction transaction = new Transaction();
-        transaction.setTransactionType(1);
-        transaction.setName("ATM Withdrawal");
-        transaction.setAmount(200.00);
-        transaction.setDate(new Date());
-        transaction.setAccountId(testAccount.getId());
-        transaction.setCategoryId(testCategory.getId());
-        transactionWriteService.saveForUser(testUser.getId(), transaction);
-
-        mockMvc.perform(get("/api/transactions/account/" + testAccount.getId())
-                        .header("Authorization", bearerToken))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result", hasSize(1)))
-                .andExpect(jsonPath("$.result[0].name").value("ATM Withdrawal"));
-    }
-
-    @Test
-    public void testGetTransactionsByCategoryId() throws Exception {
-        Transaction transaction = new Transaction();
-        transaction.setTransactionType(1);
-        transaction.setName("Restaurant");
-        transaction.setAmount(50.00);
-        transaction.setDate(new Date());
-        transaction.setAccountId(testAccount.getId());
-        transaction.setCategoryId(testCategory.getId());
-        transactionWriteService.saveForUser(testUser.getId(), transaction);
-
-        mockMvc.perform(get("/api/transactions/category/" + testCategory.getId())
-                        .header("Authorization", bearerToken))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result", hasSize(1)))
-                .andExpect(jsonPath("$.result[0].name").value("Restaurant"));
     }
 
     @Test
@@ -799,8 +763,6 @@ public class TransactionIntegrationTest {
                 .andExpect(status().isUnauthorized());
     }
 
-
-
     @Test
     public void testGetMyTransactionsByDateRangeWithAccountFilter() throws Exception {
         Account secondAcc = new Account();
@@ -1027,27 +989,6 @@ public class TransactionIntegrationTest {
                         .param("endDate", "2030-12-31"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result").value(20.00));
-    }
-
-    @Test
-    public void testAccountAndCategoryEndpointsWithoutAuthReturnUnauthorized() throws Exception {
-        // Create one txn
-        Transaction t = new Transaction();
-        t.setTransactionType(1);
-        t.setName("CatAcc");
-        t.setAmount(5.00);
-        t.setDate(new Date());
-        t.setAccountId(testAccount.getId());
-        t.setCategoryId(testCategory.getId());
-        transactionWriteService.saveForUser(testUser.getId(), t);
-
-        // account/{id} without auth
-        mockMvc.perform(get("/api/transactions/account/" + testAccount.getId()))
-                .andExpect(status().isUnauthorized());
-
-        // category/{id} without auth
-        mockMvc.perform(get("/api/transactions/category/" + testCategory.getId()))
-                .andExpect(status().isUnauthorized());
     }
 
     @Test

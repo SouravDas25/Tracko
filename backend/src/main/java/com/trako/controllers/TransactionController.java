@@ -352,43 +352,6 @@ public class TransactionController {
         }
     }
 
-
-    /**
-     * GET /api/transactions/account/{accountId}
-     * Returns all transactions for the given account id.
-     * When a user is authenticated, transfer entries are normalized for UI (hide credit side, mark transfer type).
-     */
-    @GetMapping("/account/{accountId}")
-    public ResponseEntity<?> getByAccountId(@PathVariable Long accountId) {
-        List<Transaction> transactions = transactionService.findByAccountId(accountId);
-        try {
-            String currentUserId = userService.loggedInUser().getId();
-            transactions = hideTransferCredits(transactions, currentUserId);
-            transactions = markTransferTypeAsTransfer(transactions, currentUserId);
-        } catch (UserNotLoggedInException e) {
-            // If unauthenticated, return raw list (consistent with previous behavior)
-        }
-        return Response.ok(transactions);
-    }
-
-    /**
-     * GET /api/transactions/category/{categoryId}
-     * Returns all transactions for the given category id.
-     * When a user is authenticated, transfer entries are normalized for UI (hide credit side, mark transfer type).
-     */
-    @GetMapping("/category/{categoryId}")
-    public ResponseEntity<?> getByCategoryId(@PathVariable Long categoryId) {
-        List<Transaction> transactions = transactionService.findByCategoryId(categoryId);
-        try {
-            String currentUserId = userService.loggedInUser().getId();
-            transactions = hideTransferCredits(transactions, currentUserId);
-            transactions = markTransferTypeAsTransfer(transactions, currentUserId);
-        } catch (UserNotLoggedInException e) {
-            // If unauthenticated, return raw list
-        }
-        return Response.ok(transactions);
-    }
-
     /**
      * POST /api/transactions
      * Creates a new transaction OR transfer for the authenticated user.
