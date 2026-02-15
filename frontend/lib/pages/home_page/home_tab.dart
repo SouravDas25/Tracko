@@ -25,18 +25,18 @@ class HomeTab extends StatefulWidget {
 class _HomeTab extends State<HomeTab> with SingleTickerProviderStateMixin {
   late TabController tabController;
 
-  int _selectedIndex = 3;
+  int _selectedIndex = 2;
   // Mapping of bottom bar item positions (compact layout) to TabController indices.
   // We omit the 'Split' tab (index 2) on small screens to satisfy BottomNavyBar's
   // 2..5 item constraint while keeping 6 tabs available on wide screens via NavigationRail.
   // Order maps compact bottom bar positions -> TabController indices.
   // Keep Home (tab index 3) centered at bottom bar position 2.
-  final List<int> _navTabIndices = const [0, 1, 3, 2, 4];
+  final List<int> _navTabIndices = const [0, 1, 2, 3, 4];
 
   @override
   initState() {
     super.initState();
-    tabController = TabController(length: 5, vsync: this, initialIndex: 3);
+    tabController = TabController(length: 5, vsync: this, initialIndex: 2);
     tabController.addListener(() {
       // Keep the tab index as the source of truth
       setState(() {
