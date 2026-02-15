@@ -260,7 +260,7 @@ databaseChangeLog:
             tableName: json_store
             columns:
               - column: { name: name, type: varchar(64), constraints: { primaryKey: true, nullable: false } }
-              - column: { name: value, type: text }
+              - column: { name: json_value, type: text }
 
   - changeSet:
       id: 006-add-zbb-tables

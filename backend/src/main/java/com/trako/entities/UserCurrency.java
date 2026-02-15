@@ -6,7 +6,12 @@ import jakarta.validation.constraints.NotNull;
 
 @Entity
 @Table(name = "user_currencies")
-public class UserCurrency extends AbstractBaseEntity {
+public class UserCurrency {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -20,6 +25,14 @@ public class UserCurrency extends AbstractBaseEntity {
     @NotNull
     @Column(name = "exchange_rate", nullable = false)
     private Double exchangeRate;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     public User getUser() {
         return user;
@@ -48,7 +61,7 @@ public class UserCurrency extends AbstractBaseEntity {
     @Override
     public String toString() {
         return "UserCurrency{" +
-                "id='" + id + '\'' +
+                "id=" + id +
                 ", currencyCode='" + currencyCode + '\'' +
                 ", exchangeRate=" + exchangeRate +
                 '}';

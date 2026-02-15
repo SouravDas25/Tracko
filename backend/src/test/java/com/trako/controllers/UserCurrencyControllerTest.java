@@ -58,7 +58,7 @@ public class UserCurrencyControllerTest {
         testUser.setPhoneNo("1234567890");
 
         testUserCurrency = new UserCurrency();
-        testUserCurrency.setId("uc123");
+        testUserCurrency.setId(123L);
         testUserCurrency.setUser(testUser);
         testUserCurrency.setCurrencyCode("USD");
         testUserCurrency.setExchangeRate(83.5);

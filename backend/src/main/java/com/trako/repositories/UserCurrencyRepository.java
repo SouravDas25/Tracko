@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface UserCurrencyRepository extends JpaRepository<UserCurrency, String> {
+public interface UserCurrencyRepository extends JpaRepository<UserCurrency, Long> {
     List<UserCurrency> findByUserId(String userId);
     UserCurrency findByUserIdAndCurrencyCode(String userId, String currencyCode);
 }

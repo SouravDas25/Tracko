@@ -380,4 +380,65 @@ public class SplitIntegrationTest {
                         .header("Authorization", bearerToken))
                 .andExpect(status().isNotFound());
     }
+
+    /**
+     * Verifies the split settlement workflow.
+     *
+     * <p>When a split is settled (e.g., a contact pays back their share), the system updates the
+     * split status to 'settled'. However, it does NOT automatically create a corresponding
+     * transaction record. This is because the repayment details (source, destination account, etc.)
+     * are unknown.
+     *
+     * <p>This test confirms:
+     * 1. Settling a split updates its status but does not change the transaction count.
+     * 2. The user can manually create a transaction to record the repayment.
+     */
+    @Test
+    public void testSettleSplit_doesNotCreateTransaction_and_allowsManualTransactionCreation() throws Exception {
+        // 1. Create a split
+        Split split = new Split();
+        split.setTransactionId(testTransaction.getId());
+        split.setUserId(testUser.getId());
+        split.setContactId(testContact.getId());
+        split.setAmount(50.00);
+        split.setIsSettled(0);
+        Split savedSplit = splitRepository.save(split);
+
+        long initialTransactionCount = transactionRepository.count();
+
+        // 2. Settle the split
+        // This simulates the user marking the split as "paid" in the UI.
+        mockMvc.perform(patch("/api/splits/settle/" + savedSplit.getId())
+                        .header("Authorization", bearerToken))
+                .andExpect(status().isOk());
+
+        entityManager.flush();
+        entityManager.clear();
+
+        // 3. Verify split is settled
+        Split settledSplit = splitRepository.findById(savedSplit.getId()).orElse(null);
+        assertThat(settledSplit).isNotNull();
+        assertThat(settledSplit.getIsSettled()).isEqualTo(1);
+
+        // 4. Verify NO new transaction was automatically created
+        // The system should not guess where the money went.
+        long transactionCountAfterSettle = transactionRepository.count();
+        assertThat(transactionCountAfterSettle).isEqualTo(initialTransactionCount);
+
+        // 5. Manually create a transaction for the settlement (Income)
+        // This simulates the user explicitly recording the repayment transaction.
+        Transaction settlementTransaction = new Transaction();
+        settlementTransaction.setTransactionType(2); // Credit/Income
+        settlementTransaction.setName("Settlement from " + testContact.getName());
+        settlementTransaction.setAmount(savedSplit.getAmount());
+        settlementTransaction.setDate(new Date());
+        settlementTransaction.setAccountId(testTransaction.getAccountId());
+        settlementTransaction.setCategoryId(testTransaction.getCategoryId());
+
+        Transaction manualTx = transactionWriteService.saveForUser(testUser.getId(), settlementTransaction);
+
+        // 6. Verify the new transaction exists
+        assertThat(manualTx.getId()).isNotNull();
+        assertThat(transactionRepository.count()).isEqualTo(initialTransactionCount + 1);
+    }
 }

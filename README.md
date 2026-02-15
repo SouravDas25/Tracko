@@ -16,23 +16,35 @@ A comprehensive expense management application with Flutter mobile UI and dual b
 - Maven 3.8+
 - Python 3.8+
 - PostgreSQL (for local development)
-- Windows users: Git Bash (recommended for running the start script)
+- Docker & Docker Compose (optional)
+- Task (Taskfile) - `go install github.com/go-task/task/v3/cmd/task@latest` (recommended)
 
-### Quick start (recommended)
+### Quick Start Options
 
-Run both backends and the Flutter UI with hot reload from the repo root:
-
+#### Option 1: Taskfile (Recommended)
 ```bash
-./start-tracko.sh
+task start          # Start both backend and Flutter UI
+task stop           # Stop all services
+task clean          # Clean build artifacts
+task test           # Run all tests
+task install        # Install dependencies
 ```
 
-Hot keys in the terminal:
+#### Option 2: Manual Startup
+```bash
+# Terminal 1 - Backend
+cd backend
+mvn spring-boot:run -P dev
 
-- r — Flutter hot reload
-- b — Backend restart (Spring Boot DevTools)
-- q — Quit (cleans up all processes)
+# Terminal 2 - Flutter UI  
+cd frontend
+flutter run
+```
 
-Logs are written to the `logs/` folder.
+#### Option 3: Docker Compose
+```bash
+docker-compose up -d
+```
 
 ### Setup Instructions
 
@@ -60,9 +72,9 @@ Logs are written to the `logs/` folder.
 </dependency>
 ```
 
-3. **Python Backend Setup**
+3. **Python ML Backend Setup**
    ```bash
-   cd Tracko-Python-Backend
+   cd ml-backend
    pip install -r requirements.txt
    python manage.py migrate
    python manage.py runserver
@@ -81,12 +93,93 @@ Database credentials and other sensitive configuration should be stored in envir
 
 ## Features
 
-- 📱 Cross-platform mobile app (Flutter)
-- 💰 Expense tracking and categorization
-- 📊 Visual analytics and charts
+- 📱 Cross-platform mobile app (Flutter) with modern UI design
+- 💰 Comprehensive expense tracking and categorization
+- 📊 Advanced analytics and reporting with sticky navigation
 - 🤖 ML-powered smart categorization
-- 🔐 Secure authentication with JWT
-- ☁️ Cloud deployment ready (Heroku, SAP Cloud Platform)
+- 🔐 Secure authentication with JWT (username/password & phone login)
+- ☁️ Cloud deployment ready (Docker, Heroku, SAP Cloud Platform)
+- 💳 **Zero-Based Budgeting (ZBB)** system with monthly allocations
+- 💱 **Multi-currency support** with live exchange rates
+- 🔄 **Unified Transaction/Transfer API** for seamless money movement
+- 📋 **CLI tools** for API testing and database seeding
+- 🎨 **Modern UI** with consistent design language across all pages
+- 🐳 **Docker support** for containerized deployment
+
+## Architecture
+
+### Backend (Java Spring Boot)
+- **RESTful API** with JWT authentication
+- **Zero-Based Budgeting (ZBB)** engine with monthly allocations and rollover logic
+- **Multi-currency support** with automatic exchange rate fetching
+- **Unified Transaction/Transfer API** handling both expense/income and account transfers
+- **Liquibase database migrations** for schema versioning
+- **Comprehensive test coverage** with integration tests
+
+### Frontend (Flutter)
+- **Modern UI design** with consistent styling across all pages
+- **Sticky navigation headers** for better UX in list views
+- **Multi-currency transaction entry** with automatic rate conversion
+- **Budget management interface** with allocation and tracking
+- **Transfer functionality** integrated with transaction flow
+- **Offline-first architecture** with local caching
+
+### ML Backend (Python Django)
+- **Smart categorization** using machine learning models
+- **Natural language processing** for transaction descriptions
+- **API integration** with main Java backend
+
+## Development Tools
+
+### Taskfile Commands
+```bash
+task start          # Start Flutter UI and Java Backend
+task flutter        # Start Flutter UI only (Chrome)
+task backend        # Start Java Backend only (detached)
+task stop           # Stop all services
+task clean          # Clean build artifacts
+task test           # Run tests (Flutter and Backend)
+task install        # Install dependencies
+task docker:tar     # Build and export Docker image
+task docker:publish # Tag and push to registry
+```
+
+### Docker Support
+```bash
+# Build and run with Docker Compose
+docker-compose up -d
+
+# Build standalone Docker image
+docker build -t tracko-app .
+```
+
+### Integration Testing
+
+Tracko includes comprehensive integration tests for the backend API:
+
+#### Running Integration Tests
+```bash
+# Run all integration tests
+cd backend
+mvn test -Dtest=*IntegrationTest
+
+# Run specific test classes
+mvn test -Dtest=AccountIntegrationTest
+mvn test -Dtest=TransactionIntegrationTest
+mvn test -Dtest=BudgetIntegrationTest
+```
+
+#### Test Coverage
+The integration test suite covers:
+- **Account Management** (6 tests) - CRUD operations
+- **Transaction Management** (8 tests) - CRUD, date range, filtering
+- **Budget System** (multiple tests) - ZBB allocations and calculations
+- **Multi-Currency** (multiple tests) - Exchange rates and conversions
+- **Authentication** (multiple tests) - JWT and phone login
+- **Transfers & Splits** (multiple tests) - Money movement between accounts
+
+#### Test Results
+All integration tests are designed to pass with 100% success rate, providing full API coverage for the Flutter frontend.
 
 ## CLI and Database Seeding
 
@@ -215,16 +308,40 @@ python tracko_cli.py --base-url http://localhost:8080 --token <TOKEN> budget vie
 
 For detailed documentation, see `tracko-cli/README_SEEDING.md`.
 
+## Documentation
+
+- **[Startup Guide](README-STARTUP.md)** - Detailed startup instructions and troubleshooting
+- **[Backend Integration Guide](backend/docs/FLUTTER_INTEGRATION_GUIDE.md)** - Complete API documentation
+- **[Migration Complete](backend/docs/MIGRATION_COMPLETE.md)** - Backend migration status
+- **[CLI Seeding Guide](tracko-cli/README_SEEDING.md)** - Database seeding documentation
+
 ## License
 
 See individual component repositories for license information.
 
 ## Troubleshooting
 
-- Port 8080 already in use
-  - The start script attempts to free port 8080 automatically on start/exit. If you still see this, on Windows:
-    - Find listeners: `powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort 8080 -State Listen | Select OwningProcess"`
-    - Kill process: `taskkill /T /PID <PID> /F`
-- Flutter hot reload commands not working
-  - Make sure you are running the start script in a terminal and the terminal window has focus when pressing keys.
-  - If you started Flutter separately, ensure you’re in an interactive run (`flutter run`), not `flutter run --machine`.
+### Port 8080 already in use
+- Use `task stop` to cleanly stop all services
+- If issues persist, on Windows:
+  - Find listeners: `powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort 8080 -State Listen | Select OwningProcess"`
+  - Kill process: `taskkill /T /PID <PID> /F`
+
+### Flutter hot reload not working
+- Make sure you're in an interactive run (`flutter run`), not `flutter run --machine`.
+- Use `task flutter` to start Flutter UI with proper configuration.
+
+### Backend fails to start
+- Check Java version: `java -version` (should be 17+)
+- Verify MAVEN_HOME is set: `mvn -version`
+- Clean and rebuild: `task clean && task install`
+
+### Database connection issues
+- For development, the backend uses H2 in-memory database (no setup required)
+- For production, configure PostgreSQL in `application.properties`
+- Check environment variables are set correctly
+
+### Docker issues
+- Ensure Docker Desktop is running
+- Check Docker Compose version: `docker-compose --version`
+- Rebuild images: `docker-compose build --no-cache`

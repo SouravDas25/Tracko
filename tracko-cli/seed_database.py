@@ -296,7 +296,43 @@ def create_transactions(base_url: str, token: str, account_ids: list, category_i
                             "amount": round(tracko_cli.random.uniform(*income["amount_range"]), 2)
                         })
     
-    log(f"Generated {len(transactions)} transactions across the previous 3 months")
+    # Generate 10 transactions for the current month as well
+    log("Generating 10 transactions for the current month...")
+    current_month_transactions = []
+    # Ensure we don't pick a day beyond today to keep timestamps realistic
+    max_day = max(1, min(now.day, 28))
+    for i in range(10):
+        day = tracko_cli.random.randint(1, max_day)
+        transaction_date = datetime(current_year, current_month, day,
+                                    tracko_cli.random.randint(9, 21),
+                                    tracko_cli.random.randint(0, 59))
+        # Bias towards expenses for current month
+        if tracko_cli.random.random() < 0.8:
+            expense = tracko_cli.random.choice(expense_data)
+            current_month_transactions.append({
+                "transactionType": 1,
+                "name": expense["name"],
+                "comments": "Current month expense transaction",
+                "date": int(transaction_date.timestamp() * 1000),
+                "accountId": tracko_cli.random.choice(valid_account_ids),
+                "categoryId": tracko_cli.random.choice(valid_category_ids[:8]),
+                "isCountable": 1,
+                "amount": round(tracko_cli.random.uniform(*expense["amount_range"]), 2),
+            })
+        else:
+            income = tracko_cli.random.choice(income_data)
+            current_month_transactions.append({
+                "transactionType": 2,
+                "name": income["name"],
+                "comments": "Current month income transaction",
+                "date": int(transaction_date.timestamp() * 1000),
+                "accountId": valid_account_ids[0],
+                "categoryId": tracko_cli.random.choice(valid_category_ids[8:]),
+                "isCountable": 1,
+                "amount": round(tracko_cli.random.uniform(*income["amount_range"]), 2),
+            })
+    transactions.extend(current_month_transactions)
+    log(f"Generated {len(transactions)} transactions including current month")
     
     # Create transactions in batches
     url = tracko_cli._join_url(base_url, "/api/transactions")
@@ -314,6 +350,64 @@ def create_transactions(base_url: str, token: str, account_ids: list, category_i
     log(f"Created {created_count} transactions total")
     return created_count
 
+
+def create_transfers(base_url: str, token: str, account_ids: list):
+    """Create sample transfer transactions"""
+    log("Creating sample transfer transactions...")
+    valid_account_ids = [aid for aid in account_ids if aid is not None]
+    if len(valid_account_ids) < 2:
+        log("Need at least 2 valid account IDs for transfers, skipping...")
+        return 0
+
+    transfers = [
+        {
+            "fromAccountId": valid_account_ids[0],
+            "toAccountId": valid_account_ids[2] if len(valid_account_ids) > 2 else valid_account_ids[1],
+            "amount": 500.0,
+            "name": "Weekly Cash Withdrawal",
+            "comments": "Cash for weekly expenses",
+        },
+        {
+            "fromAccountId": valid_account_ids[0],
+            "toAccountId": valid_account_ids[4] if len(valid_account_ids) > 4 else valid_account_ids[-1],
+            "amount": 1000.0,
+            "name": "Monthly Investment",
+            "comments": "Monthly investment contribution",
+        },
+        {
+            "fromAccountId": valid_account_ids[1],
+            "toAccountId": valid_account_ids[0],
+            "amount": 2000.0,
+            "name": "Credit Card Payment",
+            "comments": "Monthly credit card bill payment",
+        },
+        {
+            "fromAccountId": valid_account_ids[0],
+            "toAccountId": valid_account_ids[3] if len(valid_account_ids) > 3 else valid_account_ids[-1],
+            "amount": 300.0,
+            "name": "Mobile Recharge",
+            "comments": "Loading Paytm wallet",
+        },
+        {
+            "fromAccountId": valid_account_ids[2] if len(valid_account_ids) > 2 else valid_account_ids[0],
+            "toAccountId": valid_account_ids[0],
+            "amount": 150.0,
+            "name": "Cash Deposit",
+            "comments": "Depositing excess cash",
+        },
+    ]
+
+    url = tracko_cli._join_url(base_url, "/api/transfers")
+    created_count = 0
+    for tr in transfers:
+        result = tracko_cli.http_request("POST", url, token=token, json_body=tr)
+        if result.get("ok"):
+            created_count += 1
+            log(f"Created transfer: {tr['name']} (${tr['amount']} from {tr['fromAccountId']} to {tr['toAccountId']})")
+        else:
+            log(f"Failed to create transfer {tr['name']}: {result.get('text', 'Unknown error')}")
+    log(f"Created {created_count} transfers total")
+    return created_count
 
 def create_budget_allocations(base_url: str, token: str, category_ids: list):
     """Create sample budget allocations for current month"""
@@ -507,6 +601,13 @@ def main():
     # Create currency configurations
     currency_count = create_currencies(base_url, token)
     
+    # Create transfer transactions (requires accounts)
+    if account_ids:
+        transfer_count = create_transfers(base_url, token, account_ids)
+    else:
+        transfer_count = 0
+        log("Skipping transfers due to missing accounts")
+    
     # Create sample splits (requires contacts, accounts, categories)
     if contact_ids and account_ids and category_ids:
         split_count = create_sample_splits(base_url, token, contact_ids, account_ids, category_ids)
@@ -526,6 +627,7 @@ def main():
     log(f"Budget allocations created: {budget_count}")
     log(f"Currency configurations created: {currency_count}")
     log(f"Splits created: {split_count}")
+    log(f"Transfers created: {transfer_count}")
     log("="*60)
     log("\nYou can now use the CLI with:")
     log(f"python tracko_cli.py --base-url {base_url} --token {token} [command]")

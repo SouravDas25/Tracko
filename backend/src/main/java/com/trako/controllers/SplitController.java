@@ -14,6 +14,24 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Controller for managing expense splits.
+ *
+ * <p>The Split feature allows users to divide a transaction amount among multiple contacts.
+ * This is useful for tracking shared expenses where one person pays and others owe them.
+ *
+ * <p>Key concepts:
+ * <ul>
+ *   <li><b>Creation:</b> A split is created for a specific transaction and assigned to a contact.
+ *       It represents the amount that contact owes the user.</li>
+ *   <li><b>Settlement:</b> When a contact pays back their share, the split is marked as "settled".
+ *       IMPORTANT: Settling a split does NOT automatically create a transaction in the system.
+ *       This is by design because the repayment could come in various forms (cash, bank transfer, etc.)
+ *       and to different accounts. The user must manually create an income transaction to record
+ *       the actual receipt of funds if they wish to track it in their accounts.</li>
+ *   <li><b>Unsettlement:</b> If a settlement was marked in error, it can be reversed.</li>
+ * </ul>
+ */
 @RestController
 @RequestMapping("/api/splits")
 public class SplitController {

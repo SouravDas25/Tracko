@@ -32,7 +32,7 @@ public class JsonStoreController {
     public ResponseEntity<?> getByName(@PathVariable String name) {
         userService.loggedInUser();
         return jsonStoreService.findByName(name)
-                .map(Response::ok)
+                .<ResponseEntity<?>>map(Response::ok)
                 .orElse(Response.notFound("Setting not found"));
     }
 
