@@ -78,8 +78,23 @@ public class TransactionService {
         return transactionRepository.findByUserIdAndCategoryIdAndDateBetween(userId, categoryId, startDate, endDate, pageable);
     }
 
+    public Page<Transaction> findByUserIdAndCategoryIdAndDateBetweenAndAccountIds(String userId, Long categoryId, Date startDate, Date endDate, List<Long> accountIds, Pageable pageable) {
+        return transactionRepository.findByUserIdAndCategoryIdAndDateBetweenAndAccountIds(userId, categoryId, startDate, endDate, accountIds, pageable);
+    }
+
     public Page<TransactionDetailDTO> findWithDetailsByUserIdAndCategoryIdAndDateBetween(String userId, Long categoryId, Date startDate, Date endDate, Pageable pageable) {
         Page<Transaction> page = transactionRepository.findByUserIdAndCategoryIdAndDateBetween(userId, categoryId, startDate, endDate, pageable);
+
+        if (page.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        List<TransactionDetailDTO> dtos = fetchDetailsForTransactions(page.getContent());
+        return new PageImpl<>(dtos, pageable, page.getTotalElements());
+    }
+
+    public Page<TransactionDetailDTO> findWithDetailsByUserIdAndCategoryIdAndDateBetweenAndAccountIds(String userId, Long categoryId, Date startDate, Date endDate, List<Long> accountIds, Pageable pageable) {
+        Page<Transaction> page = transactionRepository.findByUserIdAndCategoryIdAndDateBetweenAndAccountIds(userId, categoryId, startDate, endDate, accountIds, pageable);
 
         if (page.isEmpty()) {
             return Page.empty(pageable);
@@ -241,6 +256,7 @@ public class TransactionService {
             // pre-aggregated account_month_summary table instead of scanning raw transactions.
             AccountSummaryReadOnlyService.MonthTotals totals =
                     accountSummaryReadOnlyService.getMonthTotals(userId, ym.year, ym.month, accountIds);
+
             return new TransactionSummaryDTO(totals.income(), totals.expense(), totals.net(), totals.count());
         }
 
@@ -270,6 +286,44 @@ public class TransactionService {
 
         double netTotal = totalIncome - totalExpense;
         return new TransactionSummaryDTO(totalIncome, totalExpense, netTotal, count);
+    }
+
+    public TransactionSummaryDTO getAccountSummary(String userId, Long accountId, Date startDate, Date endDate) {
+        TransactionSummaryDTO base = getSummary(userId, startDate, endDate, Collections.singletonList(accountId));
+        Double transferDelta = transactionRepository.sumTransferDeltaForAccountInRange(userId, accountId, startDate, endDate);
+        double net = safe(base.getNetTotal()) + safe(transferDelta);
+        return new TransactionSummaryDTO(
+                safe(base.getTotalIncome()),
+                safe(base.getTotalExpense()),
+                net,
+                base.getTransactionCount()
+        );
+    }
+
+    public TransactionSummaryDTO getAccountSummaryWithRollover(String userId, Long accountId, Date startDate, Date endDate) {
+        TransactionSummaryDTO base = getAccountSummary(userId, accountId, startDate, endDate);
+
+        YearMonthKey ym = toYearMonthKey(startDate);
+        if (ym == null) {
+            return base;
+        }
+
+        Double rolloverNet = accountSummaryReadOnlyService.getRolloverNetBeforeMonth(
+                userId,
+                ym.year,
+                ym.month,
+                Collections.singletonList(accountId)
+        );
+
+        double withRollover = safe(base.getNetTotal()) + safe(rolloverNet);
+        return new TransactionSummaryDTO(
+                safe(base.getTotalIncome()),
+                safe(base.getTotalExpense()),
+                safe(base.getNetTotal()),
+                safe(rolloverNet),
+                withRollover,
+                base.getTransactionCount()
+        );
     }
 
     private static class YearMonthKey {

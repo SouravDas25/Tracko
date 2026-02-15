@@ -194,12 +194,18 @@ class TransactionController {
     final user = SessionService.currentUser();
     final userId = (user.id ?? '').toString();
 
-    final summary = await txRepo.getSummary(
-      userId,
-      begin,
-      end,
-      accountIds: accountId == null ? null : [accountId],
-    );
+    final summary = accountId == null
+        ? await txRepo.getSummary(
+            userId,
+            begin,
+            end,
+          )
+        : await txRepo.getAccountSummary(
+            accountId,
+            begin,
+            end,
+            includeRollover: false,
+          );
     return (summary['netTotal'] as num?)?.toDouble() ?? 0.0;
   }
 
@@ -247,6 +253,16 @@ class TransactionController {
     if (userId == null) {
       return <String, dynamic>{};
     }
+
+    if (accountIds != null && accountIds.length == 1) {
+      return await txRepo.getAccountSummary(
+        accountIds.first,
+        begin,
+        end,
+        includeRollover: true,
+      );
+    }
+
     return await txRepo.getSummary(userId, begin, end, accountIds: accountIds);
   }
 
@@ -304,7 +320,10 @@ class TransactionController {
   }
 
   static Future<List<Transaction>> getTransactionsForSelectedMonthPaginated(
-      {List<int>? accountIds, DateTime? month, int page = 0, int size = 20}) async {
+      {List<int>? accountIds,
+      DateTime? month,
+      int page = 0,
+      int size = 20}) async {
     final txRepo = TransactionRepository();
     final userId = await _resolveUserId();
     if (userId == null) {

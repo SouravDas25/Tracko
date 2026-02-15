@@ -1,17 +1,27 @@
 package com.trako.controllers;
 
 import com.trako.entities.Account;
+import com.trako.dtos.TransactionSummaryDTO;
+import com.trako.dtos.TransactionDetailDTO;
 import com.trako.models.request.AccountSaveRequest;
-import com.trako.repositories.CategoryRepository;
 import com.trako.repositories.TransactionRepository;
 import com.trako.services.AccountService;
+import com.trako.services.TransactionService;
 import com.trako.services.UserService;
 import com.trako.util.Response;
+import org.springframework.format.annotation.DateTimeFormat;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +42,32 @@ public class AccountController {
     private TransactionRepository transactionRepository;
 
     @Autowired
-    private CategoryRepository categoryRepository;
+    private TransactionService transactionService;
+
+    private Date getStartOfMonth(int year, int month) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.YEAR, year);
+        calendar.set(Calendar.MONTH, month - 1);
+        calendar.set(Calendar.DAY_OF_MONTH, 1);
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        return calendar.getTime();
+    }
+
+    private Date getStartOfNextMonth(int year, int month) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.YEAR, year);
+        calendar.set(Calendar.MONTH, month - 1);
+        calendar.set(Calendar.DAY_OF_MONTH, 1);
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        calendar.add(Calendar.MONTH, 1);
+        return calendar.getTime();
+    }
 
     @GetMapping
     public ResponseEntity<?> getAll() {
@@ -45,23 +80,20 @@ public class AccountController {
     public ResponseEntity<?> getMyAccountBalances() {
         String currentUserId = userService.loggedInUser().getId();
 
-        Long transferCategoryId = null;
-        var transferCats = categoryRepository.findByUserIdAndName(currentUserId, "TRANSFER");
-        if (transferCats != null && !transferCats.isEmpty()) {
-            transferCategoryId = transferCats.get(0).getId();
-        }
-
-        final var rows = transactionRepository.findAccountBalancesByUserId(currentUserId, transferCategoryId);
+        // Balance derived purely from transactions:
+        // - include countable income/expense (isCountable=1)
+        // - include transfers detected via linkedTransactionId != null
+        final var rows = transactionRepository.sumBalancesByAccountForUserFromTransactions(currentUserId);
         Map<Long, Double> balances = new HashMap<>();
-        for (var row : rows) {
-            Object accountIdObj = row.get("accountId");
-            Object balanceObj = row.get("balance");
-            if (!(accountIdObj instanceof Number) || !(balanceObj instanceof Number)) {
-                continue;
+        if (rows != null) {
+            for (var row : rows) {
+                Object accountIdObj = row.get("accountId");
+                Object balanceObj = row.get("balance");
+                if (!(accountIdObj instanceof Number) || !(balanceObj instanceof Number)) {
+                    continue;
+                }
+                balances.put(((Number) accountIdObj).longValue(), ((Number) balanceObj).doubleValue());
             }
-            Long accountId = ((Number) accountIdObj).longValue();
-            Double balance = ((Number) balanceObj).doubleValue();
-            balances.put(accountId, balance);
         }
         return Response.ok(balances);
     }
@@ -77,15 +109,151 @@ public class AccountController {
             return Response.unauthorized();
         }
 
-        Long transferCategoryId = null;
-        var transferCats = categoryRepository.findByUserIdAndName(currentUserId, "TRANSFER");
-        if (transferCats != null && !transferCats.isEmpty()) {
-            transferCategoryId = transferCats.get(0).getId();
-        }
-        Double balance = transactionRepository.findBalanceByAccountId(id, transferCategoryId);
+        Double balance = transactionRepository.sumBalanceForAccountFromTransactions(currentUserId, id);
         account.setBalance(balance == null ? 0.0 : balance);
 
         return Response.ok(account);
+    }
+
+    @GetMapping("/{id}/summary")
+    public ResponseEntity<?> getAccountSummary(
+            @PathVariable Long id,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate,
+            @RequestParam(required = false, defaultValue = "true") boolean includeRollover) {
+        String currentUserId = userService.loggedInUser().getId();
+        Account account = accountService.findById(id).orElse(null);
+        if (account == null) {
+            return notFound("Account not found");
+        }
+        if (!currentUserId.equals(account.getUserId())) {
+            return Response.unauthorized();
+        }
+
+        TransactionSummaryDTO summary;
+        if (includeRollover) {
+            summary = transactionService.getAccountSummaryWithRollover(currentUserId, id, startDate, endDate);
+        } else {
+            summary = transactionService.getAccountSummary(currentUserId, id, startDate, endDate);
+        }
+        return Response.ok(summary);
+    }
+
+    @GetMapping("/{id}/transactions")
+    public ResponseEntity<?> getAccountTransactions(
+            @PathVariable Long id,
+            @RequestParam(required = false) Integer month,
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "500") Integer size,
+            @RequestParam(defaultValue = "false") boolean expand) {
+        if (page == null || page < 0) {
+            return Response.badRequest("page must be 0 or greater");
+        }
+        if (size == null || size < 1 || size > 10000) {
+            return Response.badRequest("size must be between 1 and 10000");
+        }
+
+        String currentUserId = userService.loggedInUser().getId();
+        Account account = accountService.findById(id).orElse(null);
+        if (account == null) {
+            return notFound("Account not found");
+        }
+        if (!currentUserId.equals(account.getUserId())) {
+            return Response.unauthorized();
+        }
+
+        Date start;
+        Date end;
+        int resolvedYear = (year == null) ? Calendar.getInstance().get(Calendar.YEAR) : year;
+        if (startDate != null && endDate != null) {
+            start = startDate;
+            end = endDate;
+        } else if (month != null) {
+            if (month < 1 || month > 12) {
+                return Response.badRequest("month must be between 1 and 12");
+            }
+            start = getStartOfMonth(resolvedYear, month);
+            end = getStartOfNextMonth(resolvedYear, month);
+        } else {
+            return Response.badRequest("Either month or startDate/endDate must be provided");
+        }
+
+        List<Long> accountIds = List.of(id);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "date"));
+
+        if (expand) {
+            Page<TransactionDetailDTO> dtoPage;
+            if (categoryId != null && categoryId > 0) {
+                dtoPage = transactionService.findWithDetailsByUserIdAndCategoryIdAndDateBetweenAndAccountIds(
+                        currentUserId,
+                        categoryId,
+                        start,
+                        end,
+                        accountIds,
+                        pageable
+                );
+            } else {
+                dtoPage = transactionService.findWithDetailsByUserIdAndDateBetween(
+                        currentUserId,
+                        start,
+                        end,
+                        accountIds,
+                        pageable
+                );
+            }
+
+            List<TransactionDetailDTO> dtos = new ArrayList<>(dtoPage.getContent());
+
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("month", month);
+            payload.put("year", resolvedYear);
+            payload.put("page", dtoPage.getNumber());
+            payload.put("size", dtoPage.getSize());
+            payload.put("totalElements", dtoPage.getTotalElements());
+            payload.put("totalPages", dtoPage.getTotalPages());
+            payload.put("hasNext", dtoPage.hasNext());
+            payload.put("hasPrevious", dtoPage.hasPrevious());
+            payload.put("transactions", dtos);
+            return Response.ok(payload);
+        }
+
+        Page<com.trako.entities.Transaction> txPage;
+        if (categoryId != null && categoryId > 0) {
+            txPage = transactionService.findByUserIdAndCategoryIdAndDateBetweenAndAccountIds(
+                    currentUserId,
+                    categoryId,
+                    start,
+                    end,
+                    accountIds,
+                    pageable
+            );
+        } else {
+            txPage = transactionService.findByUserIdAndDateBetweenAndAccountIds(
+                    currentUserId,
+                    start,
+                    end,
+                    accountIds,
+                    pageable
+            );
+        }
+
+        List<com.trako.entities.Transaction> transactions = new ArrayList<>(txPage.getContent());
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("month", month);
+        payload.put("year", resolvedYear);
+        payload.put("page", txPage.getNumber());
+        payload.put("size", txPage.getSize());
+        payload.put("totalElements", txPage.getTotalElements());
+        payload.put("totalPages", txPage.getTotalPages());
+        payload.put("hasNext", txPage.hasNext());
+        payload.put("hasPrevious", txPage.hasPrevious());
+        payload.put("transactions", transactions);
+        return Response.ok(payload);
     }
 
     @GetMapping("/user/{userId}")

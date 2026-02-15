@@ -24,17 +24,24 @@ class TransactionRepository {
     bool expand = false,
   }) async {
     final now = DateTime.now();
+    final isSingleAccount = accountIds != null && accountIds.length == 1;
+    final path = isSingleAccount
+        ? "${ApiConfig.accounts}/${accountIds!.first}/transactions"
+        : ApiConfig.transactions;
+
     final res = await _api.get<Map<String, dynamic>>(
-      ApiConfig.transactions,
+      path,
       query: {
         if (month != null) 'month': month,
         if (year != null) 'year': year,
-        if (startDate != null) 'startDate': startDate.toIso8601String().split('T').first,
-        if (endDate != null) 'endDate': endDate.toIso8601String().split('T').first,
+        if (startDate != null)
+          'startDate': startDate.toIso8601String().split('T').first,
+        if (endDate != null)
+          'endDate': endDate.toIso8601String().split('T').first,
         'page': page,
         'size': size,
         'expand': expand,
-        if (accountIds != null && accountIds.isNotEmpty)
+        if (!isSingleAccount && accountIds != null && accountIds.isNotEmpty)
           'accountIds': accountIds.join(','),
         if (categoryId != null) 'categoryId': categoryId,
       },
@@ -86,6 +93,33 @@ class TransactionRepository {
   }) async {
     AppLog.d(
         '[TransactionRepository] getByUserIdAndDateRange userId=$userId start=${startDate.toIso8601String()} end=${endDate.toIso8601String()} accountIds=$accountIds');
+    final isSingleAccount = accountIds != null && accountIds.length == 1;
+    if (isSingleAccount) {
+      final res = await _api.get<Map<String, dynamic>>(
+        "${ApiConfig.accounts}/${accountIds!.first}/transactions",
+        query: {
+          'startDate': startDate.toIso8601String().split('T').first,
+          'endDate': endDate.toIso8601String().split('T').first,
+          'page': 0,
+          'size': 10000,
+          'expand': true,
+        },
+      );
+      final rows = (res['transactions'] as List<dynamic>?) ?? const <dynamic>[];
+      AppLog.d(
+          '[TransactionRepository] date-range(single account) raw response count=${rows.length}');
+      return rows.map((e) {
+        final row = e as Map<String, dynamic>;
+        if (row['transaction'] is Map<String, dynamic> ||
+            row.containsKey('category') ||
+            row.containsKey('account') ||
+            row.containsKey('splits')) {
+          return _toLegacyFromExpanded(row);
+        }
+        return _toLegacy(row);
+      }).toList();
+    }
+
     final res = await _api.get<List<dynamic>>(
       "${ApiConfig.transactions}/date-range",
       query: {
@@ -279,6 +313,23 @@ class TransactionRepository {
         'endDate': endDate.toIso8601String().split('T').first,
         if (accountIds != null && accountIds.isNotEmpty)
           'accountIds': accountIds.join(','),
+      },
+    );
+    return res;
+  }
+
+  Future<Map<String, dynamic>> getAccountSummary(
+    int accountId,
+    DateTime startDate,
+    DateTime endDate, {
+    bool includeRollover = true,
+  }) async {
+    final res = await _api.get<Map<String, dynamic>>(
+      "${ApiConfig.accounts}/$accountId/summary",
+      query: {
+        'startDate': startDate.toIso8601String().split('T').first,
+        'endDate': endDate.toIso8601String().split('T').first,
+        'includeRollover': includeRollover,
       },
     );
     return res;

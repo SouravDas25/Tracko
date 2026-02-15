@@ -496,6 +496,108 @@ public class TransactionIntegrationTest {
     }
 
     @Test
+    public void testGetSummary_singleAccountFilter_stillExcludesTransfers() throws Exception {
+        Account toAccount = new Account();
+        toAccount.setName("Checking");
+        toAccount.setUserId(testUser.getId());
+        toAccount = accountRepository.save(toAccount);
+
+        Date txDate = new GregorianCalendar(2020, Calendar.JANUARY, 15).getTime();
+
+        Transaction income = new Transaction();
+        income.setTransactionType(2);
+        income.setName("Salary");
+        income.setAmount(1000.00);
+        income.setDate(txDate);
+        income.setAccountId(testAccount.getId());
+        income.setCategoryId(testCategory.getId());
+        income.setIsCountable(1);
+        transactionWriteService.saveForUser(testUser.getId(), income);
+
+        Transaction expense = new Transaction();
+        expense.setTransactionType(1);
+        expense.setName("Groceries");
+        expense.setAmount(200.00);
+        expense.setDate(txDate);
+        expense.setAccountId(testAccount.getId());
+        expense.setCategoryId(testCategory.getId());
+        expense.setIsCountable(1);
+        transactionWriteService.saveForUser(testUser.getId(), expense);
+
+        transactionWriteService.createTransfer(
+                testUser.getId(),
+                testAccount.getId(),
+                toAccount.getId(),
+                txDate,
+                50.00,
+                "Xfer",
+                ""
+        );
+
+        mockMvc.perform(get("/api/transactions/summary")
+                        .header("Authorization", bearerToken)
+                        .param("startDate", "2020-01-01")
+                        .param("endDate", "2020-02-01")
+                        .param("accountIds", String.valueOf(testAccount.getId())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.totalIncome").value(1000.00))
+                .andExpect(jsonPath("$.result.totalExpense").value(200.00))
+                .andExpect(jsonPath("$.result.netTotal").value(800.00))
+                .andExpect(jsonPath("$.result.transactionCount").value(2));
+    }
+
+    @Test
+    public void testGetAccountSummary_includesTransferDeltaInNetOnly() throws Exception {
+        Account toAccount = new Account();
+        toAccount.setName("Checking");
+        toAccount.setUserId(testUser.getId());
+        toAccount = accountRepository.save(toAccount);
+
+        Date txDate = new GregorianCalendar(2020, Calendar.JANUARY, 15).getTime();
+
+        Transaction income = new Transaction();
+        income.setTransactionType(2);
+        income.setName("Salary");
+        income.setAmount(1000.00);
+        income.setDate(txDate);
+        income.setAccountId(testAccount.getId());
+        income.setCategoryId(testCategory.getId());
+        income.setIsCountable(1);
+        transactionWriteService.saveForUser(testUser.getId(), income);
+
+        Transaction expense = new Transaction();
+        expense.setTransactionType(1);
+        expense.setName("Groceries");
+        expense.setAmount(200.00);
+        expense.setDate(txDate);
+        expense.setAccountId(testAccount.getId());
+        expense.setCategoryId(testCategory.getId());
+        expense.setIsCountable(1);
+        transactionWriteService.saveForUser(testUser.getId(), expense);
+
+        transactionWriteService.createTransfer(
+                testUser.getId(),
+                testAccount.getId(),
+                toAccount.getId(),
+                txDate,
+                50.00,
+                "Xfer",
+                ""
+        );
+
+        mockMvc.perform(get("/api/accounts/{accountId}/summary", testAccount.getId())
+                        .header("Authorization", bearerToken)
+                        .param("startDate", "2020-01-01")
+                        .param("endDate", "2020-02-01")
+                        .param("includeRollover", "false"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.totalIncome").value(1000.00))
+                .andExpect(jsonPath("$.result.totalExpense").value(200.00))
+                .andExpect(jsonPath("$.result.netTotal").value(750.00))
+                .andExpect(jsonPath("$.result.transactionCount").value(2));
+    }
+
+    @Test
     public void testGetTotalIncome() throws Exception {
         Transaction income1 = new Transaction();
         income1.setTransactionType(2); // CREDIT = income
@@ -729,6 +831,45 @@ public class TransactionIntegrationTest {
                         .param("startDate", "2020-01-01")
                         .param("endDate", "2030-12-31")
                         .param("accountIds", String.valueOf(testAccount.getId())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.transactions", hasSize(1)))
+                .andExpect(jsonPath("$.result.transactions[0].name").value("A1"));
+    }
+
+    @Test
+    public void testGetAccountTransactionsEndpoint_returnsOnlyThatAccount() throws Exception {
+        Account secondAcc = new Account();
+        secondAcc.setName("Spending");
+        secondAcc.setUserId(testUser.getId());
+        secondAcc = accountRepository.save(secondAcc);
+
+        Date txDate = new GregorianCalendar(2020, Calendar.JANUARY, 15).getTime();
+
+        Transaction a1 = new Transaction();
+        a1.setTransactionType(1);
+        a1.setName("A1");
+        a1.setAmount(10.00);
+        a1.setDate(txDate);
+        a1.setAccountId(testAccount.getId());
+        a1.setCategoryId(testCategory.getId());
+        a1.setIsCountable(1);
+        transactionWriteService.saveForUser(testUser.getId(), a1);
+
+        Transaction a2 = new Transaction();
+        a2.setTransactionType(1);
+        a2.setName("A2");
+        a2.setAmount(20.00);
+        a2.setDate(txDate);
+        a2.setAccountId(secondAcc.getId());
+        a2.setCategoryId(testCategory.getId());
+        a2.setIsCountable(1);
+        transactionWriteService.saveForUser(testUser.getId(), a2);
+
+        mockMvc.perform(get("/api/accounts/{accountId}/transactions", testAccount.getId())
+                        .header("Authorization", bearerToken)
+                        .param("startDate", "2020-01-01")
+                        .param("endDate", "2020-02-01")
+                        .param("expand", "true"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.transactions", hasSize(1)))
                 .andExpect(jsonPath("$.result.transactions[0].name").value("A1"));

@@ -3,10 +3,15 @@ package com.trako.integration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trako.config.TestJwtSecurityConfig;
 import com.trako.entities.Account;
+import com.trako.entities.Category;
+import com.trako.entities.Transaction;
 import com.trako.entities.User;
 import com.trako.models.request.AccountSaveRequest;
 import com.trako.repositories.AccountRepository;
+import com.trako.repositories.CategoryRepository;
+import com.trako.repositories.TransactionRepository;
 import com.trako.repositories.UsersRepository;
+import com.trako.services.TransactionWriteService;
 import com.trako.util.JwtTokenUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,6 +26,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.Calendar;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -44,6 +52,15 @@ public class AccountIntegrationTest {
     private AccountRepository accountRepository;
 
     @Autowired
+    private TransactionRepository transactionRepository;
+
+    @Autowired
+    private CategoryRepository categoryRepository;
+
+    @Autowired
+    private TransactionWriteService transactionWriteService;
+
+    @Autowired
     private UsersRepository usersRepository;
 
     @Autowired
@@ -54,7 +71,9 @@ public class AccountIntegrationTest {
 
     @BeforeEach
     public void setup() {
+        transactionRepository.deleteAll();
         accountRepository.deleteAll();
+        categoryRepository.deleteAll();
         usersRepository.deleteAll();
 
         testUser = new User();
@@ -70,6 +89,93 @@ public class AccountIntegrationTest {
                 Collections.emptyList()
         );
         bearerToken = "Bearer " + jwtTokenUtil.generateToken(principal);
+    }
+
+    @Test
+    public void testGetAccountById_ReturnsHybridBalance_SummaryPlusTransfers() throws Exception {
+        // Create accounts
+        Account a1 = new Account();
+        a1.setName("A1");
+        a1.setUserId(testUser.getId());
+        a1 = accountRepository.save(a1);
+
+        Account a2 = new Account();
+        a2.setName("A2");
+        a2.setUserId(testUser.getId());
+        a2 = accountRepository.save(a2);
+
+        // Create categories for countable transactions
+        Category salary = new Category();
+        salary.setName("Salary");
+        salary.setUserId(testUser.getId());
+        salary = categoryRepository.save(salary);
+
+        Category food = new Category();
+        food.setName("Food");
+        food.setUserId(testUser.getId());
+        food = categoryRepository.save(food);
+
+        // Two different months for summary aggregation
+        Date jan10 = new GregorianCalendar(2024, Calendar.JANUARY, 10).getTime();
+        Date feb05 = new GregorianCalendar(2024, Calendar.FEBRUARY, 5).getTime();
+
+        // Countable income + expense on A1 (should go into account_month_summary)
+        Transaction income = new Transaction();
+        income.setTransactionType(2);
+        income.setName("Income");
+        income.setAmount(1000.0);
+        income.setDate(jan10);
+        income.setAccountId(a1.getId());
+        income.setCategoryId(salary.getId());
+        income.setIsCountable(1);
+        transactionWriteService.saveForUser(testUser.getId(), income);
+
+        Transaction expense = new Transaction();
+        expense.setTransactionType(1);
+        expense.setName("Expense");
+        expense.setAmount(200.0);
+        expense.setDate(feb05);
+        expense.setAccountId(a1.getId());
+        expense.setCategoryId(food.getId());
+        expense.setIsCountable(1);
+        transactionWriteService.saveForUser(testUser.getId(), expense);
+
+        // Transfers (isCountable=0) should NOT affect summary, but MUST affect balance via linkedTransactionId
+        transactionWriteService.createTransfer(
+                testUser.getId(),
+                a1.getId(),
+                a2.getId(),
+                feb05,
+                50.0,
+                "T1",
+                ""
+        );
+
+        transactionWriteService.createTransfer(
+                testUser.getId(),
+                a2.getId(),
+                a1.getId(),
+                feb05,
+                30.0,
+                "T2",
+                ""
+        );
+
+        // Expected balance for A1 (derived from transactions only):
+        // +1000 (income) - 200 (expense) - 50 (transfer out) + 30 (transfer in) = 780
+        mockMvc.perform(get("/api/accounts/" + a1.getId())
+                        .header("Authorization", bearerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.id").value(a1.getId()))
+                .andExpect(jsonPath("$.result.balance").value(780.0));
+
+        // Expected balance for A2 (derived from transactions only):
+        // +50 (transfer in) - 30 (transfer out) = 20
+        mockMvc.perform(get("/api/accounts/" + a2.getId())
+                        .header("Authorization", bearerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.id").value(a2.getId()))
+                .andExpect(jsonPath("$.result.balance").value(20.0));
     }
 
     @Test

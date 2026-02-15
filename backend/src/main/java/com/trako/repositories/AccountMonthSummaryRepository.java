@@ -52,4 +52,19 @@ public interface AccountMonthSummaryRepository extends JpaRepository<AccountMont
             @Param("year") Integer year,
             @Param("month") Integer month
     );
+
+    @Query("SELECT COALESCE(SUM(s.netTotal), 0) FROM AccountMonthlySummary s " +
+            "WHERE s.userId = :userId AND s.accountId = :accountId")
+    Double sumNetAllTimeForAccount(
+            @Param("userId") String userId,
+            @Param("accountId") Long accountId
+    );
+
+    @Query("SELECT s.accountId AS accountId, COALESCE(SUM(s.netTotal), 0) AS netTotal " +
+            "FROM AccountMonthlySummary s " +
+            "WHERE s.userId = :userId " +
+            "GROUP BY s.accountId")
+    List<Object[]> sumNetAllTimeByAccountForUser(
+            @Param("userId") String userId
+    );
 }
