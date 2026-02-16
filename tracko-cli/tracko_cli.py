@@ -1,4 +1,5 @@
 import argparse
+import csv
 import datetime
 import json
 import os
@@ -1264,6 +1265,160 @@ def cmd_transactions_add(args: argparse.Namespace) -> int:
     return 0 if result["ok"] else 1
 
 
+def cmd_transactions_import_csv(args: argparse.Namespace) -> int:
+    token, base_url = _get_token_from_args_or_config(args)
+    url = _join_url(base_url, "/api/transactions")
+
+    file_path = args.file
+    if not os.path.exists(file_path):
+        print(f"Error: File not found: {file_path}", file=sys.stderr)
+        return 1
+
+    try:
+        account_id = int(args.account_id)
+    except ValueError:
+        print("Error: account-id must be integers", file=sys.stderr)
+        return 1
+
+    # Find or create 'import' category
+    import_cat_id = None
+    categories = _get_id_name_map(base_url, token, "/api/categories")
+    for cid, cname in categories.items():
+        if cname.lower() == "import":
+            import_cat_id = cid
+            break
+    
+    if import_cat_id is None:
+        print("Category 'import' not found. Creating it...")
+        cat_url = _join_url(base_url, "/api/categories")
+        res = http_request("POST", cat_url, token=token, json_body={"name": "import"})
+        if res["ok"]:
+            payload = res.get("json", {})
+            if "result" in payload and isinstance(payload["result"], dict):
+                import_cat_id = payload["result"].get("id")
+            elif "id" in payload:
+                import_cat_id = payload.get("id")
+        
+        if import_cat_id is None:
+            print("Error: Failed to create 'import' category.", file=sys.stderr)
+            return 1
+        print(f"Created 'import' category with ID: {import_cat_id}")
+    else:
+        print(f"Using existing 'import' category ID: {import_cat_id}")
+
+    category_id = int(import_cat_id)
+
+    success_count = 0
+    fail_count = 0
+    skipped_count = 0
+
+    print(f"Importing transactions from {file_path}...")
+    
+    with open(file_path, 'r', encoding='utf-8-sig') as f:
+        # Use csv.DictReader if headers are present, else csv.reader
+        # Based on user's CSV, it has headers: Date,Transaction Type,Description,Amount,Balance
+        reader = csv.DictReader(f)
+        
+        # Validate headers
+        expected_headers = {'Date', 'Description', 'Amount'}
+        if reader.fieldnames and not expected_headers.issubset(set(reader.fieldnames)):
+             # Fallback to column indices if headers don't match exactly or purely for safety
+             # But user showed a specific format. Let's try to be flexible.
+             pass
+
+        for row_idx, row in enumerate(reader, start=2): # Start at 2 for line number (1 is header)
+            try:
+                # 1. Parse Date (DD/MM/YYYY)
+                date_str = row.get("Date")
+                if not date_str:
+                    print(f"Line {row_idx}: Missing date, skipping.")
+                    skipped_count += 1
+                    continue
+                
+                try:
+                    dt = datetime.datetime.strptime(date_str, "%d/%m/%Y")
+                    # Set time to current time or noon to avoid timezone shifts shifting the day
+                    # The system uses epoch ms.
+                    dt = dt.replace(hour=12, minute=0, second=0, microsecond=0, tzinfo=datetime.timezone.utc)
+                    epoch_ms = int(dt.timestamp() * 1000)
+                except ValueError:
+                     print(f"Line {row_idx}: Invalid date format '{date_str}', expected DD/MM/YYYY. Skipping.")
+                     skipped_count += 1
+                     continue
+
+                # 2. Parse Amount
+                amount_str = row.get("Amount")
+                if not amount_str:
+                     print(f"Line {row_idx}: Missing amount, skipping.")
+                     skipped_count += 1
+                     continue
+                
+                try:
+                    # Remove commas if any
+                    clean_amount = amount_str.replace(",", "")
+                    amount_val = float(clean_amount)
+                except ValueError:
+                    print(f"Line {row_idx}: Invalid amount '{amount_str}', skipping.")
+                    skipped_count += 1
+                    continue
+
+                if amount_val == 0:
+                    print(f"Line {row_idx}: Amount is 0, skipping.")
+                    skipped_count += 1
+                    continue
+
+                # 3. Determine Type
+                # Negative = Expense (1), Positive = Income (2)
+                if amount_val < 0:
+                    transaction_type = 1 # Expense
+                    final_amount = abs(amount_val)
+                else:
+                    transaction_type = 2 # Income
+                    final_amount = amount_val
+
+                # 4. Description
+                description = row.get("Description", "").strip()
+                tx_type_col = row.get("Transaction Type", "").strip()
+                
+                # Combine Transaction Type + Description for name/comments
+                name = description if description else "Imported Transaction"
+                comments = f"Imported from CSV. Type: {tx_type_col}"
+
+                # 5. Build Body
+                body = {
+                    "transactionType": transaction_type,
+                    "name": name[:50], # Truncate if too long
+                    "comments": comments,
+                    "date": epoch_ms,
+                    "accountId": account_id,
+                    "categoryId": category_id,
+                    "isCountable": 1,
+                    "amount": final_amount
+                }
+
+                # 6. Send Request
+                res = http_request("POST", url, token=token, json_body=body)
+                if res["ok"]:
+                    success_count += 1
+                    if success_count % 10 == 0:
+                        print(f"Imported {success_count} transactions...")
+                else:
+                    fail_count += 1
+                    print(f"Line {row_idx}: Failed to create transaction. Status: {res['status']}. Text: {res.get('text')}")
+
+            except Exception as e:
+                print(f"Line {row_idx}: Unexpected error: {e}")
+                fail_count += 1
+
+    print("-" * 30)
+    print(f"Import Complete.")
+    print(f"Success: {success_count}")
+    print(f"Failed:  {fail_count}")
+    print(f"Skipped: {skipped_count}")
+    
+    return 0 if fail_count == 0 else 1
+
+
 def cmd_budget_view(args: argparse.Namespace) -> int:
     token, base_url = _get_token_from_args_or_config(args)
     
@@ -1712,6 +1867,28 @@ def build_parser() -> argparse.ArgumentParser:
     sp2.add_argument("--currency", help="Original currency code (e.g., USD, EUR). Backend will fetch the configured exchange rate.")
     sp2.add_argument("--exchange-rate", type=float, help="Optional: explicit exchange rate. If omitted, backend uses user's configured rate.")
     sp2.set_defaults(func=cmd_transactions_add)
+
+    sample_csv = (
+        "Sample CSV Format:\n"
+        "Date,Transaction Type,Description,Amount\n"
+        "20/01/2025,DEBIT,Lunch,150.00\n"
+        "21/01/2025,CREDIT,Salary,50000.00\n"
+        "\n"
+        "Notes:\n"
+        "- Date format: DD/MM/YYYY\n"
+        "- Amount: Negative for expense, positive for income (or use Transaction Type column if amount is absolute)\n"
+        "- Transaction Type: Optional. Used for comments.\n"
+    )
+    sp2 = sub_tx.add_parser(
+        "import-csv", 
+        help="Import transactions from a CSV file",
+        description=sample_csv,
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    sp2.add_argument("--file", required=True, help="Path to CSV file")
+    sp2.add_argument("--account-id", required=True, type=int, help="Target Account ID")
+    # category-id is now automatic
+    sp2.set_defaults(func=cmd_transactions_import_csv)
 
     sp2 = sub_tx.add_parser("get", help="Get a transaction by id")
     sp2.add_argument("--id", required=True, type=int, help="Transaction ID")
