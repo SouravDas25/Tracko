@@ -1359,7 +1359,7 @@ public class TransactionIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(payload)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("accountId: must not be null"));
+                .andExpect(jsonPath("$.message").value("Transfer requires fromAccountId or accountId"));
     }
 
     @Test
@@ -1440,5 +1440,109 @@ public class TransactionIntegrationTest {
                 .andExpect(jsonPath("$.result.transactions", hasSize(1)))
                 // marked as type=3 for transfer rendering
                 .andExpect(jsonPath("$.result.transactions[0].transactionType").value(3));
+    }
+
+    @Test
+    public void testPartialUpdateTransaction_OnlyUpdatesProvidedFields() throws Exception {
+        Transaction transaction = new Transaction();
+        transaction.setTransactionType(1);
+        transaction.setName("Original Name");
+        transaction.setAmount(10.00);
+        transaction.setDate(new Date());
+        transaction.setAccountId(testAccount.getId());
+        transaction.setCategoryId(testCategory.getId());
+        Transaction saved = transactionWriteService.saveForUser(testUser.getId(), transaction);
+
+        // Update only name and amount
+        Map<String, Object> partialUpdate = new HashMap<>();
+        partialUpdate.put("name", "New Partial Name");
+        partialUpdate.put("amount", 20.00);
+
+        mockMvc.perform(put("/api/transactions/" + saved.getId())
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(partialUpdate)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.name").value("New Partial Name"))
+                .andExpect(jsonPath("$.result.amount").value(20.00))
+                // Verify other fields remain unchanged (returned in response)
+                .andExpect(jsonPath("$.result.accountId").value(testAccount.getId()))
+                .andExpect(jsonPath("$.result.categoryId").value(testCategory.getId()));
+
+        // Verify persistence
+        Transaction updated = transactionRepository.findById(saved.getId()).orElseThrow();
+        assertEquals("New Partial Name", updated.getName());
+        assertEquals(20.00, updated.getAmount());
+        assertEquals(testAccount.getId(), updated.getAccountId());
+    }
+
+    @Test
+    public void testPartialUpdateTransfer_UpdatesBothSides() throws Exception {
+        Account toAccount = new Account();
+        toAccount.setName("Savings 2");
+        toAccount.setUserId(testUser.getId());
+        toAccount = accountRepository.save(toAccount);
+
+        Transaction[] transfer = transactionWriteService.createTransfer(
+                testUser.getId(),
+                testAccount.getId(),
+                toAccount.getId(),
+                new Date(),
+                50.00,
+                "Original Transfer",
+                "Original Comment"
+        );
+        Transaction debit = transfer[0];
+
+        // Update name via partial PUT on the debit transaction
+        Map<String, Object> partialUpdate = new HashMap<>();
+        partialUpdate.put("name", "Updated Transfer Name");
+
+        mockMvc.perform(put("/api/transactions/" + debit.getId())
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(partialUpdate)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.name").value("Updated Transfer Name"));
+
+        // Verify both sides updated
+        Transaction updatedDebit = transactionRepository.findById(debit.getId()).orElseThrow();
+        Transaction updatedCredit = transactionRepository.findById(updatedDebit.getLinkedTransactionId()).orElseThrow();
+
+        assertEquals("Updated Transfer Name", updatedDebit.getName());
+        assertEquals("Updated Transfer Name", updatedCredit.getName());
+        // Amounts should remain unchanged
+        assertEquals(50.00, updatedDebit.getAmount());
+        assertEquals(50.00, updatedCredit.getAmount());
+    }
+
+    @Test
+    public void testPartialUpdateTransaction_ChangeAccountId() throws Exception {
+        Account newAccount = new Account();
+        newAccount.setName("New Account");
+        newAccount.setUserId(testUser.getId());
+        newAccount = accountRepository.save(newAccount);
+
+        Transaction transaction = new Transaction();
+        transaction.setTransactionType(1);
+        transaction.setName("Move Me");
+        transaction.setAmount(10.00);
+        transaction.setDate(new Date());
+        transaction.setAccountId(testAccount.getId());
+        transaction.setCategoryId(testCategory.getId());
+        Transaction saved = transactionWriteService.saveForUser(testUser.getId(), transaction);
+
+        Map<String, Object> partialUpdate = new HashMap<>();
+        partialUpdate.put("accountId", newAccount.getId());
+
+        mockMvc.perform(put("/api/transactions/" + saved.getId())
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(partialUpdate)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.accountId").value(newAccount.getId()));
+
+        Transaction updated = transactionRepository.findById(saved.getId()).orElseThrow();
+        assertEquals(newAccount.getId(), updated.getAccountId());
     }
 }

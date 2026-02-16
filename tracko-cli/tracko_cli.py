@@ -229,6 +229,23 @@ def cmd_health(args: argparse.Namespace) -> int:
     return 0 if result["ok"] else 1
 
 
+def cmd_signup(args: argparse.Namespace) -> int:
+    url = _join_url(args.base_url, "/api/signUp")
+    body = {
+        "phoneNo": args.phone_no,
+        "fireBaseId": args.firebase_id,
+    }
+    if args.name is not None:
+        body["name"] = args.name
+    if args.email is not None:
+        body["email"] = args.email
+    if args.base_currency is not None:
+        body["baseCurrency"] = args.base_currency
+    result = http_request("POST", url, json_body=body)
+    print_result(result, raw=args.raw)
+    return 0 if result.get("ok") else 1
+
+
 # =========================
 # User Currencies (secondary)
 # =========================
@@ -254,6 +271,14 @@ def _render_currencies_list(result: dict, raw: bool) -> int:
         )
         return 0
     print_result(result, raw=False)
+    return 0 if result.get("ok") else 1
+
+
+def cmd_contacts_get(args: argparse.Namespace) -> int:
+    token, base_url = _get_token_from_args_or_config(args)
+    url = _join_url(base_url, f"/api/contacts/{int(args.id)}")
+    result = http_request("GET", url, token=token)
+    print_result(result, raw=args.raw)
     return 0 if result.get("ok") else 1
 
 
@@ -394,6 +419,38 @@ def cmd_splits_unsettled_contact(args: argparse.Namespace) -> int:
     return _render_splits_result(result, raw=args.raw)
 
 
+def cmd_splits_get(args: argparse.Namespace) -> int:
+    token, base_url = _get_token_from_args_or_config(args)
+    url = _join_url(base_url, f"/api/splits/{int(args.id)}")
+    result = http_request("GET", url, token=token)
+    print_result(result, raw=args.raw)
+    return 0 if result.get("ok") else 1
+
+
+def cmd_splits_settle(args: argparse.Namespace) -> int:
+    token, base_url = _get_token_from_args_or_config(args)
+    url = _join_url(base_url, f"/api/splits/settle/{int(args.id)}")
+    result = http_request("PATCH", url, token=token)
+    print_result(result, raw=args.raw)
+    return 0 if result.get("ok") else 1
+
+
+def cmd_splits_unsettle(args: argparse.Namespace) -> int:
+    token, base_url = _get_token_from_args_or_config(args)
+    url = _join_url(base_url, f"/api/splits/unsettle/{int(args.id)}")
+    result = http_request("PATCH", url, token=token)
+    print_result(result, raw=args.raw)
+    return 0 if result.get("ok") else 1
+
+
+def cmd_splits_delete(args: argparse.Namespace) -> int:
+    token, base_url = _get_token_from_args_or_config(args)
+    url = _join_url(base_url, f"/api/splits/{int(args.id)}")
+    result = http_request("DELETE", url, token=token)
+    print_result(result, raw=args.raw)
+    return 0 if result.get("ok") else 1
+
+
 def cmd_categories_add(args: argparse.Namespace) -> int:
     token, base_url = _get_token_from_args_or_config(args)
     url = _join_url(base_url, "/api/categories")
@@ -401,6 +458,121 @@ def cmd_categories_add(args: argparse.Namespace) -> int:
     result = http_request("POST", url, token=token, json_body=body)
     print_result(result, raw=args.raw)
     return 0 if result["ok"] else 1
+
+
+def cmd_categories_get(args: argparse.Namespace) -> int:
+    token, base_url = _get_token_from_args_or_config(args)
+    url = _join_url(base_url, f"/api/categories/{int(args.id)}")
+    result = http_request("GET", url, token=token)
+    print_result(result, raw=args.raw)
+    return 0 if result.get("ok") else 1
+
+
+def cmd_categories_update(args: argparse.Namespace) -> int:
+    token, base_url = _get_token_from_args_or_config(args)
+    url = _join_url(base_url, f"/api/categories/{int(args.id)}")
+    body: dict = {"name": args.name}
+    if getattr(args, "category_type", None) is not None:
+        body["categoryType"] = args.category_type
+    result = http_request("PUT", url, token=token, json_body=body)
+    print_result(result, raw=args.raw)
+    return 0 if result.get("ok") else 1
+
+
+def cmd_categories_delete(args: argparse.Namespace) -> int:
+    token, base_url = _get_token_from_args_or_config(args)
+    url = _join_url(base_url, f"/api/categories/{int(args.id)}")
+    result = http_request("DELETE", url, token=token)
+    print_result(result, raw=args.raw)
+    return 0 if result.get("ok") else 1
+
+
+def cmd_transactions_get(args: argparse.Namespace) -> int:
+    token, base_url = _get_token_from_args_or_config(args)
+    url = _join_url(base_url, f"/api/transactions/{int(args.id)}")
+    result = http_request("GET", url, token=token)
+    print_result(result, raw=args.raw)
+    return 0 if result.get("ok") else 1
+
+
+def cmd_transactions_update(args: argparse.Namespace) -> int:
+    token, base_url = _get_token_from_args_or_config(args)
+    tx_id = int(args.id)
+    url = _join_url(base_url, f"/api/transactions/{tx_id}")
+
+    # Build partial update payload
+    body: dict = {}
+
+    if args.type is not None:
+        tx_type = args.type.lower().strip()
+        if tx_type in {"expense", "debit", "dr", "d"}:
+            body["transactionType"] = 1
+        elif tx_type in {"income", "credit", "cr", "c"}:
+            body["transactionType"] = 2
+        else:
+            print("Invalid --type. Use income or expense.", file=sys.stderr)
+            return 2
+
+    if args.account_id is not None:
+        body["accountId"] = int(args.account_id)
+    
+    if args.category_id is not None:
+        body["categoryId"] = int(args.category_id)
+    
+    if args.name is not None:
+        body["name"] = args.name
+    
+    if args.comments is not None:
+        body["comments"] = args.comments
+    
+    if args.date is not None:
+        body["date"] = _parse_date_to_epoch_ms(args.date)
+    
+    # Handle countable flag tristate (True/False/None)
+    # The arguments are set up as --countable (True) and --not-countable (False).
+    # If neither is present, we shouldn't send the field.
+    # However, argparse with store_true/false usually defaults to something.
+    # We need to check if user explicitly passed it.
+    # In the parser definition below, we'll change default to None to detect absence.
+    if args.countable is not None:
+        body["isCountable"] = 1 if args.countable else 0
+
+    # Multi-currency fields
+    currency = getattr(args, "currency", None)
+    if currency is not None:
+        body["originalCurrency"] = str(currency).upper()
+        if args.amount is not None:
+             try:
+                body["originalAmount"] = float(args.amount)
+             except Exception:
+                print("Invalid --amount", file=sys.stderr)
+                return 2
+        exchange_rate = getattr(args, "exchange_rate", None)
+        if exchange_rate is not None:
+            body["exchangeRate"] = float(exchange_rate)
+    elif args.amount is not None:
+        # Standard amount update
+        try:
+            body["amount"] = float(args.amount)
+        except Exception:
+            print("Invalid --amount", file=sys.stderr)
+            return 2
+
+    if not body:
+        print("No fields to update provided.", file=sys.stderr)
+        return 1
+
+    result = http_request("PUT", url, token=token, json_body=body)
+    print_result(result, raw=args.raw)
+    return 0 if result.get("ok") else 1
+
+
+def cmd_transactions_delete(args: argparse.Namespace) -> int:
+    token, base_url = _get_token_from_args_or_config(args)
+    url = _join_url(base_url, f"/api/transactions/{int(args.id)}")
+    result = http_request("DELETE", url, token=token)
+    print_result(result, raw=args.raw)
+    return 0 if result.get("ok") else 1
 
 
 def cmd_contacts_list(args: argparse.Namespace) -> int:
@@ -646,9 +818,183 @@ def cmd_accounts_add(args: argparse.Namespace) -> int:
     token, base_url = _get_token_from_args_or_config(args)
     url = _join_url(base_url, "/api/accounts")
     body = {"name": args.name}
+    if getattr(args, "currency", None) is not None:
+        body["currency"] = args.currency
     result = http_request("POST", url, token=token, json_body=body)
     print_result(result, raw=args.raw)
     return 0 if result["ok"] else 1
+
+
+def cmd_accounts_get(args: argparse.Namespace) -> int:
+    token, base_url = _get_token_from_args_or_config(args)
+    url = _join_url(base_url, f"/api/accounts/{int(args.id)}")
+    result = http_request("GET", url, token=token)
+    print_result(result, raw=args.raw)
+    return 0 if result.get("ok") else 1
+
+
+def cmd_accounts_update(args: argparse.Namespace) -> int:
+    token, base_url = _get_token_from_args_or_config(args)
+    url = _join_url(base_url, f"/api/accounts/{int(args.id)}")
+    body: dict = {"name": args.name}
+    if getattr(args, "currency", None) is not None:
+        body["currency"] = args.currency
+    result = http_request("PUT", url, token=token, json_body=body)
+    print_result(result, raw=args.raw)
+    return 0 if result.get("ok") else 1
+
+
+def cmd_accounts_delete(args: argparse.Namespace) -> int:
+    token, base_url = _get_token_from_args_or_config(args)
+    url = _join_url(base_url, f"/api/accounts/{int(args.id)}")
+    result = http_request("DELETE", url, token=token)
+    print_result(result, raw=args.raw)
+    return 0 if result.get("ok") else 1
+
+
+def cmd_accounts_summary(args: argparse.Namespace) -> int:
+    token, base_url = _get_token_from_args_or_config(args)
+    query = urllib.parse.urlencode({
+        "startDate": args.start_date,
+        "endDate": args.end_date,
+        "includeRollover": "true" if args.include_rollover else "false",
+    })
+    url = _join_url(base_url, f"/api/accounts/{int(args.id)}/summary") + "?" + query
+    result = http_request("GET", url, token=token)
+    print_result(result, raw=args.raw)
+    return 0 if result.get("ok") else 1
+
+
+def cmd_accounts_transactions(args: argparse.Namespace) -> int:
+    token, base_url = _get_token_from_args_or_config(args)
+    params: dict[str, object] = {
+        "page": args.page,
+        "size": args.size,
+        "expand": "true" if args.expand else "false",
+    }
+    if args.month is not None:
+        params["month"] = args.month
+    if args.year is not None:
+        params["year"] = args.year
+    if args.start_date is not None:
+        params["startDate"] = args.start_date
+    if args.end_date is not None:
+        params["endDate"] = args.end_date
+    if args.category_id is not None:
+        params["categoryId"] = args.category_id
+    query = urllib.parse.urlencode(params)
+    url = _join_url(base_url, f"/api/accounts/{int(args.id)}/transactions") + "?" + query
+    result = http_request("GET", url, token=token)
+    print_result(result, raw=args.raw)
+    return 0 if result.get("ok") else 1
+
+
+def cmd_transactions_total_income(args: argparse.Namespace) -> int:
+    token, base_url = _get_token_from_args_or_config(args)
+    query = urllib.parse.urlencode({"startDate": args.start_date, "endDate": args.end_date})
+    url = _join_url(base_url, "/api/transactions/total-income") + "?" + query
+    result = http_request("GET", url, token=token)
+    print_result(result, raw=args.raw)
+    return 0 if result.get("ok") else 1
+
+
+def cmd_transactions_total_expense(args: argparse.Namespace) -> int:
+    token, base_url = _get_token_from_args_or_config(args)
+    query = urllib.parse.urlencode({"startDate": args.start_date, "endDate": args.end_date})
+    url = _join_url(base_url, "/api/transactions/total-expense") + "?" + query
+    result = http_request("GET", url, token=token)
+    print_result(result, raw=args.raw)
+    return 0 if result.get("ok") else 1
+
+
+def cmd_budget_current(args: argparse.Namespace) -> int:
+    token, base_url = _get_token_from_args_or_config(args)
+    url = _join_url(base_url, "/api/budget/current")
+    result = http_request("GET", url, token=token)
+    print_result(result, raw=args.raw)
+    return 0 if result.get("ok") else 1
+
+
+def cmd_stats_summary(args: argparse.Namespace) -> int:
+    token, base_url = _get_token_from_args_or_config(args)
+    params: dict[str, object] = {
+        "range": args.range,
+        "transactionType": int(args.transaction_type),
+    }
+    if args.date is not None:
+        params["date"] = args.date
+    url = _join_url(base_url, "/api/stats/summary") + "?" + urllib.parse.urlencode(params)
+    result = http_request("GET", url, token=token)
+    print_result(result, raw=args.raw)
+    return 0 if result.get("ok") else 1
+
+
+def cmd_stats_category_summary(args: argparse.Namespace) -> int:
+    token, base_url = _get_token_from_args_or_config(args)
+    params: dict[str, object] = {
+        "range": args.range,
+        "transactionType": int(args.transaction_type),
+        "categoryId": int(args.category_id),
+    }
+    if args.date is not None:
+        params["date"] = args.date
+    url = _join_url(base_url, "/api/stats/category-summary") + "?" + urllib.parse.urlencode(params)
+    result = http_request("GET", url, token=token)
+    print_result(result, raw=args.raw)
+    return 0 if result.get("ok") else 1
+
+
+def cmd_exchange_rates_get(args: argparse.Namespace) -> int:
+    token, base_url = _get_token_from_args_or_config(args)
+    url = _join_url(base_url, f"/api/exchange-rates/{urllib.parse.quote(str(args.base_currency))}")
+    result = http_request("GET", url, token=token)
+    print_result(result, raw=args.raw)
+    return 0 if result.get("ok") else 1
+
+
+def cmd_json_store_list(args: argparse.Namespace) -> int:
+    token, base_url = _get_token_from_args_or_config(args)
+    url = _join_url(base_url, "/api/json-store")
+    result = http_request("GET", url, token=token)
+    print_result(result, raw=args.raw)
+    return 0 if result.get("ok") else 1
+
+
+def cmd_json_store_get(args: argparse.Namespace) -> int:
+    token, base_url = _get_token_from_args_or_config(args)
+    url = _join_url(base_url, f"/api/json-store/{urllib.parse.quote(str(args.name))}")
+    result = http_request("GET", url, token=token)
+    print_result(result, raw=args.raw)
+    return 0 if result.get("ok") else 1
+
+
+def cmd_json_store_create(args: argparse.Namespace) -> int:
+    token, base_url = _get_token_from_args_or_config(args)
+    url = _join_url(base_url, "/api/json-store")
+    body = {
+        "name": args.name,
+        "value": args.value,
+    }
+    result = http_request("POST", url, token=token, json_body=body)
+    print_result(result, raw=args.raw)
+    return 0 if result.get("ok") else 1
+
+
+def cmd_json_store_update(args: argparse.Namespace) -> int:
+    token, base_url = _get_token_from_args_or_config(args)
+    url = _join_url(base_url, f"/api/json-store/{urllib.parse.quote(str(args.name))}")
+    body = {"value": args.value}
+    result = http_request("PUT", url, token=token, json_body=body)
+    print_result(result, raw=args.raw)
+    return 0 if result.get("ok") else 1
+
+
+def cmd_json_store_delete(args: argparse.Namespace) -> int:
+    token, base_url = _get_token_from_args_or_config(args)
+    url = _join_url(base_url, f"/api/json-store/{urllib.parse.quote(str(args.name))}")
+    result = http_request("DELETE", url, token=token)
+    print_result(result, raw=args.raw)
+    return 0 if result.get("ok") else 1
 
 
 def cmd_categories_list(args: argparse.Namespace) -> int:
@@ -1077,6 +1423,8 @@ def build_parser() -> argparse.ArgumentParser:
         "  tracko_cli health\n\n"
         "  # Auth\n"
         "  tracko_cli login --username user@example.com --password password\n"
+        "  tracko_cli --base-url http://192.168.1.10:8080 login --username user@example.com --password password\n"
+        "  tracko_cli sign-up --phone-no 99999 --firebase-id FIREBASE_UUID\n"
         "  tracko_cli logout\n\n"
         "  # Users\n"
         "  tracko_cli users list\n\n"
@@ -1095,7 +1443,10 @@ def build_parser() -> argparse.ArgumentParser:
         "  # Transactions\n"
         "  tracko_cli transactions list\n"
         "  tracko_cli transactions summary --start-date 2026-01-01 --end-date 2026-12-31\n"
-        "  tracko_cli transactions add --account-id 2 --category-id 2 --amount 250 --type expense --name Lunch --comments 'Team lunch'\n\n"
+        "  tracko_cli transactions add --account-id 2 --category-id 2 --amount 250 --type expense --name Lunch --comments 'Team lunch'\n"
+        "  tracko_cli transactions get --id 1\n"
+        "  tracko_cli transactions update --id 1 --account-id 2 --category-id 2 --amount 300 --type expense --name 'Lunch (updated)' --comments 'Updated from CLI'\n"
+        "  tracko_cli transactions delete --id 1\n\n"
         "  # Transfers (now uses unified transactions API)\n"
         "  tracko_cli transfers create --from-account-id 2 --to-account-id 3 --amount 500 --name 'Move to Savings' --comments 'Feb savings'\n\n"
         "  # Splits (list)\n"
@@ -1143,6 +1494,14 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--firebase-uuid", required=True)
     sp.set_defaults(func=cmd_oauth_token)
 
+    sp = sub.add_parser("sign-up", help="Sign up via /api/signUp")
+    sp.add_argument("--phone-no", required=True)
+    sp.add_argument("--firebase-id", required=True)
+    sp.add_argument("--name")
+    sp.add_argument("--email")
+    sp.add_argument("--base-currency")
+    sp.set_defaults(func=cmd_signup)
+
     sp = sub.add_parser("logout")
     sp.set_defaults(func=cmd_logout)
 
@@ -1180,7 +1539,41 @@ def build_parser() -> argparse.ArgumentParser:
     sp2.set_defaults(func=cmd_accounts_list)
     sp2 = sub_acc.add_parser("add")
     sp2.add_argument("--name", required=True)
+    sp2.add_argument("--currency")
     sp2.set_defaults(func=cmd_accounts_add)
+
+    sp2 = sub_acc.add_parser("get")
+    sp2.add_argument("--id", required=True, type=int)
+    sp2.set_defaults(func=cmd_accounts_get)
+
+    sp2 = sub_acc.add_parser("update")
+    sp2.add_argument("--id", required=True, type=int)
+    sp2.add_argument("--name", required=True)
+    sp2.add_argument("--currency")
+    sp2.set_defaults(func=cmd_accounts_update)
+
+    sp2 = sub_acc.add_parser("delete")
+    sp2.add_argument("--id", required=True, type=int)
+    sp2.set_defaults(func=cmd_accounts_delete)
+
+    sp2 = sub_acc.add_parser("summary")
+    sp2.add_argument("--id", required=True, type=int)
+    sp2.add_argument("--start-date", required=True, help="Start date (YYYY-MM-DD)")
+    sp2.add_argument("--end-date", required=True, help="End date (YYYY-MM-DD)")
+    sp2.add_argument("--include-rollover", action="store_true")
+    sp2.set_defaults(func=cmd_accounts_summary)
+
+    sp2 = sub_acc.add_parser("transactions")
+    sp2.add_argument("--id", required=True, type=int)
+    sp2.add_argument("--month", type=int)
+    sp2.add_argument("--year", type=int)
+    sp2.add_argument("--start-date")
+    sp2.add_argument("--end-date")
+    sp2.add_argument("--category-id", type=int)
+    sp2.add_argument("--page", type=int, default=0)
+    sp2.add_argument("--size", type=int, default=500)
+    sp2.add_argument("--expand", action="store_true")
+    sp2.set_defaults(func=cmd_accounts_transactions)
 
     sp2 = sub_acc.add_parser("balances")
     sp2.set_defaults(func=cmd_accounts_balances)
@@ -1193,11 +1586,29 @@ def build_parser() -> argparse.ArgumentParser:
     sp2.add_argument("--name", required=True)
     sp2.set_defaults(func=cmd_categories_add)
 
+    sp2 = sub_cat.add_parser("get")
+    sp2.add_argument("--id", required=True, type=int)
+    sp2.set_defaults(func=cmd_categories_get)
+
+    sp2 = sub_cat.add_parser("update")
+    sp2.add_argument("--id", required=True, type=int)
+    sp2.add_argument("--name", required=True)
+    sp2.add_argument("--category-type")
+    sp2.set_defaults(func=cmd_categories_update)
+
+    sp2 = sub_cat.add_parser("delete")
+    sp2.add_argument("--id", required=True, type=int)
+    sp2.set_defaults(func=cmd_categories_delete)
+
     # contacts
     sp = sub.add_parser("contacts")
     sub_ct = sp.add_subparsers(dest="contacts_cmd", required=True)
     sp2 = sub_ct.add_parser("list")
     sp2.set_defaults(func=cmd_contacts_list)
+
+    sp2 = sub_ct.add_parser("get")
+    sp2.add_argument("--id", required=True, type=int)
+    sp2.set_defaults(func=cmd_contacts_get)
 
     sp2 = sub_ct.add_parser("add")
     sp2.add_argument("--name", required=True)
@@ -1233,6 +1644,10 @@ def build_parser() -> argparse.ArgumentParser:
     sp2 = sub_spl.add_parser("list")
     sp2.set_defaults(func=cmd_splits_list)
 
+    sp2 = sub_spl.add_parser("get")
+    sp2.add_argument("--id", type=int, required=True)
+    sp2.set_defaults(func=cmd_splits_get)
+
     sp2 = sub_spl.add_parser("for-transaction")
     sp2.add_argument("--transaction-id", type=int, required=True)
     sp2.set_defaults(func=cmd_splits_for_transaction)
@@ -1262,16 +1677,28 @@ def build_parser() -> argparse.ArgumentParser:
     sp2.add_argument("--settled-at")
     sp2.set_defaults(func=cmd_splits_create)
 
-    sp = sub.add_parser("transactions")
+    sp2 = sub_spl.add_parser("settle")
+    sp2.add_argument("--id", type=int, required=True)
+    sp2.set_defaults(func=cmd_splits_settle)
+
+    sp2 = sub_spl.add_parser("unsettle")
+    sp2.add_argument("--id", type=int, required=True)
+    sp2.set_defaults(func=cmd_splits_unsettle)
+
+    sp2 = sub_spl.add_parser("delete")
+    sp2.add_argument("--id", type=int, required=True)
+    sp2.set_defaults(func=cmd_splits_delete)
+
+    sp = sub.add_parser("transactions", help="Transactions operations")
     sub_tx = sp.add_subparsers(dest="transactions_cmd", required=True)
-    sp2 = sub_tx.add_parser("list")
+    sp2 = sub_tx.add_parser("list", help="List transactions (paginated) for a given month/year")
     sp2.add_argument("--month", type=int, help="Month (1-12). Defaults to current month.")
     sp2.add_argument("--year", type=int, help="Year (YYYY). Defaults to current year.")
     sp2.add_argument("--page", type=int, default=0, help="Zero-based page index (default: 0).")
     sp2.add_argument("--size", type=int, default=500, help="Page size (default: 500).")
     sp2.set_defaults(func=cmd_transactions_list)
 
-    sp2 = sub_tx.add_parser("add")
+    sp2 = sub_tx.add_parser("add", help="Create a transaction")
     sp2.add_argument("--account-id", required=True, type=int)
     sp2.add_argument("--category-id", required=True, type=int)
     sp2.add_argument("--amount", required=True, type=float)
@@ -1286,12 +1713,45 @@ def build_parser() -> argparse.ArgumentParser:
     sp2.add_argument("--exchange-rate", type=float, help="Optional: explicit exchange rate. If omitted, backend uses user's configured rate.")
     sp2.set_defaults(func=cmd_transactions_add)
 
-    sp2 = sub_tx.add_parser("summary")
+    sp2 = sub_tx.add_parser("get", help="Get a transaction by id")
+    sp2.add_argument("--id", required=True, type=int, help="Transaction ID")
+    sp2.set_defaults(func=cmd_transactions_get)
+
+    sp2 = sub_tx.add_parser("update", help="Update a transaction by id")
+    sp2.add_argument("--id", required=True, type=int, help="Transaction ID")
+    sp2.add_argument("--account-id", type=int)
+    sp2.add_argument("--category-id", type=int)
+    sp2.add_argument("--amount", type=float)
+    sp2.add_argument("--type", choices=["income", "expense"], help="income -> CREDIT(2), expense -> DEBIT(1)")
+    sp2.add_argument("--name", help="Transaction title/name")
+    sp2.add_argument("--comments", default=None)
+    sp2.add_argument("--date", default=None, help="YYYY-MM-DD or ISO-8601 or epoch-ms (default: no change)")
+    sp2.add_argument("--countable", action="store_true", default=None)
+    sp2.add_argument("--not-countable", action="store_false", dest="countable")
+    sp2.add_argument("--currency", help="Original currency code (e.g., USD, EUR). Backend will fetch the configured exchange rate.")
+    sp2.add_argument("--exchange-rate", type=float, help="Optional: explicit exchange rate. If omitted, backend uses user's configured rate.")
+    sp2.set_defaults(func=cmd_transactions_update)
+
+    sp2 = sub_tx.add_parser("delete", help="Delete a transaction by id")
+    sp2.add_argument("--id", required=True, type=int, help="Transaction ID")
+    sp2.set_defaults(func=cmd_transactions_delete)
+
+    sp2 = sub_tx.add_parser("summary", help="Get income/expense/balance summary for a date range")
     sp2.add_argument("--start-date", help="Start date (YYYY-MM-DD). Defaults to current year start.")
     sp2.add_argument("--end-date", help="End date (YYYY-MM-DD). Defaults to current year end.")
     sp2.add_argument("--account-ids", help="Comma-separated account IDs to filter by")
     sp2.add_argument("--include-rollover", action="store_true", help="Include rollover in calculations")
     sp2.set_defaults(func=cmd_transactions_summary)
+
+    sp2 = sub_tx.add_parser("total-income", help="Get total income for a date range")
+    sp2.add_argument("--start-date", required=True, help="Start date (YYYY-MM-DD)")
+    sp2.add_argument("--end-date", required=True, help="End date (YYYY-MM-DD)")
+    sp2.set_defaults(func=cmd_transactions_total_income)
+
+    sp2 = sub_tx.add_parser("total-expense", help="Get total expense for a date range")
+    sp2.add_argument("--start-date", required=True, help="Start date (YYYY-MM-DD)")
+    sp2.add_argument("--end-date", required=True, help="End date (YYYY-MM-DD)")
+    sp2.set_defaults(func=cmd_transactions_total_expense)
 
     # budget
     sp = sub.add_parser("budget")
@@ -1313,6 +1773,55 @@ def build_parser() -> argparse.ArgumentParser:
     sp2.add_argument("--month", type=int, help="Month (1-12)")
     sp2.add_argument("--year", type=int, help="Year (YYYY)")
     sp2.set_defaults(func=cmd_budget_available)
+
+    sp2 = sub_budget.add_parser("current")
+    sp2.set_defaults(func=cmd_budget_current)
+
+    sp = sub.add_parser("stats")
+    sub_stats = sp.add_subparsers(dest="stats_cmd", required=True)
+
+    sp2 = sub_stats.add_parser("summary")
+    sp2.add_argument("--range", required=True, choices=["weekly", "monthly", "yearly"])
+    sp2.add_argument("--transaction-type", required=True, type=int, choices=[1, 2])
+    sp2.add_argument("--date", help="Anchor date (YYYY-MM-DD)")
+    sp2.set_defaults(func=cmd_stats_summary)
+
+    sp2 = sub_stats.add_parser("category-summary")
+    sp2.add_argument("--range", required=True, choices=["weekly", "monthly", "yearly"])
+    sp2.add_argument("--transaction-type", required=True, type=int, choices=[1, 2])
+    sp2.add_argument("--category-id", required=True, type=int)
+    sp2.add_argument("--date", help="Anchor date (YYYY-MM-DD)")
+    sp2.set_defaults(func=cmd_stats_category_summary)
+
+    sp = sub.add_parser("exchange-rates")
+    sub_er = sp.add_subparsers(dest="exchange_rates_cmd", required=True)
+    sp2 = sub_er.add_parser("get")
+    sp2.add_argument("--base-currency", required=True)
+    sp2.set_defaults(func=cmd_exchange_rates_get)
+
+    sp = sub.add_parser("json-store")
+    sub_js = sp.add_subparsers(dest="json_store_cmd", required=True)
+
+    sp2 = sub_js.add_parser("list")
+    sp2.set_defaults(func=cmd_json_store_list)
+
+    sp2 = sub_js.add_parser("get")
+    sp2.add_argument("--name", required=True)
+    sp2.set_defaults(func=cmd_json_store_get)
+
+    sp2 = sub_js.add_parser("create")
+    sp2.add_argument("--name", required=True)
+    sp2.add_argument("--value", required=True)
+    sp2.set_defaults(func=cmd_json_store_create)
+
+    sp2 = sub_js.add_parser("update")
+    sp2.add_argument("--name", required=True)
+    sp2.add_argument("--value", required=True)
+    sp2.set_defaults(func=cmd_json_store_update)
+
+    sp2 = sub_js.add_parser("delete")
+    sp2.add_argument("--name", required=True)
+    sp2.set_defaults(func=cmd_json_store_delete)
 
     # user currencies
     sp = sub.add_parser("currencies")

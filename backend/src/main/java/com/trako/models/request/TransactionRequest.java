@@ -13,7 +13,7 @@ import java.util.Date;
 public record TransactionRequest(
     // Common fields
     Long id,
-    @NotNull Long accountId,  // For transactions, this is the account. For transfers, this is the source (fromAccountId)
+    Long accountId,  // For transactions, this is the account. For transfers, this is the source (fromAccountId)
     Date date,
     Double amount,
     String name,
