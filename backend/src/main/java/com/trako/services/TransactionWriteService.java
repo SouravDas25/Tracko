@@ -488,7 +488,7 @@ public class TransactionWriteService {
 
     /**
      * Updates an existing transaction (regular or transfer).
-     * Validates ownership and delegates to appropriate update method.
+     * Validates ownership and delegates to the appropriate update method.
      * 
      * @param userId authenticated user id
      * @param transaction the transaction to update
@@ -504,7 +504,7 @@ public class TransactionWriteService {
         Transaction existing = transactionRepository.findById(transaction.getId())
                 .orElseThrow(() -> new NotFoundException("Transaction not found: " + transaction.getId()));
 
-        // Verify ownership of existing transaction
+        // Verify ownership of an existing transaction
         Account existingAccount = accountRepository.findById(existing.getAccountId())
                 .orElseThrow(() -> new IllegalArgumentException("Account not found: " + existing.getAccountId()));
         

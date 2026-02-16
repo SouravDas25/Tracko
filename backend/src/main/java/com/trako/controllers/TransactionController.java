@@ -15,8 +15,6 @@ import com.trako.services.TransactionService;
 import com.trako.services.TransactionWriteService;
 import com.trako.services.UserService;
 import com.trako.util.Response;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,8 +50,6 @@ public class TransactionController {
 
     @Autowired
     private CategoryRepository categoryRepository;
-
-    private static final ObjectMapper ACCOUNT_IDS_OBJECT_MAPPER = new ObjectMapper();
 
     private List<Transaction> hideTransferCredits(List<Transaction> transactions, String userId) {
         var transferCats = categoryRepository.findByUserIdAndName(userId, "TRANSFER");
@@ -423,6 +419,7 @@ public class TransactionController {
     /**
      * PUT /api/transactions/{id}
      * Updates an existing transaction or transfer by id.
+     * Supports partial updates - only non-null fields in the request are updated.
      * 
      * <p>Delegates all write logic to TransactionWriteService.
      * <p>If the transaction is part of a transfer (has linkedTransactionId), both sides are updated atomically.
@@ -433,29 +430,66 @@ public class TransactionController {
         try {
             String currentUserId = userService.loggedInUser().getId();
 
-            // Map request to entity for the write service
-            Transaction tx = new Transaction();
-            tx.setId(id);
-            tx.setAccountId(request.accountId());
-            tx.setCategoryId(request.categoryId());
-            tx.setTransactionType(request.transactionType());
-            tx.setAmount(request.amount());
-            tx.setName(request.name());
-            tx.setComments(request.comments());
-            tx.setDate(request.date());
-            tx.setIsCountable(request.isCountable());
-            tx.setOriginalCurrency(request.originalCurrency());
-            tx.setOriginalAmount(request.originalAmount());
-            tx.setExchangeRate(request.exchangeRate());
-            tx.setLinkedTransactionId(request.linkedTransactionId());
+            // Load an existing transaction to check its type and support partial updates
+            Transaction existing = transactionService.findById(id).orElse(null);
+            if (existing == null) {
+                return Response.notFound("Transaction not found");
+            }
 
-            // Delegate to write service - it handles both regular transactions and transfers
-            Transaction updated = transactionWriteService.updateTransaction(currentUserId, tx);
+            // Check if an existing transaction is part of a transfer
+            boolean isExistingTransfer = transactionWriteService.isTransfer(id);
             
-            // Determine the success message based on whether it's a transfer
-            String message = transactionWriteService.isTransfer(id) ? 
-                "Transfer updated successfully" : "Transaction updated successfully";
+            // CASE 1: Updating a TRANSFER (either existing is a transfer, or request is converting to transfer)
+            // Note: Currently we assume if existing is a transfer, we stay transfer.
+            // If a request has transfer fields, we treat it as a transfer update.
+            if (isExistingTransfer || request.isTransfer()) {
+                Transaction[] result = transactionWriteService.updateTransfer(
+                    currentUserId,
+                    id,
+                    request.getSourceAccountId(), // null means don't change
+                    request.toAccountId(),
+                    request.date(),
+                    request.amount(),
+                    request.name(),
+                    request.comments()
+                );
+
+                Transaction updated = result[0].getId().equals(id) ? result[0] : result[1];
+                return Response.ok(updated, "Transfer updated successfully");
+            }
+
+            // CASE 2: Updating a REGULAR TRANSACTION
+            // Merge non-null fields from the request into a new Transaction object for the service
+            //  (updateTransaction) expects a Transaction entity.
+            // We will populate it with existing values first, then override with request values.
             
+            Transaction txToUpdate = new Transaction();
+            txToUpdate.setId(id);
+            
+            // Apply updates or keep existing
+            txToUpdate.setAccountId(request.accountId() != null ? request.accountId() : existing.getAccountId());
+            txToUpdate.setCategoryId(request.categoryId() != null ? request.categoryId() : existing.getCategoryId());
+            txToUpdate.setTransactionType(request.transactionType() != null ? request.transactionType() : existing.getTransactionType());
+            txToUpdate.setAmount(request.amount() != null ? request.amount() : existing.getAmount());
+            txToUpdate.setName(request.name() != null ? request.name() : existing.getName());
+            txToUpdate.setComments(request.comments() != null ? request.comments() : existing.getComments());
+            txToUpdate.setDate(request.date() != null ? request.date() : existing.getDate());
+            txToUpdate.setIsCountable(request.isCountable() != null ? request.isCountable() : existing.getIsCountable());
+            
+            // Currency fields - if any are provided, we should probably take them.
+            // If not provided, keep existing.
+            txToUpdate.setOriginalCurrency(request.originalCurrency() != null ? request.originalCurrency() : existing.getOriginalCurrency());
+            txToUpdate.setOriginalAmount(request.originalAmount() != null ? request.originalAmount() : existing.getOriginalAmount());
+            txToUpdate.setExchangeRate(request.exchangeRate() != null ? request.exchangeRate() : existing.getExchangeRate());
+            
+            // linkedTransactionId should not be set manually for regular transactions usually, 
+            // but we preserve it if it was there (though if it was there, isExistingTransfer would be true)
+            txToUpdate.setLinkedTransactionId(existing.getLinkedTransactionId());
+
+            // Delegate to write service - it will enforce ownership and will also handle
+            // transfer updates when the existing transaction is part of a transfer.
+            Transaction updated = transactionWriteService.updateTransaction(currentUserId, txToUpdate);
+            String message = "Transaction updated successfully";
             return Response.ok(updated, message);
             
         } catch (UserNotLoggedInException e) {
