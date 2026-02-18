@@ -49,9 +49,6 @@ public class SplitIntegrationTest {
     private TransactionWriteService transactionWriteService;
 
     @Autowired
-    private AccountMonthSummaryRepository accountMonthSummaryRepository;
-
-    @Autowired
     private AccountRepository accountRepository;
 
     @Autowired
@@ -79,7 +76,6 @@ public class SplitIntegrationTest {
     @BeforeEach
     public void setup() {
         splitRepository.deleteAll();
-        accountMonthSummaryRepository.deleteAll();
         transactionRepository.deleteAll();
         contactRepository.deleteAll();
         accountRepository.deleteAll();

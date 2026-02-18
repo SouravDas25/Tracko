@@ -55,9 +55,6 @@ public class BudgetIntegrationTest {
 
     @Autowired
     private TransactionWriteService transactionWriteService;
-
-    @Autowired
-    private AccountMonthSummaryRepository accountMonthSummaryRepository;
     
     @Autowired
     private BudgetMonthRepository budgetMonthRepository;
@@ -78,7 +75,6 @@ public class BudgetIntegrationTest {
         // Clear data
         budgetCategoryAllocationRepository.deleteAll();
         budgetMonthRepository.deleteAll();
-        accountMonthSummaryRepository.deleteAll();
         transactionRepository.deleteAll();
         categoryRepository.deleteAll();
         accountRepository.deleteAll();

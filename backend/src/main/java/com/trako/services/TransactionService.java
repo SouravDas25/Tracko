@@ -5,6 +5,7 @@ import com.trako.dtos.TransactionDetailDTO;
 import com.trako.dtos.TransactionSummaryDTO;
 import com.trako.entities.*;
 import com.trako.repositories.*;
+import com.trako.util.NumberUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -19,20 +20,16 @@ import java.util.stream.Collectors;
  * Read-oriented service for {@link Transaction} queries.
  *
  * <p><b>Important:</b> this service is intentionally read-only. All transaction mutations must go
- * through {@link TransactionWriteService} so {@code account_month_summary} remains consistent.
+ * through {@link TransactionWriteService} to preserve read-side consistency.
  */
 @Service
 public class TransactionService {
 
     // Read-only service.
-    // All transaction mutations must go through TransactionWriteService so that
-    // account_month_summary stays consistent (used for fast summary + rollover queries).
+    // All transaction mutations must go through TransactionWriteService.
 
     @Autowired
     private TransactionRepository transactionRepository;
-
-    @Autowired
-    private AccountSummaryReadOnlyService accountSummaryReadOnlyService;
 
     @Autowired
     private AccountRepository accountRepository;
@@ -217,9 +214,14 @@ public class TransactionService {
             return base;
         }
 
+        Date monthStart = toMonthStart(ym.year, ym.month);
         Double rolloverNet;
-        // Rollover is defined as the sum of net totals for all months strictly before the start month.
-        rolloverNet = accountSummaryReadOnlyService.getRolloverNetBeforeMonth(userId, ym.year, ym.month, accountIds);
+        // Rollover is defined as the sum of net totals strictly before the start month.
+        if (accountIds == null || accountIds.isEmpty()) {
+            rolloverNet = transactionRepository.sumNetBeforeDateForUser(userId, monthStart);
+        } else {
+            rolloverNet = transactionRepository.sumNetBeforeDateForUserAndAccounts(userId, accountIds, monthStart);
+        }
 
         double withRollover = safe(base.getNetTotal()) + safe(rolloverNet);
         return new TransactionSummaryDTO(
@@ -236,8 +238,8 @@ public class TransactionService {
      * Returns a transaction summary for the given date range.
      *
      * <p>Fast path: if the range is exactly a full calendar month (start at first-day midnight,
-     * end at the start of the next month), the result is computed from the pre-aggregated
-     * {@code account_month_summary} table.
+     * end at the start of the next month), the result is computed by aggregating countable
+     * transactions directly in SQL.
      *
      * <p>Fallback: otherwise, the result is computed by scanning raw transactions in the range.
      *
@@ -252,12 +254,14 @@ public class TransactionService {
         boolean fullMonth = isFullMonthRange(startDate, endDate);
 
         if (ym != null && fullMonth) {
-            // Fast-path: when the requested range is exactly a full calendar month, use the
-            // pre-aggregated account_month_summary table instead of scanning raw transactions.
-            AccountSummaryReadOnlyService.MonthTotals totals =
-                    accountSummaryReadOnlyService.getMonthTotals(userId, ym.year, ym.month, accountIds);
-
-            return new TransactionSummaryDTO(totals.income(), totals.expense(), totals.net(), totals.count());
+            // Fast-path: aggregate countable transactions directly for full calendar months.
+            Object[] row;
+            if (accountIds == null || accountIds.isEmpty()) {
+                row = transactionRepository.sumCountableTotalsForUserInRange(userId, startDate, endDate);
+            } else {
+                row = transactionRepository.sumCountableTotalsForUserInRangeAndAccounts(userId, accountIds, startDate, endDate);
+            }
+            return summaryFromAggregateRow(row);
         }
 
         // Fallback for arbitrary date ranges (preserve old behavior): scan raw transactions
@@ -308,11 +312,11 @@ public class TransactionService {
             return base;
         }
 
-        Double rolloverNet = accountSummaryReadOnlyService.getRolloverNetBeforeMonth(
+        Date monthStart = toMonthStart(ym.year, ym.month);
+        Double rolloverNet = transactionRepository.sumNetBeforeDateForUserAndAccounts(
                 userId,
-                ym.year,
-                ym.month,
-                Collections.singletonList(accountId)
+                Collections.singletonList(accountId),
+                monthStart
         );
 
         double withRollover = safe(base.getNetTotal()) + safe(rolloverNet);
@@ -345,6 +349,15 @@ public class TransactionService {
         return new YearMonthKey(year, month);
     }
 
+    private Date toMonthStart(int year, int month) {
+        Calendar cal = Calendar.getInstance();
+        cal.clear();
+        cal.set(Calendar.YEAR, year);
+        cal.set(Calendar.MONTH, month - 1);
+        cal.set(Calendar.DAY_OF_MONTH, 1);
+        return cal.getTime();
+    }
+
     private boolean isFullMonthRange(Date startDate, Date endDate) {
         if (startDate == null || endDate == null) return false;
 
@@ -374,6 +387,23 @@ public class TransactionService {
 
     private double safe(Double v) {
         return v == null ? 0.0 : v;
+    }
+
+    private TransactionSummaryDTO summaryFromAggregateRow(Object[] row) {
+        row = normalizeAggregateRow(row);
+        double income = NumberUtil.asDouble(row[0]);
+        double expense = NumberUtil.asDouble(row[1]);
+        double net = NumberUtil.asDouble(row[2]);
+        int count = NumberUtil.asInt(row[3]);
+        return new TransactionSummaryDTO(income, expense, net, count);
+    }
+
+    private Object[] normalizeAggregateRow(Object[] row) {
+        if (row == null) return new Object[]{0.0, 0.0, 0.0, 0};
+        if (row.length == 1 && row[0] instanceof Object[]) {
+            return (Object[]) row[0];
+        }
+        return row;
     }
 
     public Double getTotalIncome(String userId, Date startDate, Date endDate) {

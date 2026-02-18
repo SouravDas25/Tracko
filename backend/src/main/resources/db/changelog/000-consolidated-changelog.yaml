@@ -473,3 +473,10 @@ databaseChangeLog:
             columns:
               - column:
                   name: linked_transaction_id
+
+  - changeSet:
+      id: 013-drop-account-month-summary
+      author: sd25
+      changes:
+        - dropTable:
+            tableName: account_month_summary

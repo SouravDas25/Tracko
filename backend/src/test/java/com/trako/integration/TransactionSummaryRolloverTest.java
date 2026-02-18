@@ -52,9 +52,6 @@ public class TransactionSummaryRolloverTest {
     private BudgetCategoryAllocationRepository budgetCategoryAllocationRepository;
 
     @Autowired
-    private AccountMonthSummaryRepository accountMonthSummaryRepository;
-
-    @Autowired
     private TransactionWriteService transactionWriteService;
 
     private User testUser;
@@ -68,7 +65,6 @@ public class TransactionSummaryRolloverTest {
         // Cleanup
         budgetCategoryAllocationRepository.deleteAll();
         budgetMonthRepository.deleteAll();
-        accountMonthSummaryRepository.deleteAll();
         transactionRepository.deleteAll();
         categoryRepository.deleteAll();
         accountRepository.deleteAll();
