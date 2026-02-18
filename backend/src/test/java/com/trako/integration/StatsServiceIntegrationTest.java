@@ -3,7 +3,6 @@ package com.trako.integration;
 import com.trako.config.TestJwtSecurityConfig;
 import com.trako.dtos.StatsResponseDTO;
 import com.trako.entities.*;
-import com.trako.repositories.AccountMonthSummaryRepository;
 import com.trako.repositories.AccountRepository;
 import com.trako.repositories.CategoryRepository;
 import com.trako.repositories.TransactionRepository;
@@ -52,9 +51,6 @@ public class StatsServiceIntegrationTest {
     @Autowired
     private TransactionWriteService transactionWriteService;
 
-    @Autowired
-    private AccountMonthSummaryRepository accountMonthSummaryRepository;
-
     private User user;
     private Account account;
     private Category food;
@@ -62,7 +58,6 @@ public class StatsServiceIntegrationTest {
 
     @BeforeEach
     public void setup() {
-        accountMonthSummaryRepository.deleteAll();
         transactionRepository.deleteAll();
         categoryRepository.deleteAll();
         accountRepository.deleteAll();
