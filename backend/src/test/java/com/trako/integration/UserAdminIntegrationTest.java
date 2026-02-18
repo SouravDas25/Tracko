@@ -20,6 +20,9 @@ import java.util.Collections;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -101,8 +104,8 @@ public class UserAdminIntegrationTest {
                 .andExpect(jsonPath("$.result", notNullValue()));
 
         User created = usersRepository.findByPhoneNo("2222222222");
-        org.junit.jupiter.api.Assertions.assertNotNull(created);
-        org.junit.jupiter.api.Assertions.assertEquals("Created User", created.getName());
+        assertNotNull(created);
+        assertEquals("Created User", created.getName());
     }
 
     @Test
@@ -121,7 +124,12 @@ public class UserAdminIntegrationTest {
                 .andExpect(status().isOk());
 
         User notCreated = usersRepository.findByPhoneNo("3333333333");
-        org.junit.jupiter.api.Assertions.assertNull(notCreated);
+        assertNull(notCreated);
+
+        User normal = usersRepository.findByPhoneNo("1111111111");
+        assertNotNull(normal);
+        assertEquals("Hacker", normal.getName());
+        assertEquals("hacker@mail.com", normal.getEmail());
     }
 
     @Test
@@ -163,9 +171,15 @@ public class UserAdminIntegrationTest {
     public void nonAdminListReturnsOnlySelf() throws Exception {
         mockMvc.perform(get("/api/user")
                         .header("Authorization", userBearer))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    public void adminListReturnsAllUsers() throws Exception {
+        mockMvc.perform(get("/api/user")
+                        .header("Authorization", adminBearer))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result", hasSize(1)))
-                .andExpect(jsonPath("$.result[0].phoneNo").value("1111111111"));
+                .andExpect(jsonPath("$.result", hasSize(2)));
     }
 
     @Test
@@ -191,11 +205,12 @@ public class UserAdminIntegrationTest {
                 .andExpect(status().isOk());
 
         User shouldNotExist = usersRepository.findByPhoneNo("3333333333");
-        org.junit.jupiter.api.Assertions.assertNull(shouldNotExist);
+        assertNull(shouldNotExist);
 
         User normal = usersRepository.findByPhoneNo("1111111111");
-        org.junit.jupiter.api.Assertions.assertNotNull(normal);
-        org.junit.jupiter.api.Assertions.assertEquals("Normal Updated", normal.getName());
-        org.junit.jupiter.api.Assertions.assertEquals("normal.updated@mail.com", normal.getEmail());
+        assertNotNull(normal);
+        assertEquals("Normal Updated", normal.getName());
+        assertEquals("normal.updated@mail.com", normal.getEmail());
+        assertEquals("1111111111", normal.getPhoneNo());
     }
 }
