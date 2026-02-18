@@ -141,7 +141,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                     || SecurityContextHolder.getContext().getAuthentication() instanceof AnonymousAuthenticationToken)) {
 
                 logger.info("JwtRequestFilter: Loading details for user: " + username);
-                // Load user details from database using the username from token
+                // Load user details from a database using the username from token
                 UserDetails userDetails = jwtUserDetailsService.loadUserByUsername(username);
 
                 // Validate the JWT token against the loaded user details

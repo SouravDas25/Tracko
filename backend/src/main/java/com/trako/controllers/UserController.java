@@ -2,11 +2,13 @@ package com.trako.controllers;
 
 import com.trako.entities.User;
 import com.trako.models.request.UserSaveRequest;
+import com.trako.models.responses.ApiResponse;
 import com.trako.services.UserService;
 import com.trako.util.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,7 +30,11 @@ public class UserController {
         User current = userService.loggedInUser();
 
         if (id == null || id.isBlank()) {
-            return Response.ok(Collections.singletonList(current));
+            if (!current.isAdmin()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(ApiResponse.make(null, "Access denied"));
+            }
+            return Response.ok(userService.findUser(null));
         }
         if (!current.isAdmin() && !current.getId().equals(id)) {
             return Response.unauthorized();
