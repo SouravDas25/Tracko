@@ -9,8 +9,45 @@ import '../services/api_client.dart';
 import '../Utils/enums.dart';
 import '../Utils/AppLog.dart';
 
+import '../models/transaction_period_summary.dart';
+
 class TransactionRepository {
   final _api = ApiClient();
+
+  Future<List<TransactionPeriodSummary>> getMonthlySummaries(int year,
+      {List<int>? accountIds}) async {
+    final isSingleAccount = accountIds != null && accountIds.length == 1;
+    final path = isSingleAccount
+        ? "${ApiConfig.accounts}/${accountIds!.first}/summary/monthly"
+        : "${ApiConfig.transactions}/summary/monthly";
+
+    final res = await _api.get<List<dynamic>>(
+      path,
+      query: {
+        'year': year,
+        if (!isSingleAccount && accountIds != null && accountIds.isNotEmpty)
+          'accountIds': accountIds.join(','),
+      },
+    );
+    return res.map((e) => TransactionPeriodSummary.fromJson(e)).toList();
+  }
+
+  Future<List<TransactionPeriodSummary>> getYearlySummaries(
+      {List<int>? accountIds}) async {
+    final isSingleAccount = accountIds != null && accountIds.length == 1;
+    final path = isSingleAccount
+        ? "${ApiConfig.accounts}/${accountIds!.first}/summary/yearly"
+        : "${ApiConfig.transactions}/summary/yearly";
+
+    final res = await _api.get<List<dynamic>>(
+      path,
+      query: {
+        if (!isSingleAccount && accountIds != null && accountIds.isNotEmpty)
+          'accountIds': accountIds.join(','),
+      },
+    );
+    return res.map((e) => TransactionPeriodSummary.fromJson(e)).toList();
+  }
 
   Future<List<legacy.Transaction>> getAll({
     int? month,

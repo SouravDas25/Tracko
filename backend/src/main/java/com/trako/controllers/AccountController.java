@@ -1,6 +1,7 @@
 package com.trako.controllers;
 
 import com.trako.entities.Account;
+import com.trako.dtos.TransactionPeriodSummaryDTO;
 import com.trako.dtos.TransactionSummaryDTO;
 import com.trako.dtos.TransactionDetailDTO;
 import com.trako.models.request.AccountSaveRequest;
@@ -137,6 +138,47 @@ public class AccountController {
             summary = transactionService.getAccountSummary(currentUserId, id, startDate, endDate);
         }
         return Response.ok(summary);
+    }
+
+    /**
+     * GET /api/accounts/{id}/summary/monthly
+     * Returns monthly summaries for a specific account.
+     */
+    @GetMapping("/{id}/summary/monthly")
+    public ResponseEntity<?> getAccountMonthlySummaries(
+            @PathVariable Long id,
+            @RequestParam(required = false) Integer year) {
+        String currentUserId = userService.loggedInUser().getId();
+        Account account = accountService.findById(id).orElse(null);
+        if (account == null) {
+            return notFound("Account not found");
+        }
+        if (!currentUserId.equals(account.getUserId())) {
+            return Response.unauthorized();
+        }
+
+        int resolvedYear = (year == null) ? Calendar.getInstance().get(Calendar.YEAR) : year;
+        List<TransactionPeriodSummaryDTO> summaries = transactionService.getMonthlySummaries(currentUserId, resolvedYear, List.of(id));
+        return Response.ok(summaries);
+    }
+
+    /**
+     * GET /api/accounts/{id}/summary/yearly
+     * Returns yearly summaries for a specific account.
+     */
+    @GetMapping("/{id}/summary/yearly")
+    public ResponseEntity<?> getAccountYearlySummaries(@PathVariable Long id) {
+        String currentUserId = userService.loggedInUser().getId();
+        Account account = accountService.findById(id).orElse(null);
+        if (account == null) {
+            return notFound("Account not found");
+        }
+        if (!currentUserId.equals(account.getUserId())) {
+            return Response.unauthorized();
+        }
+
+        List<TransactionPeriodSummaryDTO> summaries = transactionService.getYearlySummaries(currentUserId, List.of(id));
+        return Response.ok(summaries);
     }
 
     @GetMapping("/{id}/transactions")

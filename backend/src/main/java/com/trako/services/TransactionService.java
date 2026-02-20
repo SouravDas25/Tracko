@@ -2,6 +2,7 @@ package com.trako.services;
 
 import com.trako.dtos.SplitDetailDTO;
 import com.trako.dtos.TransactionDetailDTO;
+import com.trako.dtos.TransactionPeriodSummaryDTO;
 import com.trako.dtos.TransactionSummaryDTO;
 import com.trako.entities.*;
 import com.trako.repositories.*;
@@ -420,5 +421,44 @@ public class TransactionService {
                 .filter(t -> t.getIsCountable() == 1 && t.getTransactionType() == 1) // DEBIT = expense
                 .mapToDouble(Transaction::getAmount)
                 .sum();
+    }
+
+    public List<TransactionPeriodSummaryDTO> getMonthlySummaries(String userId, int year, List<Long> accountIds) {
+        List<Object[]> rows;
+        if (accountIds == null || accountIds.isEmpty()) {
+            rows = transactionRepository.findMonthlySummariesForUserAndYear(userId, year);
+        } else {
+            rows = transactionRepository.findMonthlySummariesForUserAndYearAndAccounts(userId, year, accountIds);
+        }
+        
+        return rows.stream().map(row -> {
+            row = normalizeAggregateRow(row);
+            int y = NumberUtil.asInt(row[0]);
+            int m = NumberUtil.asInt(row[1]);
+            double income = NumberUtil.asDouble(row[2]);
+            double expense = NumberUtil.asDouble(row[3]);
+            double net = NumberUtil.asDouble(row[4]);
+            int count = NumberUtil.asInt(row[5]);
+            return new TransactionPeriodSummaryDTO(income, expense, net, count, y, m);
+        }).collect(Collectors.toList());
+    }
+
+    public List<TransactionPeriodSummaryDTO> getYearlySummaries(String userId, List<Long> accountIds) {
+        List<Object[]> rows;
+        if (accountIds == null || accountIds.isEmpty()) {
+            rows = transactionRepository.findYearlySummariesForUser(userId);
+        } else {
+            rows = transactionRepository.findYearlySummariesForUserAndAccounts(userId, accountIds);
+        }
+
+        return rows.stream().map(row -> {
+            row = normalizeAggregateRow(row);
+            int y = NumberUtil.asInt(row[0]);
+            double income = NumberUtil.asDouble(row[1]);
+            double expense = NumberUtil.asDouble(row[2]);
+            double net = NumberUtil.asDouble(row[3]);
+            int count = NumberUtil.asInt(row[4]);
+            return new TransactionPeriodSummaryDTO(income, expense, net, count, y, null);
+        }).collect(Collectors.toList());
     }
 }

@@ -16,6 +16,7 @@ import 'package:tracko/services/SessionService.dart';
 import 'package:tracko/repositories/transaction_repository.dart';
 import 'package:tracko/repositories/split_repository.dart';
 import 'package:tracko/repositories/contact_repository.dart';
+import 'package:tracko/models/transaction_period_summary.dart';
 
 import 'CategoryController.dart';
 
@@ -364,6 +365,18 @@ class TransactionController {
       accountIds: accountIds,
     );
     return (summary['totalExpense'] as num?)?.toDouble() ?? 0.0;
+  }
+
+  static Future<List<TransactionPeriodSummary>> getMonthlySummaries(int year,
+      {List<int>? accountIds}) async {
+    final txRepo = TransactionRepository();
+    return await txRepo.getMonthlySummaries(year, accountIds: accountIds);
+  }
+
+  static Future<List<TransactionPeriodSummary>> getYearlySummaries(
+      {List<int>? accountIds}) async {
+    final txRepo = TransactionRepository();
+    return await txRepo.getYearlySummaries(accountIds: accountIds);
   }
 
   static _preloadTransactions(Transaction transaction) async {

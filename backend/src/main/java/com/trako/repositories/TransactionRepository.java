@@ -262,4 +262,74 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     
     List<Transaction> findByAccountId(Long accountId);
     List<Transaction> findByCategoryId(Long categoryId);
+    
+    @Query("SELECT YEAR(t.date) as y, MONTH(t.date) as m, " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = 2 THEN t.amount ELSE 0 END), 0), " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = 1 THEN t.amount ELSE 0 END), 0), " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = 2 THEN t.amount " +
+            "         WHEN t.transactionType = 1 THEN -t.amount " +
+            "         ELSE 0 END), 0), " +
+            "COUNT(t) " +
+            "FROM Transaction t " +
+            "WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId) " +
+            "AND t.isCountable = 1 " +
+            "AND YEAR(t.date) = :year " +
+            "GROUP BY YEAR(t.date), MONTH(t.date) " +
+            "ORDER BY y DESC, m DESC")
+    List<Object[]> findMonthlySummariesForUserAndYear(
+            @Param("userId") String userId,
+            @Param("year") int year
+    );
+
+    @Query("SELECT YEAR(t.date) as y, " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = 2 THEN t.amount ELSE 0 END), 0), " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = 1 THEN t.amount ELSE 0 END), 0), " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = 2 THEN t.amount " +
+            "         WHEN t.transactionType = 1 THEN -t.amount " +
+            "         ELSE 0 END), 0), " +
+            "COUNT(t) " +
+            "FROM Transaction t " +
+            "WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId) " +
+            "AND t.isCountable = 1 " +
+            "GROUP BY YEAR(t.date) " +
+            "ORDER BY y DESC")
+    List<Object[]> findYearlySummariesForUser(
+            @Param("userId") String userId
+    );
+
+    @Query("SELECT YEAR(t.date) as y, MONTH(t.date) as m, " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = 2 THEN t.amount ELSE 0 END), 0), " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = 1 THEN t.amount ELSE 0 END), 0), " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = 2 THEN t.amount " +
+            "         WHEN t.transactionType = 1 THEN -t.amount " +
+            "         ELSE 0 END), 0), " +
+            "COUNT(t) " +
+            "FROM Transaction t " +
+            "WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId AND a.id IN :accountIds) " +
+            "AND t.isCountable = 1 " +
+            "AND YEAR(t.date) = :year " +
+            "GROUP BY YEAR(t.date), MONTH(t.date) " +
+            "ORDER BY y DESC, m DESC")
+    List<Object[]> findMonthlySummariesForUserAndYearAndAccounts(
+            @Param("userId") String userId,
+            @Param("year") int year,
+            @Param("accountIds") List<Long> accountIds
+    );
+
+    @Query("SELECT YEAR(t.date) as y, " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = 2 THEN t.amount ELSE 0 END), 0), " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = 1 THEN t.amount ELSE 0 END), 0), " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = 2 THEN t.amount " +
+            "         WHEN t.transactionType = 1 THEN -t.amount " +
+            "         ELSE 0 END), 0), " +
+            "COUNT(t) " +
+            "FROM Transaction t " +
+            "WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId AND a.id IN :accountIds) " +
+            "AND t.isCountable = 1 " +
+            "GROUP BY YEAR(t.date) " +
+            "ORDER BY y DESC")
+    List<Object[]> findYearlySummariesForUserAndAccounts(
+            @Param("userId") String userId,
+            @Param("accountIds") List<Long> accountIds
+    );
 }

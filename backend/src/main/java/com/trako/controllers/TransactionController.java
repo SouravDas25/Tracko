@@ -1,6 +1,7 @@
 package com.trako.controllers;
 
 import com.trako.dtos.TransactionDetailDTO;
+import com.trako.dtos.TransactionPeriodSummaryDTO;
 import com.trako.dtos.TransactionSummaryDTO;
 import com.trako.entities.Account;
 import com.trako.entities.Category;
@@ -547,6 +548,46 @@ public class TransactionController {
         } catch (Exception e) {
             log.error("Error deleting transaction {}: {}", id, e.getMessage(), e);
             return Response.badRequest("Failed to delete transaction: " + e.getMessage());
+        }
+    }
+
+    /**
+     * GET /api/transactions/summary/monthly
+     * Returns a list of summaries grouped by month for a specific year.
+     */
+    @GetMapping("/summary/monthly")
+    public ResponseEntity<?> getMonthlySummaries(
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) String accountIds) {
+        try {
+            String currentUserId = userService.loggedInUser().getId();
+            List<Long> ids = com.trako.util.CommonUtil.parseAccountIds(accountIds);
+            
+            // Default to current year if not provided
+            int resolvedYear = (year == null) ? Calendar.getInstance().get(Calendar.YEAR) : year;
+            
+            List<TransactionPeriodSummaryDTO> summaries = transactionService.getMonthlySummaries(currentUserId, resolvedYear, ids);
+            return Response.ok(summaries);
+        } catch (UserNotLoggedInException e) {
+            return Response.unauthorized();
+        }
+    }
+
+    /**
+     * GET /api/transactions/summary/yearly
+     * Returns a list of summaries grouped by year.
+     */
+    @GetMapping("/summary/yearly")
+    public ResponseEntity<?> getYearlySummaries(
+            @RequestParam(required = false) String accountIds) {
+        try {
+            String currentUserId = userService.loggedInUser().getId();
+            List<Long> ids = com.trako.util.CommonUtil.parseAccountIds(accountIds);
+            
+            List<TransactionPeriodSummaryDTO> summaries = transactionService.getYearlySummaries(currentUserId, ids);
+            return Response.ok(summaries);
+        } catch (UserNotLoggedInException e) {
+            return Response.unauthorized();
         }
     }
 
