@@ -16,6 +16,15 @@ allprojects {
     }
 }
 
+subprojects {
+    configurations.configureEach {
+        resolutionStrategy {
+            force 'net.bytebuddy:byte-buddy:1.14.19'
+            force 'net.bytebuddy:byte-buddy-agent:1.14.19'
+        }
+    }
+}
+
 rootProject.buildDir = '../build'
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
