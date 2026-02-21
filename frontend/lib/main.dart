@@ -5,9 +5,12 @@ import 'package:tracko/pages/login_page/login_page.dart';
 import 'package:tracko/pages/route.dart';
 import 'package:tracko/pages/transaction_list_page/transaction_list_page.dart';
 import 'package:flutter/material.dart';
+import 'package:tracko/Utils/ssl_bypass.dart'
+    if (dart.library.html) 'package:tracko/Utils/ssl_bypass_web.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  enableSslBypass(); // Globally ignore SSL errors for self-signed certs
   await InitializeApp.initialize();
   runApp(MyApp());
 }
