@@ -108,7 +108,7 @@ public class StatsServiceIntegrationTest {
         // Out of current week (still affects series, but not category breakdown for current period)
         saveExpense(travel.getId(), 999.0, date(2025, 12, 15));
 
-        StatsResponseDTO dto = statsService.getStats(user.getId(), StatsService.Range.weekly, 1, anchor);
+        StatsResponseDTO dto = statsService.getStats(user.getId(), StatsService.Range.weekly, 1, null, anchor, null, null);
 
         assertNotNull(dto);
         assertEquals("weekly", dto.getRange());
@@ -143,7 +143,7 @@ public class StatsServiceIntegrationTest {
         saveTx(travel.getId(), 1, 1, 5.0, date(2026, 2, 6));
         saveTx(food.getId(), 1, 1, null, date(2026, 2, 7));
 
-        StatsResponseDTO dto = statsService.getStats(user.getId(), StatsService.Range.monthly, 1, anchor);
+        StatsResponseDTO dto = statsService.getStats(user.getId(), StatsService.Range.monthly, 1, null, anchor, null, null);
 
         assertNotNull(dto);
         assertEquals("monthly", dto.getRange());
@@ -166,7 +166,7 @@ public class StatsServiceIntegrationTest {
             saveTx(food.getId(), 1, 1, 1.0, date(2026, m, 2));
         }
 
-        StatsResponseDTO dto = statsService.getStats(user.getId(), StatsService.Range.monthly, 1, anchor);
+        StatsResponseDTO dto = statsService.getStats(user.getId(), StatsService.Range.monthly, 1, null, anchor, null, null);
 
         assertNotNull(dto);
         assertEquals("monthly", dto.getRange());
@@ -182,7 +182,7 @@ public class StatsServiceIntegrationTest {
         saveTx(food.getId(), 1, 1, 10.0, date(2025, 12, 31));
         saveTx(food.getId(), 1, 1, 20.0, date(2026, 1, 1));
 
-        StatsResponseDTO dto = statsService.getStats(user.getId(), StatsService.Range.yearly, 1, anchor);
+        StatsResponseDTO dto = statsService.getStats(user.getId(), StatsService.Range.yearly, 1, null, anchor, null, null);
 
         assertNotNull(dto);
         assertEquals("yearly", dto.getRange());
@@ -200,7 +200,7 @@ public class StatsServiceIntegrationTest {
         saveTx(food.getId(), 2, 1, 50.0, date(2026, 1, 7));
         saveTx(food.getId(), 1, null, 50.0, date(2026, 1, 7));
 
-        StatsResponseDTO dto = statsService.getStats(user.getId(), StatsService.Range.weekly, 1, anchor);
+        StatsResponseDTO dto = statsService.getStats(user.getId(), StatsService.Range.weekly, 1, null, anchor, null, null);
 
         assertNotNull(dto);
         assertNotNull(dto.getSeries());
@@ -219,7 +219,7 @@ public class StatsServiceIntegrationTest {
         saveTx(travel.getId(), 1, 1, 999.0, date(2026, 1, 7));
         saveTx(food.getId(), 1, 1, 500.0, date(2025, 12, 15));
 
-        var dto = statsService.getCategoryStats(user.getId(), StatsService.Range.weekly, 1, anchor, food.getId());
+        var dto = statsService.getCategoryStats(user.getId(), StatsService.Range.weekly, 1, null, anchor, food.getId(), null, null);
 
         assertNotNull(dto);
         assertEquals("weekly", dto.getRange());
@@ -234,7 +234,7 @@ public class StatsServiceIntegrationTest {
     public void categoryStatsWithNullCategoryReturnsEmpty() {
         Date anchor = date(2026, 1, 8);
 
-        var dto = statsService.getCategoryStats(user.getId(), StatsService.Range.weekly, 1, anchor, null);
+        var dto = statsService.getCategoryStats(user.getId(), StatsService.Range.weekly, 1, null, anchor, null, null, null);
 
         assertNotNull(dto);
         assertNotNull(dto.getSeries());
@@ -245,37 +245,8 @@ public class StatsServiceIntegrationTest {
 
     @Test
     public void filterCategoryAndMonthLabelUnreachableBranchesAreCoveredViaReflection() throws Exception {
-        Method filterCategory = StatsService.class.getDeclaredMethod("filterCategory", List.class, Long.class);
-        filterCategory.setAccessible(true);
-
         Method monthLabel = StatsService.class.getDeclaredMethod("monthLabel", int.class);
         monthLabel.setAccessible(true);
-
-        List<Transaction> txs = new ArrayList<>();
-        txs.add(newTx(food.getId(), 1, 1, 10.0, date(2026, 1, 2)));
-
-        @SuppressWarnings("unchecked")
-        List<Transaction> empty1 = (List<Transaction>) filterCategory.invoke(statsService, null, food.getId());
-        assertNotNull(empty1);
-        assertEquals(0, empty1.size());
-
-        @SuppressWarnings("unchecked")
-        List<Transaction> empty2 = (List<Transaction>) filterCategory.invoke(statsService, txs, null);
-        assertNotNull(empty2);
-        assertEquals(0, empty2.size());
-
-        Transaction nullCat = newTx(food.getId(), 1, 1, 10.0, date(2026, 1, 2));
-        nullCat.setCategoryId(null);
-        txs.add(nullCat);
-
-        Transaction zeroCat = newTx(food.getId(), 1, 1, 10.0, date(2026, 1, 2));
-        zeroCat.setCategoryId(0L);
-        txs.add(zeroCat);
-
-        @SuppressWarnings("unchecked")
-        List<Transaction> matches = (List<Transaction>) filterCategory.invoke(statsService, txs, food.getId());
-        assertNotNull(matches);
-        assertEquals(1, matches.size());
 
         String unknown = (String) monthLabel.invoke(statsService, 13);
         assertEquals("", unknown);

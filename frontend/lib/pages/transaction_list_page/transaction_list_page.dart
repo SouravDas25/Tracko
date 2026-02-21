@@ -3,6 +3,7 @@ import 'package:tracko/Utils/SettingUtil.dart';
 import 'package:tracko/pages/transaction_list_page/daily_transaction_view.dart';
 import 'package:tracko/pages/transaction_list_page/monthly_summary_view.dart';
 import 'package:tracko/pages/transaction_list_page/yearly_summary_view.dart';
+import 'package:tracko/pages/stats_page/stats_page.dart';
 
 class TransactionListPage extends StatefulWidget {
   final List<int>? initialAccountIds;
@@ -121,6 +122,24 @@ class _TransactionListPageState extends State<TransactionListPage>
         title: const Text('Transactions'),
         centerTitle: true,
         elevation: 0,
+        actions: [
+          if (widget.initialAccountIds != null &&
+              widget.initialAccountIds!.length == 1)
+            IconButton(
+              icon: const Icon(Icons.bar_chart),
+              tooltip: 'Stats',
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => StatsPage(
+                      initialDate: SettingUtil.currentMonth,
+                      initialAccountId: widget.initialAccountIds!.first,
+                    ),
+                  ),
+                );
+              },
+            ),
+        ],
       ),
       body: content,
       floatingActionButton: FloatingActionButton(

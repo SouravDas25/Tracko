@@ -143,6 +143,19 @@ class _HomeTab extends State<HomeTab> with SingleTickerProviderStateMixin {
             onPressed: () {},
           ),
           IconButton(
+            tooltip: "Stats",
+            icon: const Icon(Icons.bar_chart),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => StatsPage(
+                    initialDate: SettingUtil.currentMonth,
+                  ),
+                ),
+              );
+            },
+          ),
+          IconButton(
             tooltip: "Settings",
             icon: Icon(Icons.settings),
             onPressed: () {

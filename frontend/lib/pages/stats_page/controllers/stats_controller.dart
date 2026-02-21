@@ -3,10 +3,12 @@ import 'package:intl/intl.dart';
 import 'package:tracko/Utils/CommonUtil.dart';
 import 'package:tracko/Utils/enums.dart';
 import 'package:tracko/config/api_config.dart';
+import 'package:tracko/models/account.dart';
+import 'package:tracko/repositories/account_repository.dart';
 import 'package:tracko/scratch/ChartUtil.dart';
 import 'package:tracko/services/api_client.dart';
 
-enum StatsRange { weekly, monthly, yearly }
+enum StatsRange { weekly, monthly, yearly, custom }
 
 enum StatsKind { expense, income }
 
@@ -38,6 +40,10 @@ class StatsController extends ChangeNotifier {
   StatsRange _range = StatsRange.monthly;
   StatsKind _kind = StatsKind.expense;
   DateTime _anchorDate = DateTime.now();
+  DateTime? _customStartDate;
+  DateTime? _customEndDate;
+  Account? _selectedAccount;
+  List<Account> _accounts = [];
 
   bool _loading = false;
   String? _error;
@@ -55,6 +61,11 @@ class StatsController extends ChangeNotifier {
   StatsRange get range => _range;
   StatsKind get kind => _kind;
   DateTime get anchorDate => _anchorDate;
+  DateTime? get customStartDate => _customStartDate;
+  DateTime? get customEndDate => _customEndDate;
+  Account? get selectedAccount => _selectedAccount;
+  List<Account> get accounts => _accounts;
+
   bool get loading => _loading;
   String? get error => _error;
   double get total => _total;
@@ -65,8 +76,42 @@ class StatsController extends ChangeNotifier {
   DateTime? get periodStart => _periodStart;
   DateTime? get periodEndExclusive => _periodEndExclusive;
 
-  StatsController() {
+  StatsController({
+    DateTime? initialDate,
+    StatsKind? initialKind,
+    int? initialAccountId,
+  }) {
+    if (initialDate != null) {
+      _anchorDate = initialDate;
+      // If initial date is provided, maybe default to weekly or monthly? Monthly is default.
+    }
+    if (initialKind != null) {
+      _kind = initialKind;
+    }
+    _init(initialAccountId);
+  }
+
+  Future<void> _init(int? initialAccountId) async {
+    await _loadAccounts();
+    if (initialAccountId != null) {
+      try {
+        _selectedAccount =
+            _accounts.firstWhere((a) => a.id == initialAccountId);
+      } catch (_) {
+        // Account not found or ID was valid but not in list
+      }
+    }
     load();
+  }
+
+  Future<void> _loadAccounts() async {
+    try {
+      final repo = AccountRepository();
+      _accounts = await repo.getAllAccounts();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error loading accounts for stats: $e');
+    }
   }
 
   void setRange(StatsRange range) {
@@ -80,7 +125,20 @@ class StatsController extends ChangeNotifier {
     load();
   }
 
+  void setAccount(Account? account) {
+    _selectedAccount = account;
+    load();
+  }
+
+  void setCustomRange(DateTime start, DateTime end) {
+    _range = StatsRange.custom;
+    _customStartDate = start;
+    _customEndDate = end;
+    load();
+  }
+
   void shiftAnchor(int delta) {
+    if (_range == StatsRange.custom) return; // Cannot shift custom range
     _anchorDate = _shiftAnchorDate(_anchorDate, delta);
     load();
   }
@@ -93,6 +151,8 @@ class StatsController extends ChangeNotifier {
         return DateTime(anchor.year, anchor.month + delta, 15);
       case StatsRange.yearly:
         return DateTime(anchor.year + delta, anchor.month, 15);
+      case StatsRange.custom:
+        return anchor;
     }
   }
 
@@ -105,6 +165,7 @@ class StatsController extends ChangeNotifier {
 
     switch (_range) {
       case StatsRange.weekly:
+      case StatsRange.custom:
         // "Oct 1 - Oct 7, 2023"
         final startFormat = DateFormat('MMM d');
         final endFormat = DateFormat('MMM d, yyyy');
@@ -129,6 +190,8 @@ class StatsController extends ChangeNotifier {
         return 'Monthly';
       case StatsRange.yearly:
         return 'Yearly';
+      case StatsRange.custom:
+        return 'Custom';
     }
   }
 
@@ -167,6 +230,12 @@ class StatsController extends ChangeNotifier {
           'range': _range.name,
           'transactionType': kindType,
           'date': _fmtDate(_anchorDate),
+          if (_selectedAccount != null && _selectedAccount!.id != null)
+            'accountId': _selectedAccount!.id,
+          if (_range == StatsRange.custom && _customStartDate != null)
+            'startDate': _fmtDate(_customStartDate!),
+          if (_range == StatsRange.custom && _customEndDate != null)
+            'endDate': _fmtDate(_customEndDate!),
         },
       );
 

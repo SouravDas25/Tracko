@@ -45,7 +45,10 @@ class StatsLineChart extends StatelessWidget {
     final spots = (() {
       if (baseSpots.isEmpty) return <FlSpot>[];
       if (baseSpots.length == 1) {
-        return <FlSpot>[baseSpots[0], FlSpot(baseSpots[0].x + 1, baseSpots[0].y)];
+        return <FlSpot>[
+          baseSpots[0],
+          FlSpot(baseSpots[0].x + 1, baseSpots[0].y)
+        ];
       }
       return baseSpots;
     })();
@@ -139,8 +142,22 @@ class StatsLineChart extends StatelessWidget {
                     return const SizedBox.shrink();
                   }
                   final idx = value.round();
-                  if (idx < 0 || idx >= series.length)
+                  if (idx < 0 || idx >= series.length) {
                     return const SizedBox.shrink();
+                  }
+
+                  // Skip labels if there are too many points to avoid overlapping
+                  if (series.length > 7) {
+                    // Calculate a step size to show max ~6-7 labels
+                    int step = (series.length / 6).ceil();
+                    // Always show the first and last label, and evenly spaced labels in between
+                    if (idx != 0 &&
+                        idx != series.length - 1 &&
+                        idx % step != 0) {
+                      return const SizedBox.shrink();
+                    }
+                  }
+
                   return SideTitleWidget(
                     axisSide: meta.axisSide,
                     space: 8,

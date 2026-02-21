@@ -20,7 +20,8 @@ public class StatsService {
     public enum Range {
         weekly,
         monthly,
-        yearly
+        yearly,
+        custom
     }
 
     @Autowired
@@ -171,137 +172,56 @@ public class StatsService {
     //     return total;
     // }
 
-    /**
-     * Filters transactions by countable=1 and the requested transaction type.
-     */
-    private List<Transaction> filterKindCountable(List<Transaction> txs, int transactionType) {
-        List<Transaction> out = new ArrayList<>();
-        for (Transaction t : txs) {
-            if (t.getIsCountable() == null || t.getIsCountable() != 1) continue;
-            if (t.getTransactionType() == null || t.getTransactionType() != transactionType) continue;
-            out.add(t);
-        }
-        return out;
+
+    private List<StatsPointDTO> buildSeriesFromDb(String userId, Range range, int transactionType, Long accountId, Date anchorDate, Date currentStart, Date currentEnd) {
+        List<Object[]> aggs = transactionRepository.sumAmountsByDateForUser(userId, transactionType, accountId);
+        return buildSeriesFromAggs(range, anchorDate, aggs, currentStart, currentEnd);
+    }
+    
+    private List<StatsPointDTO> buildSeriesFromDbCategory(String userId, Range range, int transactionType, Long accountId, Long categoryId, Date anchorDate, Date currentStart, Date currentEnd) {
+        List<Object[]> aggs = transactionRepository.sumAmountsByDateForCategory(userId, transactionType, accountId, categoryId);
+        return buildSeriesFromAggs(range, anchorDate, aggs, currentStart, currentEnd);
     }
 
-    /**
-     * Builds fixed-size current-period buckets for charts.
-     * yearly -> 12 months, monthly -> days in month, weekly -> 7 days.
-     */
-    // private List<StatsPointDTO> buildSeriesForPeriod(Range range, List<Transaction> kindTxs, Date start, Date endExclusive) {
-    //     List<StatsPointDTO> out = new ArrayList<>();
-    //     if (start == null || endExclusive == null) return out;
-
-    //     if (range == Range.yearly) {
-    //         // 12 months: Jan..Dec
-    //         double[] buckets = new double[12];
-    //         if (kindTxs != null) {
-    //             for (Transaction t : kindTxs) {
-    //                 Date d = t.getDate();
-    //                 if (d == null) continue;
-    //                 if (d.before(start) || !d.before(endExclusive)) continue;
-    //                 Calendar c = Calendar.getInstance();
-    //                 c.setTime(d);
-    //                 int m = c.get(Calendar.MONTH); // 0-11
-    //                 buckets[m] += (t.getAmount() == null ? 0.0 : t.getAmount());
-    //             }
-    //         }
-    //         for (int m = 0; m < 12; m++) {
-    //             out.add(new StatsPointDTO(monthLabel(m + 1), buckets[m]));
-    //         }
-    //         return out;
-    //     }
-
-    //     if (range == Range.monthly) {
-    //         // Days of month: 1..N
-    //         Calendar c = Calendar.getInstance();
-    //         c.setTime(start);
-    //         int daysInMonth = c.getActualMaximum(Calendar.DAY_OF_MONTH);
-    //         double[] buckets = new double[daysInMonth];
-    //         if (kindTxs != null) {
-    //             for (Transaction t : kindTxs) {
-    //                 Date d = t.getDate();
-    //                 if (d == null) continue;
-    //                 if (d.before(start) || !d.before(endExclusive)) continue;
-    //                 Calendar tc = Calendar.getInstance();
-    //                 tc.setTime(d);
-    //                 int dom = tc.get(Calendar.DAY_OF_MONTH); // 1..N
-    //                 if (dom >= 1 && dom <= daysInMonth) {
-    //                     buckets[dom - 1] += (t.getAmount() == null ? 0.0 : t.getAmount());
-    //                 }
-    //             }
-    //         }
-    //         for (int i = 1; i <= daysInMonth; i++) {
-    //             out.add(new StatsPointDTO(String.valueOf(i), buckets[i - 1]));
-    //         }
-    //         return out;
-    //     }
-
-    //     // weekly: 7 days starting from computed week start (Mon)
-    //     double[] buckets = new double[7];
-    //     if (kindTxs != null) {
-    //         for (Transaction t : kindTxs) {
-    //             Date d = t.getDate();
-    //             if (d == null) continue;
-    //             if (d.before(start) || !d.before(endExclusive)) continue;
-    //             long diffMs = d.getTime() - start.getTime();
-    //             int idx = (int) (diffMs / (24L * 60L * 60L * 1000L));
-    //             if (idx >= 0 && idx < 7) {
-    //                 buckets[idx] += (t.getAmount() == null ? 0.0 : t.getAmount());
-    //             }
-    //         }
-    //     }
-    //     for (int i = 0; i < 7; i++) {
-    //         Date d = addDays(start, i);
-    //         out.add(new StatsPointDTO(DOW_FMT.format(d), buckets[i]));
-    //     }
-    //     return out;
-    // }
-
-    /**
-     * Filters transactions by a specific category id.
-     */
-    private List<Transaction> filterCategory(List<Transaction> txs, Long categoryId) {
-        List<Transaction> out = new ArrayList<>();
-        if (txs == null || txs.isEmpty() || categoryId == null) return out;
-        for (Transaction t : txs) {
-            if (t.getCategoryId() == null) continue;
-            if (!categoryId.equals(t.getCategoryId())) continue;
-            out.add(t);
-        }
-        return out;
-    }
-
-    /**
-     * Builds a time-series aggregated over the user's available transaction history using the requested granularity.
-     *
-     * Feature: contiguous bucket series (zero-filled)
-     * - The backend returns a contiguous series so the UI does not need to infer or "fill gaps".
-     * - We find the first bucket that contains any data and then create buckets up to the bucket containing the
-     *   provided anchor date (usually "today" or a user-selected reference date).
-     * - Any missing bucket between first..anchor is returned with value 0.
-     *
-     * Semantics (labels):
-     * - yearly: bucket per year, label = "YYYY" (e.g., "2025").
-     * - monthly: bucket per month across years, label = "Mon YYYY" (e.g., "Jan 2026").
-     * - weekly: bucket per week (week start), label = "yyyy-MM-dd" (e.g., "2026-01-05").
-     */
-    private List<StatsPointDTO> buildSeriesAllData(Range range, List<Transaction> kindTxs, Date anchorDate) {
-        if (kindTxs == null || kindTxs.isEmpty()) {
+    private List<StatsPointDTO> buildSeriesFromAggs(Range range, Date anchorDate, List<Object[]> aggs, Date currentStart, Date currentEnd) {
+        if (aggs == null || aggs.isEmpty()) {
             return new ArrayList<>();
         }
 
         Date anchor = (anchorDate == null) ? new Date() : anchorDate;
-
-        if (range == Range.yearly) {
-            TreeMap<Integer, Double> byYear = new TreeMap<>();
-            for (Transaction t : kindTxs) {
-                Calendar c = Calendar.getInstance();
-                c.setTime(t.getDate());
-                int year = c.get(Calendar.YEAR);
-                byYear.put(year, byYear.getOrDefault(year, 0.0) + (t.getAmount() == null ? 0.0 : t.getAmount()));
+        
+        if (range == Range.custom) {
+            TreeMap<Long, Double> byDay = new TreeMap<>();
+            for (Object[] row : aggs) {
+                Date d = (Date) row[0];
+                if (d.before(currentStart) || !d.before(currentEnd)) continue;
+                Double amt = row[1] != null ? ((Number) row[1]).doubleValue() : 0.0;
+                long key = startOfDay(d).getTime();
+                byDay.put(key, byDay.getOrDefault(key, 0.0) + amt);
             }
             List<StatsPointDTO> out = new ArrayList<>();
+            if (byDay.isEmpty()) return out;
+
+            long startMs = startOfDay(currentStart).getTime();
+            long endMs = startOfDay(addDays(currentEnd, -1)).getTime();
+            long oneDayMs = 24L * 60L * 60L * 1000L;
+
+            for (long ts = startMs; ts <= endMs; ts += oneDayMs) {
+                out.add(new StatsPointDTO(DATE_FMT.format(new Date(ts)), byDay.getOrDefault(ts, 0.0)));
+            }
+            return out;
+        }
+        
+        if (range == Range.yearly) {
+            TreeMap<Integer, Double> byYear = new TreeMap<>();
+            for (Object[] row : aggs) {
+                Date d = (Date) row[0];
+                Double amt = row[1] != null ? ((Number) row[1]).doubleValue() : 0.0;
+                int year = toYear(d);
+                byYear.put(year, byYear.getOrDefault(year, 0.0) + amt);
+            }
+            List<StatsPointDTO> out = new ArrayList<>();
+            if (byYear.isEmpty()) return out;
 
             int minYear = byYear.firstKey();
             int maxYear = Math.max(byYear.lastKey(), toYear(anchor));
@@ -313,15 +233,14 @@ public class StatsService {
 
         if (range == Range.monthly) {
             TreeMap<Integer, Double> byMonth = new TreeMap<>();
-            for (Transaction t : kindTxs) {
-                Calendar c = Calendar.getInstance();
-                c.setTime(t.getDate());
-                int year = c.get(Calendar.YEAR);
-                int month = c.get(Calendar.MONTH) + 1;
-                int key = year * 100 + month;
-                byMonth.put(key, byMonth.getOrDefault(key, 0.0) + (t.getAmount() == null ? 0.0 : t.getAmount()));
+            for (Object[] row : aggs) {
+                Date d = (Date) row[0];
+                Double amt = row[1] != null ? ((Number) row[1]).doubleValue() : 0.0;
+                int key = toYearMonthKey(d);
+                byMonth.put(key, byMonth.getOrDefault(key, 0.0) + amt);
             }
             List<StatsPointDTO> out = new ArrayList<>();
+            if (byMonth.isEmpty()) return out;
 
             int minKey = byMonth.firstKey();
             int anchorKey = toYearMonthKey(anchor);
@@ -339,12 +258,15 @@ public class StatsService {
 
         // weekly
         TreeMap<Long, Double> byWeekStart = new TreeMap<>();
-        for (Transaction t : kindTxs) {
-            Date weekStart = startOfWeek(t.getDate());
+        for (Object[] row : aggs) {
+            Date d = (Date) row[0];
+            Double amt = row[1] != null ? ((Number) row[1]).doubleValue() : 0.0;
+            Date weekStart = startOfWeek(d);
             long key = weekStart.getTime();
-            byWeekStart.put(key, byWeekStart.getOrDefault(key, 0.0) + (t.getAmount() == null ? 0.0 : t.getAmount()));
+            byWeekStart.put(key, byWeekStart.getOrDefault(key, 0.0) + amt);
         }
         List<StatsPointDTO> out = new ArrayList<>();
+        if (byWeekStart.isEmpty()) return out;
 
         long minWeekStart = byWeekStart.firstKey();
         long maxWeekStart = Math.max(byWeekStart.lastKey(), startOfWeek(anchor).getTime());
@@ -356,17 +278,22 @@ public class StatsService {
         return out;
     }
 
+
     /**
      * Returns stats summary for the authenticated user:
      * - current-period total and category breakdown
      * - contiguous historical series by requested granularity
      */
-    public StatsResponseDTO getStats(String userId, Range range, int transactionType, Date anchorDate) {
+    public StatsResponseDTO getStats(String userId, Range range, int transactionType, Long accountId, Date anchorDate, Date customStartDate, Date customEndDate) {
         // Current period
         Date now = (anchorDate == null) ? new Date() : anchorDate;
         Date currentStart;
         Date currentEnd;
         switch (range) {
+            case custom:
+                currentStart = (customStartDate != null) ? startOfDay(customStartDate) : startOfDay(now);
+                currentEnd = (customEndDate != null) ? addDays(startOfDay(customEndDate), 1) : addDays(currentStart, 1);
+                break;
             case weekly:
                 currentStart = startOfWeek(now);
                 currentEnd = addDays(currentStart, 7);
@@ -383,15 +310,13 @@ public class StatsService {
         }
 
         System.out.println("[StatsService] computed period range=" + range
+                + " accountId=" + accountId
                 + " anchor=" + now
                 + " start=" + DATE_FMT.format(currentStart)
                 + " end=" + DATE_FMT.format(addDays(currentEnd, -1)));
 
-        // Fetch all user transactions once and do aggregation in backend.
-        // (Requirement: graph should show all periods that have data)
-        List<Transaction> allTxs = transactionRepository.findByUserId(userId);
-        List<Transaction> kindTxs = filterKindCountable(allTxs, transactionType);
-        List<StatsPointDTO> series = buildSeriesAllData(range, kindTxs, now);
+        // Use new database aggregations instead of loading all transactions into memory
+        List<StatsPointDTO> series = buildSeriesFromDb(userId, range, transactionType, accountId, now, currentStart, currentEnd);
 
         // Category breakdown for current period
         Map<Long, String> categoryNames = new HashMap<>();
@@ -400,23 +325,23 @@ public class StatsService {
             categoryNames.put(c.getId(), c.getName());
         }
 
-        Map<Long, Double> byCategory = new HashMap<>();
-        for (Transaction t : kindTxs) {
-            Date d = t.getDate();
-            if (d.before(currentStart) || !d.before(currentEnd)) continue;
-            Long cid = t.getCategoryId();
-            if (cid == null || cid == 0) continue;
-            double amt = (t.getAmount() == null ? 0.0 : t.getAmount());
-            byCategory.put(cid, (byCategory.getOrDefault(cid, 0.0)) + amt);
-        }
+        List<Object[]> catAggs = transactionRepository.sumAmountsByCategoryForUserInRange(
+                userId, transactionType, accountId, currentStart, currentEnd);
 
         List<CategoryStatDTO> catStats = new ArrayList<>();
         double total = 0.0;
-        for (Map.Entry<Long, Double> e : byCategory.entrySet()) {
-            if (e.getValue() == null || e.getValue() <= 0) continue;
-            total += e.getValue();
-            catStats.add(new CategoryStatDTO(e.getKey(), categoryNames.getOrDefault(e.getKey(), "Category " + e.getKey()), e.getValue()));
+        
+        for (Object[] row : catAggs) {
+            Long cid = row[0] != null ? ((Number) row[0]).longValue() : null;
+            if (cid == null || cid == 0) continue;
+            
+            Double amt = row[1] != null ? ((Number) row[1]).doubleValue() : 0.0;
+            if (amt <= 0) continue;
+            
+            total += amt;
+            catStats.add(new CategoryStatDTO(cid, categoryNames.getOrDefault(cid, "Category " + cid), amt));
         }
+        
         catStats.sort((a, b) -> Double.compare(b.getAmount(), a.getAmount()));
 
         return new StatsResponseDTO(
@@ -435,11 +360,15 @@ public class StatsService {
      * - current-period total for category
      * - contiguous historical series for that category by requested granularity
      */
-    public CategoryStatsResponseDTO getCategoryStats(String userId, Range range, int transactionType, Date anchorDate, Long categoryId) {
+    public CategoryStatsResponseDTO getCategoryStats(String userId, Range range, int transactionType, Long accountId, Date anchorDate, Long categoryId, Date customStartDate, Date customEndDate) {
         Date now = (anchorDate == null) ? new Date() : anchorDate;
         Date currentStart;
         Date currentEnd;
         switch (range) {
+            case custom:
+                currentStart = (customStartDate != null) ? startOfDay(customStartDate) : startOfDay(now);
+                currentEnd = (customEndDate != null) ? addDays(startOfDay(customEndDate), 1) : addDays(currentStart, 1);
+                break;
             case weekly:
                 currentStart = startOfWeek(now);
                 currentEnd = addDays(currentStart, 7);
@@ -455,21 +384,13 @@ public class StatsService {
                 break;
         }
 
-        List<Transaction> allTxs = transactionRepository.findByUserId(userId);
-        List<Transaction> kindTxs = filterKindCountable(allTxs, transactionType);
-        List<Transaction> catTxs = filterCategory(kindTxs, categoryId);
-
-        // Series by requested granularity over available category data
-        List<StatsPointDTO> series = buildSeriesAllData(range, catTxs, now);
+        // Series by requested granularity over available category data using DB aggregations
+        List<StatsPointDTO> series = buildSeriesFromDbCategory(userId, range, transactionType, accountId, categoryId, now, currentStart, currentEnd);
 
         // Total for current period only
-        double total = 0.0;
-        for (Transaction t : catTxs) {
-            Date d = t.getDate();
-            if (d == null) continue;
-            if (d.before(currentStart) || !d.before(currentEnd)) continue;
-            total += (t.getAmount() == null ? 0.0 : t.getAmount());
-        }
+        Double sum = transactionRepository.sumAmountForCategoryInRange(
+                userId, transactionType, accountId, categoryId, currentStart, currentEnd);
+        double total = sum != null ? sum : 0.0;
 
         return new CategoryStatsResponseDTO(
                 range.name(),

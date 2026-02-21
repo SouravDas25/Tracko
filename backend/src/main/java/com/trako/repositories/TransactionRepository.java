@@ -332,4 +332,67 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             @Param("userId") String userId,
             @Param("accountIds") List<Long> accountIds
     );
+
+    @Query("SELECT t.date, SUM(t.amount) " +
+            "FROM Transaction t " +
+            "WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId) " +
+            "AND t.isCountable = 1 " +
+            "AND t.transactionType = :transactionType " +
+            "AND (:accountId IS NULL OR t.accountId = :accountId) " +
+            "GROUP BY t.date " +
+            "ORDER BY t.date ASC")
+    List<Object[]> sumAmountsByDateForUser(
+            @Param("userId") String userId,
+            @Param("transactionType") int transactionType,
+            @Param("accountId") Long accountId
+    );
+
+    @Query("SELECT t.date, SUM(t.amount) " +
+            "FROM Transaction t " +
+            "WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId) " +
+            "AND t.isCountable = 1 " +
+            "AND t.transactionType = :transactionType " +
+            "AND (:accountId IS NULL OR t.accountId = :accountId) " +
+            "AND t.categoryId = :categoryId " +
+            "GROUP BY t.date " +
+            "ORDER BY t.date ASC")
+    List<Object[]> sumAmountsByDateForCategory(
+            @Param("userId") String userId,
+            @Param("transactionType") int transactionType,
+            @Param("accountId") Long accountId,
+            @Param("categoryId") Long categoryId
+    );
+
+    @Query("SELECT t.categoryId, SUM(t.amount) " +
+            "FROM Transaction t " +
+            "WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId) " +
+            "AND t.isCountable = 1 " +
+            "AND t.transactionType = :transactionType " +
+            "AND (:accountId IS NULL OR t.accountId = :accountId) " +
+            "AND t.date >= :startDate AND t.date < :endDate " +
+            "GROUP BY t.categoryId")
+    List<Object[]> sumAmountsByCategoryForUserInRange(
+            @Param("userId") String userId,
+            @Param("transactionType") int transactionType,
+            @Param("accountId") Long accountId,
+            @Param("startDate") Date startDate,
+            @Param("endDate") Date endDate
+    );
+
+    @Query("SELECT SUM(t.amount) " +
+            "FROM Transaction t " +
+            "WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId) " +
+            "AND t.isCountable = 1 " +
+            "AND t.transactionType = :transactionType " +
+            "AND (:accountId IS NULL OR t.accountId = :accountId) " +
+            "AND t.categoryId = :categoryId " +
+            "AND t.date >= :startDate AND t.date < :endDate")
+    Double sumAmountForCategoryInRange(
+            @Param("userId") String userId,
+            @Param("transactionType") int transactionType,
+            @Param("accountId") Long accountId,
+            @Param("categoryId") Long categoryId,
+            @Param("startDate") Date startDate,
+            @Param("endDate") Date endDate
+    );
 }

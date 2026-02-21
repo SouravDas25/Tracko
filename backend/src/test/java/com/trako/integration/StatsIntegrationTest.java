@@ -20,6 +20,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import static org.hamcrest.Matchers.hasSize;
@@ -72,7 +73,7 @@ public class StatsIntegrationTest {
                 List.of(new StatsPointDTO("2026-01-01", 123.0)),
                 List.of(new CategoryStatDTO(10L, "Food", 123.0))
         );
-        when(statsService.getStats(anyString(), any(StatsService.Range.class), anyInt(), any())).thenReturn(dto);
+        when(statsService.getStats(anyString(), any(StatsService.Range.class), anyInt(), nullable(Long.class), any(), nullable(Date.class), nullable(Date.class))).thenReturn(dto);
 
         CategoryStatsResponseDTO catDto = new CategoryStatsResponseDTO(
                 "weekly",
@@ -83,7 +84,7 @@ public class StatsIntegrationTest {
                 50.0,
                 List.of(new StatsPointDTO("2026-01-01", 50.0))
         );
-        when(statsService.getCategoryStats(anyString(), any(StatsService.Range.class), anyInt(), any(), anyLong()))
+        when(statsService.getCategoryStats(anyString(), any(StatsService.Range.class), anyInt(), nullable(Long.class), any(), anyLong(), nullable(Date.class), nullable(Date.class)))
                 .thenReturn(catDto);
     }
 
@@ -111,7 +112,7 @@ public class StatsIntegrationTest {
                         .queryParam("range", "bad")
                         .queryParam("transactionType", "1"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Invalid range. Use weekly|monthly|yearly"));
+                .andExpect(jsonPath("$.message").value("Invalid range. Use weekly|monthly|yearly|custom"));
     }
 
     @Test
