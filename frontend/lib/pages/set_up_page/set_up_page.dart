@@ -86,7 +86,7 @@ class _setUpPage extends State<SetUpPage> {
         if (globalId == null || globalId.isEmpty) {
           LoadingDialog.hide(context);
           WidgetUtil.toast("Failed to create account. Please try again.");
-          Navigator.pushReplacementNamed(context, "/welcome");
+          Navigator.pushReplacementNamed(context, "/login");
           return;
         }
         user.globalId = globalId;

@@ -120,6 +120,11 @@ class ApiClient {
     ));
   }
 
+  void updateBaseUrl(String url) {
+    _dio.options.baseUrl = url;
+    AppLog.d('[ApiClient] Base URL updated to: $url');
+  }
+
   Dio get dio => _dio;
 
   Future<T> get<T>(String path, {Map<String, dynamic>? query}) async {

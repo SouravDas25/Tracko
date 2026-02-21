@@ -13,12 +13,14 @@ class StatsPage extends StatefulWidget {
   final DateTime? initialDate;
   final StatsKind? initialKind;
   final int? initialAccountId;
+  final bool showAppBar;
 
   const StatsPage({
     super.key,
     this.initialDate,
     this.initialKind,
     this.initialAccountId,
+    this.showAppBar = false,
   });
 
   @override
@@ -81,6 +83,11 @@ class _StatsPageState extends State<StatsPage> {
     return Scaffold(
       body: CustomScrollView(
         slivers: [
+          if (widget.showAppBar)
+            const SliverAppBar(
+              title: Text("Statistics"),
+              pinned: true,
+            ),
           SliverToBoxAdapter(
             child: StatsFilterSection(
               range: _controller.range,

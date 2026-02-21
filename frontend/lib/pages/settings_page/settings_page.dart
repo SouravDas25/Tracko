@@ -54,7 +54,7 @@ class _SettingsPage extends State<SettingsPage> {
   Future<void> _logout() async {
     await SessionService.logout();
     Navigator.of(context).pushNamedAndRemoveUntil(
-      "/welcome",
+      "/login",
       (route) => false,
     );
   }

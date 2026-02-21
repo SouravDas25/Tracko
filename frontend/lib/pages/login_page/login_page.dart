@@ -2,6 +2,8 @@ import 'package:tracko/component/menu_bar.dart' as TrackoMenuBar;
 import 'package:flutter/material.dart';
 import 'package:tracko/services/auth_service.dart';
 import 'package:dio/dio.dart';
+import 'package:tracko/config/api_config.dart';
+import 'package:tracko/pages/backend_setup_page/backend_setup_page.dart';
 
 import 'package:tracko/services/SessionService.dart';
 
@@ -204,19 +206,25 @@ class _LoginPage extends State<LoginForm> {
             ),
           ),
           const SizedBox(height: 16),
-          TextButton(
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.teal,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          if (!ApiConfig.isProduction)
+            TextButton.icon(
+              onPressed: _submitting
+                  ? null
+                  : () async {
+                      await ApiConfig.reset();
+                      if (context.mounted) {
+                        Navigator.of(context).pushReplacement(
+                          MaterialPageRoute(
+                              builder: (context) => const BackendSetupPage()),
+                        );
+                      }
+                    },
+              icon: const Icon(Icons.settings_ethernet),
+              label: const Text('Change Backend URL'),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.grey,
+              ),
             ),
-            onPressed: _submitting
-                ? null
-                : () => Navigator.pushNamed(context, '/phone_login'),
-            child: const Text(
-              'Login with phone instead',
-              style: TextStyle(fontSize: 16),
-            ),
-          ),
         ],
       ),
     );

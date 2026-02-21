@@ -150,6 +150,7 @@ class _HomeTab extends State<HomeTab> with SingleTickerProviderStateMixin {
                 MaterialPageRoute(
                   builder: (_) => StatsPage(
                     initialDate: SettingUtil.currentMonth,
+                    showAppBar: true,
                   ),
                 ),
               );

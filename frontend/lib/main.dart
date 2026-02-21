@@ -1,6 +1,8 @@
 import 'package:tracko/Init.dart';
+import 'package:tracko/config/api_config.dart';
+import 'package:tracko/pages/backend_setup_page/backend_setup_page.dart';
+import 'package:tracko/pages/login_page/login_page.dart';
 import 'package:tracko/pages/route.dart';
-import 'package:tracko/pages/welcome_page/welcome_page.dart';
 import 'package:tracko/pages/transaction_list_page/transaction_list_page.dart';
 import 'package:flutter/material.dart';
 
@@ -46,7 +48,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
       themeMode: ThemeMode.dark,
-      home: WelcomePage(),
+      home: ApiConfig.isConfigured ? LoginPage() : const BackendSetupPage(),
     );
   }
 }

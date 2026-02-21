@@ -134,6 +134,7 @@ class _TransactionListPageState extends State<TransactionListPage>
                     builder: (_) => StatsPage(
                       initialDate: SettingUtil.currentMonth,
                       initialAccountId: widget.initialAccountIds!.first,
+                      showAppBar: true,
                     ),
                   ),
                 );
