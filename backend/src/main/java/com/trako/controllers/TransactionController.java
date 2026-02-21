@@ -444,11 +444,30 @@ public class TransactionController {
             // Note: Currently we assume if existing is a transfer, we stay transfer.
             // If a request has transfer fields, we treat it as a transfer update.
             if (isExistingTransfer || request.isTransfer()) {
+                // For transfer updates, `accountId` in the request represents the account of the
+                // transaction being updated (debit or credit side). Map it to the correct
+                // transfer side so updates are symmetric when calling PUT on either transaction.
+                boolean isDebitSide = existing.getTransactionType() != null && existing.getTransactionType() == 1;
+                boolean isCreditSide = existing.getTransactionType() != null && existing.getTransactionType() == 2;
+
+                // Important: request.getSourceAccountId() falls back to `accountId` when `fromAccountId` is null.
+                // For credit-side updates, the request will usually only send `accountId` (the credit account),
+                // so treating that as the *source* would invert the transfer and cause validation failures.
+                Long resolvedFromAccountId = request.fromAccountId();
+                Long resolvedToAccountId = request.toAccountId();
+
+                if (resolvedFromAccountId == null && isDebitSide) {
+                    resolvedFromAccountId = request.accountId();
+                }
+                if (resolvedToAccountId == null && isCreditSide) {
+                    resolvedToAccountId = request.accountId();
+                }
+
                 Transaction[] result = transactionWriteService.updateTransfer(
                     currentUserId,
                     id,
-                    request.getSourceAccountId(), // null means don't change
-                    request.toAccountId(),
+                    resolvedFromAccountId, // null means don't change
+                    resolvedToAccountId,
                     request.date(),
                     request.amount(),
                     request.name(),

@@ -112,43 +112,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
         Pageable pageable
     );
 
-    @Query("SELECT t.accountId AS accountId, " +
-            "SUM(CASE WHEN t.transactionType = 2 THEN t.amount " +
-            "         WHEN t.transactionType = 1 THEN -t.amount " +
-            "         ELSE 0 END) AS balance " +
-            "FROM Transaction t " +
-            "WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId) " +
-            "AND (t.isCountable = 1 OR (:transferCategoryId IS NOT NULL AND t.categoryId = :transferCategoryId)) " +
-            "GROUP BY t.accountId")
-    List<Map<String, Object>> findAccountBalancesByUserId(
-            @Param("userId") String userId,
-            @Param("transferCategoryId") Long transferCategoryId
-    );
-
-    @Query("SELECT " +
-            "SUM(CASE WHEN t.transactionType = 2 THEN t.amount " +
-            "         WHEN t.transactionType = 1 THEN -t.amount " +
-            "         ELSE 0 END) " +
-            "FROM Transaction t " +
-            "WHERE t.accountId = :accountId " +
-            "AND (t.isCountable = 1 OR (:transferCategoryId IS NOT NULL AND t.categoryId = :transferCategoryId))")
-    Double findBalanceByAccountId(
-            @Param("accountId") Long accountId,
-            @Param("transferCategoryId") Long transferCategoryId
-    );
-
-    @Query("SELECT COALESCE(SUM(CASE WHEN t.transactionType = 2 THEN t.amount " +
-            "         WHEN t.transactionType = 1 THEN -t.amount " +
-            "         ELSE 0 END), 0) " +
-            "FROM Transaction t " +
-            "WHERE t.accountId = :accountId " +
-            "AND t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId) " +
-            "AND t.linkedTransactionId IS NOT NULL")
-    Double sumTransferDeltaForAccount(
-            @Param("userId") String userId,
-            @Param("accountId") Long accountId
-    );
-
     @Query("SELECT COALESCE(SUM(CASE WHEN t.transactionType = 2 THEN t.amount " +
             "         WHEN t.transactionType = 1 THEN -t.amount " +
             "         ELSE 0 END), 0) " +
@@ -185,18 +148,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             "AND (t.isCountable = 1 OR t.linkedTransactionId IS NOT NULL) " +
             "GROUP BY t.accountId")
     List<Map<String, Object>> sumBalancesByAccountForUserFromTransactions(
-            @Param("userId") String userId
-    );
-
-    @Query("SELECT t.accountId AS accountId, " +
-            "COALESCE(SUM(CASE WHEN t.transactionType = 2 THEN t.amount " +
-            "         WHEN t.transactionType = 1 THEN -t.amount " +
-            "         ELSE 0 END), 0) AS transferDelta " +
-            "FROM Transaction t " +
-            "WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId) " +
-            "AND t.linkedTransactionId IS NOT NULL " +
-            "GROUP BY t.accountId")
-    List<Map<String, Object>> sumTransferDeltasByAccountForUser(
             @Param("userId") String userId
     );
 
