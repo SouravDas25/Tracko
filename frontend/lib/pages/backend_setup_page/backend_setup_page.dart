@@ -3,6 +3,7 @@ import 'package:tracko/config/api_config.dart';
 import 'package:tracko/pages/login_page/login_page.dart';
 import 'package:tracko/services/api_client.dart';
 import 'package:tracko/Utils/AppLog.dart';
+import 'package:tracko/Utils/HealthCheckUtil.dart';
 import 'package:tracko/services/SessionService.dart';
 import 'package:dio/dio.dart';
 
@@ -55,24 +56,10 @@ class _BackendSetupPageState extends State<BackendSetupPage> {
 
       // 3. Verify connection
       // We attempt to hit the health endpoint with a short timeout.
-      try {
-        final dio = Dio(BaseOptions(
-          baseUrl: url,
-          connectTimeout: const Duration(seconds: 5),
-          receiveTimeout: const Duration(seconds: 5),
-        ));
-
-        final response = await dio.get(ApiConfig.health);
-        final healthData = response.data;
-
-        if (healthData is Map && healthData['status'] == 'UP') {
-          // Server is up and running
-        } else {
-          throw Exception("Server returned invalid health status");
-        }
-      } catch (e) {
+      final isHealthy = await HealthCheckUtil.checkHealth(url);
+      if (!isHealthy) {
         throw Exception(
-            "Could not connect to server health endpoint: ${e.toString()}");
+            "Server returned invalid health status or is unreachable");
       }
 
       // 4. Try to fetch user session (best effort, initializes session if token exists)

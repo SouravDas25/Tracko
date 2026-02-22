@@ -11,7 +11,9 @@ import 'package:tracko/pages/category_page/category_page.dart';
 import 'package:tracko/pages/contact_page/contact_page.dart';
 import 'package:tracko/pages/settings_page/currency_settings_page.dart';
 import 'package:tracko/repositories/user_repository.dart';
+import 'package:tracko/Utils/HealthCheckUtil.dart';
 import 'package:tracko/services/SessionService.dart';
+import 'package:tracko/services/api_client.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:tracko/config/api_config.dart';
@@ -85,6 +87,109 @@ class _SettingsPage extends State<SettingsPage> {
             );
           }
         });
+  }
+
+  void _showUpdateUrlDialog() {
+    final controller = TextEditingController(text: ApiConfig.baseUrl);
+    bool isChecking = false;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            title: Text("Update Backend URL"),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: controller,
+                  enabled: !isChecking,
+                  decoration: InputDecoration(
+                    labelText: "Backend URL",
+                    hintText: "http://192.168.1.100:8080",
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  "Restart app might be required for changes to take full effect.",
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+                if (isChecking) ...[
+                  SizedBox(height: 16),
+                  CircularProgressIndicator(),
+                  SizedBox(height: 8),
+                  Text("Verifying connection..."),
+                ],
+              ],
+            ),
+            actions: isChecking
+                ? []
+                : [
+                    TextButton(
+                      onPressed: () async {
+                        await ApiConfig.reset();
+                        ApiClient().updateBaseUrl(ApiConfig.baseUrl);
+                        if (mounted) setState(() {});
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                              content: Text('Backend URL reset to default')),
+                        );
+                      },
+                      style:
+                          TextButton.styleFrom(foregroundColor: Colors.orange),
+                      child: Text("Reset Default"),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text("Cancel"),
+                    ),
+                    TextButton(
+                      onPressed: () async {
+                        final url = controller.text.trim();
+                        if (url.isEmpty) return;
+
+                        var cleanUrl = url;
+                        if (cleanUrl.endsWith('/')) {
+                          cleanUrl = cleanUrl.substring(0, cleanUrl.length - 1);
+                        }
+
+                        setDialogState(() {
+                          isChecking = true;
+                        });
+
+                        final success = await HealthCheckUtil.checkHealth(cleanUrl);
+
+                        if (success) {
+                          await ApiConfig.setBaseUrl(cleanUrl);
+                          ApiClient().updateBaseUrl(ApiConfig.baseUrl);
+                          if (mounted) setState(() {});
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Backend URL updated')),
+                          );
+                        } else {
+                          setDialogState(() {
+                            isChecking = false;
+                          });
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Connection failed or invalid response'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      },
+                      child: Text("Save"),
+                    ),
+                  ],
+          );
+        },
+      ),
+    );
   }
 
   Future<void> _logout() async {
@@ -190,10 +295,6 @@ class _SettingsPage extends State<SettingsPage> {
                     ],
                   ),
                 ),
-                Text(
-                  ConstantUtil.version,
-                  style: TextStyle(color: secondaryTextColor, fontSize: 12),
-                ),
               ],
             ),
           ),
@@ -246,13 +347,8 @@ class _SettingsPage extends State<SettingsPage> {
             title: "Backend URL",
             subtitle: ApiConfig.baseUrl,
             iconColor: Colors.blueGrey,
-            trailing: Icon(Icons.copy, size: 20, color: Colors.grey),
-            onTap: () {
-              Clipboard.setData(ClipboardData(text: ApiConfig.baseUrl));
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('URL copied to clipboard')),
-              );
-            },
+            trailing: Icon(Icons.edit, size: 20, color: Colors.grey),
+            onTap: _showUpdateUrlDialog,
           ),
 
           _buildSettingsTile(

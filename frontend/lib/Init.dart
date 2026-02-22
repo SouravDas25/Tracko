@@ -3,6 +3,7 @@ import 'package:tracko/config/api_config.dart';
 import 'package:tracko/services/SessionService.dart';
 import 'package:tracko/services/api_client.dart';
 import 'package:tracko/Utils/AppLog.dart';
+import 'package:tracko/Utils/HealthCheckUtil.dart';
 import 'package:dio/dio.dart';
 
 class InitializeApp {
@@ -22,27 +23,14 @@ class InitializeApp {
     // If configured and not web, verify connection
     if (!kIsWeb && ApiConfig.isConfigured) {
       AppLog.d("InitializeApp: Verifying connection to ${ApiConfig.health}");
-      try {
-        // Create a temporary Dio instance for health check with short timeout
-        final dio = Dio(BaseOptions(
-          baseUrl: ApiConfig.baseUrl,
-          connectTimeout: const Duration(seconds: 5),
-          receiveTimeout: const Duration(seconds: 5),
-        ));
 
-        // Check health to verify the server is reachable
-        final response = await dio.get(ApiConfig.health);
-        final healthData = response.data;
-        AppLog.d("InitializeApp: Health check response: $healthData");
+      final isHealthy = await HealthCheckUtil.checkHealth(ApiConfig.baseUrl);
 
-        if (!(healthData is Map && healthData['status'] == 'UP')) {
-          throw Exception(
-              "Health check failed: Invalid response format or status");
-        }
+      if (isHealthy) {
         AppLog.d("InitializeApp: Health check passed");
-      } catch (e) {
+      } else {
         AppLog.d(
-            "InitializeApp: Backend unreachable at ${ApiConfig.baseUrl}: $e. Resetting config.");
+            "InitializeApp: Backend unreachable at ${ApiConfig.baseUrl}. Resetting config.");
         // Store the failed URL so we can pre-fill it for editing
         ApiConfig.lastAttemptedUrl = ApiConfig.baseUrl;
         // Reset config to force BackendSetupPage
