@@ -96,6 +96,57 @@ public class StatsServiceIntegrationTest {
     }
 
     @Test
+    public void customRangeShortReturnsDailySeries() {
+        Date start = date(2026, 1, 1);
+        Date end = date(2026, 1, 10); // 10 days inclusive
+
+        saveTx(food.getId(), 1, 1, 10.0, date(2026, 1, 2));
+        saveTx(food.getId(), 1, 1, 20.0, date(2026, 1, 5));
+
+        StatsResponseDTO dto = statsService.getStats(user.getId(), StatsService.Range.custom, 1, null, null, start, end);
+
+        assertNotNull(dto);
+        assertEquals("custom", dto.getRange());
+        assertNotNull(dto.getSeries());
+        // Should span 10 days (Jan 1 to Jan 10 inclusive)
+        assertEquals(10, dto.getSeries().size());
+        // Labels should be daily format YYYY-MM-DD
+        assertTrue(dto.getSeries().get(0).getLabel().matches("\\d{4}-\\d{2}-\\d{2}"));
+        assertEquals("2026-01-01", dto.getSeries().get(0).getLabel());
+        assertEquals("2026-01-10", dto.getSeries().get(9).getLabel());
+    }
+
+    @Test
+    public void customRangeLongReturnsMonthlySeries() {
+        Date start = date(2026, 1, 1);
+        Date end = date(2026, 4, 1); // Spans into April (> 62 days threshold)
+
+        saveTx(food.getId(), 1, 1, 10.0, date(2026, 1, 15));
+        saveTx(food.getId(), 1, 1, 20.0, date(2026, 2, 15));
+        saveTx(food.getId(), 1, 1, 30.0, date(2026, 3, 15));
+        saveTx(food.getId(), 1, 1, 40.0, date(2026, 4, 1)); // Transaction on the last day
+
+        StatsResponseDTO dto = statsService.getStats(user.getId(), StatsService.Range.custom, 1, null, null, start, end);
+
+        assertNotNull(dto);
+        assertEquals("custom", dto.getRange());
+        assertNotNull(dto.getSeries());
+        // Should span 4 months: Jan, Feb, Mar, Apr
+        assertEquals(4, dto.getSeries().size());
+        
+        // Labels should be monthly format MMM YYYY (e.g. "Jan 2026")
+        assertEquals("Jan 2026", dto.getSeries().get(0).getLabel());
+        assertEquals("Feb 2026", dto.getSeries().get(1).getLabel());
+        assertEquals("Mar 2026", dto.getSeries().get(2).getLabel());
+        assertEquals("Apr 2026", dto.getSeries().get(3).getLabel());
+        
+        assertEquals(10.0, dto.getSeries().get(0).getValue(), 0.001);
+        assertEquals(20.0, dto.getSeries().get(1).getValue(), 0.001);
+        assertEquals(30.0, dto.getSeries().get(2).getValue(), 0.001);
+        assertEquals(40.0, dto.getSeries().get(3).getValue(), 0.001);
+    }
+
+    @Test
     public void categoriesAreSortedByAmountDescForCurrentPeriod() {
         // Anchor within the same week for deterministic “current period” selection
         Date anchor = date(2026, 1, 8);

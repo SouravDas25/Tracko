@@ -18,21 +18,34 @@ class ChartEntry {
 }
 
 class ChartUtil {
+  static const List<Color> _palette = [
+    Colors.redAccent,
+    Colors.orange,
+    Colors.amber,
+    Colors.green,
+    Colors.teal,
+    Colors.blue,
+    Colors.indigo,
+    Colors.purple,
+    Colors.pink,
+    Colors.brown,
+  ];
+
   static prepareForChart(List<ChartEntry> data) {
     double sum = 0.0;
-    Random random = new Random();
-    int baseColor = 100;
-    int len = data.length == 0 ? 1 : data.length;
-    int diff = min(175 ~/ len, 40);
 
-    for (ChartEntry ce in data) {
+    for (int i = 0; i < data.length; i++) {
+      ChartEntry ce = data[i];
       sum += ce.value;
-      ce.color = Color.fromRGBO(0, baseColor, baseColor, 1);
-      baseColor = max((baseColor + diff) % 220, 100);
+      ce.color = getColor(i);
     }
 
     for (ChartEntry ce in data) {
-      ce.percentage = (ce.value / sum) * 100;
+      ce.percentage = sum == 0 ? 0.0 : (ce.value / sum) * 100;
     }
+  }
+
+  static Color getColor(int index) {
+    return _palette[index % _palette.length];
   }
 }

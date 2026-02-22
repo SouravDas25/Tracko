@@ -191,25 +191,57 @@ public class StatsService {
         Date anchor = (anchorDate == null) ? new Date() : anchorDate;
         
         if (range == Range.custom) {
-            TreeMap<Long, Double> byDay = new TreeMap<>();
-            for (Object[] row : aggs) {
-                Date d = (Date) row[0];
-                if (d.before(currentStart) || !d.before(currentEnd)) continue;
-                Double amt = row[1] != null ? ((Number) row[1]).doubleValue() : 0.0;
-                long key = startOfDay(d).getTime();
-                byDay.put(key, byDay.getOrDefault(key, 0.0) + amt);
-            }
-            List<StatsPointDTO> out = new ArrayList<>();
-            if (byDay.isEmpty()) return out;
+            long diff = currentEnd.getTime() - currentStart.getTime();
+            long days = diff / (24 * 60 * 60 * 1000);
 
-            long startMs = startOfDay(currentStart).getTime();
-            long endMs = startOfDay(addDays(currentEnd, -1)).getTime();
-            long oneDayMs = 24L * 60L * 60L * 1000L;
+            if (days > 62) {
+                // Use Monthly Granularity for large ranges (> 2 months)
+                TreeMap<Integer, Double> byMonth = new TreeMap<>();
+                for (Object[] row : aggs) {
+                    Date d = (Date) row[0];
+                    if (d.before(currentStart) || !d.before(currentEnd)) continue;
+                    Double amt = row[1] != null ? ((Number) row[1]).doubleValue() : 0.0;
+                    int key = toYearMonthKey(d);
+                    byMonth.put(key, byMonth.getOrDefault(key, 0.0) + amt);
+                }
+                
+                List<StatsPointDTO> out = new ArrayList<>();
+                // Even if empty, we want to generate the zero-filled series for the range
+                
+                int startKey = toYearMonthKey(currentStart);
+                // For endKey, since currentEnd is exclusive (start of next day), 
+                // we should look at the last inclusive day (currentEnd - 1ms)
+                int endKey = toYearMonthKey(addDays(currentEnd, -1));
+                
+                int spanMonths = monthsBetweenKeys(startKey, endKey);
+                for (int i = 0; i <= spanMonths; i++) {
+                    int key = addMonthsToYearMonthKey(startKey, i);
+                    int year = key / 100;
+                    int month = key % 100;
+                    out.add(new StatsPointDTO(monthLabel(month) + " " + year, byMonth.getOrDefault(key, 0.0)));
+                }
+                return out;
+            } else {
+                // Use Daily Granularity for short ranges
+                TreeMap<Long, Double> byDay = new TreeMap<>();
+                for (Object[] row : aggs) {
+                    Date d = (Date) row[0];
+                    if (d.before(currentStart) || !d.before(currentEnd)) continue;
+                    Double amt = row[1] != null ? ((Number) row[1]).doubleValue() : 0.0;
+                    long key = startOfDay(d).getTime();
+                    byDay.put(key, byDay.getOrDefault(key, 0.0) + amt);
+                }
+                List<StatsPointDTO> out = new ArrayList<>();
+                // Generate contiguous days
+                long startMs = startOfDay(currentStart).getTime();
+                long endMs = startOfDay(addDays(currentEnd, -1)).getTime();
+                long oneDayMs = 24L * 60L * 60L * 1000L;
 
-            for (long ts = startMs; ts <= endMs; ts += oneDayMs) {
-                out.add(new StatsPointDTO(DATE_FMT.format(new Date(ts)), byDay.getOrDefault(ts, 0.0)));
+                for (long ts = startMs; ts <= endMs; ts += oneDayMs) {
+                    out.add(new StatsPointDTO(DATE_FMT.format(new Date(ts)), byDay.getOrDefault(ts, 0.0)));
+                }
+                return out;
             }
-            return out;
         }
         
         if (range == Range.yearly) {

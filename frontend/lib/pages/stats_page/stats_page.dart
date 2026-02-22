@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:tracko/Utils/CommonUtil.dart';
 import 'package:tracko/Utils/enums.dart';
 import 'package:tracko/models/category.dart';
@@ -73,8 +74,178 @@ class _StatsPageState extends State<StatsPage> {
           endDate: _controller.periodEndExclusive!,
           range: _controller.range.name,
           transactionType: txType,
+          accountId: _controller.selectedAccount?.id,
         ),
       ),
+    );
+  }
+
+  Future<DateTimeRange?> _pickCustomRange(BuildContext context) async {
+    DateTime start = _controller.customStartDate ??
+        DateTime(DateTime.now().year, DateTime.now().month, 1);
+    DateTime end = _controller.customEndDate ?? DateTime.now();
+    bool isYearMode = false;
+
+    // Generate year list (2000 to Current + 1)
+    final currentYear = DateTime.now().year;
+    final years = List.generate(currentYear - 2000 + 2, (index) => 2000 + index)
+        .reversed
+        .toList();
+
+    return await showDialog<DateTimeRange>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text("Select Date Range"),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SwitchListTile(
+                    title: const Text("Select entire years"),
+                    value: isYearMode,
+                    activeColor: Theme.of(context).primaryColor,
+                    onChanged: (val) {
+                      setState(() {
+                        isYearMode = val;
+                        if (isYearMode) {
+                          // Snap to year boundaries
+                          start = DateTime(start.year, 1, 1);
+                          end = DateTime(end.year, 12, 31);
+                        }
+                      });
+                    },
+                  ),
+                  const Divider(),
+                  if (isYearMode) ...[
+                    // YEAR SELECTION MODE
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text("From Year:",
+                              style: TextStyle(fontWeight: FontWeight.w600)),
+                          DropdownButton<int>(
+                            value: years.contains(start.year)
+                                ? start.year
+                                : years.first,
+                            items: years.map((y) {
+                              return DropdownMenuItem(
+                                value: y,
+                                child: Text(y.toString()),
+                              );
+                            }).toList(),
+                            onChanged: (val) {
+                              if (val != null) {
+                                setState(() {
+                                  start = DateTime(val, 1, 1);
+                                  if (end.year < val) {
+                                    end = DateTime(val, 12, 31);
+                                  }
+                                });
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text("To Year:",
+                              style: TextStyle(fontWeight: FontWeight.w600)),
+                          DropdownButton<int>(
+                            value: years.contains(end.year)
+                                ? end.year
+                                : years.first,
+                            items: years.map((y) {
+                              return DropdownMenuItem(
+                                value: y,
+                                child: Text(y.toString()),
+                              );
+                            }).toList(),
+                            onChanged: (val) {
+                              if (val != null) {
+                                setState(() {
+                                  end = DateTime(val, 12, 31);
+                                  if (start.year > val) {
+                                    start = DateTime(val, 1, 1);
+                                  }
+                                });
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ] else ...[
+                    // SPECIFIC DATE MODE
+                    ListTile(
+                      title: const Text("Start Date"),
+                      subtitle: Text(DateFormat('MMM dd, yyyy').format(start)),
+                      trailing: const Icon(Icons.calendar_today),
+                      onTap: () async {
+                        final d = await showDatePicker(
+                          context: context,
+                          initialDate: start,
+                          firstDate: DateTime(2000),
+                          lastDate:
+                              DateTime.now().add(const Duration(days: 365)),
+                        );
+                        if (d != null) {
+                          setState(() {
+                            start = d;
+                            if (end.isBefore(start)) {
+                              end = start;
+                            }
+                          });
+                        }
+                      },
+                    ),
+                    ListTile(
+                      title: const Text("End Date"),
+                      subtitle: Text(DateFormat('MMM dd, yyyy').format(end)),
+                      trailing: const Icon(Icons.calendar_today),
+                      onTap: () async {
+                        final d = await showDatePicker(
+                          context: context,
+                          initialDate: end,
+                          firstDate: DateTime(2000),
+                          lastDate:
+                              DateTime.now().add(const Duration(days: 365)),
+                        );
+                        if (d != null) {
+                          setState(() {
+                            end = d;
+                            if (start.isAfter(end)) {
+                              start = end;
+                            }
+                          });
+                        }
+                      },
+                    ),
+                  ],
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("Cancel"),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(
+                      context, DateTimeRange(start: start, end: end)),
+                  child: const Text("Apply"),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 
@@ -96,33 +267,7 @@ class _StatsPageState extends State<StatsPage> {
               accounts: _controller.accounts,
               onRangeChanged: (range) async {
                 if (range == StatsRange.custom) {
-                  final DateTimeRange? picked = await showDateRangePicker(
-                    context: context,
-                    firstDate: DateTime(2000),
-                    lastDate: DateTime.now().add(const Duration(days: 365)),
-                    initialDateRange: _controller.range == StatsRange.custom &&
-                            _controller.customStartDate != null &&
-                            _controller.customEndDate != null
-                        ? DateTimeRange(
-                            start: _controller.customStartDate!,
-                            end: _controller.customEndDate!)
-                        : null,
-                    builder: (context, child) {
-                      return Theme(
-                        data: Theme.of(context).copyWith(
-                          colorScheme: ColorScheme.light(
-                            primary: Theme.of(context).primaryColor,
-                            onPrimary: Colors.white,
-                            surface: Theme.of(context).cardColor,
-                            onSurface:
-                                Theme.of(context).textTheme.bodyLarge?.color ??
-                                    Colors.black,
-                          ),
-                        ),
-                        child: child!,
-                      );
-                    },
-                  );
+                  final DateTimeRange? picked = await _pickCustomRange(context);
                   if (picked != null) {
                     _controller.setCustomRange(picked.start, picked.end);
                   }
