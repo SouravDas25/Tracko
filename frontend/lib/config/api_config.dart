@@ -75,5 +75,6 @@ class ApiConfig {
   static const String users = '/api/user';
   static const String userCurrencies = '/api/user-currencies';
   static const String exchangeRates = '/api/exchange-rates';
+  static const String recurringTransactions = '/api/recurring-transactions';
   static const String health = '/api/health';
 }

@@ -9,6 +9,7 @@ import 'package:tracko/models/user.dart';
 import 'package:tracko/pages/account_page/AccountPage.dart';
 import 'package:tracko/pages/category_page/category_page.dart';
 import 'package:tracko/pages/contact_page/contact_page.dart';
+import '../recurring_transaction_page/recurring_transaction_list_page.dart';
 import 'package:tracko/pages/settings_page/currency_settings_page.dart';
 import 'package:tracko/repositories/user_repository.dart';
 import 'package:tracko/Utils/HealthCheckUtil.dart';
@@ -161,7 +162,8 @@ class _SettingsPage extends State<SettingsPage> {
                           isChecking = true;
                         });
 
-                        final success = await HealthCheckUtil.checkHealth(cleanUrl);
+                        final success =
+                            await HealthCheckUtil.checkHealth(cleanUrl);
 
                         if (success) {
                           await ApiConfig.setBaseUrl(cleanUrl);
@@ -177,7 +179,8 @@ class _SettingsPage extends State<SettingsPage> {
                           });
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('Connection failed or invalid response'),
+                              content:
+                                  Text('Connection failed or invalid response'),
                               backgroundColor: Colors.red,
                             ),
                           );
@@ -337,6 +340,16 @@ class _SettingsPage extends State<SettingsPage> {
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => CurrencySettingsPage()),
+            ),
+          ),
+          _buildSettingsTile(
+            icon: Icons.repeat,
+            title: "Recurring Transactions",
+            iconColor: Colors.purpleAccent,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => RecurringTransactionListPage()),
             ),
           ),
 
