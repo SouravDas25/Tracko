@@ -10,4 +10,5 @@ import java.util.List;
 public interface AllocationRuleRepository extends JpaRepository<AllocationRule, Long> {
     List<AllocationRule> findByUserId(String userId);
     List<AllocationRule> findByUserIdAndIsActiveTrue(String userId);
+    void deleteByUserId(String userId);
 }

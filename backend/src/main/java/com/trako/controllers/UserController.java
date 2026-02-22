@@ -94,4 +94,18 @@ public class UserController {
         return Response.ok(saved.getId(), "User Updated Successfully.");
     }
 
+    @DeleteMapping(value = "/data")
+    ResponseEntity<?> resetData() {
+        User current = userService.loggedInUser();
+        userService.resetUserData(current.getId());
+        return Response.ok("User data reset successfully.");
+    }
+
+    @DeleteMapping(value = "/transactions")
+    ResponseEntity<?> resetTransactions() {
+        User current = userService.loggedInUser();
+        userService.resetUserTransactions(current.getId());
+        return Response.ok("User transactions reset successfully.");
+    }
+
 }

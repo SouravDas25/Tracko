@@ -212,7 +212,10 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     );
     
     List<Transaction> findByAccountId(Long accountId);
+    List<Transaction> findByAccountIdIn(List<Long> accountIds);
     List<Transaction> findByCategoryId(Long categoryId);
+
+    void deleteByAccountIdIn(List<Long> accountIds);
     
     @Query("SELECT YEAR(t.date) as y, MONTH(t.date) as m, " +
             "COALESCE(SUM(CASE WHEN t.transactionType = 2 THEN t.amount ELSE 0 END), 0), " +

@@ -22,6 +22,7 @@ tasks:
       - echo "  task clean     # Clean build artifacts"
       - echo "  task test      # Run tests"
       - echo "  task install   # Install dependencies"
+      - echo "  task release:apk # Generate release APK for Android"
 
   # Start both services (backend detached, flutter in foreground)
   start:
@@ -101,6 +102,13 @@ tasks:
       
       - cmd: mvn -B install -P dev
         dir: "{{.BACKEND_DIR}}"
+      
+  # Generate release APK
+  release:apk:
+    desc: Generate release APK for Android
+    dir: "{{.FRONTEND_DIR}}"
+    cmds:
+      - cmd: flutter build apk --release
       
 
   docker:tar:

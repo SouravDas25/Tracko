@@ -53,45 +53,66 @@ class CommonUtil {
   // but existing calls are sync. We will assume 'INR' default or pass it in.
   // For best results, pass the currencySymbol or currencyCode explicitly.
   static String toCurrency(double amount, {String? currencyCode}) {
-    NumberFormat formatCurrency;
-    String tail = "";
     if (amount == null) {
       amount = 0;
     }
-
-    // Determine symbol
     String symbol = SessionService.currentCurrencySymbol;
+    String code = currencyCode ?? 'INR';
     if (currencyCode != null) {
       symbol = getCurrencySymbol(currencyCode);
     }
-
     double absAmount = amount.abs();
-    if (absAmount >= million && absAmount < billion) {
-      amount = amount / million;
-      bool hasFraction = (amount * 100).round() % 100 != 0;
+    bool isINR = code == 'INR';
+    String tail = "";
+    NumberFormat formatCurrency;
+
+    bool isJPYorCNY = code == 'JPY' || code == 'CNY';
+    bool isNegative = amount < 0;
+    double displayAmount = amount.abs();
+
+    if (isINR) {
+      if (absAmount >= 10000000) {
+        displayAmount = absAmount / 10000000;
+        tail = " crore";
+      } else if (absAmount >= 100000) {
+        displayAmount = absAmount / 100000;
+        tail = " lakh";
+      }
+      bool hasFraction = (displayAmount * 100).round() % 100 != 0;
       formatCurrency = NumberFormat.currency(
+        locale: 'en_IN',
         decimalDigits: hasFraction ? 2 : 0,
         symbol: symbol,
       );
-      tail = " million";
-    } else if (absAmount >= billion) {
-      amount = amount / billion;
-      bool hasFraction = (amount * 100).round() % 100 != 0;
-      formatCurrency = NumberFormat.currency(
-        decimalDigits: hasFraction ? 2 : 0,
-        symbol: symbol,
-      );
-      tail = " billion";
     } else {
-      // Check if amount has significant fractional part
-      bool hasFraction = (amount * 100).round() % 100 != 0;
+      if (absAmount >= million && absAmount < billion) {
+        displayAmount = absAmount / million;
+        tail = " million";
+      } else if (absAmount >= billion) {
+        displayAmount = absAmount / billion;
+        tail = " billion";
+      }
+      int decimalDigits =
+          isJPYorCNY ? 0 : ((displayAmount * 100).round() % 100 != 0 ? 2 : 0);
       formatCurrency = NumberFormat.currency(
-        decimalDigits: hasFraction ? 2 : 0,
+        locale: 'en_US',
+        decimalDigits: decimalDigits,
         symbol: symbol,
       );
     }
-    // Add space after symbol if it's not a standard symbol-prefix (optional preference)
-    return formatCurrency.format(amount) + tail;
+    String formatted = formatCurrency.format(displayAmount) + tail;
+    // Place negative sign after symbol (e.g., ₹-9.88 lakh)
+    if (isNegative) {
+      if (formatted.startsWith(symbol)) {
+        formatted = symbol + '-' + formatted.substring(symbol.length);
+      } else if (formatted.startsWith('¥')) {
+        // For JPY/CNY
+        formatted = '¥-' + formatted.substring(1);
+      } else {
+        formatted = '-' + formatted;
+      }
+    }
+    return formatted;
   }
 
   static String toSign(int type) {

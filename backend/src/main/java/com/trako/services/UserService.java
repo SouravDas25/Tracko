@@ -1,9 +1,11 @@
 package com.trako.services;
 
+import com.trako.entities.Account;
+import com.trako.entities.Transaction;
 import com.trako.entities.User;
 import com.trako.exceptions.UserNotLoggedInException;
 import com.trako.models.request.UserSaveRequest;
-import com.trako.repositories.UsersRepository;
+import com.trako.repositories.*;
 import com.trako.util.CommonUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,9 +13,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class UserService {
@@ -22,6 +26,33 @@ public class UserService {
 
     @Autowired
     UsersRepository usersRepository;
+
+    @Autowired
+    AccountRepository accountRepository;
+
+    @Autowired
+    TransactionRepository transactionRepository;
+
+    @Autowired
+    SplitRepository splitRepository;
+
+    @Autowired
+    CategoryRepository categoryRepository;
+
+    @Autowired
+    ContactRepository contactRepository;
+
+    @Autowired
+    UserCurrencyRepository userCurrencyRepository;
+
+    @Autowired
+    BudgetMonthRepository budgetMonthRepository;
+
+    @Autowired
+    BudgetCategoryAllocationRepository budgetCategoryAllocationRepository;
+
+    @Autowired
+    AllocationRuleRepository allocationRuleRepository;
 
     public User loggedInUser() throws UserNotLoggedInException {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -100,5 +131,82 @@ public class UserService {
 
     public User saveUser(User user) {
         return usersRepository.save(user);
+    }
+
+    @Transactional
+    public void resetUserData(String userId) {
+        log.info("Resetting data for user: {}", userId);
+
+        // 1. Get all accounts for the user
+        List<Account> userAccounts = accountRepository.findByUserId(userId);
+        List<Long> accountIds = userAccounts.stream().map(Account::getId).collect(Collectors.toList());
+
+        // 2. Get all transactions for these accounts
+        if (!accountIds.isEmpty()) {
+            List<Transaction> userTransactions = transactionRepository.findByAccountIdIn(accountIds);
+            List<Long> transactionIds = userTransactions.stream().map(Transaction::getId).collect(Collectors.toList());
+
+            // 3. Delete Splits associated with these transactions
+            if (!transactionIds.isEmpty()) {
+                splitRepository.deleteByTransactionIdIn(transactionIds);
+            }
+            
+            // 4. Delete Transactions
+            transactionRepository.deleteByAccountIdIn(accountIds);
+        }
+
+        // 5. Delete Splits by userId (cleanup)
+        splitRepository.deleteByUserId(userId);
+
+        // 6. Delete Budget Allocations
+        budgetCategoryAllocationRepository.deleteByUserId(userId);
+
+        // 7. Delete Budget Months
+        budgetMonthRepository.deleteByUserId(userId);
+
+        // 8. Delete Allocation Rules
+        allocationRuleRepository.deleteByUserId(userId);
+
+        // 9. Delete Contacts
+        contactRepository.deleteByUserId(userId);
+
+        // 10. Delete User Currencies
+        userCurrencyRepository.deleteByUserId(userId);
+
+        // 11. Delete Accounts
+        accountRepository.deleteByUserId(userId);
+
+        // 12. Delete Categories
+        categoryRepository.deleteByUserId(userId);
+
+        log.info("Data reset completed for user: {}", userId);
+    }
+
+    @Transactional
+    public void resetUserTransactions(String userId) {
+        log.info("Resetting transactions for user: {}", userId);
+
+        // 1. Get all accounts for the user
+        List<Account> userAccounts = accountRepository.findByUserId(userId);
+        List<Long> accountIds = userAccounts.stream().map(Account::getId).collect(Collectors.toList());
+
+        // 2. Get all transactions for these accounts
+        if (!accountIds.isEmpty()) {
+            List<Transaction> userTransactions = transactionRepository.findByAccountIdIn(accountIds);
+            List<Long> transactionIds = userTransactions.stream().map(Transaction::getId).collect(Collectors.toList());
+
+            // 3. Delete Splits associated with these transactions
+            if (!transactionIds.isEmpty()) {
+                splitRepository.deleteByTransactionIdIn(transactionIds);
+            }
+
+            // 4. Delete Transactions
+            transactionRepository.deleteByAccountIdIn(accountIds);
+        }
+
+        // 5. Reset Budget Allocations (Actual Spent = 0, Remaining = Allocated)
+        budgetCategoryAllocationRepository.resetActualSpentByUserId(userId);
+
+        log.info("Transactions reset completed for user: {}", userId);
     }
 }

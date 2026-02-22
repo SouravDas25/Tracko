@@ -58,6 +58,14 @@ class UserRepository {
     return res;
   }
 
+  Future<void> resetUserData() async {
+    await _api.delete("${ApiConfig.users}/data");
+  }
+
+  Future<void> resetUserTransactions() async {
+    await _api.delete("${ApiConfig.users}/transactions");
+  }
+
   User _fromBackend(Map<String, dynamic> json) {
     final user = User();
     user.id = int.tryParse(json['id']?.toString() ?? '0');
@@ -67,13 +75,13 @@ class UserRepository {
     user.email = (json['email'] as String?) ?? '';
     user.profilePic = (json['profilePic'] as String?) ?? '';
     user.baseCurrency = (json['baseCurrency'] as String?) ?? 'INR';
-    
+
     if (json['secondaryCurrencies'] != null) {
       user.secondaryCurrencies = (json['secondaryCurrencies'] as List)
           .map((e) => UserCurrency.fromJson(e as Map<String, dynamic>))
           .toList();
     }
-    
+
     return user;
   }
 }

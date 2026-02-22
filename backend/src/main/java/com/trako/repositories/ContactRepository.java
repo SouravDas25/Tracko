@@ -11,4 +11,5 @@ import java.util.Optional;
 public interface ContactRepository extends JpaRepository<Contact, Long> {
     List<Contact> findByUserId(String userId);
     Optional<Contact> findByIdAndUserId(Long id, String userId);
+    void deleteByUserId(String userId);
 }

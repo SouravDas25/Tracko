@@ -26,8 +26,7 @@ except Exception:
 
 
 def _config_path() -> str:
-    home = os.path.expanduser("~")
-    return os.path.join(home, ".tracko-cli.json")
+    return os.path.join(os.path.dirname(__file__), ".tracko-cli.json")
 
 
 def load_config() -> dict:
@@ -72,7 +71,7 @@ def http_request(method: str, url: str, *, token: str | None = None, json_body: 
 
     started = time.time()
     try:
-        # Use SSL context for HTTPS requests to handle self-signed certificates
+        # Always use SSL_CONTEXT for HTTPS requests to skip SSL verification (dev only)
         context = SSL_CONTEXT if url.startswith("https://") else None
         with urllib.request.urlopen(req, timeout=timeout, context=context) as resp:
             raw = resp.read()
