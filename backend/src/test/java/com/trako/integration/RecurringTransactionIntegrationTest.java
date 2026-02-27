@@ -86,12 +86,12 @@ public class RecurringTransactionIntegrationTest {
         testUser.setName("Test User");
         testUser.setPhoneNo("1234567890");
         testUser.setEmail("test@example.com");
-        testUser.setFireBaseId("firebase_id_123"); // Set firebaseId as it is used as password in principal
+        testUser.setPassword("firebase_id_123"); // Set firebaseId as it is used as password in principal
         testUser = usersRepository.save(testUser);
 
         var principal = new org.springframework.security.core.userdetails.User(
                 testUser.getPhoneNo(),
-                testUser.getFireBaseId(),
+                testUser.getPassword(),
                 java.util.Collections.emptyList()
         );
         bearerToken = "Bearer " + jwtTokenUtil.generateToken(principal);

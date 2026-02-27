@@ -67,7 +67,7 @@ public class StatsServiceIntegrationTest {
         user.setName("Stats Svc");
         user.setPhoneNo("7777777777");
         user.setEmail("statssvc@example.com");
-        user.setFireBaseId("pass");
+        user.setPassword("pass");
         user = usersRepository.save(user);
 
         account = new Account();

@@ -3,7 +3,7 @@ package com.trako.models.request;
 public class AuthicationRequest {
 
     String phoneNo;
-    String firebaseUuid;
+    String password;
 
     public String getPhoneNo() {
         return phoneNo;
@@ -13,11 +13,11 @@ public class AuthicationRequest {
         this.phoneNo = phoneNo;
     }
 
-    public String getFirebaseUuid() {
-        return firebaseUuid;
+    public String getPassword() {
+        return password;
     }
 
-    public void setFirebaseUuid(String firebaseUuid) {
-        this.firebaseUuid = firebaseUuid;
+    public void setPassword(String password) {
+        this.password = password;
     }
 }

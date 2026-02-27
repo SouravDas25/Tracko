@@ -75,7 +75,7 @@ public class TransactionSummaryRolloverTest {
         testUser.setName("Summary Test User");
         testUser.setPhoneNo("9998887777");
         testUser.setEmail("summary@test.com");
-        testUser.setFireBaseId("summary_pass");
+        testUser.setPassword("summary_pass");
         testUser = usersRepository.save(testUser);
 
         // Accounts

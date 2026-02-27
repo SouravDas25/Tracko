@@ -5,3 +5,5 @@ databaseChangeLog:
       file: db/changelog/001-add-recurring-transactions.yaml
   - include:
       file: db/changelog/002-add-currency-to-recurring-transactions.yaml
+  - include:
+      file: db/changelog/004-rename-firebase-id-to-password.yaml

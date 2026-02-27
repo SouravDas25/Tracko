@@ -57,11 +57,11 @@ public class StatsIntegrationTest {
         user.setName("StatsUser");
         user.setPhoneNo("9090909090");
         user.setEmail("stats@example.com");
-        user.setFireBaseId("pass");
+        user.setPassword("pass");
         usersRepository.save(user);
 
         UserDetails principal = new org.springframework.security.core.userdetails.User(
-                user.getPhoneNo(), user.getFireBaseId(), Collections.emptyList());
+                user.getPhoneNo(), user.getPassword(), Collections.emptyList());
         bearerToken = "Bearer " + jwtTokenUtil.generateToken(principal);
 
         StatsResponseDTO dto = new StatsResponseDTO(

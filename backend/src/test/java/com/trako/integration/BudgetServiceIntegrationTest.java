@@ -71,7 +71,7 @@ public class BudgetServiceIntegrationTest {
         testUser.setName("Budget User");
         testUser.setPhoneNo("5551234567");
         testUser.setEmail("budget@example.com");
-        testUser.setFireBaseId("pass");
+        testUser.setPassword("pass");
         testUser = usersRepository.save(testUser);
 
         // Seed Account

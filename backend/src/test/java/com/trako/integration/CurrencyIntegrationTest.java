@@ -95,13 +95,13 @@ public class CurrencyIntegrationTest {
         testUser.setName("Currency User");
         testUser.setPhoneNo("9876543210");
         testUser.setEmail("currency@example.com");
-        testUser.setFireBaseId("currency_pass");
+        testUser.setPassword("currency_pass");
         testUser.setBaseCurrency("USD"); // Base currency is USD
         testUser = usersRepository.save(testUser);
 
         var principal = new org.springframework.security.core.userdetails.User(
                 testUser.getPhoneNo(),
-                testUser.getFireBaseId(),
+                testUser.getPassword(),
                 Collections.emptyList()
         );
         bearerToken = "Bearer " + jwtTokenUtil.generateToken(principal);

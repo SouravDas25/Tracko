@@ -75,7 +75,7 @@ class SessionControllerIT {
         User user = new User();
         user.setName("user");
         user.setPhoneNo("user");
-        user.setFireBaseId("password");
+        user.setPassword("password");
         usersRepository.save(user);
 
         Map<String, Object> body = new HashMap<>();
@@ -94,7 +94,7 @@ class SessionControllerIT {
         User user = new User();
         user.setName("user");
         user.setPhoneNo("user");
-        user.setFireBaseId("password");
+        user.setPassword("password");
         usersRepository.save(user);
 
         Map<String, Object> body = new HashMap<>();

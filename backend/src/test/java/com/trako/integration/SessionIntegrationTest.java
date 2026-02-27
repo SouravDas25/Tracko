@@ -60,13 +60,13 @@ public class SessionIntegrationTest {
         testUser.setName("Test User");
         testUser.setPhoneNo("1234567890");
         testUser.setEmail("test@example.com");
-        testUser.setFireBaseId("password");
+        testUser.setPassword("password");
         testUser = usersRepository.save(testUser);
 
         // For /api/oauth/token we mock the authentication manager so we don't depend on password encoding config.
         UserDetails principal = new org.springframework.security.core.userdetails.User(
                 testUser.getPhoneNo(),
-                testUser.getFireBaseId(),
+                testUser.getPassword(),
                 Collections.emptyList()
         );
         Authentication auth = new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
@@ -77,7 +77,7 @@ public class SessionIntegrationTest {
     public void loginSuccessReturnsJwtToken() throws Exception {
         LoginRequest req = new LoginRequest();
         req.setUsername(testUser.getPhoneNo());
-        req.setPassword(testUser.getFireBaseId());
+        req.setPassword(testUser.getPassword());
 
         mockMvc.perform(post("/api/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -102,7 +102,7 @@ public class SessionIntegrationTest {
     public void oauthTokenReturnsJwtToken() throws Exception {
         AuthicationRequest req = new AuthicationRequest();
         req.setPhoneNo(testUser.getPhoneNo());
-        req.setFirebaseUuid(testUser.getFireBaseId());
+        req.setPassword(testUser.getPassword());
 
         mockMvc.perform(post("/api/oauth/token")
                         .contentType(MediaType.APPLICATION_JSON)

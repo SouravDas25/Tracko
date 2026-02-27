@@ -53,12 +53,12 @@ public class UserByPhoneNoIntegrationTest {
         authUser.setName("Auth User");
         authUser.setPhoneNo("1234567890");
         authUser.setEmail("auth@example.com");
-        authUser.setFireBaseId("password");
+        authUser.setPassword("password");
         authUser = usersRepository.save(authUser);
 
         UserDetails principal = new org.springframework.security.core.userdetails.User(
                 authUser.getPhoneNo(),
-                authUser.getFireBaseId(),
+                authUser.getPassword(),
                 Collections.emptyList()
         );
         bearerToken = "Bearer " + jwtTokenUtil.generateToken(principal);
@@ -77,7 +77,7 @@ public class UserByPhoneNoIntegrationTest {
         target.setName("Target");
         target.setPhoneNo("9998887777");
         target.setEmail("target@example.com");
-        target.setFireBaseId("pass2");
+        target.setPassword("pass2");
         target = usersRepository.save(target);
 
         // send formatted phone to exercise CommonUtil.extractPhoneNumber

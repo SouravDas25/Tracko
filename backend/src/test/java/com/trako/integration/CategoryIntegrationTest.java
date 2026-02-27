@@ -60,12 +60,12 @@ public class CategoryIntegrationTest {
         testUser.setName("Test User");
         testUser.setPhoneNo("1234567890");
         testUser.setEmail("test@example.com");
-        testUser.setFireBaseId("password");
+        testUser.setPassword("password");
         testUser = usersRepository.save(testUser);
 
         var principal = new org.springframework.security.core.userdetails.User(
                 testUser.getPhoneNo(),
-                testUser.getFireBaseId(),
+                testUser.getPassword(),
                 Collections.emptyList()
         );
         bearerToken = "Bearer " + jwtTokenUtil.generateToken(principal);
@@ -117,7 +117,7 @@ public class CategoryIntegrationTest {
         other.setName("OtherU");
         other.setPhoneNo("7777777777");
         other.setEmail("otheru@example.com");
-        other.setFireBaseId("other_pass");
+        other.setPassword("other_pass");
         other = usersRepository.save(other);
 
         mockMvc.perform(get("/api/categories/user/" + other.getId())
@@ -131,7 +131,7 @@ public class CategoryIntegrationTest {
         other.setName("OtherCat");
         other.setPhoneNo("8888888888");
         other.setEmail("othercat@example.com");
-        other.setFireBaseId("othercat_pass");
+        other.setPassword("othercat_pass");
         other = usersRepository.save(other);
 
         Category foreign = new Category();
@@ -150,7 +150,7 @@ public class CategoryIntegrationTest {
         other.setName("UpdOtherCat");
         other.setPhoneNo("9999999999");
         other.setEmail("updothercat@example.com");
-        other.setFireBaseId("updothercat_pass");
+        other.setPassword("updothercat_pass");
         other = usersRepository.save(other);
 
         Category foreign = new Category();
@@ -174,7 +174,7 @@ public class CategoryIntegrationTest {
         other.setName("DelOtherCat");
         other.setPhoneNo("6666666666");
         other.setEmail("delothercat@example.com");
-        other.setFireBaseId("delothercat_pass");
+        other.setPassword("delothercat_pass");
         other = usersRepository.save(other);
 
         Category foreign = new Category();

@@ -36,10 +36,12 @@ class AuthService {
 
   Future<String?> signIn({
     required String phoneNo,
+    required String password,
   }) async {
     final res =
         await _api.post<Map<String, dynamic>>(ApiConfig.authLogin, data: {
       'phoneNo': phoneNo,
+      'password': password,
     });
     final token = res['token'] ?? res['jwtToken'];
     if (token is String) {

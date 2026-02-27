@@ -36,6 +36,6 @@ public class JwtUserDetailsService implements UserDetailsService {
         if (u.isAdmin()) {
             authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
         }
-        return new User(u.getPhoneNo(), u.getFireBaseId(), authorities);
+        return new User(u.getPhoneNo(), u.getPassword(), authorities);
     }
 }

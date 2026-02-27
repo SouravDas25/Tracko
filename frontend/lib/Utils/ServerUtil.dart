@@ -30,7 +30,7 @@ class ServerUtil {
   static Future<String?> getAuthToken(User user) async {
     var url = Uri.parse(DestinationUtil.javaBackend() + "api/oauth/token");
     var headers = {"Content-Type": "application/json"};
-    var body = {"phoneNo": user.phoneNo};
+    var body = {"phoneNo": user.phoneNo, "password": user.password};
     String data = convert.jsonEncode(body);
     final dio = ApiClient().dio;
     final response =

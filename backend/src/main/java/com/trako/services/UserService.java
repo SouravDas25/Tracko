@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,6 +54,9 @@ public class UserService {
 
     @Autowired
     AllocationRuleRepository allocationRuleRepository;
+
+    @Autowired
+    PasswordEncoder passwordEncoder;
 
     public User loggedInUser() throws UserNotLoggedInException {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -119,6 +123,12 @@ public class UserService {
                 user.setName(isPreset.getName());
         }
         
+        if (userSaveRequest.getPassword() != null && !userSaveRequest.getPassword().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(userSaveRequest.getPassword()));
+        } else if (isPreset != null && isPreset.getPassword() != null) {
+            user.setPassword(isPreset.getPassword());
+        }
+
         if (userSaveRequest.getBaseCurrency() != null) {
             user.setBaseCurrency(userSaveRequest.getBaseCurrency());
         } else if (user.getBaseCurrency() == null) {

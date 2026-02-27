@@ -80,12 +80,12 @@ public class AccountIntegrationTest {
         testUser.setName("Test User");
         testUser.setPhoneNo("1234567890");
         testUser.setEmail("test@example.com");
-        testUser.setFireBaseId("password");
+        testUser.setPassword("password");
         testUser = usersRepository.save(testUser);
 
         UserDetails principal = new org.springframework.security.core.userdetails.User(
                 testUser.getPhoneNo(),
-                testUser.getFireBaseId(),
+                testUser.getPassword(),
                 Collections.emptyList()
         );
         bearerToken = "Bearer " + jwtTokenUtil.generateToken(principal);
@@ -225,7 +225,7 @@ public class AccountIntegrationTest {
         other.setName("OtherU");
         other.setPhoneNo("2002002000");
         other.setEmail("otheru@example.com");
-        other.setFireBaseId("other_pass");
+        other.setPassword("other_pass");
         other = usersRepository.save(other);
 
         mockMvc.perform(get("/api/accounts/user/" + other.getId())
@@ -239,7 +239,7 @@ public class AccountIntegrationTest {
         other.setName("OtherAcc");
         other.setPhoneNo("3003003000");
         other.setEmail("otheracc@example.com");
-        other.setFireBaseId("otheracc_pass");
+        other.setPassword("otheracc_pass");
         other = usersRepository.save(other);
 
         Account foreign = new Account();
@@ -258,7 +258,7 @@ public class AccountIntegrationTest {
         other.setName("UpdOtherAcc");
         other.setPhoneNo("4004004000");
         other.setEmail("updother@example.com");
-        other.setFireBaseId("updother_pass");
+        other.setPassword("updother_pass");
         other = usersRepository.save(other);
 
         Account foreign = new Account();
@@ -282,7 +282,7 @@ public class AccountIntegrationTest {
         other.setName("DelOtherAcc");
         other.setPhoneNo("5005005000");
         other.setEmail("delother@example.com");
-        other.setFireBaseId("delother_pass");
+        other.setPassword("delother_pass");
         other = usersRepository.save(other);
 
         Account foreign = new Account();

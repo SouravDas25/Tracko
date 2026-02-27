@@ -58,7 +58,7 @@ public class UserAdminIntegrationTest {
         admin.setName("Admin");
         admin.setPhoneNo("0000000000");
         admin.setEmail("admin@mail.com");
-        admin.setFireBaseId("password");
+        admin.setPassword("password");
         admin.setIsShadow(0);
         admin.setIsAdmin(1);
         usersRepository.save(admin);
@@ -67,21 +67,21 @@ public class UserAdminIntegrationTest {
         normal.setName("Normal");
         normal.setPhoneNo("1111111111");
         normal.setEmail("normal@mail.com");
-        normal.setFireBaseId("password");
+        normal.setPassword("password");
         normal.setIsShadow(0);
         normal.setIsAdmin(0);
         usersRepository.save(normal);
 
         var adminPrincipal = new org.springframework.security.core.userdetails.User(
                 admin.getPhoneNo(),
-                admin.getFireBaseId(),
+                admin.getPassword(),
                 Collections.emptyList()
         );
         adminBearer = "Bearer " + jwtTokenUtil.generateToken(adminPrincipal);
 
         var userPrincipal = new org.springframework.security.core.userdetails.User(
                 normal.getPhoneNo(),
-                normal.getFireBaseId(),
+                normal.getPassword(),
                 Collections.emptyList()
         );
         userBearer = "Bearer " + jwtTokenUtil.generateToken(userPrincipal);
@@ -138,7 +138,7 @@ public class UserAdminIntegrationTest {
         target.setName("Target");
         target.setPhoneNo("4444444444");
         target.setEmail("target@mail.com");
-        target.setFireBaseId("password");
+        target.setPassword("password");
         target.setIsShadow(0);
         target.setIsAdmin(0);
         target = usersRepository.save(target);
@@ -157,7 +157,7 @@ public class UserAdminIntegrationTest {
         target.setName("Target");
         target.setPhoneNo("4444444444");
         target.setEmail("target@mail.com");
-        target.setFireBaseId("password");
+        target.setPassword("password");
         target.setIsShadow(0);
         target.setIsAdmin(0);
         target = usersRepository.save(target);

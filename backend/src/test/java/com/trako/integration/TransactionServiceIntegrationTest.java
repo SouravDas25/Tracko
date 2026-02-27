@@ -70,7 +70,7 @@ public class TransactionServiceIntegrationTest {
         testUser.setName("Txn User");
         testUser.setPhoneNo("1112223333");
         testUser.setEmail("txn@example.com");
-        testUser.setFireBaseId("pass");
+        testUser.setPassword("pass");
         testUser = usersRepository.save(testUser);
 
         testAccount = new Account();
@@ -86,7 +86,7 @@ public class TransactionServiceIntegrationTest {
 
         // Mock Security Context for service methods that need loggedInUser()
         UserDetails principal = new org.springframework.security.core.userdetails.User(
-                testUser.getPhoneNo(), testUser.getFireBaseId(), Collections.emptyList());
+                testUser.getPhoneNo(), testUser.getPassword(), Collections.emptyList());
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities()));
     }

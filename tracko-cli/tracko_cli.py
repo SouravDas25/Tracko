@@ -670,7 +670,7 @@ def cmd_login(args: argparse.Namespace) -> int:
 
 def cmd_oauth_token(args: argparse.Namespace) -> int:
     url = _join_url(args.base_url, "/api/oauth/token")
-    body = {"phoneNo": args.phone_no, "firebaseUuid": args.firebase_uuid}
+    body = {"phoneNo": args.phone_no, "password": args.password}
     result = http_request("POST", url, json_body=body)
     print_result(result, raw=args.raw)
 
@@ -744,7 +744,7 @@ def cmd_users_upsert(args: argparse.Namespace) -> int:
 
     body: dict = {
         "phoneNo": str(args.phone_no),
-        "uuid": str(args.uuid),
+        "password": str(args.password),
     }
     if args.name is not None:
         body["name"] = args.name
@@ -1627,7 +1627,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     sp = sub.add_parser("oauth-token", help="Login via /api/oauth/token")
     sp.add_argument("--phone-no", required=True)
-    sp.add_argument("--firebase-uuid", required=True)
+    sp.add_argument("--password", required=True)
     sp.set_defaults(func=cmd_oauth_token)
 
     sp = sub.add_parser("logout")
@@ -1651,7 +1651,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     sp2 = sub_users.add_parser("upsert")
     sp2.add_argument("--phone-no", required=True)
-    sp2.add_argument("--uuid", required=True, help="Firebase UUID / password")
+    sp2.add_argument("--password", required=True, help="Password")
     sp2.add_argument("--name")
     sp2.add_argument("--email")
     sp2.add_argument("--profile-pic")

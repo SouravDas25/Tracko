@@ -86,12 +86,12 @@ public class SplitIntegrationTest {
         testUser.setName("Test User");
         testUser.setPhoneNo("1234567890");
         testUser.setEmail("test@example.com");
-        testUser.setFireBaseId("password");
+        testUser.setPassword("password");
         testUser = usersRepository.save(testUser);
 
         var principal = new org.springframework.security.core.userdetails.User(
                 testUser.getPhoneNo(),
-                testUser.getFireBaseId(),
+                testUser.getPassword(),
                 Collections.emptyList()
         );
         bearerToken = "Bearer " + jwtTokenUtil.generateToken(principal);
@@ -100,12 +100,12 @@ public class SplitIntegrationTest {
         otherUser.setName("Other User");
         otherUser.setPhoneNo("5555555555");
         otherUser.setEmail("other@example.com");
-        otherUser.setFireBaseId("password");
+        otherUser.setPassword("password");
         otherUser = usersRepository.save(otherUser);
 
         var otherPrincipal = new org.springframework.security.core.userdetails.User(
                 otherUser.getPhoneNo(),
-                otherUser.getFireBaseId(),
+                otherUser.getPassword(),
                 Collections.emptyList()
         );
         otherBearerToken = "Bearer " + jwtTokenUtil.generateToken(otherPrincipal);

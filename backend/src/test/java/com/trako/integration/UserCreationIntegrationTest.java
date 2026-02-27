@@ -62,19 +62,19 @@ public class UserCreationIntegrationTest {
         adminUser = new User();
         adminUser.setName("Admin User");
         adminUser.setPhoneNo("9999999999");
-        adminUser.setFireBaseId("admin_pass");
+        adminUser.setPassword("admin_pass");
         adminUser.setIsAdmin(1);
         adminUser = usersRepository.save(adminUser);
-        adminToken = "Bearer " + jwtTokenUtil.generateToken(new org.springframework.security.core.userdetails.User(adminUser.getPhoneNo(), adminUser.getFireBaseId(), Collections.emptyList()));
+        adminToken = "Bearer " + jwtTokenUtil.generateToken(new org.springframework.security.core.userdetails.User(adminUser.getPhoneNo(), adminUser.getPassword(), Collections.emptyList()));
 
         // Create Regular User
         regularUser = new User();
         regularUser.setName("Regular User");
         regularUser.setPhoneNo("8888888888");
-        regularUser.setFireBaseId("user_pass");
+        regularUser.setPassword("user_pass");
         regularUser.setIsAdmin(0);
         regularUser = usersRepository.save(regularUser);
-        regularToken = "Bearer " + jwtTokenUtil.generateToken(new org.springframework.security.core.userdetails.User(regularUser.getPhoneNo(), regularUser.getFireBaseId(), Collections.emptyList()));
+        regularToken = "Bearer " + jwtTokenUtil.generateToken(new org.springframework.security.core.userdetails.User(regularUser.getPhoneNo(), regularUser.getPassword(), Collections.emptyList()));
     }
 
     @Test
@@ -82,7 +82,7 @@ public class UserCreationIntegrationTest {
         UserSaveRequest request = new UserSaveRequest();
         request.setName("New User");
         request.setPhoneNo("7777777777");
-        request.setFireBaseId("new_pass");
+        request.setPassword("new_pass");
 
         mockMvc.perform(post("/api/user/save")
                 .header("Authorization", adminToken)
@@ -100,7 +100,7 @@ public class UserCreationIntegrationTest {
         UserSaveRequest request = new UserSaveRequest();
         request.setName("Updated Regular User");
         request.setPhoneNo("7777777777"); // Trying to create/hijack this number
-        request.setFireBaseId("new_pass");
+        request.setPassword("new_pass");
 
         mockMvc.perform(post("/api/user/save")
                 .header("Authorization", regularToken)

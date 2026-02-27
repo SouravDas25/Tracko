@@ -98,12 +98,12 @@ public class TransactionIntegrationTest {
         testUser.setName("Test User");
         testUser.setPhoneNo("1234567890");
         testUser.setEmail("test@example.com");
-        testUser.setFireBaseId("password");
+        testUser.setPassword("password");
         testUser = usersRepository.save(testUser);
 
         var principal = new org.springframework.security.core.userdetails.User(
                 testUser.getPhoneNo(),
-                testUser.getFireBaseId(),
+                testUser.getPassword(),
                 Collections.emptyList()
         );
         bearerToken = "Bearer " + jwtTokenUtil.generateToken(principal);
@@ -707,7 +707,7 @@ public class TransactionIntegrationTest {
         other.setName("Other");
         other.setPhoneNo("5550001111");
         other.setEmail("other@example.com");
-        other.setFireBaseId("other_pass");
+        other.setPassword("other_pass");
         other = usersRepository.save(other);
 
         Account foreignAcc = new Account();
@@ -737,7 +737,7 @@ public class TransactionIntegrationTest {
         other.setName("Other");
         other.setPhoneNo("5550002222");
         other.setEmail("other2@example.com");
-        other.setFireBaseId("other2_pass");
+        other.setPassword("other2_pass");
         other = usersRepository.save(other);
 
         Account otherAcc = new Account();
@@ -1056,7 +1056,7 @@ public class TransactionIntegrationTest {
         other.setName("Other");
         other.setPhoneNo("5550009999");
         other.setEmail("other99@example.com");
-        other.setFireBaseId("other99_pass");
+        other.setPassword("other99_pass");
         other = usersRepository.save(other);
 
         Account otherAcc = new Account();
@@ -1140,7 +1140,7 @@ public class TransactionIntegrationTest {
         other.setName("OtherCatUser");
         other.setPhoneNo("5550005555");
         other.setEmail("other5@example.com");
-        other.setFireBaseId("other5_pass");
+        other.setPassword("other5_pass");
         other = usersRepository.save(other);
 
         Category foreignCat = new Category();
@@ -1180,7 +1180,7 @@ public class TransactionIntegrationTest {
         other.setName("UpdOther");
         other.setPhoneNo("5550006666");
         other.setEmail("other6@example.com");
-        other.setFireBaseId("other6_pass");
+        other.setPassword("other6_pass");
         other = usersRepository.save(other);
 
         Account foreignAcc = new Account();
@@ -1226,7 +1226,7 @@ public class TransactionIntegrationTest {
         other.setName("DelOther");
         other.setPhoneNo("5550007777");
         other.setEmail("other7@example.com");
-        other.setFireBaseId("other7_pass");
+        other.setPassword("other7_pass");
         other = usersRepository.save(other);
 
         Account otherAcc = new Account();

@@ -45,7 +45,7 @@ public class SessionController {
     public ResponseEntity<?> signIn(@RequestBody AuthicationRequest authicationRequest) {
 
         UsernamePasswordAuthenticationToken token =
-                new UsernamePasswordAuthenticationToken(authicationRequest.getPhoneNo(), authicationRequest.getFirebaseUuid());
+                new UsernamePasswordAuthenticationToken(authicationRequest.getPhoneNo(), authicationRequest.getPassword());
         Authentication authenticate = authenticationManager.authenticate(token);
 
         String jwtToken = jwtTokenUtil.generateToken((UserDetails) authenticate.getPrincipal());

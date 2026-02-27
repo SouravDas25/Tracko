@@ -90,13 +90,13 @@ public class TransferIntegrationTest {
         testUser.setName("Test User");
         testUser.setEmail("test@example.com");
         testUser.setPhoneNo("1234567890");
-        testUser.setFireBaseId("firebase-" + System.currentTimeMillis());
+        testUser.setPassword("firebase-" + System.currentTimeMillis());
         testUser = userRepository.save(testUser);
 
         // Generate JWT token for authentication
         UserDetails principal = new org.springframework.security.core.userdetails.User(
                 testUser.getPhoneNo(),
-                testUser.getFireBaseId(),
+                testUser.getPassword(),
                 Collections.emptyList()
         );
         bearerToken = "Bearer " + jwtTokenUtil.generateToken(principal);

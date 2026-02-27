@@ -12,7 +12,7 @@ class User {
   String name = '';
   String phoneNo = '';
   String email = '';
-  String fireBaseId = '';
+  String password = '';
   String globalId = '';
   String baseCurrency = 'INR';
   List<Account> accounts = [];
