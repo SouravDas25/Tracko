@@ -34,30 +34,6 @@ class AuthService {
     await _storage.delete(key: 'jwt_token');
   }
 
-  Future<String> signUp({
-    required String phoneNo,
-    required String name,
-    String? email,
-    String? profilePic,
-    String? baseCurrency,
-  }) async {
-    final res =
-        await _api.post<Map<String, dynamic>>(ApiConfig.authSignUp, data: {
-      'phoneNo': phoneNo,
-      'name': name,
-      'email': email,
-      'profilePic': profilePic,
-      'baseCurrency': baseCurrency ?? 'INR',
-    });
-    // If backend sends token in body/header, store it when available
-    final token = res['token'] ?? res['jwtToken'];
-    if (token is String) {
-      await _writeToken(token);
-      ApiClient.resetAuthSuppression();
-    }
-    return (res['id'] ?? res['userId'] ?? '').toString();
-  }
-
   Future<String?> signIn({
     required String phoneNo,
   }) async {

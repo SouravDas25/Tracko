@@ -29,7 +29,6 @@ public class SecurityConfig {
 
     private static final String[] WHITE_LIST_API = {
             "/api/oauth/token",
-            "/api/signUp",
             "/api/login",
             "/api/health",
             "/h2-console/**"

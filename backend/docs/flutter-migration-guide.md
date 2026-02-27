@@ -9,9 +9,6 @@ Replace direct SQLite database access in the Flutter UI with HTTP calls to the S
 - **POST** `/api/oauth/token` - Login (returns JWT)
   - Body: `{ "phoneNo": "string", "firebaseUuid": "string" }`
   - Response: `{ "token": "jwt-string" }`
-- **POST** `/api/signUp` - Register new user
-  - Body: `{ "phoneNo": "string", "firebase_uuid": "string", "name": "string", "email": "string", "profilePic": "string" }`
-  - Response: User ID
 
 ### Users
 - **GET** `/api/user` - List all users (requires JWT)

@@ -21,7 +21,7 @@ public class TestJwtSecurityConfig {
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(jwtAuthenticationEntryPoint))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/login", "/api/oauth/token", "/api/signUp", "/api/health").permitAll()
+                        .requestMatchers("/api/login", "/api/oauth/token", "/api/health").permitAll()
                         .anyRequest().authenticated()
                 );
 

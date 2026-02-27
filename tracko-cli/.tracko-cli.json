@@ -1,4 +1,4 @@
 {
-  "base_url": "http://localhost:8080",
-  "token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI5OTk5OTk5OTk5IiwiaWF0IjoxNzcxNzYxMDk0LCJleHAiOjE3NzE3NzkwOTR9.zPGMVUJfQme5B9i_AK8fCF9rOahSQK3CSf_VpPvnMqQ"
+  "base_url": "https://trako.myc",
+  "token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI5OTk5OTk5OTk5IiwiaWF0IjoxNzcyMjI3MTM3LCJleHAiOjE3NzIyNDUxMzd9.4_3_6m-PQplWEaT1KPARoMpRDo__DJsFjeJ___5wHwg"
 }

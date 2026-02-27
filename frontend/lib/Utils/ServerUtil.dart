@@ -48,31 +48,6 @@ class ServerUtil {
     return null;
   }
 
-  static Future<String?> signUp(User user) async {
-    var url = Uri.parse(DestinationUtil.javaBackend() + "api/signUp");
-    var requestBody = {"phoneNo": user.phoneNo, "isShadow": 0};
-    String data = convert.jsonEncode(requestBody);
-    print(data);
-//    data = Uri.encodeQueryComponent(data);
-    var header = {"Content-Type": "application/json"};
-    final dio = ApiClient().dio;
-    final response =
-        await dio.postUri(url, data: data, options: Options(headers: header));
-    print(response.headers.map);
-    print(response.data);
-    if (response.statusCode == 200) {
-      var token = response.headers.map['jwt-token']?.first;
-      if (token != null && token.length > 1) {
-        ServerUtil.authJwtToken = token;
-      }
-      final jsonResponse = response.data is String
-          ? convert.jsonDecode(response.data as String)
-          : response.data as Map<String, dynamic>;
-      return jsonResponse["result"];
-    }
-    return null;
-  }
-
   static Future<GlobalAccountResponse?> getGlobalAccount(
       String phoneNumber) async {
     var url = Uri.parse(DestinationUtil.javaBackend() +

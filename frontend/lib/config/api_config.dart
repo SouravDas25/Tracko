@@ -62,7 +62,6 @@ class ApiConfig {
   // API Endpoints
   static const String authLogin = '/api/oauth/token';
   static const String authLoginBasic = '/api/login';
-  static const String authSignUp = '/api/signUp';
   static const String accounts = '/api/accounts';
   static const String accountBalances = '/api/accounts/balances';
   static const String categories = '/api/categories';

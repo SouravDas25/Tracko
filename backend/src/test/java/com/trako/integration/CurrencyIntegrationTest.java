@@ -121,25 +121,6 @@ public class CurrencyIntegrationTest {
     }
 
     @Test
-    public void testUserCreationWithBaseCurrency() throws Exception {
-        UserSaveRequest request = new UserSaveRequest();
-        request.setName("New User");
-        request.setPhoneNo("5555555555");
-        request.setFireBaseId("firebase_new");
-        request.setBaseCurrency("GBP"); // Set base currency
-
-        mockMvc.perform(post("/api/signUp")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk());
-
-        // Verify in DB
-        User savedUser = usersRepository.findByPhoneNo("5555555555");
-        assert savedUser != null;
-        assert "GBP".equals(savedUser.getBaseCurrency());
-    }
-
-    @Test
     public void testAccountCreationWithCurrency() throws Exception {
         AccountSaveRequest request = new AccountSaveRequest();
         request.setName("Forex Card");

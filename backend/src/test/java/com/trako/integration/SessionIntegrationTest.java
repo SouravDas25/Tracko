@@ -110,43 +110,4 @@ public class SessionIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.token").isNotEmpty());
     }
-
-    @Test
-    public void signUpWithoutUuidReturnsUnauthorized() throws Exception {
-        UserSaveRequest req = new UserSaveRequest();
-        req.setName("NoUuid");
-        req.setPhoneNo("9998887777");
-        // uuid missing
-
-        mockMvc.perform(post("/api/signUp")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(req)))
-                .andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    public void testSignUpThenLoginSuccess() throws Exception {
-        // 1. Sign Up
-        UserSaveRequest signUpReq = new UserSaveRequest();
-        signUpReq.setName("New User");
-        signUpReq.setPhoneNo("1112223333");
-        signUpReq.setFireBaseId("password123");
-        signUpReq.setEmail("newuser@example.com");
-
-        mockMvc.perform(post("/api/signUp")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(signUpReq)))
-                .andExpect(status().isOk());
-
-        // 2. Login
-        LoginRequest loginReq = new LoginRequest();
-        loginReq.setUsername("1112223333");
-        loginReq.setPassword("password123");
-
-        mockMvc.perform(post("/api/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(loginReq)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").isNotEmpty());
-    }
 }

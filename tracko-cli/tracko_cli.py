@@ -229,23 +229,6 @@ def cmd_health(args: argparse.Namespace) -> int:
     return 0 if result["ok"] else 1
 
 
-def cmd_signup(args: argparse.Namespace) -> int:
-    url = _join_url(args.base_url, "/api/signUp")
-    body = {
-        "phoneNo": args.phone_no,
-        "fireBaseId": args.firebase_id,
-    }
-    if args.name is not None:
-        body["name"] = args.name
-    if args.email is not None:
-        body["email"] = args.email
-    if args.base_currency is not None:
-        body["baseCurrency"] = args.base_currency
-    result = http_request("POST", url, json_body=body)
-    print_result(result, raw=args.raw)
-    return 0 if result.get("ok") else 1
-
-
 # =========================
 # User Currencies (secondary)
 # =========================
@@ -1578,7 +1561,6 @@ def build_parser() -> argparse.ArgumentParser:
         "  # Auth\n"
         "  tracko_cli login --username user@example.com --password password\n"
         "  tracko_cli --base-url http://192.168.1.10:8080 login --username user@example.com --password password\n"
-        "  tracko_cli sign-up --phone-no 99999 --firebase-id FIREBASE_UUID\n"
         "  tracko_cli logout\n\n"
         "  # Users\n"
         "  tracko_cli users list\n\n"
@@ -1647,14 +1629,6 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--phone-no", required=True)
     sp.add_argument("--firebase-uuid", required=True)
     sp.set_defaults(func=cmd_oauth_token)
-
-    sp = sub.add_parser("sign-up", help="Sign up via /api/signUp")
-    sp.add_argument("--phone-no", required=True)
-    sp.add_argument("--firebase-id", required=True)
-    sp.add_argument("--name")
-    sp.add_argument("--email")
-    sp.add_argument("--base-currency")
-    sp.set_defaults(func=cmd_signup)
 
     sp = sub.add_parser("logout")
     sp.set_defaults(func=cmd_logout)
