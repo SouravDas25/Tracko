@@ -1661,6 +1661,18 @@ def build_parser() -> argparse.ArgumentParser:
     sh.add_argument("--not-shadow", action="store_false", dest="shadow")
     sp2.set_defaults(func=cmd_users_upsert)
 
+    sp2 = sub_users.add_parser("create")
+    sp2.add_argument("--phone-no", required=True)
+    sp2.add_argument("--password", required=True, help="Password")
+    sp2.add_argument("--name")
+    sp2.add_argument("--email")
+    sp2.add_argument("--profile-pic")
+    sp2.add_argument("--base-currency")
+    sh = sp2.add_mutually_exclusive_group()
+    sh.add_argument("--shadow", action="store_true", default=None)
+    sh.add_argument("--not-shadow", action="store_false", dest="shadow")
+    sp2.set_defaults(func=cmd_users_upsert)
+
     sp = sub.add_parser("accounts")
     sub_acc = sp.add_subparsers(dest="accounts_cmd", required=True)
     sp2 = sub_acc.add_parser("list")

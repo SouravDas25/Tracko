@@ -76,7 +76,7 @@ public class UserController {
         if (current.isAdmin()) {
             String id = userService.save(userSaveRequest);
             if (id == null) {
-                return Response.badRequest("Phone Number Incorrect");
+                return Response.badRequest("Invalid user request");
             }
             log.info("Admin saved user : {}", id);
             return Response.ok(id, "User Saved Successfully.");

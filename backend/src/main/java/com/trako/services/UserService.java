@@ -122,9 +122,19 @@ public class UserService {
             if (isPreset.getName() != null && user.getName() == null)
                 user.setName(isPreset.getName());
         }
-        
-        if (userSaveRequest.getPassword() != null && !userSaveRequest.getPassword().isEmpty()) {
-            user.setPassword(passwordEncoder.encode(userSaveRequest.getPassword()));
+
+        String rawPassword = userSaveRequest.getPassword();
+        boolean hasPassword = rawPassword != null && !rawPassword.trim().isEmpty();
+
+        // For a brand new user, password must be provided.
+        // For updates, allow missing password to keep existing password unchanged.
+        if (isPreset == null && !hasPassword) {
+            log.warn("User create rejected: missing password for phoneNo={}", phnNo);
+            return null;
+        }
+
+        if (hasPassword) {
+            user.setPassword(passwordEncoder.encode(rawPassword));
         } else if (isPreset != null && isPreset.getPassword() != null) {
             user.setPassword(isPreset.getPassword());
         }

@@ -93,7 +93,7 @@ public class UserAdminIntegrationTest {
         body.put("name", "Created User");
         body.put("phoneNo", "2222222222");
         body.put("email", "created@mail.com");
-        body.put("uuid", "password");
+        body.put("password", "password");
         body.put("isShadow", 0);
 
         mockMvc.perform(post("/api/user/save")
@@ -114,7 +114,7 @@ public class UserAdminIntegrationTest {
         body.put("name", "Hacker");
         body.put("phoneNo", "3333333333");
         body.put("email", "hacker@mail.com");
-        body.put("uuid", "password");
+        body.put("password", "password");
         body.put("isShadow", 0);
 
         mockMvc.perform(post("/api/user/save")
@@ -195,7 +195,7 @@ public class UserAdminIntegrationTest {
         body.put("name", "Normal Updated");
         body.put("phoneNo", "3333333333");
         body.put("email", "normal.updated@mail.com");
-        body.put("uuid", "password");
+        body.put("password", "password");
         body.put("isShadow", 0);
 
         mockMvc.perform(post("/api/user/save")

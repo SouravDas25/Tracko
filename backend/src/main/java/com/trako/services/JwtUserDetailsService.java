@@ -36,6 +36,21 @@ public class JwtUserDetailsService implements UserDetailsService {
         if (u.isAdmin()) {
             authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
         }
-        return new User(u.getPhoneNo(), u.getPassword(), authorities);
+        
+        String username = u.getPhoneNo();
+        if (username == null || username.isEmpty()) {
+            username = u.getEmail();
+        }
+        if (username == null || username.isEmpty()) {
+            // Should not happen ideally if DB is consistent, but prevent crash
+            username = "UNKNOWN"; 
+        }
+
+        String password = u.getPassword();
+        if (password == null) {
+            password = ""; // Empty password prevents null pointer in User constructor but fails auth
+        }
+
+        return new User(username, password, authorities);
     }
 }
