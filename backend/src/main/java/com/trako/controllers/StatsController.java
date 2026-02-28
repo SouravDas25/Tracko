@@ -5,6 +5,8 @@ import com.trako.exceptions.UserNotLoggedInException;
 import com.trako.services.StatsService;
 import com.trako.services.UserService;
 import com.trako.util.Response;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -12,11 +14,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.Date;
 
 @RestController
 @RequestMapping("/api/stats")
+@Validated
 public class StatsController {
 
     @Autowired
@@ -27,9 +31,9 @@ public class StatsController {
 
     @GetMapping("/summary")
     public ResponseEntity<?> getStats(
-            @RequestParam String range,
+            @RequestParam @NotBlank String range,
             @RequestParam Integer transactionType,
-            @RequestParam(required = false) Long accountId,
+            @RequestParam(required = false) @Positive(message = "Invalid accountId") Long accountId,
             @RequestParam(required = false)
             @DateTimeFormat(pattern = "yyyy-MM-dd")
             Date date,
@@ -68,10 +72,10 @@ public class StatsController {
 
     @GetMapping("/category-summary")
     public ResponseEntity<?> getCategoryStats(
-            @RequestParam String range,
+            @RequestParam @NotBlank String range,
             @RequestParam Integer transactionType,
-            @RequestParam Long categoryId,
-            @RequestParam(required = false) Long accountId,
+            @RequestParam @Positive(message = "Invalid categoryId") Long categoryId,
+            @RequestParam(required = false) @Positive(message = "Invalid accountId") Long accountId,
             @RequestParam(required = false)
             @DateTimeFormat(pattern = "yyyy-MM-dd")
             Date date,

@@ -20,6 +20,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.Valid;
 
 @RestController
 public class SessionController {
@@ -42,7 +43,7 @@ public class SessionController {
     private PasswordEncoder passwordEncoder;
 
     @PostMapping("/api/oauth/token")
-    public ResponseEntity<?> signIn(@RequestBody AuthicationRequest authicationRequest) {
+    public ResponseEntity<?> signIn(@Valid @RequestBody AuthicationRequest authicationRequest) {
 
         UsernamePasswordAuthenticationToken token =
                 new UsernamePasswordAuthenticationToken(authicationRequest.getPhoneNo(), authicationRequest.getPassword());
@@ -54,7 +55,7 @@ public class SessionController {
     }
 
     @PostMapping("/api/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest) {
         try {
             UserDetails user = userDetailsService.loadUserByUsername(loginRequest.getUsername());
 

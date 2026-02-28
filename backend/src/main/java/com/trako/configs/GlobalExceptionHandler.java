@@ -20,6 +20,7 @@ import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.security.access.AccessDeniedException;
 import com.trako.exceptions.AuthorizationException;
+import jakarta.validation.ConstraintViolationException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -45,6 +46,17 @@ public class GlobalExceptionHandler {
         if (firstError != null) {
             message = firstError.getField() + ": " + firstError.getDefaultMessage();
         }
+        log.warn("Bad request: {}", message);
+        return Response.badRequest(message);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<?> handleConstraintViolation(ConstraintViolationException ex) {
+        String message = ex.getConstraintViolations()
+                .stream()
+                .findFirst()
+                .map(v -> v.getMessage())
+                .orElse("Validation failed");
         log.warn("Bad request: {}", message);
         return Response.badRequest(message);
     }

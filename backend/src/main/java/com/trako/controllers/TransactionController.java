@@ -17,6 +17,7 @@ import com.trako.services.TransactionWriteService;
 import com.trako.services.UserService;
 import com.trako.util.Response;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,12 +28,14 @@ import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/transactions")
+@Validated
 public class TransactionController {
 
     private static final Logger log = LoggerFactory.getLogger(TransactionController.class);
@@ -332,7 +335,7 @@ public class TransactionController {
      * (ownership verified through the transaction's account).
      */
     @GetMapping("/{id}")
-    public ResponseEntity<?> getById(@PathVariable Long id) {
+    public ResponseEntity<?> getById(@PathVariable @Positive Long id) {
         try {
             String currentUserId = userService.loggedInUser().getId();
             Transaction tx = transactionService.findById(id).orElse(null);
@@ -427,7 +430,7 @@ public class TransactionController {
      * <p>For regular transactions, verifies that existing/new account plus category are all owned by authenticated user.
      */
     @PutMapping("/{id}")
-    public ResponseEntity<?> update(@PathVariable Long id, @Valid @RequestBody TransactionRequest request) {
+    public ResponseEntity<?> update(@PathVariable @Positive Long id, @Valid @RequestBody TransactionRequest request) {
         try {
             String currentUserId = userService.loggedInUser().getId();
 
@@ -534,7 +537,7 @@ public class TransactionController {
      * If the transaction is part of a transfer (has linkedTransactionId), both sides are deleted atomically.
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable Long id) {
+    public ResponseEntity<?> delete(@PathVariable @Positive Long id) {
         try {
             String currentUserId = userService.loggedInUser().getId();
             Transaction existing = transactionService.findById(id).orElse(null);

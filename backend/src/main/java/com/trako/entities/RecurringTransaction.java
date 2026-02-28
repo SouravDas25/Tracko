@@ -1,7 +1,10 @@
 package com.trako.entities;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -19,10 +22,12 @@ public class RecurringTransaction {
     @Column(name = "user_id", length = 36, nullable = false)
     private String userId;
 
-    @NotNull
+    @NotBlank
+    @Size(max = 128)
     @Column(name = "name", length = 128)
     private String name;
 
+    @Positive
     @Column(name = "amount")
     private Double amount;
 
@@ -30,20 +35,25 @@ public class RecurringTransaction {
     private String originalCurrency;
 
     @Column(name = "original_amount")
+    @Positive
     private Double originalAmount;
 
     @Column(name = "exchange_rate")
+    @Positive
     private Double exchangeRate;
 
     @NotNull
+    @Positive
     @Column(name = "account_id")
     private Long accountId;
 
     @NotNull
+    @Positive
     @Column(name = "category_id")
     private Long categoryId;
 
     @Column(name = "to_account_id")
+    @Positive
     private Long toAccountId;
 
     @NotNull

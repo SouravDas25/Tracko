@@ -5,14 +5,18 @@ import com.trako.services.JsonStoreService;
 import com.trako.services.UserService;
 import com.trako.util.Response;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/json-store")
+@Validated
 public class JsonStoreController {
 
     @Autowired
@@ -29,7 +33,7 @@ public class JsonStoreController {
     }
 
     @GetMapping("/{name}")
-    public ResponseEntity<?> getByName(@PathVariable String name) {
+    public ResponseEntity<?> getByName(@PathVariable @NotBlank @Size(max = 191) String name) {
         userService.loggedInUser();
         return jsonStoreService.findByName(name)
                 .<ResponseEntity<?>>map(Response::ok)
@@ -44,7 +48,7 @@ public class JsonStoreController {
     }
 
     @PutMapping("/{name}")
-    public ResponseEntity<?> update(@PathVariable String name, @Valid @RequestBody JsonStore jsonStore) {
+    public ResponseEntity<?> update(@PathVariable @NotBlank @Size(max = 191) String name, @Valid @RequestBody JsonStore jsonStore) {
         userService.loggedInUser();
         jsonStore.setName(name);
         JsonStore updated = jsonStoreService.save(jsonStore);
@@ -52,7 +56,7 @@ public class JsonStoreController {
     }
 
     @DeleteMapping("/{name}")
-    public ResponseEntity<?> delete(@PathVariable String name) {
+    public ResponseEntity<?> delete(@PathVariable @NotBlank @Size(max = 191) String name) {
         userService.loggedInUser();
         jsonStoreService.delete(name);
         return Response.ok("Setting deleted successfully");

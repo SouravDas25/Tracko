@@ -7,14 +7,17 @@ import com.trako.services.ContactService;
 import com.trako.services.UserService;
 import com.trako.util.Response;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/contacts")
+@Validated
 public class ContactController {
 
     @Autowired
@@ -35,7 +38,7 @@ public class ContactController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getOne(@PathVariable Long id) {
+    public ResponseEntity<?> getOne(@PathVariable @Positive Long id) {
         try {
             String currentUserId = userService.loggedInUser().getId();
             var opt = contactService.findByIdAndUserId(id, currentUserId);
@@ -65,7 +68,7 @@ public class ContactController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> update(@PathVariable Long id, @Valid @RequestBody ContactSaveRequest request) {
+    public ResponseEntity<?> update(@PathVariable @Positive Long id, @Valid @RequestBody ContactSaveRequest request) {
         try {
             String currentUserId = userService.loggedInUser().getId();
             // Ensure ownership
@@ -85,7 +88,7 @@ public class ContactController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable Long id) {
+    public ResponseEntity<?> delete(@PathVariable @Positive Long id) {
         try {
             String currentUserId = userService.loggedInUser().getId();
             var opt = contactService.findByIdAndUserId(id, currentUserId);

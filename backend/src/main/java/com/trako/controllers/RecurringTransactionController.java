@@ -6,14 +6,17 @@ import com.trako.services.RecurringTransactionService;
 import com.trako.services.UserService;
 import com.trako.util.Response;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/recurring-transactions")
+@Validated
 public class RecurringTransactionController {
 
     @Autowired
@@ -34,7 +37,7 @@ public class RecurringTransactionController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getById(@PathVariable Long id) {
+    public ResponseEntity<?> getById(@PathVariable @Positive Long id) {
         try {
             String currentUserId = userService.loggedInUser().getId();
             RecurringTransaction rt = recurringTransactionService.getById(id).orElse(null);
@@ -66,7 +69,7 @@ public class RecurringTransactionController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody RecurringTransaction updates) {
+    public ResponseEntity<?> update(@PathVariable @Positive Long id, @Valid @RequestBody RecurringTransaction updates) {
         try {
             String currentUserId = userService.loggedInUser().getId();
             RecurringTransaction updated = recurringTransactionService.update(currentUserId, id, updates);
@@ -84,7 +87,7 @@ public class RecurringTransactionController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable Long id) {
+    public ResponseEntity<?> delete(@PathVariable @Positive Long id) {
         try {
             String currentUserId = userService.loggedInUser().getId();
             recurringTransactionService.delete(currentUserId, id);

@@ -1,25 +1,33 @@
 package com.trako.models.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 public class UserSaveRequest {
 
     private String name;
 
-    @NotNull
+    @NotBlank
+    @Size(max = 32)
     private String phoneNo;
 
+    @Email
+    @Size(max = 150)
     private String email;
 
     private String profilePic;
 
-    @NotNull
+    @NotBlank
+    @Size(min = 4, max = 250)
     @JsonProperty("password")
     private String password;
 
     private Integer isShadow;
 
+    @Pattern(regexp = "^$|^[A-Z]{3}$", message = "must be a 3-letter currency code")
     private String baseCurrency;
 
     public String getName() {

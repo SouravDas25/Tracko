@@ -11,6 +11,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.Collections;
 import java.util.List;
@@ -18,6 +22,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/user")
+@Validated
 public class UserController {
 
     private static final Logger log = LoggerFactory.getLogger(UserController.class);
@@ -26,7 +31,7 @@ public class UserController {
     UserService userService;
 
     @GetMapping(value = {"", "/{id}"})
-    ResponseEntity<?> show(@PathVariable(required = false) String id) {
+    ResponseEntity<?> show(@PathVariable(required = false) @Size(max = 36) String id) {
         User current = userService.loggedInUser();
 
         if (id == null || id.isBlank()) {
@@ -58,7 +63,7 @@ public class UserController {
     }
 
     @GetMapping(value = "/byPhoneNo")
-    ResponseEntity<?> showByPhone(@RequestParam("phone_no") String phoneNo) {
+    ResponseEntity<?> showByPhone(@RequestParam("phone_no") @NotBlank @Size(max = 32) String phoneNo) {
         // prevent user enumeration; only allow lookup when authenticated
         userService.loggedInUser();
         User byPhoneNo = userService.findByPhoneNo(phoneNo);
@@ -70,7 +75,7 @@ public class UserController {
     }
 
     @PostMapping(value = "/save")
-    ResponseEntity<?> save(@RequestBody UserSaveRequest userSaveRequest) {
+    ResponseEntity<?> save(@Valid @RequestBody UserSaveRequest userSaveRequest) {
         User current = userService.loggedInUser();
 
         if (current.isAdmin()) {

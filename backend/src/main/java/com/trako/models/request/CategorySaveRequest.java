@@ -1,11 +1,13 @@
 package com.trako.models.request;
 
 import com.trako.entities.CategoryType;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 public class CategorySaveRequest {
 
-    @NotNull
+    @NotBlank
+    @Size(max = 250)
     private String name;
 
     private CategoryType categoryType;
