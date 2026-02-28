@@ -1,8 +1,8 @@
 import argparse
 import urllib.parse
-from tracko_cli.core.config import get_token_from_args_or_config
-from tracko_cli.core.client import TrackoClient
-from tracko_cli.utils.formatting import print_result
+from ..core.config import get_token_from_args_or_config
+from ..core.client import TrackoClient
+from ..utils.formatting import print_result
 
 
 def setup_parser(subparsers):

@@ -1,11 +1,11 @@
 import argparse
 import sys
 import urllib.parse
-from tracko_cli.core.config import get_token_from_args_or_config
-from tracko_cli.core.client import TrackoClient
-from tracko_cli.utils.dates import parse_date_to_epoch_ms
-from tracko_cli.utils.formatting import print_result, print_table
-from tracko_cli.utils.lookups import get_id_name_map
+from ..core.config import get_token_from_args_or_config
+from ..core.client import TrackoClient
+from ..utils.dates import parse_date_to_epoch_ms
+from ..utils.formatting import print_result, print_table
+from ..utils.lookups import get_id_name_map
 
 
 def setup_parser(subparsers):

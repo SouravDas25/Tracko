@@ -1,12 +1,12 @@
 import argparse
-from tracko_cli.core.config import (
+from ..core.config import (
     load_config,
     save_config,
     config_path,
     get_token_from_args_or_config,
 )
-from tracko_cli.core.client import TrackoClient
-from tracko_cli.utils.formatting import print_result
+from ..core.client import TrackoClient
+from ..utils.formatting import print_result
 
 
 def setup_parser(subparsers):

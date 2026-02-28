@@ -38,7 +38,7 @@ class TrackoClient:
                 save_config(cfg)
                 print(f"Removed expired token from {config_path()}", file=sys.stderr)
             
-            print("Please run `python -m tracko_cli login` again.", file=sys.stderr)
+            print("Please run `python -m cli login` again.", file=sys.stderr)
             sys.exit(1)
 
         # Connection refused / timeout

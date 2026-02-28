@@ -1,7 +1,7 @@
 import argparse
-from tracko_cli.core.config import get_token_from_args_or_config
-from tracko_cli.core.client import TrackoClient
-from tracko_cli.utils.formatting import print_result, print_table
+from ..core.config import get_token_from_args_or_config
+from ..core.client import TrackoClient
+from ..utils.formatting import print_result, print_table
 
 
 def setup_parser(subparsers):
@@ -42,7 +42,7 @@ def cmd_categories_list(args: argparse.Namespace) -> int:
 
     payload = result.get("json")
     if result.get("ok") and isinstance(payload, dict):
-        from tracko_cli.core.models import CategoryListResponse
+        from ..core.models import CategoryListResponse
         try:
             resp_model = CategoryListResponse.model_validate(payload)
             rows = [cat.model_dump() for cat in resp_model.result]

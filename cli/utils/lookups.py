@@ -1,4 +1,4 @@
-from tracko_cli.core.client import TrackoClient
+from ..core.client import TrackoClient
 
 def get_id_name_map(base_url: str, token: str | None, path: str) -> dict[int, str]:
     client = TrackoClient(base_url, token)

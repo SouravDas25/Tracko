@@ -1,4 +1,4 @@
-from tracko_cli.commands import (
+from .commands import (
     accounts,
     auth,
     budget,
@@ -17,13 +17,13 @@ import argparse
 import os
 import sys
 
-from tracko_cli.core.config import (
+from .core.config import (
     config_path,
     get_token_from_args_or_config,
 )
-from tracko_cli.core.http import join_url
-from tracko_cli.utils.dates import parse_date_to_epoch_ms
-from tracko_cli.utils.lookups import get_id_name_map
+from .core.http import join_url
+from .utils.dates import parse_date_to_epoch_ms
+from .utils.lookups import get_id_name_map
 
 
 # Optional: python-dateutil for robust datetime parsing
@@ -60,67 +60,67 @@ def _parse_date_to_epoch_ms(date_str: str | None) -> int:
 def build_parser() -> argparse.ArgumentParser:
     examples = """Examples:
   # Health
-  python -m tracko_cli health
+  python -m cli health
 
   # Auth
-  python -m tracko_cli login --username user@example.com --password password
-  python -m tracko_cli --base-url http://192.168.1.10:8080 login --username user@example.com --password password
-  python -m tracko_cli logout
+  python -m cli login --username user@example.com --password password
+  python -m cli --base-url http://192.168.1.10:8080 login --username user@example.com --password password
+  python -m cli logout
 
   # Users
-  python -m tracko_cli users list
+  python -m cli users list
 
   # Accounts
-  python -m tracko_cli accounts list
-  python -m tracko_cli accounts balances
-  python -m tracko_cli accounts add --name HDFC
+  python -m cli accounts list
+  python -m cli accounts balances
+  python -m cli accounts add --name HDFC
 
   # Categories
-  python -m tracko_cli categories list
-  python -m tracko_cli categories add --name FOOD
+  python -m cli categories list
+  python -m cli categories add --name FOOD
 
   # Contacts
-  python -m tracko_cli contacts list
-  python -m tracko_cli contacts add --name Alice --phone 99999 --email alice@example.com
-  python -m tracko_cli contacts update --id 1 --name 'Alice B'
-  python -m tracko_cli contacts delete --id 1
+  python -m cli contacts list
+  python -m cli contacts add --name Alice --phone 99999 --email alice@example.com
+  python -m cli contacts update --id 1 --name 'Alice B'
+  python -m cli contacts delete --id 1
 
   # Transactions
-  python -m tracko_cli transactions list
-  python -m tracko_cli transactions summary --start-date 2026-01-01 --end-date 2026-12-31
-  python -m tracko_cli transactions add --account-id 2 --category-id 2 --amount 250 --type expense --name Lunch --comments 'Team lunch'
-  python -m tracko_cli transactions get --id 1
-  python -m tracko_cli transactions update --id 1 --account-id 2 --category-id 2 --amount 300 --type expense --name 'Lunch (updated)' --comments 'Updated from CLI'
-  python -m tracko_cli transactions delete --id 1
+  python -m cli transactions list
+  python -m cli transactions summary --start-date 2026-01-01 --end-date 2026-12-31
+  python -m cli transactions add --account-id 2 --category-id 2 --amount 250 --type expense --name Lunch --comments 'Team lunch'
+  python -m cli transactions get --id 1
+  python -m cli transactions update --id 1 --account-id 2 --category-id 2 --amount 300 --type expense --name 'Lunch (updated)' --comments 'Updated from CLI'
+  python -m cli transactions delete --id 1
 
   # Transfers (now uses unified transactions API)
-  python -m tracko_cli transfers create --from-account-id 2 --to-account-id 3 --amount 500 --name 'Move to Savings' --comments 'Feb savings'
+  python -m cli transfers create --from-account-id 2 --to-account-id 3 --amount 500 --name 'Move to Savings' --comments 'Feb savings'
 
   # Splits (list)
-  python -m tracko_cli splits list
-  python -m tracko_cli splits for-transaction --transaction-id 6
-  python -m tracko_cli splits for-user --user-id 575e15bc-...
-  python -m tracko_cli splits unsettled --user-id 575e15bc-...
-  python -m tracko_cli splits for-contact --contact-id 1
-  python -m tracko_cli splits unsettled-contact --contact-id 1
+  python -m cli splits list
+  python -m cli splits for-transaction --transaction-id 6
+  python -m cli splits for-user --user-id 575e15bc-...
+  python -m cli splits unsettled --user-id 575e15bc-...
+  python -m cli splits for-contact --contact-id 1
+  python -m cli splits unsettled-contact --contact-id 1
 
   # Splits (create)
-  python -m tracko_cli splits create --transaction-id 6 --user-id 575e15bc-... --amount 125 --contact-id 1
+  python -m cli splits create --transaction-id 6 --user-id 575e15bc-... --amount 125 --contact-id 1
 
   # Budget
-  python -m tracko_cli budget view --month 2 --year 2026
-  python -m tracko_cli budget allocate --category-id 1 --amount 500 --month 2 --year 2026
-  python -m tracko_cli budget available --month 2 --year 2026
+  python -m cli budget view --month 2 --year 2026
+  python -m cli budget allocate --category-id 1 --amount 500 --month 2 --year 2026
+  python -m cli budget available --month 2 --year 2026
 
   # Currency settings
-  python -m tracko_cli currencies list
-  python -m tracko_cli currencies add --code USD --rate 0.85
+  python -m cli currencies list
+  python -m cli currencies add --code USD --rate 0.85
 """
     p = argparse.ArgumentParser(
         description="Tracko CLI (dev/admin tool)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=examples,
-        prog="tracko_cli",
+        prog="cli",
     )
     p.add_argument("--base-url", default=None)
     p.add_argument(

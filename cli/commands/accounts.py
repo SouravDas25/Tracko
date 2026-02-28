@@ -1,8 +1,8 @@
 import argparse
 import urllib.parse
-from tracko_cli.core.config import get_token_from_args_or_config
-from tracko_cli.core.http import http_request, join_url
-from tracko_cli.utils.formatting import print_result, print_table
+from ..core.config import get_token_from_args_or_config
+from ..core.http import http_request, join_url
+from ..utils.formatting import print_result, print_table
 
 
 

@@ -14,7 +14,7 @@ This script seeds the Tracko database with sample data for testing and developme
 ### Run the seeding script
 
 ```bash
-cd tracko-cli
+cd cli
 python seed_database.py
 ```
 
@@ -95,25 +95,26 @@ The script provides:
 After running the seeding script, you can use the Tracko CLI with the provided token:
 
 ```bash
-# List accounts
-python -m tracko_cli --base-url http://localhost:8080 --token <TOKEN> accounts list
+# Health check
+python -m cli health
 
+# List accounts
+python -m cli --base-url http://localhost:8080 --token <TOKEN> accounts list
 
 # List transactions
-python -m tracko_cli --base-url http://localhost:8080 --token <TOKEN> transactions list
-
+python -m cli --base-url http://localhost:8080 --token <TOKEN> transactions list
 
 # Get a transaction by ID
-python -m tracko_cli --base-url http://localhost:8080 --token <TOKEN> transactions get --id 1
+python -m cli --base-url http://localhost:8080 --token <TOKEN> transactions get --id 1
 
 # Update a transaction by ID
-python -m tracko_cli --base-url http://localhost:8080 --token <TOKEN> transactions update --id 1 --account-id 2 --category-id 2 --amount 300 --type expense --name "Lunch (updated)" --comments "Updated from CLI"
+python -m cli --base-url http://localhost:8080 --token <TOKEN> transactions update --id 1 --account-id 2 --category-id 2 --amount 300 --type expense --name "Lunch (updated)" --comments "Updated from CLI"
 
 # Delete a transaction by ID
-python -m tracko_cli --base-url http://localhost:8080 --token <TOKEN> transactions delete --id 1
+python -m cli --base-url http://localhost:8080 --token <TOKEN> transactions delete --id 1
 
 # View budget
-python -m tracko_cli --base-url http://localhost:8080 --token <TOKEN> budget view
+python -m cli --base-url http://localhost:8080 --token <TOKEN> budget view
 ```
 
 ## Troubleshooting

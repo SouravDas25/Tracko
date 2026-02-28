@@ -1,4 +1,4 @@
-from tracko_cli.main import build_parser
+from ..main import build_parser
 
 def test_parser_basic_health():
     parser = build_parser()

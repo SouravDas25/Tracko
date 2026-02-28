@@ -10,7 +10,10 @@ import sys
 import time
 import uuid
 from datetime import datetime, timedelta
-from tracko_cli.core import http as tracko_http
+try:
+    from tracko_cli.core import http as tracko_http
+except Exception:
+    from core import http as tracko_http
 
 
 def log(message):
@@ -662,11 +665,11 @@ def main():
     log(f"Transfers created: {transfer_count}")
     log("="*60)
     log("\nYou can now use the CLI with:")
-    log(f"python -m tracko_cli --base-url {base_url} --token {token} [command]")
+    log(f"python -m cli --base-url {base_url} --token {token} [command]")
     log("\nExample commands:")
-    log("python -m tracko_cli accounts list")
-    log("python -m tracko_cli transactions list")
-    log("python -m tracko_cli budget view")
+    log("python -m cli accounts list")
+    log("python -m cli transactions list")
+    log("python -m cli budget view")
 
 
 if __name__ == "__main__":

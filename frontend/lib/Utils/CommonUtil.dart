@@ -1,4 +1,5 @@
 import 'package:tracko/Utils/enums.dart';
+import 'package:tracko/Utils/ConstantUtil.dart';
 import 'package:tracko/services/SessionService.dart';
 import 'package:tracko/di/di.dart';
 import 'package:flutter/material.dart';
@@ -10,21 +11,8 @@ const double billion = 1000000000;
 const double million = 1000000;
 
 class CommonUtil {
-  static const Map<String, String> currencyToSymbol = {
-    'INR': '₹',
-    'USD': '\$',
-    'EUR': '€',
-    'GBP': '£',
-    'JPY': '¥',
-    'CAD': 'C\$',
-    'AUD': 'A\$',
-    'CHF': 'CHF',
-    'CNY': '¥',
-    'NZD': 'NZ\$',
-  };
-
   static String getCurrencySymbol(String currencyCode) {
-    return currencyToSymbol[currencyCode] ?? currencyCode;
+    return ConstantUtil.currencyToSymbol[currencyCode] ?? currencyCode;
   }
 
   static String humanDate(var date, {format}) {

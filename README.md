@@ -191,11 +191,11 @@ The CLI provides direct access to all Tracko backend APIs for testing, debugging
 
 #### Installation & Setup
 
-The CLI is located in the `tracko-cli/` directory:
+The CLI is located in the `cli/` directory:
 
 ```bash
-cd tracko-cli
-python tracko_cli.py --help
+cd cli
+python -m cli --help
 ```
 
 #### Authentication
@@ -204,10 +204,10 @@ First, authenticate with the backend:
 
 ```bash
 # Login with username/password
-python tracko_cli.py login --username user@example.com --password password
+python -m cli login --username user@example.com --password password
 
 # Or use OAuth token endpoint
-python tracko_cli.py oauth-token --phone-no 9999999999 --firebase-uuid your-uuid
+python -m cli oauth-token --phone-no 9999999999 --firebase-uuid your-uuid
 ```
 
 The CLI automatically saves the authentication token for subsequent commands.
@@ -216,35 +216,35 @@ The CLI automatically saves the authentication token for subsequent commands.
 
 ```bash
 # Health check
-python tracko_cli.py health
+python -m cli health
 
 # Accounts
-python tracko_cli.py accounts list
-python tracko_cli.py accounts add --name "HDFC Savings"
+python -m cli accounts list
+python -m cli accounts add --name "HDFC Savings"
 
 # Categories
-python tracko_cli.py categories list
-python tracko_cli.py categories add --name "Food & Dining"
+python -m cli categories list
+python -m cli categories add --name "Food & Dining"
 
 # Transactions
-python tracko_cli.py transactions list
-python tracko_cli.py transactions add --account-id 1 --category-id 1 --amount 50.0 --type expense --name "Lunch"
+python -m cli transactions list
+python -m cli transactions add --account-id 1 --category-id 1 --amount 50.0 --type expense --name "Lunch"
 
 # Budget
-python tracko_cli.py budget view --month 2 --year 2026
-python tracko_cli.py budget allocate --category-id 1 --amount 500.0 --month 2 --year 2026
+python -m cli budget view --month 2 --year 2026
+python -m cli budget allocate --category-id 1 --amount 500.0 --month 2 --year 2026
 
 # Contacts
-python tracko_cli.py contacts list
-python tracko_cli.py contacts add --name "Alice" --phone "9876543210" --email "alice@example.com"
+python -m cli contacts list
+python -m cli contacts add --name "Alice" --phone "9876543210" --email "alice@example.com"
 
 # Currencies
-python tracko_cli.py currencies list
-python tracko_cli.py currencies add --code EUR --rate 0.85
+python -m cli currencies list
+python -m cli currencies add --code EUR --rate 0.85
 
 # Generic API requests
-python tracko_cli.py request --method GET --path /api/health
-python tracko_cli.py request --method POST --path /api/contacts --json '{"name":"Bob"}'
+python -m cli request --method GET --path /api/health
+python -m cli request --method POST --path /api/contacts --json '{"name":"Bob"}'
 ```
 
 #### CLI Options
@@ -260,7 +260,7 @@ Tracko includes a comprehensive database seeding script that populates the datab
 #### Running the Seeder
 
 ```bash
-cd tracko-cli
+cd cli
 python seed_database.py
 ```
 
@@ -301,19 +301,19 @@ After running the seeder, you can use the CLI with the provided token:
 
 ```bash
 # The seeder outputs the authentication token
-python tracko_cli.py --base-url http://localhost:8080 --token <TOKEN> accounts list
-python tracko_cli.py --base-url http://localhost:8080 --token <TOKEN> transactions list
-python tracko_cli.py --base-url http://localhost:8080 --token <TOKEN> budget view
+python -m cli --base-url http://localhost:8080 --token <TOKEN> accounts list
+python -m cli --base-url http://localhost:8080 --token <TOKEN> transactions list
+python -m cli --base-url http://localhost:8080 --token <TOKEN> budget view
 ```
 
-For detailed documentation, see `tracko-cli/README_SEEDING.md`.
+For detailed documentation, see `cli/README_SEEDING.md`.
 
 ## Documentation
 
 - **[Startup Guide](README-STARTUP.md)** - Detailed startup instructions and troubleshooting
 - **[Backend Integration Guide](backend/docs/FLUTTER_INTEGRATION_GUIDE.md)** - Complete API documentation
 - **[Migration Complete](backend/docs/MIGRATION_COMPLETE.md)** - Backend migration status
-- **[CLI Seeding Guide](tracko-cli/README_SEEDING.md)** - Database seeding documentation
+- **[CLI Seeding Guide](cli/README_SEEDING.md)** - Database seeding documentation
 
 ## CLI and Database Seeding
 
@@ -325,11 +325,11 @@ The CLI provides direct access to all Tracko backend APIs for testing, debugging
 
 #### Installation & Setup
 
-The CLI is located in the `tracko-cli/` directory:
+The CLI is located in the `cli/` directory:
 
 ```bash
-cd tracko-cli
-python tracko_cli.py --help
+cd cli
+python -m cli --help
 ```
 
 #### Authentication
@@ -338,10 +338,10 @@ First, authenticate with the backend:
 
 ```bash
 # Login with username/password
-python tracko_cli.py login --username user@example.com --password password
+python -m cli login --username user@example.com --password password
 
 # Or use OAuth token endpoint
-python tracko_cli.py oauth-token --phone-no 9999999999 --firebase-uuid your-uuid
+python -m cli oauth-token --phone-no 9999999999 --firebase-uuid your-uuid
 ```
 
 The CLI automatically saves the authentication token for subsequent commands.
@@ -350,35 +350,35 @@ The CLI automatically saves the authentication token for subsequent commands.
 
 ```bash
 # Health check
-python tracko_cli.py health
+python -m cli health
 
 # Accounts
-python tracko_cli.py accounts list
-python tracko_cli.py accounts add --name "HDFC Savings"
+python -m cli accounts list
+python -m cli accounts add --name "HDFC Savings"
 
 # Categories
-python tracko_cli.py categories list
-python tracko_cli.py categories add --name "Food & Dining"
+python -m cli categories list
+python -m cli categories add --name "Food & Dining"
 
 # Transactions
-python tracko_cli.py transactions list
-python tracko_cli.py transactions add --account-id 1 --category-id 1 --amount 50.0 --type expense --name "Lunch"
+python -m cli transactions list
+python -m cli transactions add --account-id 1 --category-id 1 --amount 50.0 --type expense --name "Lunch"
 
 # Budget
-python tracko_cli.py budget view --month 2 --year 2026
-python tracko_cli.py budget allocate --category-id 1 --amount 500.0 --month 2 --year 2026
+python -m cli budget view --month 2 --year 2026
+python -m cli budget allocate --category-id 1 --amount 500.0 --month 2 --year 2026
 
 # Contacts
-python tracko_cli.py contacts list
-python tracko_cli.py contacts add --name "Alice" --phone "9876543210" --email "alice@example.com"
+python -m cli contacts list
+python -m cli contacts add --name "Alice" --phone "9876543210" --email "alice@example.com"
 
 # Currencies
-python tracko_cli.py currencies list
-python tracko_cli.py currencies add --code EUR --rate 0.85
+python -m cli currencies list
+python -m cli currencies add --code EUR --rate 0.85
 
 # Generic API requests
-python tracko_cli.py request --method GET --path /api/health
-python tracko_cli.py request --method POST --path /api/contacts --json '{"name":"Bob"}'
+python -m cli request --method GET --path /api/health
+python -m cli request --method POST --path /api/contacts --json '{"name":"Bob"}'
 ```
 
 #### CLI Options
@@ -394,7 +394,7 @@ Tracko includes a comprehensive database seeding script that populates the datab
 #### Running the Seeder
 
 ```bash
-cd tracko-cli
+cd cli
 python seed_database.py
 ```
 
@@ -435,12 +435,12 @@ After running the seeder, you can use the CLI with the provided token:
 
 ```bash
 # The seeder outputs the authentication token
-python tracko_cli.py --base-url http://localhost:8080 --token <TOKEN> accounts list
-python tracko_cli.py --base-url http://localhost:8080 --token <TOKEN> transactions list
-python tracko_cli.py --base-url http://localhost:8080 --token <TOKEN> budget view
+python -m cli --base-url http://localhost:8080 --token <TOKEN> accounts list
+python -m cli --base-url http://localhost:8080 --token <TOKEN> transactions list
+python -m cli --base-url http://localhost:8080 --token <TOKEN> budget view
 ```
 
-For detailed documentation, see `tracko-cli/README_SEEDING.md`.
+For detailed documentation, see `cli/README_SEEDING.md`.
 
 ## License
 
