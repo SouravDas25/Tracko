@@ -88,7 +88,7 @@ public class UserAdminIntegrationTest {
     }
 
     @Test
-    public void adminCanCreateUserViaSave() throws Exception {
+    public void adminCanCreateUserViaCreate() throws Exception {
         var body = new java.util.HashMap<String, Object>();
         body.put("name", "Created User");
         body.put("phoneNo", "2222222222");
@@ -96,7 +96,7 @@ public class UserAdminIntegrationTest {
         body.put("password", "password");
         body.put("isShadow", 0);
 
-        mockMvc.perform(post("/api/user/save")
+        mockMvc.perform(post("/api/user/create")
                 .header("Authorization", adminBearer)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(body)))
@@ -109,7 +109,7 @@ public class UserAdminIntegrationTest {
     }
 
     @Test
-    public void nonAdminCannotCreateOtherUserViaSave() throws Exception {
+    public void nonAdminCannotCreateOtherUserViaCreate() throws Exception {
         var body = new java.util.HashMap<String, Object>();
         body.put("name", "Hacker");
         body.put("phoneNo", "3333333333");
@@ -117,19 +117,20 @@ public class UserAdminIntegrationTest {
         body.put("password", "password");
         body.put("isShadow", 0);
 
-        mockMvc.perform(post("/api/user/save")
+        mockMvc.perform(post("/api/user/create")
                 .header("Authorization", userBearer)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(body)))
-                .andExpect(status().isOk());
+                .andExpect(status().isUnauthorized());
 
         User notCreated = usersRepository.findByPhoneNo("3333333333");
         assertNull(notCreated);
 
+        // Verify original user was NOT modified
         User normal = usersRepository.findByPhoneNo("1111111111");
         assertNotNull(normal);
-        assertEquals("Hacker", normal.getName());
-        assertEquals("hacker@mail.com", normal.getEmail());
+        assertEquals("Normal", normal.getName());
+        assertEquals("normal@mail.com", normal.getEmail());
     }
 
     @Test
@@ -190,22 +191,17 @@ public class UserAdminIntegrationTest {
     }
 
     @Test
-    public void nonAdminSaveUpdatesSelfOnly() throws Exception {
+    public void nonAdminCanUpdateOwnProfileViaMeEndpoint() throws Exception {
         var body = new java.util.HashMap<String, Object>();
         body.put("name", "Normal Updated");
-        body.put("phoneNo", "3333333333");
         body.put("email", "normal.updated@mail.com");
-        body.put("password", "password");
-        body.put("isShadow", 0);
+        body.put("profilePic", "https://example.com/pic.jpg");
 
-        mockMvc.perform(post("/api/user/save")
+        mockMvc.perform(post("/api/user/me")
                         .header("Authorization", userBearer)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(body)))
                 .andExpect(status().isOk());
-
-        User shouldNotExist = usersRepository.findByPhoneNo("3333333333");
-        assertNull(shouldNotExist);
 
         User normal = usersRepository.findByPhoneNo("1111111111");
         assertNotNull(normal);

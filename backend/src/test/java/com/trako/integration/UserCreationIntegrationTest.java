@@ -84,7 +84,7 @@ public class UserCreationIntegrationTest {
         request.setPhoneNo("7777777777");
         request.setPassword("new_pass");
 
-        mockMvc.perform(post("/api/user/save")
+        mockMvc.perform(post("/api/user/create")
                 .header("Authorization", adminToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
@@ -96,26 +96,26 @@ public class UserCreationIntegrationTest {
     }
 
     @Test
-    public void testRegularUserCannotCreateNewUser_UpdatesSelfInstead() throws Exception {
+    public void testRegularUserCannotCreateNewUser() throws Exception {
         UserSaveRequest request = new UserSaveRequest();
-        request.setName("Updated Regular User");
-        request.setPhoneNo("7777777777"); // Trying to create/hijack this number
+        request.setName("Hacker User");
+        request.setPhoneNo("7777777777"); // Trying to create this number
         request.setPassword("new_pass");
 
-        mockMvc.perform(post("/api/user/save")
+        mockMvc.perform(post("/api/user/create")
                 .header("Authorization", regularToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk());
+                .andExpect(status().isUnauthorized());
 
         // Verify "7777777777" was NOT created
         User newUser = usersRepository.findByPhoneNo("7777777777");
         assertNull(newUser);
 
-        // Verify regularUser was updated
+        // Verify regularUser was NOT modified
         User updatedUser = usersRepository.findById(regularUser.getId()).orElse(null);
         assertNotNull(updatedUser);
-        assertEquals("Updated Regular User", updatedUser.getName());
-        assertEquals("8888888888", updatedUser.getPhoneNo()); // Phone should NOT change
+        assertEquals("Regular User", updatedUser.getName());
+        assertEquals("8888888888", updatedUser.getPhoneNo());
     }
 }

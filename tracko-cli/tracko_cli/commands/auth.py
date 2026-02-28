@@ -1,24 +1,47 @@
 import argparse
-import sys
-from tracko_cli.core.config import load_config, save_config, config_path
-from tracko_cli.core.http import http_request, join_url
+from tracko_cli.core.config import (
+    load_config,
+    save_config,
+    config_path,
+    get_token_from_args_or_config,
+)
+from tracko_cli.core.client import TrackoClient
 from tracko_cli.utils.formatting import print_result
 
 
+def setup_parser(subparsers):
+    # login
+    sp_login = subparsers.add_parser("login", help="Login via /api/login")
+    sp_login.add_argument("--username", required=True)
+    sp_login.add_argument("--password", required=True)
+    sp_login.set_defaults(func=cmd_login)
+
+    # oauth-token
+    sp_oauth = subparsers.add_parser("oauth-token", help="Login via /api/oauth/token")
+    sp_oauth.add_argument("--phone-no", required=True)
+    sp_oauth.add_argument("--password", required=True)
+    sp_oauth.set_defaults(func=cmd_oauth_token)
+
+    # logout
+    sp_logout = subparsers.add_parser("logout", help="Clear saved token")
+    sp_logout.set_defaults(func=cmd_logout)
+
+
 def cmd_login(args: argparse.Namespace) -> int:
-    url = join_url(args.base_url, "/api/login")
+    token, base_url = get_token_from_args_or_config(args)
+    client = TrackoClient(base_url)
     body = {"username": args.username, "password": args.password}
-    result = http_request("POST", url, json_body=body)
+    result = client.post("/api/login", json_body=body)
     print_result(result, raw=args.raw)
 
-    token = None
+    new_token = None
     if isinstance(result.get("json"), dict):
-        token = result["json"].get("token")
+        new_token = result["json"].get("token")
 
-    if result["ok"] and token:
+    if result["ok"] and new_token:
         cfg = load_config()
-        cfg["base_url"] = args.base_url
-        cfg["token"] = token
+        cfg["base_url"] = base_url
+        cfg["token"] = new_token
         save_config(cfg)
         print("Saved token to", config_path())
         return 0
@@ -27,19 +50,20 @@ def cmd_login(args: argparse.Namespace) -> int:
 
 
 def cmd_oauth_token(args: argparse.Namespace) -> int:
-    url = join_url(args.base_url, "/api/oauth/token")
+    token, base_url = get_token_from_args_or_config(args)
+    client = TrackoClient(base_url)
     body = {"phoneNo": args.phone_no, "password": args.password}
-    result = http_request("POST", url, json_body=body)
+    result = client.post("/api/oauth/token", json_body=body)
     print_result(result, raw=args.raw)
 
-    token = None
+    new_token = None
     if isinstance(result.get("json"), dict):
-        token = result["json"].get("token")
+        new_token = result["json"].get("token")
 
-    if result["ok"] and token:
+    if result["ok"] and new_token:
         cfg = load_config()
-        cfg["base_url"] = args.base_url
-        cfg["token"] = token
+        cfg["base_url"] = base_url
+        cfg["token"] = new_token
         save_config(cfg)
         print("Saved token to", config_path())
         return 0

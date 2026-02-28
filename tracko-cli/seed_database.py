@@ -1,3 +1,4 @@
+import random
 #!/usr/bin/env python3
 """
 Database seeding script for Tracko
@@ -9,7 +10,7 @@ import sys
 import time
 import uuid
 from datetime import datetime, timedelta
-import tracko_cli
+from tracko_cli.core import http as tracko_http
 
 
 def log(message):
@@ -24,7 +25,7 @@ def wait_for_api(base_url: str, max_attempts: int = 30):
     
     for attempt in range(max_attempts):
         try:
-            result = tracko_cli.http_request("GET", f"{base_url}/api/health")
+            result = tracko_http.http_request("GET", f"{base_url}/api/health")
             if result.get("ok"):
                 log("API is ready!")
                 return True
@@ -42,13 +43,13 @@ def login_existing_user(base_url: str):
     """Login using existing user credentials"""
     log("Logging in with existing user credentials...")
     
-    url = tracko_cli._join_url(base_url, "/api/login")
+    url = tracko_http.join_url(base_url, "/api/login")
     body = {
         "username": "user@example.com",
         "password": "password"
     }
     
-    result = tracko_cli.http_request("POST", url, json_body=body)
+    result = tracko_http.http_request("POST", url, json_body=body)
     
     if result.get("ok"):
         token = result.get("json", {}).get("token")
@@ -76,10 +77,10 @@ def create_accounts(base_url: str, token: str):
     ]
     
     account_ids = []
-    url = tracko_cli._join_url(base_url, "/api/accounts")
+    url = tracko_http.join_url(base_url, "/api/accounts")
     
     for account_data in accounts:
-        result = tracko_cli.http_request("POST", url, token=token, json_body=account_data)
+        result = tracko_http.http_request("POST", url, token=token, json_body=account_data)
         if result.get("ok"):
             response_data = result.get("json", {})
             # Handle different response formats
@@ -122,10 +123,10 @@ def create_categories(base_url: str, token: str):
     ]
     
     category_ids = []
-    url = tracko_cli._join_url(base_url, "/api/categories")
+    url = tracko_http.join_url(base_url, "/api/categories")
     
     for category_data in categories:
-        result = tracko_cli.http_request("POST", url, token=token, json_body=category_data)
+        result = tracko_http.http_request("POST", url, token=token, json_body=category_data)
         if result.get("ok"):
             response_data = result.get("json", {})
             # Handle different response formats
@@ -161,10 +162,10 @@ def create_contacts(base_url: str, token: str):
     ]
     
     contact_ids = []
-    url = tracko_cli._join_url(base_url, "/api/contacts")
+    url = tracko_http.join_url(base_url, "/api/contacts")
     
     for contact_data in contacts:
-        result = tracko_cli.http_request("POST", url, token=token, json_body=contact_data)
+        result = tracko_http.http_request("POST", url, token=token, json_body=contact_data)
         if result.get("ok"):
             response_data = result.get("json", {})
             # Handle different response formats
@@ -259,41 +260,41 @@ def create_transactions(base_url: str, token: str, account_ids: list, category_i
         
         for day in range(1, days_in_month + 1):
             # Random transaction generation - not every day has transactions
-            if tracko_cli.random.random() < 0.7:  # 70% chance of transactions on any given day
+            if random.random() < 0.7:  # 70% chance of transactions on any given day
                 transaction_date = datetime(target_year, target_month, day, 
-                                          tracko_cli.random.randint(9, 21),  # Random hour 9-21
-                                          tracko_cli.random.randint(0, 59))  # Random minute
+                                          random.randint(9, 21),  # Random hour 9-21
+                                          random.randint(0, 59))  # Random minute
                 
                 # Generate 1-3 transactions per day
-                num_transactions = tracko_cli.random.randint(1, 3)
+                num_transactions = random.randint(1, 3)
                 
                 for i in range(num_transactions):
                     # Expense transactions (more frequent)
-                    if tracko_cli.random.random() < 0.7:  # 70% chance of expense
-                        expense = tracko_cli.random.choice(expense_data)
+                    if random.random() < 0.7:  # 70% chance of expense
+                        expense = random.choice(expense_data)
                         transactions.append({
                             "transactionType": 1,  # DEBIT/EXPENSE
                             "name": expense["name"],
                             "comments": f"Sample expense transaction from {target_month}/{target_year}",
                             "date": int(transaction_date.timestamp() * 1000),
-                            "accountId": tracko_cli.random.choice(valid_account_ids),
-                            "categoryId": tracko_cli.random.choice(valid_category_ids[:8]),  # Expense categories
+                            "accountId": random.choice(valid_account_ids),
+                            "categoryId": random.choice(valid_category_ids[:8]),  # Expense categories
                             "isCountable": 1,
-                            "amount": round(tracko_cli.random.uniform(*expense["amount_range"]), 2)
+                            "amount": round(random.uniform(*expense["amount_range"]), 2)
                         })
                     
                     # Income transactions (less frequent)
-                    elif tracko_cli.random.random() < 0.3:  # 30% chance of income
-                        income = tracko_cli.random.choice(income_data)
+                    elif random.random() < 0.3:  # 30% chance of income
+                        income = random.choice(income_data)
                         transactions.append({
                             "transactionType": 2,  # CREDIT/INCOME
                             "name": income["name"],
                             "comments": f"Sample income transaction from {target_month}/{target_year}",
                             "date": int(transaction_date.timestamp() * 1000),
                             "accountId": valid_account_ids[0],  # Usually to main account
-                            "categoryId": tracko_cli.random.choice(valid_category_ids[8:]),  # Income categories
+                            "categoryId": random.choice(valid_category_ids[8:]),  # Income categories
                             "isCountable": 1,
-                            "amount": round(tracko_cli.random.uniform(*income["amount_range"]), 2)
+                            "amount": round(random.uniform(*income["amount_range"]), 2)
                         })
     
     # Generate 10 transactions for the current month as well
@@ -302,44 +303,44 @@ def create_transactions(base_url: str, token: str, account_ids: list, category_i
     # Ensure we don't pick a day beyond today to keep timestamps realistic
     max_day = max(1, min(now.day, 28))
     for i in range(10):
-        day = tracko_cli.random.randint(1, max_day)
+        day = random.randint(1, max_day)
         transaction_date = datetime(current_year, current_month, day,
-                                    tracko_cli.random.randint(9, 21),
-                                    tracko_cli.random.randint(0, 59))
+                                    random.randint(9, 21),
+                                    random.randint(0, 59))
         # Bias towards expenses for current month
-        if tracko_cli.random.random() < 0.8:
-            expense = tracko_cli.random.choice(expense_data)
+        if random.random() < 0.8:
+            expense = random.choice(expense_data)
             current_month_transactions.append({
                 "transactionType": 1,
                 "name": expense["name"],
                 "comments": "Current month expense transaction",
                 "date": int(transaction_date.timestamp() * 1000),
-                "accountId": tracko_cli.random.choice(valid_account_ids),
-                "categoryId": tracko_cli.random.choice(valid_category_ids[:8]),
+                "accountId": random.choice(valid_account_ids),
+                "categoryId": random.choice(valid_category_ids[:8]),
                 "isCountable": 1,
-                "amount": round(tracko_cli.random.uniform(*expense["amount_range"]), 2),
+                "amount": round(random.uniform(*expense["amount_range"]), 2),
             })
         else:
-            income = tracko_cli.random.choice(income_data)
+            income = random.choice(income_data)
             current_month_transactions.append({
                 "transactionType": 2,
                 "name": income["name"],
                 "comments": "Current month income transaction",
                 "date": int(transaction_date.timestamp() * 1000),
                 "accountId": valid_account_ids[0],
-                "categoryId": tracko_cli.random.choice(valid_category_ids[8:]),
+                "categoryId": random.choice(valid_category_ids[8:]),
                 "isCountable": 1,
-                "amount": round(tracko_cli.random.uniform(*income["amount_range"]), 2),
+                "amount": round(random.uniform(*income["amount_range"]), 2),
             })
     transactions.extend(current_month_transactions)
     log(f"Generated {len(transactions)} transactions including current month")
     
     # Create transactions in batches
-    url = tracko_cli._join_url(base_url, "/api/transactions")
+    url = tracko_http.join_url(base_url, "/api/transactions")
     created_count = 0
     
     for tx in transactions:
-        result = tracko_cli.http_request("POST", url, token=token, json_body=tx)
+        result = tracko_http.http_request("POST", url, token=token, json_body=tx)
         if result.get("ok"):
             created_count += 1
             if created_count % 10 == 0:
@@ -412,10 +413,10 @@ def create_transfers(base_url: str, token: str, account_ids: list):
         },
     ]
 
-    url = tracko_cli._join_url(base_url, "/api/transactions")
+    url = tracko_http.join_url(base_url, "/api/transactions")
     created_count = 0
     for tr in transfers:
-        result = tracko_cli.http_request("POST", url, token=token, json_body=tr)
+        result = tracko_http.http_request("POST", url, token=token, json_body=tr)
         if result.get("ok"):
             created_count += 1
             log(f"Created transfer: {tr['name']} (${tr['amount']} from {tr['accountId']} to {tr['toAccountId']})")
@@ -446,7 +447,7 @@ def create_budget_allocations(base_url: str, token: str, category_ids: list):
         {"categoryId": valid_category_ids[6] if len(valid_category_ids) > 6 else valid_category_ids[0], "amount": 50.0, "name": "Education"},
     ]
     
-    url = tracko_cli._join_url(base_url, "/api/budget/allocate")
+    url = tracko_http.join_url(base_url, "/api/budget/allocate")
     created_count = 0
     
     for allocation in allocations:
@@ -457,7 +458,7 @@ def create_budget_allocations(base_url: str, token: str, category_ids: list):
             "amount": allocation["amount"]
         }
         
-        result = tracko_cli.http_request("POST", url, token=token, json_body=body)
+        result = tracko_http.http_request("POST", url, token=token, json_body=body)
         if result.get("ok"):
             created_count += 1
             log(f"Allocated ${allocation['amount']} to {allocation['name']}")
@@ -481,11 +482,11 @@ def create_currencies(base_url: str, token: str):
         {"currencyCode": "AUD", "exchangeRate": 1.35},
     ]
     
-    url = tracko_cli._join_url(base_url, "/api/user-currencies")
+    url = tracko_http.join_url(base_url, "/api/user-currencies")
     created_count = 0
     
     for currency in currencies:
-        result = tracko_cli.http_request("POST", url, token=token, json_body=currency)
+        result = tracko_http.http_request("POST", url, token=token, json_body=currency)
         if result.get("ok"):
             created_count += 1
             log(f"Added currency: {currency['currencyCode']} (Rate: {currency['exchangeRate']})")
@@ -498,8 +499,8 @@ def create_currencies(base_url: str, token: str):
 
 def get_current_user_id(base_url: str, token: str):
     """Get the current user's ID from the API"""
-    url = tracko_cli._join_url(base_url, "/api/user/me")
-    result = tracko_cli.http_request("GET", url, token=token)
+    url = tracko_http.join_url(base_url, "/api/user/me")
+    result = tracko_http.http_request("GET", url, token=token)
     
     if result.get("ok"):
         user_data = result.get("json", {})
@@ -530,7 +531,7 @@ def create_sample_splits(base_url: str, token: str, account_ids: list, category_
         return 0
     
     # First create a transaction that can be split
-    url = tracko_cli._join_url(base_url, "/api/transactions")
+    url = tracko_http.join_url(base_url, "/api/transactions")
     
     transaction_data = {
         "transactionType": 1,  # DEBIT/EXPENSE
@@ -543,7 +544,7 @@ def create_sample_splits(base_url: str, token: str, account_ids: list, category_
         "amount": 300.0
     }
     
-    result = tracko_cli.http_request("POST", url, token=token, json_body=transaction_data)
+    result = tracko_http.http_request("POST", url, token=token, json_body=transaction_data)
     if not result.get("ok"):
         log("Failed to create transaction for splits")
         return 0
@@ -560,7 +561,7 @@ def create_sample_splits(base_url: str, token: str, account_ids: list, category_
         return 0
     
     # Now create splits for this transaction using the current user's ID
-    splits_url = tracko_cli._join_url(base_url, "/api/splits")
+    splits_url = tracko_http.join_url(base_url, "/api/splits")
     split_count = 0
     
     # Get the current user's ID dynamically
@@ -579,7 +580,7 @@ def create_sample_splits(base_url: str, token: str, account_ids: list, category_
             "isSettled": 1 if i % 2 == 0 else 0  # Alternate settled/unsettled as int
         }
         
-        result = tracko_cli.http_request("POST", splits_url, token=token, json_body=split_data)
+        result = tracko_http.http_request("POST", splits_url, token=token, json_body=split_data)
         if result.get("ok"):
             split_count += 1
             status = "settled" if split_data["isSettled"] else "unsettled"
@@ -661,17 +662,14 @@ def main():
     log(f"Transfers created: {transfer_count}")
     log("="*60)
     log("\nYou can now use the CLI with:")
-    log(f"python tracko_cli.py --base-url {base_url} --token {token} [command]")
+    log(f"python -m tracko_cli --base-url {base_url} --token {token} [command]")
     log("\nExample commands:")
-    log("python tracko_cli.py accounts list")
-    log("python tracko_cli.py transactions list")
-    log("python tracko_cli.py budget view")
+    log("python -m tracko_cli accounts list")
+    log("python -m tracko_cli transactions list")
+    log("python -m tracko_cli budget view")
 
 
 if __name__ == "__main__":
     # Add missing random import to tracko_cli if not present
-    if not hasattr(tracko_cli, 'random'):
-        import random
-        tracko_cli.random = random
     
     main()

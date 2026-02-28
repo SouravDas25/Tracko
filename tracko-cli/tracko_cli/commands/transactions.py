@@ -2,16 +2,106 @@ import argparse
 import sys
 import urllib.parse
 from tracko_cli.core.config import get_token_from_args_or_config
-from tracko_cli.core.http import http_request, join_url
+from tracko_cli.core.client import TrackoClient
 from tracko_cli.utils.dates import parse_date_to_epoch_ms
 from tracko_cli.utils.formatting import print_result, print_table
 from tracko_cli.utils.lookups import get_id_name_map
 
 
+def setup_parser(subparsers):
+    sp = subparsers.add_parser("transactions")
+    sub_tx = sp.add_subparsers(dest="transactions_cmd", required=True)
+
+    sp2 = sub_tx.add_parser("list")
+    sp2.add_argument("--month", type=int)
+    sp2.add_argument("--year", type=int)
+    sp2.add_argument("--page", type=int)
+    sp2.add_argument("--size", type=int)
+    sp2.set_defaults(func=cmd_transactions_list)
+
+    sp2 = sub_tx.add_parser("add")
+    sp2.add_argument("--account-id", type=int)
+    sp2.add_argument("--account-name")
+    sp2.add_argument("--category-id", type=int)
+    sp2.add_argument("--category-name")
+    sp2.add_argument("--amount", required=True, type=float)
+    sp2.add_argument(
+        "--type",
+        required=True,
+        choices=["income", "expense", "debit", "dr", "d", "credit", "cr", "c"],
+    )
+    sp2.add_argument("--name", required=True)
+    sp2.add_argument("--comments", default=None)
+    sp2.add_argument("--date", default=None)
+    sp2.add_argument("--countable", action="store_true", default=None)
+    sp2.add_argument("--not-countable", action="store_false", dest="countable")
+    sp2.add_argument("--currency")
+    sp2.add_argument("--exchange-rate", type=float)
+    sp2.set_defaults(func=cmd_transactions_add)
+
+    sp2 = sub_tx.add_parser("import-csv")
+    sp2.add_argument("--file", required=True)
+    sp2.add_argument("--account-id", required=True, type=int)
+    sp2.set_defaults(func=cmd_transactions_import_csv)
+
+    sp2 = sub_tx.add_parser("get")
+    sp2.add_argument("--id", required=True, type=int)
+    sp2.set_defaults(func=cmd_transactions_get)
+
+    sp2 = sub_tx.add_parser("update")
+    sp2.add_argument("--id", required=True, type=int)
+    sp2.add_argument("--account-id", type=int)
+    sp2.add_argument("--category-id", type=int)
+    sp2.add_argument("--amount", type=float)
+    sp2.add_argument("--type", choices=["income", "expense"])
+    sp2.add_argument("--name")
+    sp2.add_argument("--comments", default=None)
+    sp2.add_argument("--date", default=None)
+    sp2.add_argument("--countable", action="store_true", default=None)
+    sp2.add_argument("--not-countable", action="store_false", dest="countable")
+    sp2.add_argument("--currency")
+    sp2.add_argument("--exchange-rate", type=float)
+    sp2.set_defaults(func=cmd_transactions_update)
+
+    sp2 = sub_tx.add_parser("delete")
+    sp2.add_argument("--id", required=True, type=int)
+    sp2.set_defaults(func=cmd_transactions_delete)
+
+    sp2 = sub_tx.add_parser("summary")
+    sp2.add_argument("--start-date")
+    sp2.add_argument("--end-date")
+    sp2.add_argument("--account-ids")
+    sp2.add_argument("--include-rollover", action="store_true")
+    sp2.set_defaults(func=cmd_transactions_summary)
+
+    sp2 = sub_tx.add_parser("total-income")
+    sp2.add_argument("--start-date", required=True)
+    sp2.add_argument("--end-date", required=True)
+    sp2.set_defaults(func=cmd_transactions_total_income)
+
+    sp2 = sub_tx.add_parser("total-expense")
+    sp2.add_argument("--start-date", required=True)
+    sp2.add_argument("--end-date", required=True)
+    sp2.set_defaults(func=cmd_transactions_total_expense)
+
+
+def setup_transfers_parser(subparsers):
+    sp = subparsers.add_parser("transfers")
+    sub_tr = sp.add_subparsers(dest="transfers_cmd", required=True)
+    sp2 = sub_tr.add_parser("create")
+    sp2.add_argument("--from-account-id", required=True, type=int)
+    sp2.add_argument("--to-account-id", required=True, type=int)
+    sp2.add_argument("--amount", required=True, type=float)
+    sp2.add_argument("--name", default=None)
+    sp2.add_argument("--comments", default=None)
+    sp2.set_defaults(func=cmd_transfers_create)
+
+
 def cmd_transactions_get(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
-    url = join_url(base_url, f"/api/transactions/{int(args.id)}")
-    result = http_request("GET", url, token=token)
+    client = TrackoClient(base_url, token)
+    client = TrackoClient(base_url, token)
+    result = client.get(f"/api/transactions/{int(args.id)}")
     print_result(result, raw=args.raw)
     return 0 if result.get("ok") else 1
 
@@ -19,7 +109,8 @@ def cmd_transactions_get(args: argparse.Namespace) -> int:
 def cmd_transactions_update(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     tx_id = int(args.id)
-    url = join_url(base_url, f"/api/transactions/{tx_id}")
+    client = TrackoClient(base_url, token)
+    
 
     body: dict = {}
 
@@ -73,16 +164,16 @@ def cmd_transactions_update(args: argparse.Namespace) -> int:
     if not body:
         print("No fields to update provided.", file=sys.stderr)
         return 1
-
-    result = http_request("PUT", url, token=token, json_body=body)
+    result = client.put(f"/api/transactions/{tx_id}", json_body=body)
     print_result(result, raw=args.raw)
     return 0 if result.get("ok") else 1
 
 
 def cmd_transactions_delete(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
-    url = join_url(base_url, f"/api/transactions/{int(args.id)}")
-    result = http_request("DELETE", url, token=token)
+    client = TrackoClient(base_url, token)
+
+    result = client.delete(f"/api/transactions/{int(args.id)}")
     print_result(result, raw=args.raw)
     return 0 if result.get("ok") else 1
 
@@ -90,20 +181,22 @@ def cmd_transactions_delete(args: argparse.Namespace) -> int:
 def cmd_transactions_list(args: argparse.Namespace) -> int:
     import datetime
     token, base_url = get_token_from_args_or_config(args)
+    client = TrackoClient(base_url, token)
     now = datetime.datetime.now()
     month = args.month if args.month is not None else now.month
     year = args.year if args.year is not None else now.year
     page = args.page if args.page is not None else 0
     size = args.size if args.size is not None else 500
 
-    query = urllib.parse.urlencode({
-        "month": month,
-        "year": year,
-        "page": page,
-        "size": size,
-    })
-    url = join_url(base_url, "/api/transactions") + "?" + query
-    result = http_request("GET", url, token=token)
+    query = urllib.parse.urlencode(
+        {
+            "month": month,
+            "year": year,
+            "page": page,
+            "size": size,
+        }
+    )
+    result = client.get("/api/transactions" + "?" + query)
     if args.raw:
         print_result(result, raw=True)
         return 0 if result["ok"] else 1
@@ -125,6 +218,7 @@ def cmd_transactions_list(args: argparse.Namespace) -> int:
                 f"Page={meta.get('page')} Size={meta.get('size')} "
                 f"Total={meta.get('totalElements')}"
             )
+
         def fmt_type(v):
             if v == 1 or str(v) == "1":
                 return "DEBIT"
@@ -164,6 +258,7 @@ def cmd_transactions_list(args: argparse.Namespace) -> int:
 
             try:
                 from dateutil import parser as date_parser
+
                 dt = date_parser.parse(s)
                 if dt.tzinfo is None:
                     dt = dt.replace(tzinfo=datetime.timezone.utc)
@@ -186,11 +281,19 @@ def cmd_transactions_list(args: argparse.Namespace) -> int:
             if not isinstance(tx, dict):
                 continue
             try:
-                aid = int(tx.get("accountId")) if tx.get("accountId") is not None else None
+                aid = (
+                    int(tx.get("accountId"))
+                    if tx.get("accountId") is not None
+                    else None
+                )
             except Exception:
                 aid = None
             try:
-                cid = int(tx.get("categoryId")) if tx.get("categoryId") is not None else None
+                cid = (
+                    int(tx.get("categoryId"))
+                    if tx.get("categoryId") is not None
+                    else None
+                )
             except Exception:
                 cid = None
             tx["accountName"] = accounts.get(aid, "") if aid is not None else ""
@@ -236,12 +339,11 @@ def cmd_transactions_list(args: argparse.Namespace) -> int:
 
 def cmd_transactions_add(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
-    url = join_url(base_url, "/api/transactions")
-
+    client = TrackoClient(base_url, token)
     def _resolve_id_by_name(path: str, name: str, label: str) -> int | None:
         if not name or not str(name).strip():
             return None
-        resp = http_request("GET", join_url(base_url, path), token=token)
+        resp = client.get(path)
         payload = resp.get("json")
         rows = payload.get("result") if isinstance(payload, dict) else None
         if not (resp.get("ok") and isinstance(rows, list)):
@@ -266,7 +368,9 @@ def cmd_transactions_add(args: argparse.Namespace) -> int:
             ids = []
             for m in matches:
                 try:
-                    ids.append(str(int(m.get("id"))))
+                    m_id2 = m.get("id")
+                    if m_id2 is not None:
+                        ids.append(str(int(m_id2)))
                 except Exception:
                     continue
             suffix = f" (matching IDs: {', '.join(ids)})" if ids else ""
@@ -274,7 +378,10 @@ def cmd_transactions_add(args: argparse.Namespace) -> int:
             return None
 
         try:
-            return int(matches[0].get("id"))
+            m_id = matches[0].get("id")
+            if m_id is None:
+                return None
+            return int(m_id)
         except Exception:
             print(f"Failed to resolve {label} id for name: {name}", file=sys.stderr)
             return None
@@ -292,7 +399,10 @@ def cmd_transactions_add(args: argparse.Namespace) -> int:
     if account_id is None:
         account_name = getattr(args, "account_name", None)
         if not account_name:
-            print("Missing account. Provide --account-id or --account-name", file=sys.stderr)
+            print(
+                "Missing account. Provide --account-id or --account-name",
+                file=sys.stderr,
+            )
             return 2
         account_id = _resolve_id_by_name("/api/accounts", account_name, "account")
         if account_id is None:
@@ -302,7 +412,10 @@ def cmd_transactions_add(args: argparse.Namespace) -> int:
     if category_id is None:
         category_name = getattr(args, "category_name", None)
         if not category_name:
-            print("Missing category. Provide --category-id or --category-name", file=sys.stderr)
+            print(
+                "Missing category. Provide --category-id or --category-name",
+                file=sys.stderr,
+            )
             return 2
         category_id = _resolve_id_by_name("/api/categories", category_name, "category")
         if category_id is None:
@@ -336,16 +449,16 @@ def cmd_transactions_add(args: argparse.Namespace) -> int:
         except Exception:
             print("Invalid --amount", file=sys.stderr)
             return 2
-
-    result = http_request("POST", url, token=token, json_body=body)
+    result = client.post(f"/api/transactions/{int(args.id)}", json_body=body)
     print_result(result, raw=args.raw)
     return 0 if result["ok"] else 1
 
 
 def cmd_transactions_import_csv(args: argparse.Namespace) -> int:
     import csv
+
     token, base_url = get_token_from_args_or_config(args)
-    url = join_url(base_url, "/api/transactions")
+    client = TrackoClient(base_url, token)
 
     try:
         with open(args.file, "r", encoding="utf-8") as f:
@@ -388,8 +501,9 @@ def cmd_transactions_import_csv(args: argparse.Namespace) -> int:
                 amount = raw_amount
 
             transaction_type = 1 if is_debit else 2
-            
+
             import datetime
+
             try:
                 dt = datetime.datetime.strptime(date_str, "%d/%m/%Y")
                 epoch_ms = int(dt.timestamp() * 1000)
@@ -405,15 +519,16 @@ def cmd_transactions_import_csv(args: argparse.Namespace) -> int:
                 "isCountable": 1,
                 "amount": amount,
             }
-
-            result = http_request("POST", url, token=token, json_body=body)
+            result = client.post("/api/transactions", json_body=body)
             if result.get("ok"):
                 success_count += 1
                 print(f"Row {idx}: Added {desc} ({amount})")
             else:
                 failure_count += 1
-                print(f"Row {idx}: Failed - HTTP {result.get('status')} {result.get('text')}")
-                
+                print(
+                    f"Row {idx}: Failed - HTTP {result.get('status')} {result.get('text')}"
+                )
+
         except Exception as e:
             print(f"Row {idx}: Error processing row - {e}")
             failure_count += 1
@@ -424,8 +539,8 @@ def cmd_transactions_import_csv(args: argparse.Namespace) -> int:
 
 def cmd_transfers_create(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
-    url = join_url(base_url, "/api/transactions")
-    
+    client = TrackoClient(base_url, token)
+
     body = {
         "accountId": int(args.from_account_id),
         "toAccountId": int(args.to_account_id),
@@ -435,8 +550,7 @@ def cmd_transfers_create(args: argparse.Namespace) -> int:
         "comments": args.comments,
         "isCountable": 0,
     }
-    
-    result = http_request("POST", url, token=token, json_body=body)
+    result = client.post("/api/transactions", json_body=body)
     print_result(result, raw=args.raw)
     return 0 if result["ok"] else 1
 
@@ -444,39 +558,41 @@ def cmd_transfers_create(args: argparse.Namespace) -> int:
 def cmd_transactions_summary(args: argparse.Namespace) -> int:
     import datetime
     token, base_url = get_token_from_args_or_config(args)
-    
+    client = TrackoClient(base_url, token)
     start_date = args.start_date or f"{datetime.datetime.now().year}-01-01"
     end_date = args.end_date or f"{datetime.datetime.now().year}-12-31"
-    
+
     params = {
         "startDate": start_date,
         "endDate": end_date,
-        "includeRollover": "true" if args.include_rollover else "false"
+        "includeRollover": "true" if args.include_rollover else "false",
     }
     if args.account_ids:
         params["accountIds"] = args.account_ids
-    
+
     query = urllib.parse.urlencode(params)
-    url = join_url(base_url, "/api/transactions/summary") + "?" + query
-    
-    result = http_request("GET", url, token=token)
+    result = client.get("/api/transactions/summary" + "?" + query)
     print_result(result, raw=args.raw)
     return 0 if result["ok"] else 1
 
 
 def cmd_transactions_total_income(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
-    query = urllib.parse.urlencode({"startDate": args.start_date, "endDate": args.end_date})
-    url = join_url(base_url, "/api/transactions/total-income") + "?" + query
-    result = http_request("GET", url, token=token)
+    client = TrackoClient(base_url, token)
+    query = urllib.parse.urlencode(
+        {"startDate": args.start_date, "endDate": args.end_date}
+    )
+    result = client.get("/api/transactions/total-income" + "?" + query)
     print_result(result, raw=args.raw)
     return 0 if result.get("ok") else 1
 
 
 def cmd_transactions_total_expense(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
-    query = urllib.parse.urlencode({"startDate": args.start_date, "endDate": args.end_date})
-    url = join_url(base_url, "/api/transactions/total-expense") + "?" + query
-    result = http_request("GET", url, token=token)
+    client = TrackoClient(base_url, token)
+    query = urllib.parse.urlencode(
+        {"startDate": args.start_date, "endDate": args.end_date}
+    )
+    result = client.get("/api/transactions/total-expense" + "?" + query)
     print_result(result, raw=args.raw)
     return 0 if result.get("ok") else 1

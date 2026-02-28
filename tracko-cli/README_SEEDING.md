@@ -96,28 +96,24 @@ After running the seeding script, you can use the Tracko CLI with the provided t
 
 ```bash
 # List accounts
-python tracko_cli.py --base-url http://localhost:8080 --token <TOKEN> accounts list
-
-# (Alternative) Run via module
 python -m tracko_cli --base-url http://localhost:8080 --token <TOKEN> accounts list
 
-# List transactions
-python tracko_cli.py --base-url http://localhost:8080 --token <TOKEN> transactions list
 
-# (Alternative) Run via module
+# List transactions
 python -m tracko_cli --base-url http://localhost:8080 --token <TOKEN> transactions list
 
+
 # Get a transaction by ID
-python tracko_cli.py --base-url http://localhost:8080 --token <TOKEN> transactions get --id 1
+python -m tracko_cli --base-url http://localhost:8080 --token <TOKEN> transactions get --id 1
 
 # Update a transaction by ID
-python tracko_cli.py --base-url http://localhost:8080 --token <TOKEN> transactions update --id 1 --account-id 2 --category-id 2 --amount 300 --type expense --name "Lunch (updated)" --comments "Updated from CLI"
+python -m tracko_cli --base-url http://localhost:8080 --token <TOKEN> transactions update --id 1 --account-id 2 --category-id 2 --amount 300 --type expense --name "Lunch (updated)" --comments "Updated from CLI"
 
 # Delete a transaction by ID
-python tracko_cli.py --base-url http://localhost:8080 --token <TOKEN> transactions delete --id 1
+python -m tracko_cli --base-url http://localhost:8080 --token <TOKEN> transactions delete --id 1
 
 # View budget
-python tracko_cli.py --base-url http://localhost:8080 --token <TOKEN> budget view
+python -m tracko_cli --base-url http://localhost:8080 --token <TOKEN> budget view
 ```
 
 ## Troubleshooting

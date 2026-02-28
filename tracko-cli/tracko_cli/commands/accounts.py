@@ -5,6 +5,56 @@ from tracko_cli.core.http import http_request, join_url
 from tracko_cli.utils.formatting import print_result, print_table
 
 
+
+def setup_parser(subparsers):
+    sp = subparsers.add_parser('accounts', help='Account operations')
+    sub_acc = sp.add_subparsers(dest='accounts_cmd', required=True)
+
+    sp2 = sub_acc.add_parser('list')
+    sp2.set_defaults(func=cmd_accounts_list)
+
+    sp2 = sub_acc.add_parser('balances')
+    sp2.set_defaults(func=cmd_accounts_balances)
+
+    sp2 = sub_acc.add_parser('add')
+    sp2.add_argument('--name', required=True)
+    sp2.add_argument('--currency', help='Currency code for the account')
+    sp2.set_defaults(func=cmd_accounts_add)
+
+    sp2 = sub_acc.add_parser('get')
+    sp2.add_argument('--id', required=True, type=int)
+    sp2.set_defaults(func=cmd_accounts_get)
+
+    sp2 = sub_acc.add_parser('update')
+    sp2.add_argument('--id', required=True, type=int)
+    sp2.add_argument('--name', required=True)
+    sp2.add_argument('--currency', help='Currency code for the account')
+    sp2.set_defaults(func=cmd_accounts_update)
+
+    sp2 = sub_acc.add_parser('delete')
+    sp2.add_argument('--id', required=True, type=int)
+    sp2.set_defaults(func=cmd_accounts_delete)
+
+    sp2 = sub_acc.add_parser('summary')
+    sp2.add_argument('--id', required=True, type=int)
+    sp2.add_argument('--start-date', required=True)
+    sp2.add_argument('--end-date', required=True)
+    sp2.add_argument('--include-rollover', action='store_true')
+    sp2.set_defaults(func=cmd_accounts_summary)
+
+    sp2 = sub_acc.add_parser('transactions')
+    sp2.add_argument('--id', required=True, type=int)
+    sp2.add_argument('--page', type=int, default=0)
+    sp2.add_argument('--size', type=int, default=50)
+    sp2.add_argument('--expand', action='store_true')
+    sp2.add_argument('--month', type=int)
+    sp2.add_argument('--year', type=int)
+    sp2.add_argument('--start-date')
+    sp2.add_argument('--end-date')
+    sp2.add_argument('--category-id', type=int)
+    sp2.set_defaults(func=cmd_accounts_transactions)
+
+
 def cmd_accounts_list(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     url = join_url(base_url, "/api/accounts")

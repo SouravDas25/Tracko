@@ -1,7 +1,60 @@
 import argparse
 from tracko_cli.core.config import get_token_from_args_or_config
-from tracko_cli.core.http import http_request, join_url
+from tracko_cli.core.client import TrackoClient
 from tracko_cli.utils.formatting import print_result, print_table
+
+
+def setup_parser(subparsers):
+    sp = subparsers.add_parser("splits")
+    sub_spl = sp.add_subparsers(dest="splits_cmd", required=True)
+
+    sp2 = sub_spl.add_parser("list")
+    sp2.set_defaults(func=cmd_splits_list)
+
+    sp2 = sub_spl.add_parser("for-transaction")
+    sp2.add_argument("--transaction-id", required=True, type=int)
+    sp2.set_defaults(func=cmd_splits_for_transaction)
+
+    sp2 = sub_spl.add_parser("for-user")
+    sp2.add_argument("--user-id", required=True)
+    sp2.set_defaults(func=cmd_splits_for_user)
+
+    sp2 = sub_spl.add_parser("unsettled")
+    sp2.add_argument("--user-id", required=True)
+    sp2.set_defaults(func=cmd_splits_unsettled)
+
+    sp2 = sub_spl.add_parser("for-contact")
+    sp2.add_argument("--contact-id", required=True, type=int)
+    sp2.set_defaults(func=cmd_splits_for_contact)
+
+    sp2 = sub_spl.add_parser("unsettled-contact")
+    sp2.add_argument("--contact-id", required=True, type=int)
+    sp2.set_defaults(func=cmd_splits_unsettled_contact)
+
+    sp2 = sub_spl.add_parser("create")
+    sp2.add_argument("--transaction-id", required=True, type=int)
+    sp2.add_argument("--user-id", required=True)
+    sp2.add_argument("--amount", required=True, type=float)
+    sp2.add_argument("--contact-id", type=int)
+    sp2.add_argument("--is-settled")
+    sp2.add_argument("--settled-at")
+    sp2.set_defaults(func=cmd_splits_create)
+
+    sp2 = sub_spl.add_parser("get")
+    sp2.add_argument("--id", required=True, type=int)
+    sp2.set_defaults(func=cmd_splits_get)
+
+    sp2 = sub_spl.add_parser("settle")
+    sp2.add_argument("--id", required=True, type=int)
+    sp2.set_defaults(func=cmd_splits_settle)
+
+    sp2 = sub_spl.add_parser("unsettle")
+    sp2.add_argument("--id", required=True, type=int)
+    sp2.set_defaults(func=cmd_splits_unsettle)
+
+    sp2 = sub_spl.add_parser("delete")
+    sp2.add_argument("--id", required=True, type=int)
+    sp2.set_defaults(func=cmd_splits_delete)
 
 
 def render_splits_result(result: dict, raw: bool) -> int:
@@ -38,35 +91,36 @@ def render_splits_result(result: dict, raw: bool) -> int:
 
 def cmd_splits_list(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
-    url = join_url(base_url, "/api/splits")
-    result = http_request("GET", url, token=token)
+    client = TrackoClient(base_url, token)
+    result = client.get("/api/splits")
     return render_splits_result(result, raw=args.raw)
 
 
 def cmd_splits_for_transaction(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
-    url = join_url(base_url, f"/api/splits/transaction/{args.transaction_id}")
-    result = http_request("GET", url, token=token)
+    client = TrackoClient(base_url, token)
+    result = client.get(f"/api/splits/transaction/{args.transaction_id}")
     return render_splits_result(result, raw=args.raw)
 
 
 def cmd_splits_for_user(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
-    url = join_url(base_url, f"/api/splits/user/{args.user_id}")
-    result = http_request("GET", url, token=token)
+    client = TrackoClient(base_url, token)
+    result = client.get(f"/api/splits/user/{args.user_id}")
     return render_splits_result(result, raw=args.raw)
 
 
 def cmd_splits_unsettled(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
-    url = join_url(base_url, f"/api/splits/user/{args.user_id}/unsettled")
-    result = http_request("GET", url, token=token)
+    client = TrackoClient(base_url, token)
+    result = client.get(f"/api/splits/user/{args.user_id}/unsettled")
     return render_splits_result(result, raw=args.raw)
 
 
 def cmd_splits_create(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
-    url = join_url(base_url, "/api/splits")
+    client = TrackoClient(base_url, token)
+
     body = {
         "transactionId": args.transaction_id,
         "userId": args.user_id,
@@ -78,55 +132,57 @@ def cmd_splits_create(args: argparse.Namespace) -> int:
         try:
             body["isSettled"] = int(args.is_settled)
         except Exception:
-            body["isSettled"] = 1 if str(args.is_settled).lower() in {"1", "true", "yes"} else 0
+            body["isSettled"] = (
+                1 if str(args.is_settled).lower() in {"1", "true", "yes"} else 0
+            )
     if args.settled_at:
         body["settledAt"] = args.settled_at
-    result = http_request("POST", url, token=token, json_body=body)
+    result = client.post("/api/splits", json_body=body)
     print_result(result, raw=args.raw)
     return 0 if result.get("ok") else 1
 
 
 def cmd_splits_for_contact(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
-    url = join_url(base_url, f"/api/splits/contact/{args.contact_id}")
-    result = http_request("GET", url, token=token)
+    client = TrackoClient(base_url, token)
+    result = client.get(f"/api/splits/contact/{args.contact_id}")
     return render_splits_result(result, raw=args.raw)
 
 
 def cmd_splits_unsettled_contact(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
-    url = join_url(base_url, f"/api/splits/contact/{args.contact_id}/unsettled")
-    result = http_request("GET", url, token=token)
+    client = TrackoClient(base_url, token)
+    result = client.get(f"/api/splits/contact/{args.contact_id}/unsettled")
     return render_splits_result(result, raw=args.raw)
 
 
 def cmd_splits_get(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
-    url = join_url(base_url, f"/api/splits/{int(args.id)}")
-    result = http_request("GET", url, token=token)
+    client = TrackoClient(base_url, token)
+    result = client.get(f"/api/splits/{int(args.id)}")
     print_result(result, raw=args.raw)
     return 0 if result.get("ok") else 1
 
 
 def cmd_splits_settle(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
-    url = join_url(base_url, f"/api/splits/settle/{int(args.id)}")
-    result = http_request("PATCH", url, token=token)
+    client = TrackoClient(base_url, token)
+    result = client.patch(f"/api/splits/settle/{int(args.id)}")
     print_result(result, raw=args.raw)
     return 0 if result.get("ok") else 1
 
 
 def cmd_splits_unsettle(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
-    url = join_url(base_url, f"/api/splits/unsettle/{int(args.id)}")
-    result = http_request("PATCH", url, token=token)
+    client = TrackoClient(base_url, token)
+    result = client.patch(f"/api/splits/unsettle/{int(args.id)}")
     print_result(result, raw=args.raw)
     return 0 if result.get("ok") else 1
 
 
 def cmd_splits_delete(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
-    url = join_url(base_url, f"/api/splits/{int(args.id)}")
-    result = http_request("DELETE", url, token=token)
+    client = TrackoClient(base_url, token)
+    result = client.delete(f"/api/splits/{int(args.id)}")
     print_result(result, raw=args.raw)
     return 0 if result.get("ok") else 1

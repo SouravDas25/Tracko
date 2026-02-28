@@ -1,46 +1,76 @@
 import argparse
 import urllib.parse
 from tracko_cli.core.config import get_token_from_args_or_config
-from tracko_cli.core.http import http_request, join_url
+from tracko_cli.core.client import TrackoClient
 from tracko_cli.utils.formatting import print_result
+
+
+def setup_parser(subparsers):
+    sp = subparsers.add_parser("users")
+    sub_usr = sp.add_subparsers(dest="users_cmd", required=True)
+
+    sp2 = sub_usr.add_parser("list")
+    sp2.set_defaults(func=cmd_users_list)
+
+    sp2 = sub_usr.add_parser("me")
+    sp2.set_defaults(func=cmd_users_me)
+
+    sp2 = sub_usr.add_parser("get")
+    sp2.add_argument("--id", required=True)
+    sp2.set_defaults(func=cmd_users_get)
+
+    sp2 = sub_usr.add_parser("find-phone")
+    sp2.add_argument("--phone-no", required=True)
+    sp2.set_defaults(func=cmd_users_find_phone)
+
+    sp2 = sub_usr.add_parser("upsert")
+    sp2.add_argument("--phone-no", required=True)
+    sp2.add_argument("--password", required=True)
+    sp2.add_argument("--name")
+    sp2.add_argument("--email")
+    sp2.add_argument("--profile-pic")
+    sp2.add_argument("--base-currency")
+    sp2.add_argument("--shadow", action="store_true", default=None)
+    sp2.add_argument("--not-shadow", action="store_false", dest="shadow")
+    sp2.set_defaults(func=cmd_users_upsert)
 
 
 def cmd_users_list(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
-    url = join_url(base_url, "/api/user")
-    result = http_request("GET", url, token=token)
+    client = TrackoClient(base_url, token)
+    result = client.get("/api/user")
     print_result(result, raw=args.raw)
     return 0 if result["ok"] else 1
 
 
 def cmd_users_me(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
-    url = join_url(base_url, "/api/user/me")
-    result = http_request("GET", url, token=token)
+    client = TrackoClient(base_url, token)
+    result = client.get("/api/user/me")
     print_result(result, raw=args.raw)
     return 0 if result.get("ok") else 1
 
 
 def cmd_users_get(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
-    url = join_url(base_url, f"/api/user/{urllib.parse.quote(str(args.id))}")
-    result = http_request("GET", url, token=token)
+    client = TrackoClient(base_url, token)
+    result = client.get(f"/api/user/{urllib.parse.quote(str(args.id))}")
     print_result(result, raw=args.raw)
     return 0 if result.get("ok") else 1
 
 
 def cmd_users_find_phone(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
+    client = TrackoClient(base_url, token)
     q = urllib.parse.urlencode({"phone_no": str(args.phone_no)})
-    url = join_url(base_url, "/api/user/byPhoneNo") + "?" + q
-    result = http_request("GET", url, token=token)
+    result = client.get("/api/user/byPhoneNo" + "?" + q)
     print_result(result, raw=args.raw)
     return 0 if result.get("ok") else 1
 
 
 def cmd_users_upsert(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
-    url = join_url(base_url, "/api/user/save")
+    client = TrackoClient(base_url, token)
 
     body: dict = {
         "phoneNo": str(args.phone_no),
@@ -56,7 +86,6 @@ def cmd_users_upsert(args: argparse.Namespace) -> int:
         body["baseCurrency"] = args.base_currency
     if args.shadow is not None:
         body["isShadow"] = 1 if args.shadow else 0
-
-    result = http_request("POST", url, token=token, json_body=body)
+    result = client.post("/api/user/create", json_body=body)
     print_result(result, raw=args.raw)
     return 0 if result.get("ok") else 1

@@ -37,7 +37,9 @@ def http_request(
     if token:
         headers["Authorization"] = f"Bearer {token}"
 
-    req = urllib.request.Request(url=url, method=method.upper(), headers=headers, data=data)
+    req = urllib.request.Request(
+        url=url, method=method.upper(), headers=headers, data=data
+    )
 
     started = time.time()
     try:

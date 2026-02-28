@@ -1,4 +1,5 @@
 import json
+import typing
 
 
 def to_str(v) -> str:
@@ -44,7 +45,7 @@ def print_table(
     *,
     max_widths: dict[str, int] | None = None,
     right_align: set[str] | None = None,
-    formatters: dict[str, callable] | None = None,
+    formatters: dict[str, typing.Callable] | None = None,
 ) -> None:
     # columns: [(key, header)]
     max_widths = max_widths or {}
@@ -54,7 +55,7 @@ def print_table(
     rendered_rows: list[list[str]] = []
     for r in rows:
         row_cells: list[str] = []
-        for (k, _) in columns:
+        for k, _ in columns:
             v = r.get(k)
             if k in formatters:
                 try:
@@ -66,10 +67,10 @@ def print_table(
             row_cells.append(clip(cell, mw))
         rendered_rows.append(row_cells)
 
-    headers = [h for (_, h) in columns]
+    headers = [h for _, h in columns]
     widths = [len(h) for h in headers]
-    for r in rendered_rows:
-        for i, cell in enumerate(r):
+    for r_row in rendered_rows:
+        for i, cell in enumerate(r_row):
             widths[i] = max(widths[i], len(cell))
 
     def fmt_row(cells: list[str]) -> str:
@@ -84,5 +85,5 @@ def print_table(
 
     print(fmt_row(headers))
     print("-+-".join("-" * w for w in widths))
-    for r in rendered_rows:
-        print(fmt_row(r))
+    for r_row in rendered_rows:
+        print(fmt_row(r_row))
