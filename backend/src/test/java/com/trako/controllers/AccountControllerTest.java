@@ -91,8 +91,8 @@ public class AccountControllerTest {
     }
 
     @Test
-    public void testGetByUserId() throws Exception {
-        mockMvc.perform(get("/api/accounts/user/" + testUser.getId())
+    public void testGetAll_isScopedToAuthenticatedUser() throws Exception {
+        mockMvc.perform(get("/api/accounts")
                         .header("Authorization", bearerToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result[0].userId").value(testUser.getId()));

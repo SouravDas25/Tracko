@@ -1,9 +1,7 @@
 import 'package:tracko/Utils/WidgetUtil.dart';
 import 'package:tracko/component/AsynLoadState.dart';
-import 'package:tracko/dtos/TrackoContact.dart';
 import 'package:tracko/models/contact.dart';
 import 'package:tracko/repositories/contact_repository.dart';
-import 'package:tracko/services/SessionService.dart';
 import 'package:flutter/material.dart';
 
 class SelectBackendContactPage extends StatefulWidget {
@@ -67,19 +65,8 @@ class _SelectBackendContactList
   }
 
   void _onSubmit() async {
-    List<TrakoContact> returningContact = [];
-    for (_CustomContact c in selectedContacts) {
-      final tc = TrakoContact();
-      tc.name = c.contact.name;
-      tc.phoneNo = c.contact.phoneNo;
-      tc.email = c.contact.email;
-      tc.contactId = c.contact.id;
-      returningContact.add(tc);
-    }
-
-    TrakoContact rootUserContact = SessionService.currentUserContact();
-    returningContact.add(rootUserContact);
-
+    final returningContact =
+        selectedContacts.map((c) => c.contact).toList(growable: false);
     Navigator.pop(context, returningContact);
     setState(() {});
   }

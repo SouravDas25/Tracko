@@ -216,7 +216,6 @@ class _CategoryTransactionsPageState extends State<CategoryTransactionsPage> {
     try {
       // 1. Load Chart Data (Summary)
       final api = ApiClient();
-      final userId = (SessionService.currentUser().id ?? '').toString();
 
       final catId = (widget.category.id ?? 0);
       if (catId == 0) {

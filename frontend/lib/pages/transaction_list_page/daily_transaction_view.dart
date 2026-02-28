@@ -174,10 +174,6 @@ class _DailyTransactionViewState
       AppLog.d('[DailyTransactionView] asyncLoad complete');
     } catch (e) {
       AppLog.d('[DailyTransactionView] asyncLoad error: $e');
-      if (mounted) {
-        // If not logged in or session invalid, go to login flow.
-        Navigator.pushReplacementNamed(context, '/login');
-      }
     }
   }
 
@@ -204,7 +200,6 @@ class _DailyTransactionViewState
           '[DailyTransactionView] refresh complete txCount=${transactions.length}');
     } catch (e) {
       AppLog.d('[DailyTransactionView] refresh error: $e');
-      // Likely unauthenticated; redirect to login.
       if (mounted) {
         setState(() {
           if (_isProgrammaticLoading) {
@@ -213,7 +208,6 @@ class _DailyTransactionViewState
           }
           _isProgrammaticLoading = false;
         });
-        Navigator.pushReplacementNamed(context, '/login');
       } else {
         _isProgrammaticLoading = false;
       }

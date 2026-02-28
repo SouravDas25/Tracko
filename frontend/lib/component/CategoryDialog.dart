@@ -35,8 +35,7 @@ class CategoryDialog extends StatelessWidget {
     Category category = this.category ?? Category();
     category.name = name;
     category.categoryType = _selectedCategoryType.trim().toUpperCase();
-    User user = SessionService.currentUser();
-    category.userId = user.id;
+
     final repo = CategoryRepository();
     if (category.id == null) {
       final created =

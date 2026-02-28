@@ -4,7 +4,6 @@ import '../models/account.dart' as legacy_account;
 import '../models/category.dart' as legacy_category;
 import '../models/contact.dart' as legacy_contact;
 import '../models/split.dart' as legacy_split;
-import '../dtos/TrackoContact.dart';
 import '../services/api_client.dart';
 import '../Utils/enums.dart';
 import '../Utils/AppLog.dart';
@@ -206,12 +205,7 @@ class TransactionRepository {
         final c = legacy_contact.Contact.fromJson(contactJson);
         s.contact = c;
 
-        final tc = TrakoContact();
-        tc.contactId = c.id;
-        tc.name = c.name;
-        tc.phoneNo = c.phoneNo;
-        tc.email = c.email;
-        t.contacts.add(tc);
+        t.contacts.add(c);
       }
       return s;
     }).toList();
@@ -340,8 +334,7 @@ class TransactionRepository {
   }
 
   // Aggregation methods - backend calculates
-  Future<Map<String, dynamic>> getSummary(
-      String userId, DateTime startDate, DateTime endDate,
+  Future<Map<String, dynamic>> getSummary(DateTime startDate, DateTime endDate,
       {List<int>? accountIds}) async {
     final res = await _api.get<Map<String, dynamic>>(
       "${ApiConfig.transactions}/summary",

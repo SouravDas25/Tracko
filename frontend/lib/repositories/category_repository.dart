@@ -19,11 +19,9 @@ class CategoryRepository {
     return _toLegacyCategory(res);
   }
 
-  Future<legacy.Category> create(String name,
-      {String? userId, String? categoryType}) async {
+  Future<legacy.Category> create(String name, {String? categoryType}) async {
     final body = {
       'name': name,
-      if (userId != null) 'userId': userId,
       if (categoryType != null) 'categoryType': categoryType,
     };
     final res =
@@ -32,10 +30,9 @@ class CategoryRepository {
   }
 
   Future<legacy.Category> update(int id, String name,
-      {String? userId, String? categoryType}) async {
+      {String? categoryType}) async {
     final body = {
       'name': name,
-      if (userId != null) 'userId': userId,
       if (categoryType != null) 'categoryType': categoryType,
     };
     final res = await _api
@@ -47,15 +44,14 @@ class CategoryRepository {
     await _api.delete<void>("${ApiConfig.categories}/$id");
   }
 
-  Future<legacy.Category> findOrCreateByName(String name,
-      {String? userId}) async {
+  Future<legacy.Category> findOrCreateByName(String name) async {
     final all = await getAll();
     final existing = all.firstWhere(
       (c) => (c.name).toLowerCase() == name.toLowerCase(),
       orElse: () => legacy.Category(),
     );
     if (existing.id != null) return existing;
-    return await create(name, userId: userId);
+    return await create(name);
   }
 
   legacy.Category _toLegacyCategory(Map<String, dynamic> json) {

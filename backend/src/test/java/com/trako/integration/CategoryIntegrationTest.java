@@ -112,7 +112,7 @@ public class CategoryIntegrationTest {
     }
 
     @Test
-    public void testGetCategoriesByOtherUserUnauthorized() throws Exception {
+    public void testGetAllCategories_doesNotReturnOtherUsersCategories() throws Exception {
         User other = new User();
         other.setName("OtherU");
         other.setPhoneNo("7777777777");
@@ -120,9 +120,21 @@ public class CategoryIntegrationTest {
         other.setPassword("other_pass");
         other = usersRepository.save(other);
 
-        mockMvc.perform(get("/api/categories/user/" + other.getId())
+        Category mine = new Category();
+        mine.setName("MineCat");
+        mine.setUserId(testUser.getId());
+        categoryRepository.save(mine);
+
+        Category foreign = new Category();
+        foreign.setName("ForeignCat");
+        foreign.setUserId(other.getId());
+        categoryRepository.save(foreign);
+
+        mockMvc.perform(get("/api/categories")
                         .header("Authorization", bearerToken))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result", hasSize(1)))
+                .andExpect(jsonPath("$.result[0].name").value("MineCat"));
     }
 
     @Test
@@ -253,7 +265,7 @@ public class CategoryIntegrationTest {
         category2.setUserId(testUser.getId());
         categoryRepository.save(category2);
 
-        mockMvc.perform(get("/api/categories/user/" + testUser.getId())
+        mockMvc.perform(get("/api/categories")
                         .header("Authorization", bearerToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result", hasSize(2)))

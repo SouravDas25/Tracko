@@ -6,56 +6,18 @@ import 'package:tracko/config/api_config.dart';
 class UserRepository {
   final ApiClient _api = ApiClient();
 
-  Future<User?> getById(String id) async {
-    try {
-      final res = await _api.get<List<dynamic>>("${ApiConfig.users}/$id");
-      if (res.isEmpty) return null;
-      return _fromBackend(res.first as Map<String, dynamic>);
-    } catch (e) {
-      return null;
-    }
-  }
-
-  Future<User?> getMe() async {
+  Future<User> getMe() async {
     try {
       final res = await _api.get<Map<String, dynamic>>("${ApiConfig.users}/me");
       return _fromBackend(res);
     } catch (e) {
-      return null;
-    }
-  }
-
-  Future<User?> getByPhoneNumber(String phoneNo) async {
-    try {
-      final res = await _api.get<List<dynamic>>(
-        "${ApiConfig.users}/byPhoneNo",
-        query: {'phone_no': phoneNo},
-      );
-      if (res.isEmpty) return null;
-      return _fromBackend(res.first as Map<String, dynamic>);
-    } catch (e) {
-      return null;
+      rethrow;
     }
   }
 
   Future<List<User>> getAll() async {
     final res = await _api.get<List<dynamic>>(ApiConfig.users);
     return res.map((e) => _fromBackend(e as Map<String, dynamic>)).toList();
-  }
-
-  Future<String> save(User user, {bool isShadow = false}) async {
-    final payload = {
-      'name': user.name,
-      'phoneNo': user.phoneNo,
-      'email': user.email ?? '',
-      'profilePic': user.profilePic ?? '',
-      'isShadow': isShadow,
-      'baseCurrency': user.baseCurrency,
-    };
-
-    final res =
-        await _api.post<String>("${ApiConfig.users}/save", data: payload);
-    return res;
   }
 
   Future<void> resetUserData() async {

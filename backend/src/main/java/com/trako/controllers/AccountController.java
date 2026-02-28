@@ -307,16 +307,6 @@ public class AccountController {
         return Response.ok(payload);
     }
 
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<?> getByUserId(@PathVariable @NotBlank String userId) {
-        String currentUserId = userService.loggedInUser().getId();
-        if (!currentUserId.equals(userId)) {
-            return Response.unauthorized();
-        }
-        List<Account> accounts = accountService.findByUserId(currentUserId);
-        return Response.ok(accounts);
-    }
-
     @PostMapping
     public ResponseEntity<?> create(@Valid @RequestBody AccountSaveRequest request) {
         Account account = new Account();

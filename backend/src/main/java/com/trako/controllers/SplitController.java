@@ -8,7 +8,6 @@ import com.trako.services.SplitService;
 import com.trako.services.UserService;
 import com.trako.util.Response;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -123,22 +122,9 @@ public class SplitController {
         return Response.ok(splits);
     }
 
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<?> getByUserId(@PathVariable @NotBlank String userId) {
+    @GetMapping("/unsettled")
+    public ResponseEntity<?> getMyUnsettled() {
         String currentUserId = userService.loggedInUser().getId();
-        if (!currentUserId.equals(userId)) {
-            return Response.unauthorized();
-        }
-        List<Split> splits = splitService.findByUserId(currentUserId);
-        return Response.ok(splits);
-    }
-
-    @GetMapping("/user/{userId}/unsettled")
-    public ResponseEntity<?> getUnsettledByUserId(@PathVariable @NotBlank String userId) {
-        String currentUserId = userService.loggedInUser().getId();
-        if (!currentUserId.equals(userId)) {
-            return Response.unauthorized();
-        }
         List<Split> splits = splitService.findUnsettledByUserId(currentUserId);
         return Response.ok(splits);
     }

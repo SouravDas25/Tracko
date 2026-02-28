@@ -39,7 +39,7 @@ class _SettingsPage extends State<SettingsPage> {
 
   void initData() async {
     try {
-      user = await SessionService.getCurrentUser();
+      user = await SessionService.fetchMe();
     } catch (e) {
       print("Error loading user: $e");
     }

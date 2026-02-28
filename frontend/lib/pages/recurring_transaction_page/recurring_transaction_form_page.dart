@@ -108,7 +108,7 @@ class _RecurringTransactionFormPageState
     try {
       final accounts = await _accountRepository.getAllAccounts();
       final categories = await _categoryRepository.getAll();
-      final user = await SessionService.getCurrentUser();
+      final user = await SessionService.fetchMe();
 
       setState(() {
         _accounts = accounts;

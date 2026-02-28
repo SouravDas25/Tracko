@@ -24,6 +24,17 @@ class Contact {
   }
 
   @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! Contact) return false;
+    if (id != null && other.id != null) return id == other.id;
+    return false;
+  }
+
+  @override
+  int get hashCode => id?.hashCode ?? super.hashCode;
+
+  @override
   String toString() =>
       'Contact{id: $id, name: $name, phoneNo: $phoneNo, email: $email}';
 }

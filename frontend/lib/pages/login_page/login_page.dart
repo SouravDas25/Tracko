@@ -60,7 +60,7 @@ class _LoginPage extends State<LoginForm> {
       if (!mounted) return;
       if (loggedIn) {
         // Ensure session is initialized
-        await SessionService.getCurrentUser();
+        // await SessionService.getCurrentUser();
 
         // Check again if we are still logged in.
         // If SessionService.getCurrentUser() triggered a 401, ApiClient would have logged us out.
@@ -109,7 +109,7 @@ class _LoginPage extends State<LoginForm> {
       );
       if (token != null && token.isNotEmpty) {
         // Fetch user profile to initialize session and currency settings
-        await SessionService.getCurrentUser(forceRefresh: true);
+        // await SessionService.getCurrentUser();
 
         if (!mounted) return;
         Navigator.pushReplacementNamed(context, '/home');

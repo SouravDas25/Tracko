@@ -219,8 +219,7 @@ public class AccountIntegrationTest {
     }
 
     @Test
-    public void testGetAccountsByOtherUserUnauthorized() throws Exception {
-        // Another user id
+    public void testGetAllAccounts_doesNotReturnOtherUsersAccounts() throws Exception {
         User other = new User();
         other.setName("OtherU");
         other.setPhoneNo("2002002000");
@@ -228,9 +227,21 @@ public class AccountIntegrationTest {
         other.setPassword("other_pass");
         other = usersRepository.save(other);
 
-        mockMvc.perform(get("/api/accounts/user/" + other.getId())
+        Account mine = new Account();
+        mine.setName("Mine");
+        mine.setUserId(testUser.getId());
+        accountRepository.save(mine);
+
+        Account foreign = new Account();
+        foreign.setName("Foreign");
+        foreign.setUserId(other.getId());
+        accountRepository.save(foreign);
+
+        mockMvc.perform(get("/api/accounts")
                         .header("Authorization", bearerToken))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result", hasSize(1)))
+                .andExpect(jsonPath("$.result[0].name").value("Mine"));
     }
 
     @Test
@@ -364,7 +375,7 @@ public class AccountIntegrationTest {
     }
 
     @Test
-    public void testGetAccountsByUserId() throws Exception {
+    public void testGetAllAccounts_isScopedToAuthenticatedUser() throws Exception {
         Account account1 = new Account();
         account1.setName("Savings");
         account1.setUserId(testUser.getId());
@@ -375,7 +386,7 @@ public class AccountIntegrationTest {
         account2.setUserId(testUser.getId());
         accountRepository.save(account2);
 
-        mockMvc.perform(get("/api/accounts/user/" + testUser.getId())
+        mockMvc.perform(get("/api/accounts")
                         .header("Authorization", bearerToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result", hasSize(2)))

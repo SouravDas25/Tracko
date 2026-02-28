@@ -224,7 +224,7 @@ public class SplitIntegrationTest {
         split.setAmount(50.00);
         splitRepository.save(split);
 
-        mockMvc.perform(get("/api/splits/user/" + testUser.getId())
+        mockMvc.perform(get("/api/splits")
                         .header("Authorization", bearerToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result", hasSize(1)))
@@ -247,7 +247,7 @@ public class SplitIntegrationTest {
         split2.setIsSettled(1);
         splitRepository.save(split2);
 
-        mockMvc.perform(get("/api/splits/user/" + testUser.getId() + "/unsettled")
+        mockMvc.perform(get("/api/splits/unsettled")
                         .header("Authorization", bearerToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result", hasSize(1)))
@@ -255,9 +255,15 @@ public class SplitIntegrationTest {
     }
 
     @Test
-    public void testGetSplitsByUserId_whenDifferentUserId_returnsUnauthorized() throws Exception {
-        mockMvc.perform(get("/api/splits/user/" + otherUser.getId())
-                        .header("Authorization", bearerToken))
+    public void testGetSplitById_whenOwnedByAnotherUser_returnsUnauthorized() throws Exception {
+        Split foreign = new Split();
+        foreign.setTransactionId(testTransaction.getId());
+        foreign.setUserId(testUser.getId());
+        foreign.setAmount(50.00);
+        foreign = splitRepository.save(foreign);
+
+        mockMvc.perform(get("/api/splits/" + foreign.getId())
+                        .header("Authorization", otherBearerToken))
                 .andExpect(status().isUnauthorized());
     }
 

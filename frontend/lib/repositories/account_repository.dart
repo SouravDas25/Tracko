@@ -36,18 +36,17 @@ class AccountRepository {
     }
   }
 
-  Future<legacy.Account> createAccount(
-      String name, String userId, String currency) async {
+  Future<legacy.Account> createAccount(String name, String currency) async {
     final res = await _api.post<Map<String, dynamic>>(ApiConfig.accounts,
-        data: {'name': name, 'userId': userId, 'currency': currency});
+        data: {'name': name, 'currency': currency});
     return _toLegacyAccount(res);
   }
 
   Future<legacy.Account> updateAccount(
-      int id, String name, String userId, String currency) async {
+      int id, String name, String currency) async {
     final res = await _api.put<Map<String, dynamic>>(
         '${ApiConfig.accounts}/$id',
-        data: {'name': name, 'userId': userId, 'currency': currency});
+        data: {'name': name, 'currency': currency});
     return _toLegacyAccount(res);
   }
 

@@ -7,7 +7,6 @@ import com.trako.services.CategoryService;
 import com.trako.services.UserService;
 import com.trako.util.Response;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -45,16 +44,6 @@ public class CategoryController {
             return Response.unauthorized();
         }
         return Response.ok(category);
-    }
-
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<?> getByUserId(@PathVariable @NotBlank String userId) {
-        String currentUserId = userService.loggedInUser().getId();
-        if (!currentUserId.equals(userId)) {
-            return Response.unauthorized();
-        }
-        List<Category> categories = categoryService.findByUserId(currentUserId);
-        return Response.ok(categories);
     }
 
     @PostMapping

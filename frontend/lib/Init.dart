@@ -5,6 +5,7 @@ import 'package:tracko/services/api_client.dart';
 import 'package:tracko/Utils/AppLog.dart';
 import 'package:tracko/Utils/HealthCheckUtil.dart';
 import 'package:dio/dio.dart';
+import 'package:tracko/services/auth_service.dart';
 
 class InitializeApp {
   static Future initialize() async {
@@ -47,8 +48,17 @@ class InitializeApp {
     // Initialize session by fetching user profile
     // Only attempt if configured or on web (since reset() might have cleared it)
     if (ApiConfig.isConfigured) {
-      AppLog.d("InitializeApp: Fetching current user session");
-      await SessionService.getCurrentUser();
+      final loggedIn = await AuthService().isLoggedIn();
+      if (loggedIn) {
+        AppLog.d("InitializeApp: Fetching current user session");
+        try {
+          await SessionService.fetchMe();
+        } catch (e) {
+          AppLog.d("InitializeApp: Session fetch failed: $e");
+        }
+      } else {
+        AppLog.d("InitializeApp: Skipping session fetch (Not logged in)");
+      }
     } else {
       AppLog.d("InitializeApp: Skipping session fetch (Not configured)");
     }

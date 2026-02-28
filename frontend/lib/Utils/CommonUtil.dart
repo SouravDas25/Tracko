@@ -39,19 +39,6 @@ class CommonUtil {
     return DateFormat('MMM dd, yyyy').format(date);
   }
 
-  static Future<String> _getUserSymbol() async {
-    try {
-      final user = await SessionService.getCurrentUser();
-      return getCurrencySymbol(
-          user.baseCurrency.isNotEmpty ? user.baseCurrency : 'INR');
-    } catch (e) {
-      return '₹';
-    }
-  }
-
-  // Note: This is now async-ish if we want to get user symbol properly,
-  // but existing calls are sync. We will assume 'INR' default or pass it in.
-  // For best results, pass the currencySymbol or currencyCode explicitly.
   static String toCurrency(double amount, {String? currencyCode}) {
     if (amount == null) {
       amount = 0;

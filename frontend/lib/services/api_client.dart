@@ -113,6 +113,7 @@ class ApiClient {
             // ignore
           } finally {
             _isAutoSigningOut = false;
+            _suppressAuthHeader = false;
           }
         }
         handler.next(err);

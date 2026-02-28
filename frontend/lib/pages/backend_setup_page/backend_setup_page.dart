@@ -64,7 +64,7 @@ class _BackendSetupPageState extends State<BackendSetupPage> {
 
       // 4. Try to fetch user session (best effort, initializes session if token exists)
       try {
-        await SessionService.getCurrentUser(forceRefresh: true);
+        await SessionService.fetchMe(forceRefresh: true);
       } catch (_) {
         // Ignore session fetch errors here, as the user might just need to login
       }
