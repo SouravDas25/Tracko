@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/api_config.dart';
-import '../Utils/ServerUtil.dart';
 import '../Utils/WidgetUtil.dart';
 import '../Utils/AppLog.dart';
 import 'SessionService.dart';
@@ -63,14 +62,6 @@ class ApiClient {
           return;
         }
         var token = await _readToken();
-        if (token == null || token.isEmpty) {
-          // Backward-compat: older parts of the app store auth token here.
-          token = ServerUtil.authJwtToken;
-          if (token != null && token.isNotEmpty) {
-            // Keep both auth systems in sync.
-            await _writeToken(token);
-          }
-        }
         if (token != null && token.isNotEmpty) {
           options.headers['Authorization'] = 'Bearer $token';
           AppLog.d('[ApiClient] auth header attached for ${options.path}');
