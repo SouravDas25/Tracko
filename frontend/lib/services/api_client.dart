@@ -88,30 +88,50 @@ class ApiClient {
       },
       onError: (DioException err, handler) async {
         final code = err.response?.statusCode;
+        if (code == 401 || code == 403) {
+          AppLog.d(
+              '[ApiClient] onError auth-failure code=$code path=${err.requestOptions.path} autoSigningOut=$_isAutoSigningOut');
+        }
         if ((code == 401 || code == 403) && !_isAutoSigningOut) {
           _isAutoSigningOut = true;
           _suppressAuthHeader = true;
+          AppLog.d('[ApiClient] auto-signout: start');
           try {
             // Perform a full logout to remove any persisted tokens and
             // reset in-memory/session state. This prevents the login
             // page from immediately redirecting back to home due to a
             // lingering token, which can cause a navigation loop.
             await SessionService.logout();
+            AppLog.d('[ApiClient] auto-signout: logout complete');
           } catch (_) {
+            AppLog.d('[ApiClient] auto-signout: logout failed (ignored)');
             // ignore
           }
 
           try {
             final state = WidgetUtil.globalHomeTabState;
             if (state != null && state.mounted) {
-              Navigator.of(state.context).pushNamedAndRemoveUntil(
-                '/login',
-                (route) => false,
-              );
+              final currentRoute = ModalRoute.of(state.context)?.settings.name;
+              if (currentRoute != '/login') {
+                AppLog.d(
+                    '[ApiClient] auto-signout: navigating to /login from route=$currentRoute');
+                Navigator.of(state.context).pushNamedAndRemoveUntil(
+                  '/login',
+                  (route) => false,
+                );
+              } else {
+                AppLog.d(
+                    '[ApiClient] auto-signout: already on /login; skipping navigation');
+              }
+            } else {
+              AppLog.d(
+                  '[ApiClient] auto-signout: no globalHomeTabState available; cannot navigate');
             }
           } catch (_) {
+            AppLog.d('[ApiClient] auto-signout: navigation failed (ignored)');
             // ignore
           } finally {
+            AppLog.d('[ApiClient] auto-signout: end');
             _isAutoSigningOut = false;
             _suppressAuthHeader = false;
           }

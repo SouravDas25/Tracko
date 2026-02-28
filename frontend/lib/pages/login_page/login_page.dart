@@ -4,6 +4,7 @@ import 'package:tracko/services/auth_service.dart';
 import 'package:dio/dio.dart';
 import 'package:tracko/config/api_config.dart';
 import 'package:tracko/pages/backend_setup_page/backend_setup_page.dart';
+import 'package:tracko/Utils/AppLog.dart';
 
 import 'package:tracko/services/SessionService.dart';
 
@@ -51,22 +52,41 @@ class _LoginPage extends State<LoginForm> {
   final _passwordController = TextEditingController();
   bool _submitting = false;
   bool _obscurePassword = true;
+  bool _checkingExistingSession = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final loggedIn = await AuthService().isLoggedIn();
-      if (!mounted) return;
-      if (loggedIn) {
-        // Ensure session is initialized
-        // await SessionService.getCurrentUser();
-
-        // Check again if we are still logged in.
-        // If SessionService.getCurrentUser() triggered a 401, ApiClient would have logged us out.
-        if (mounted && await AuthService().isLoggedIn()) {
-          Navigator.pushReplacementNamed(context, '/home');
+      AppLog.d('[LoginPage] session-check: start');
+      setState(() => _checkingExistingSession = true);
+      try {
+        final hasToken = await AuthService().isLoggedIn();
+        AppLog.d('[LoginPage] session-check: hasToken=$hasToken');
+        if (!mounted) return;
+        if (!hasToken) {
+          AppLog.d('[LoginPage] session-check: no token; stay on /login');
+          return;
         }
+
+        AppLog.d('[LoginPage] session-check: verifying token via /me');
+        await SessionService.fetchMe(forceRefresh: true);
+        AppLog.d('[LoginPage] session-check: /me success; navigating to /home');
+        if (!mounted) return;
+        Navigator.pushReplacementNamed(context, '/home');
+      } catch (_) {
+        AppLog.d(
+            '[LoginPage] session-check: /me failed; logging out and staying on /login');
+        try {
+          await SessionService.logout();
+          AppLog.d('[LoginPage] session-check: logout complete');
+        } catch (_) {
+          AppLog.d('[LoginPage] session-check: logout failed (ignored)');
+          // ignore
+        }
+      } finally {
+        AppLog.d('[LoginPage] session-check: end');
+        if (mounted) setState(() => _checkingExistingSession = false);
       }
     });
   }
@@ -102,29 +122,35 @@ class _LoginPage extends State<LoginForm> {
 
     setState(() => _submitting = true);
     try {
+      AppLog.d('[LoginPage] submit: start');
       final auth = AuthService();
       final token = await auth.signInBasic(
         username: _usernameController.text.trim(),
         password: _passwordController.text,
       );
       if (token != null && token.isNotEmpty) {
-        // Fetch user profile to initialize session and currency settings
-        // await SessionService.getCurrentUser();
+        AppLog.d('[LoginPage] submit: token received; fetching /me');
+        await SessionService.fetchMe(forceRefresh: true);
+        AppLog.d('[LoginPage] submit: /me success; navigating to /home');
 
         if (!mounted) return;
         Navigator.pushReplacementNamed(context, '/home');
       } else {
+        AppLog.d(
+            '[LoginPage] submit: empty token; showing invalid credentials');
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Invalid email or password.')),
         );
       }
     } catch (e) {
+      AppLog.d('[LoginPage] submit: failed error=$e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(_friendlyError(e))),
       );
     } finally {
+      AppLog.d('[LoginPage] submit: end');
       if (mounted) setState(() => _submitting = false);
     }
   }
@@ -136,6 +162,11 @@ class _LoginPage extends State<LoginForm> {
       child: Column(
         children: <Widget>[
           const SizedBox(height: 20),
+          if (_checkingExistingSession)
+            const Padding(
+              padding: EdgeInsets.only(bottom: 12),
+              child: LinearProgressIndicator(minHeight: 2),
+            ),
           TextFormField(
             controller: _usernameController,
             decoration: InputDecoration(
