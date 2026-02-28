@@ -12,6 +12,7 @@ import 'package:tracko/models/transaction.dart';
 import 'package:tracko/repositories/transaction_repository.dart';
 import 'package:tracko/services/api_client.dart';
 import 'package:tracko/services/SessionService.dart';
+import 'package:tracko/di/di.dart';
 
 class CategoryTransactionsPage extends StatefulWidget {
   final Category category;
@@ -215,7 +216,7 @@ class _CategoryTransactionsPageState extends State<CategoryTransactionsPage> {
 
     try {
       // 1. Load Chart Data (Summary)
-      final api = ApiClient();
+      final api = sl<ApiClient>();
 
       final catId = (widget.category.id ?? 0);
       if (catId == 0) {
@@ -295,7 +296,7 @@ class _CategoryTransactionsPageState extends State<CategoryTransactionsPage> {
 
   Future<void> _loadTransactions() async {
     try {
-      final txRepo = TransactionRepository();
+      final txRepo = sl<TransactionRepository>();
       final catId = (widget.category.id ?? 0);
 
       final txs = await txRepo.getAll(

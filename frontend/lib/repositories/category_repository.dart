@@ -4,7 +4,9 @@ import '../models/category.dart' as legacy;
 import '../services/api_client.dart';
 
 class CategoryRepository {
-  final _api = ApiClient();
+  final ApiClient _api;
+
+  CategoryRepository({ApiClient? api}) : _api = api ?? ApiClient();
 
   Future<List<legacy.Category>> getAll() async {
     final res = await _api.get<List<dynamic>>(ApiConfig.categories);

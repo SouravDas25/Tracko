@@ -15,13 +15,14 @@ import 'package:tracko/repositories/transaction_repository.dart';
 import 'package:tracko/repositories/split_repository.dart';
 import 'package:tracko/repositories/contact_repository.dart';
 import 'package:tracko/models/transaction_period_summary.dart';
+import 'package:tracko/di/di.dart';
 
 import 'CategoryController.dart';
 
 class TransactionController {
   static Future<bool> saveTransaction(Transaction transaction) async {
-    final txRepo = TransactionRepository();
-    final splitRepo = SplitRepository();
+    final txRepo = sl<TransactionRepository>();
+    final splitRepo = sl<SplitRepository>();
     bool isUserCountable = true;
 
     if (transaction.transactionType == TransactionType.TRANSFER) {
@@ -82,7 +83,7 @@ class TransactionController {
   }
 
   static Future<bool> saveSplitsInTransaction(Transaction transaction) async {
-    final splitRepo = SplitRepository();
+    final splitRepo = sl<SplitRepository>();
 
     final participants =
         transaction.contacts.where((c) => c.id != null).toList(growable: false);
@@ -111,8 +112,8 @@ class TransactionController {
 
   static Future<Set<backend.Contact>> loadSplits(
       Transaction transaction) async {
-    final splitRepo = SplitRepository();
-    final contactRepo = ContactRepository();
+    final splitRepo = sl<SplitRepository>();
+    final contactRepo = sl<ContactRepository>();
     final txId = transaction.id ?? 0;
 
     if (txId == 0) {
@@ -149,7 +150,7 @@ class TransactionController {
 
   static Future<double> getTotalBetween(DateTime begin, DateTime end,
       [int? accountId]) async {
-    final txRepo = TransactionRepository();
+    final txRepo = sl<TransactionRepository>();
 
     final summary = accountId == null
         ? await txRepo.getSummary(
@@ -204,7 +205,7 @@ class TransactionController {
     DateTime end, {
     List<int>? accountIds,
   }) async {
-    final txRepo = TransactionRepository();
+    final txRepo = sl<TransactionRepository>();
 
     if (accountIds != null && accountIds.length == 1) {
       return await txRepo.getAccountSummary(
@@ -219,7 +220,7 @@ class TransactionController {
   }
 
   static Future<int> totalTransactionCount({List<int>? accountIds}) async {
-    final txRepo = TransactionRepository();
+    final txRepo = sl<TransactionRepository>();
     DateTime month = SettingUtil.currentMonth;
     DateTime nextMonth = SettingUtil.nextMonth;
 
@@ -233,7 +234,7 @@ class TransactionController {
 
   static Future<List<Transaction>> getTransactionsForSelectedMonth(
       {List<int>? accountIds, DateTime? month}) async {
-    final txRepo = TransactionRepository();
+    final txRepo = sl<TransactionRepository>();
     final DateTime start = month ?? SettingUtil.currentMonth;
     final DateTime end = DateTime.utc(start.year, start.month + 1);
 
@@ -262,7 +263,7 @@ class TransactionController {
       DateTime? month,
       int page = 0,
       int size = 20}) async {
-    final txRepo = TransactionRepository();
+    final txRepo = sl<TransactionRepository>();
     final DateTime start = month ?? SettingUtil.currentMonth;
 
     List<Transaction> transactions = await txRepo.getAll(
@@ -301,13 +302,13 @@ class TransactionController {
 
   static Future<List<TransactionPeriodSummary>> getMonthlySummaries(int year,
       {List<int>? accountIds}) async {
-    final txRepo = TransactionRepository();
+    final txRepo = sl<TransactionRepository>();
     return await txRepo.getMonthlySummaries(year, accountIds: accountIds);
   }
 
   static Future<List<TransactionPeriodSummary>> getYearlySummaries(
       {List<int>? accountIds}) async {
-    final txRepo = TransactionRepository();
+    final txRepo = sl<TransactionRepository>();
     return await txRepo.getYearlySummaries(accountIds: accountIds);
   }
 
@@ -319,7 +320,7 @@ class TransactionController {
   }
 
   static Future<List<Transaction>> getRecentTransaction() async {
-    final txRepo = TransactionRepository();
+    final txRepo = sl<TransactionRepository>();
     DateTime month = SettingUtil.currentMonth;
     List<Transaction> transactions = await txRepo.getAll(
       month: month.month,
@@ -371,14 +372,14 @@ class TransactionController {
   }
 
   static Future<Transaction> findById(int id) async {
-    final txRepo = TransactionRepository();
+    final txRepo = sl<TransactionRepository>();
     return await txRepo.getById(id);
   }
 
   static Future<int> deleteById(int transactionId) async {
     // Use backend repositories
-    final splitRepo = SplitRepository();
-    final txRepo = TransactionRepository();
+    final splitRepo = sl<SplitRepository>();
+    final txRepo = sl<TransactionRepository>();
     // Remove splits first to mirror previous logic
     final splits = await splitRepo.getByTransactionId(transactionId);
     for (final s in splits) {
@@ -392,7 +393,7 @@ class TransactionController {
 
   static void clear() async {
     // Backend route doesn't expose bulk delete; perform best-effort by fetching and deleting
-    final txRepo = TransactionRepository();
+    final txRepo = sl<TransactionRepository>();
 
     final all = await txRepo.getAll(
       page: 0,

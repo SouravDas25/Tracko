@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:tracko/config/api_config.dart';
+import 'package:tracko/di/di.dart';
 import 'package:tracko/services/SessionService.dart';
 import 'package:tracko/services/api_client.dart';
 import 'package:tracko/Utils/AppLog.dart';
@@ -18,7 +19,7 @@ class InitializeApp {
 
     // Ensure ApiClient is using the loaded URL
     if (ApiConfig.isConfigured) {
-      ApiClient().updateBaseUrl(ApiConfig.baseUrl);
+      sl<ApiClient>().updateBaseUrl(ApiConfig.baseUrl);
     }
 
     // If configured and not web, verify connection
@@ -48,11 +49,11 @@ class InitializeApp {
     // Initialize session by fetching user profile
     // Only attempt if configured or on web (since reset() might have cleared it)
     if (ApiConfig.isConfigured) {
-      final loggedIn = await AuthService().isLoggedIn();
+      final loggedIn = await sl<AuthService>().isLoggedIn();
       if (loggedIn) {
         AppLog.d("InitializeApp: Fetching current user session");
         try {
-          await SessionService.fetchMe();
+          await sl<SessionService>().fetchMe();
         } catch (e) {
           AppLog.d("InitializeApp: Session fetch failed: $e");
         }

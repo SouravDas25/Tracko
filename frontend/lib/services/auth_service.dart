@@ -5,8 +5,10 @@ import '../config/api_config.dart';
 import 'api_client.dart';
 
 class AuthService {
-  final _api = ApiClient();
+  final ApiClient _api;
   final _storage = const FlutterSecureStorage();
+
+  AuthService({required ApiClient api}) : _api = api;
 
   Future<void> _writeToken(String token) async {
     if (kIsWeb) {

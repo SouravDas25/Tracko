@@ -4,7 +4,9 @@ import '../models/json_store.dart';
 import '../services/api_client.dart';
 
 class JsonStoreRepository {
-  final _api = ApiClient();
+  final ApiClient _api;
+
+  JsonStoreRepository({ApiClient? api}) : _api = api ?? ApiClient();
 
   Future<List<JsonStoreModel>> getAll() async {
     final res = await _api.get<List<dynamic>>(ApiConfig.jsonStore);

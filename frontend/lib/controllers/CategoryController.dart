@@ -8,26 +8,27 @@ import 'package:tracko/repositories/transaction_repository.dart';
 import 'package:tracko/services/SessionService.dart';
 import 'package:tracko/Utils/SettingUtil.dart';
 import 'package:dio/dio.dart';
+import 'package:tracko/di/di.dart';
 
 class CategoryController {
   static Future<List<Category>> getAllCategories() async {
-    final repo = CategoryRepository();
+    final repo = sl<CategoryRepository>();
     return await repo.getAll();
   }
 
   static Future<Category> findById(int id) async {
-    final repo = CategoryRepository();
+    final repo = sl<CategoryRepository>();
     return await repo.getById(id);
   }
 
   static Future<Category> getDefaultCategory() async {
-    final repo = CategoryRepository();
+    final repo = sl<CategoryRepository>();
     return await repo.getById(1);
   }
 
   static Future<List<ChartEntry>> getPieChartData() async {
-    final txRepo = TransactionRepository();
-    final catRepo = CategoryRepository();
+    final txRepo = sl<TransactionRepository>();
+    final catRepo = sl<CategoryRepository>();
 
     final begin = SettingUtil.currentMonth;
 
@@ -69,7 +70,7 @@ class CategoryController {
   }
 
   static deleteCategory(int id) async {
-    final repo = CategoryRepository();
+    final repo = sl<CategoryRepository>();
     try {
       await repo.delete(id);
     } on DioException catch (e) {
@@ -82,7 +83,7 @@ class CategoryController {
   }
 
   static Future<Category> findOrCreateByName(String name) async {
-    final repo = CategoryRepository();
+    final repo = sl<CategoryRepository>();
     return await repo.findOrCreateByName(name);
   }
 }

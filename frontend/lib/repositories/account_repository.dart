@@ -4,7 +4,9 @@ import '../models/account.dart' as legacy;
 import '../services/api_client.dart';
 
 class AccountRepository {
-  final _api = ApiClient();
+  final ApiClient _api;
+
+  AccountRepository({ApiClient? api}) : _api = api ?? ApiClient();
 
   Future<List<legacy.Account>> getAllAccounts() async {
     final res = await _api.get<List<dynamic>>(ApiConfig.accounts);

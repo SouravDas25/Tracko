@@ -6,6 +6,7 @@ import 'package:tracko/repositories/contact_repository.dart';
 import 'package:tracko/repositories/split_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
+import 'package:tracko/di/di.dart';
 
 class _ContactDue {
   final Contact contact;
@@ -23,12 +24,19 @@ class SplitPage extends StatefulWidget {
 
 class _SplitPage extends RefreshableState<SplitPage> {
   RefreshController refreshController = new RefreshController();
-  final _contactRepo = ContactRepository();
-  final _splitRepo = SplitRepository();
+  late final ContactRepository _contactRepo;
+  late final SplitRepository _splitRepo;
   List<_ContactDue> contacts = [];
   String? _error;
 
   _SplitPage();
+
+  @override
+  void initState() {
+    super.initState();
+    _contactRepo = sl<ContactRepository>();
+    _splitRepo = sl<SplitRepository>();
+  }
 
   @override
   void didUpdateWidget(SplitPage oldWidget) {

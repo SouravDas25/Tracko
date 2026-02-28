@@ -4,7 +4,9 @@ import 'package:tracko/services/api_client.dart';
 import 'package:tracko/config/api_config.dart';
 
 class UserRepository {
-  final ApiClient _api = ApiClient();
+  final ApiClient _api;
+
+  UserRepository({ApiClient? api}) : _api = api ?? ApiClient();
 
   Future<User> getMe() async {
     try {

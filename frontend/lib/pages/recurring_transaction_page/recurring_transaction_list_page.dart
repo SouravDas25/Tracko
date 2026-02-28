@@ -4,6 +4,7 @@ import 'package:tracko/models/recurring_transaction.dart';
 import 'recurring_transaction_form_page.dart';
 import 'package:tracko/repositories/recurring_transaction_repository.dart';
 import 'package:intl/intl.dart';
+import 'package:tracko/di/di.dart';
 
 class RecurringTransactionListPage extends StatefulWidget {
   @override
@@ -13,14 +14,14 @@ class RecurringTransactionListPage extends StatefulWidget {
 
 class _RecurringTransactionListPageState
     extends State<RecurringTransactionListPage> {
-  final RecurringTransactionRepository _repository =
-      RecurringTransactionRepository();
+  late final RecurringTransactionRepository _repository;
   List<RecurringTransaction> _transactions = [];
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
+    _repository = sl<RecurringTransactionRepository>();
     _loadData();
   }
 

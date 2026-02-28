@@ -15,6 +15,7 @@ import 'package:tracko/repositories/user_repository.dart';
 import 'package:tracko/Utils/HealthCheckUtil.dart';
 import 'package:tracko/services/SessionService.dart';
 import 'package:tracko/services/api_client.dart';
+import 'package:tracko/di/di.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:tracko/config/api_config.dart';
@@ -39,11 +40,11 @@ class _SettingsPage extends State<SettingsPage> {
 
   void initData() async {
     try {
-      user = await SessionService.fetchMe();
+      user = await sl<SessionService>().fetchMe();
     } catch (e) {
       print("Error loading user: $e");
     }
-    if (this.mounted) setState(() {});
+    setState(() {});
   }
 
   void _showResetDatabaseDialog() {
@@ -55,7 +56,7 @@ class _SettingsPage extends State<SettingsPage> {
         deleteCallback: () async {
           LoadingDialog.show(context);
           try {
-            await UserRepository().resetUserData();
+            await sl<UserRepository>().resetUserData();
             Navigator.pop(context); // Hide loading
             await _logout();
           } catch (e) {
@@ -76,7 +77,7 @@ class _SettingsPage extends State<SettingsPage> {
         deleteCallback: () async {
           LoadingDialog.show(context);
           try {
-            await UserRepository().resetUserTransactions();
+            await sl<UserRepository>().resetUserTransactions();
             Navigator.pop(context); // Hide loading
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('All transactions deleted successfully')),
@@ -132,7 +133,7 @@ class _SettingsPage extends State<SettingsPage> {
                     TextButton(
                       onPressed: () async {
                         await ApiConfig.reset();
-                        ApiClient().updateBaseUrl(ApiConfig.baseUrl);
+                        sl<ApiClient>().updateBaseUrl(ApiConfig.baseUrl);
                         if (mounted) setState(() {});
                         Navigator.pop(context);
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -167,7 +168,7 @@ class _SettingsPage extends State<SettingsPage> {
 
                         if (success) {
                           await ApiConfig.setBaseUrl(cleanUrl);
-                          ApiClient().updateBaseUrl(ApiConfig.baseUrl);
+                          sl<ApiClient>().updateBaseUrl(ApiConfig.baseUrl);
                           if (mounted) setState(() {});
                           Navigator.pop(context);
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -196,7 +197,7 @@ class _SettingsPage extends State<SettingsPage> {
   }
 
   Future<void> _logout() async {
-    await SessionService.logout();
+    await sl<SessionService>().logout();
     Navigator.of(context).pushNamedAndRemoveUntil(
       "/login",
       (route) => false,

@@ -13,6 +13,7 @@ import 'package:tracko/pages/smart_add_item/components/transaction_type_selector
 import 'package:tracko/pages/smart_add_item/components/transaction_details_form.dart';
 import 'package:tracko/pages/smart_add_item/components/amount_input_section.dart';
 import 'package:tracko/services/SessionService.dart';
+import 'package:tracko/di/di.dart';
 
 class RecurringTransactionFormPage extends StatefulWidget {
   final RecurringTransaction? transaction;
@@ -28,9 +29,9 @@ class RecurringTransactionFormPage extends StatefulWidget {
 class _RecurringTransactionFormPageState
     extends State<RecurringTransactionFormPage> {
   final _formKey = GlobalKey<FormState>();
-  final _repository = RecurringTransactionRepository();
-  final _accountRepository = AccountRepository();
-  final _categoryRepository = CategoryRepository();
+  late final RecurringTransactionRepository _repository;
+  late final AccountRepository _accountRepository;
+  late final CategoryRepository _categoryRepository;
 
   late MoneyMaskedTextController _amountController;
   late TextEditingController _nameController;
@@ -62,6 +63,9 @@ class _RecurringTransactionFormPageState
   @override
   void initState() {
     super.initState();
+    _repository = sl<RecurringTransactionRepository>();
+    _accountRepository = sl<AccountRepository>();
+    _categoryRepository = sl<CategoryRepository>();
     final rt = widget.transaction;
     _transactionType = rt?.transactionType ?? TransactionType.DEBIT;
     _frequency = rt?.frequency ?? Frequency.MONTHLY;
@@ -108,7 +112,7 @@ class _RecurringTransactionFormPageState
     try {
       final accounts = await _accountRepository.getAllAccounts();
       final categories = await _categoryRepository.getAll();
-      final user = await SessionService.fetchMe();
+      final user = await sl<SessionService>().fetchMe();
 
       setState(() {
         _accounts = accounts;

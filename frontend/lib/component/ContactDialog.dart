@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tracko/models/contact.dart';
 import 'package:tracko/repositories/contact_repository.dart';
+import 'package:tracko/di/di.dart';
 
 class ContactDialog extends StatelessWidget {
   final Function callback;
@@ -33,7 +34,7 @@ class ContactDialog extends StatelessWidget {
     c.phoneNo = _phoneController.text.trim();
     c.email = _emailController.text.trim();
 
-    final repo = ContactRepository();
+    final repo = sl<ContactRepository>();
     if (c.id == null) {
       final created = await repo.create(c);
       c.id = created.id;

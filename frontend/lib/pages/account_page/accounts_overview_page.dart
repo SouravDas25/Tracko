@@ -6,6 +6,7 @@ import 'package:tracko/controllers/AccountController.dart';
 import 'package:tracko/models/account.dart';
 import 'package:tracko/repositories/account_repository.dart';
 import 'package:tracko/pages/transaction_list_page/transaction_list_page.dart';
+import 'package:tracko/di/di.dart';
 
 class AccountsOverviewPage extends StatefulWidget {
   const AccountsOverviewPage({super.key});
@@ -23,7 +24,7 @@ class _AccountsOverviewPageState extends AsyncLoadState<AccountsOverviewPage> {
     try {
       accounts = await AccountController.getAllAccounts();
       try {
-        balances = await AccountRepository().getAccountBalances();
+        balances = await sl<AccountRepository>().getAccountBalances();
       } catch (_) {
         balances = {};
       }

@@ -3,6 +3,7 @@ import 'package:tracko/component/AsynLoadState.dart';
 import 'package:tracko/models/contact.dart';
 import 'package:tracko/repositories/contact_repository.dart';
 import 'package:flutter/material.dart';
+import 'package:tracko/di/di.dart';
 
 //
 // ignore: camel_case_types
@@ -23,7 +24,7 @@ class CustomContact {
 }
 
 class SelectContactList extends AsyncLoadState<SelectContactPage> {
-  final _repo = ContactRepository();
+  late final ContactRepository _repo;
   List<CustomContact> visibleContacts = <CustomContact>[];
   List<CustomContact> allContacts = <CustomContact>[];
   List<CustomContact> selectedContacts = <CustomContact>[];
@@ -35,6 +36,12 @@ class SelectContactList extends AsyncLoadState<SelectContactPage> {
 
   TextEditingController searchController = new TextEditingController();
   String filter = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _repo = sl<ContactRepository>();
+  }
 
   initContactsData() async {
     await refreshContacts();

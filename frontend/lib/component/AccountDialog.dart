@@ -4,6 +4,7 @@ import 'package:tracko/models/user.dart';
 import 'package:tracko/repositories/account_repository.dart';
 import 'package:tracko/services/SessionService.dart';
 import 'package:flutter/material.dart';
+import 'package:tracko/di/di.dart';
 
 class AccountDialog extends StatefulWidget {
   final Function callback;
@@ -32,7 +33,7 @@ class _AccountDialogState extends State<AccountDialog> {
       isEdit = true;
     } else {
       account = Account();
-      selectedCurrency = SessionService.currentCurrencySymbol == '₹'
+      selectedCurrency = sl<SessionService>().currentCurrencySymbol == '₹'
           ? 'INR'
           : 'INR'; // Just default to INR, backend handles defaults too
     }
@@ -46,7 +47,7 @@ class _AccountDialogState extends State<AccountDialog> {
     account.name = name;
     account.currency = selectedCurrency;
 
-    final repo = AccountRepository();
+    final repo = sl<AccountRepository>();
 
     if (account.id == null) {
       final created = await repo.createAccount(account.name, account.currency);

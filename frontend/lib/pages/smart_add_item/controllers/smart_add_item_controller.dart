@@ -11,6 +11,7 @@ import 'package:tracko/models/transaction.dart';
 import 'package:tracko/repositories/contact_repository.dart';
 import 'package:tracko/services/SessionService.dart';
 import 'package:tracko/Utils/enums.dart';
+import 'package:tracko/di/di.dart';
 
 class SmartAddItemController extends ChangeNotifier {
   final Transaction transaction;
@@ -45,11 +46,12 @@ class SmartAddItemController extends ChangeNotifier {
   List<Category> categories = [];
   List<Account> accounts = [];
   List<Contact> myContacts = [];
-  final _contactRepo = ContactRepository();
+  late final ContactRepository _contactRepo;
 
   bool isLoading = true;
 
   SmartAddItemController(this.transaction) : isEdit = transaction.id != null {
+    _contactRepo = sl<ContactRepository>();
     _initFromTransaction();
     _setupListeners();
     initData();
@@ -94,7 +96,7 @@ class SmartAddItemController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final user = await SessionService.fetchMe();
+      final user = await sl<SessionService>().fetchMe();
       baseCurrency = user.baseCurrency.isNotEmpty ? user.baseCurrency : 'INR';
 
       availableCurrencies = [baseCurrency];

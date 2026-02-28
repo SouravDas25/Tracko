@@ -8,6 +8,7 @@ import '../Utils/ServerUtil.dart';
 import '../Utils/WidgetUtil.dart';
 import '../Utils/AppLog.dart';
 import 'SessionService.dart';
+import 'package:tracko/di/di.dart';
 
 class ApiClient {
   static final ApiClient _instance = ApiClient._internal();
@@ -101,7 +102,7 @@ class ApiClient {
             // reset in-memory/session state. This prevents the login
             // page from immediately redirecting back to home due to a
             // lingering token, which can cause a navigation loop.
-            await SessionService.logout();
+            await sl<SessionService>().logout();
             AppLog.d('[ApiClient] auto-signout: logout complete');
           } catch (_) {
             AppLog.d('[ApiClient] auto-signout: logout failed (ignored)');

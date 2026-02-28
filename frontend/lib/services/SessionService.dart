@@ -1,24 +1,31 @@
 import 'package:tracko/Utils/ConstantUtil.dart';
 import 'package:tracko/Utils/ServerUtil.dart';
-import 'package:tracko/controllers/UserController.dart';
-import 'package:tracko/dtos/GlobalAccountResponse.dart';
 import 'package:tracko/models/user.dart';
 import 'package:tracko/repositories/user_repository.dart';
 import 'package:tracko/services/api_client.dart';
 import 'package:tracko/services/auth_service.dart';
 
 class SessionService {
-  static User? _loggedInUser;
-  static String currentCurrencySymbol = '₹';
+  final AuthService _auth;
+  final UserRepository _userRepo;
 
-  static void clearCache() {
+  User? _loggedInUser;
+  String _currentCurrencySymbol = '₹';
+
+  SessionService({required AuthService auth, required UserRepository userRepo})
+      : _auth = auth,
+        _userRepo = userRepo;
+
+  String get currentCurrencySymbol => _currentCurrencySymbol;
+
+  void clearCache() {
     _loggedInUser = null;
-    currentCurrencySymbol = '₹';
+    _currentCurrencySymbol = '₹';
   }
 
-  static void setCurrentUser(User user) {
+  void setCurrentUser(User user) {
     _loggedInUser = user;
-    currentCurrencySymbol = ConstantUtil.getCurrencySymbol(
+    _currentCurrencySymbol = ConstantUtil.getCurrencySymbol(
         user.baseCurrency.isNotEmpty ? user.baseCurrency : 'INR');
   }
 
@@ -27,9 +34,9 @@ class SessionService {
   //   return _loggedInUser!;
   // }
 
-  static logout() async {
+  Future<void> logout() async {
     try {
-      await AuthService().logout();
+      await _auth.logout();
     } catch (_) {
       // ignore
     }
@@ -39,13 +46,12 @@ class SessionService {
     clearCache();
   }
 
-  static Future<User> fetchMe({bool forceRefresh = false}) async {
+  Future<User> fetchMe({bool forceRefresh = false}) async {
     if (_loggedInUser != null && !forceRefresh) {
       return _loggedInUser!;
     }
 
-    final userRepo = UserRepository();
-    final backendUser = await userRepo.getMe();
+    final backendUser = await _userRepo.getMe();
     setCurrentUser(backendUser);
     return backendUser;
   }

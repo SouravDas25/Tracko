@@ -1,5 +1,6 @@
 import 'package:tracko/Init.dart';
 import 'package:tracko/config/api_config.dart';
+import 'package:tracko/di/di.dart';
 import 'package:tracko/pages/backend_setup_page/backend_setup_page.dart';
 import 'package:tracko/pages/login_page/login_page.dart';
 import 'package:tracko/pages/route.dart';
@@ -11,6 +12,7 @@ import 'package:tracko/Utils/ssl_bypass.dart'
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   enableSslBypass(); // Globally ignore SSL errors for self-signed certs
+  await setupDI();
   await InitializeApp.initialize();
   runApp(MyApp());
 }

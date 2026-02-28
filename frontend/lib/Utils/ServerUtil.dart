@@ -7,6 +7,7 @@ import 'package:tracko/models/transaction.dart';
 import 'package:tracko/models/user.dart';
 import 'package:tracko/services/api_client.dart';
 import 'package:dio/dio.dart';
+import 'package:tracko/di/di.dart';
 
 class ServerUtil {
   static String? authJwtToken;
@@ -32,7 +33,7 @@ class ServerUtil {
     var headers = {"Content-Type": "application/json"};
     var body = {"phoneNo": user.phoneNo, "password": user.password};
     String data = convert.jsonEncode(body);
-    final dio = ApiClient().dio;
+    final dio = sl<ApiClient>().dio;
     final response =
         await dio.postUri(url, data: data, options: Options(headers: headers));
     if (response.statusCode == 200) {
@@ -53,7 +54,7 @@ class ServerUtil {
     var url = Uri.parse(DestinationUtil.javaBackend() +
         "api/user/byPhoneNo?phone_no=" +
         Uri.encodeQueryComponent(phoneNumber));
-    final dio = ApiClient().dio;
+    final dio = sl<ApiClient>().dio;
     var response = await dio.getUri(url, options: Options(headers: authHeader));
     if (response.statusCode == 200) {
       final jsonResponse = response.data is String
@@ -79,10 +80,9 @@ class ServerUtil {
       "isShadow": 0
     };
     String data = convert.jsonEncode(requestBody);
-//    data = Uri.encodeQueryComponent(data);
     var header = {"Content-Type": "application/json"};
     header.addAll(authHeader);
-    final dio = ApiClient().dio;
+    final dio = sl<ApiClient>().dio;
     final response =
         await dio.postUri(url, data: data, options: Options(headers: header));
     print(response.data);
@@ -96,7 +96,6 @@ class ServerUtil {
   }
 
   static Future<Transaction?> extractSmsData(dynamic message) async {
-//    String urlPart = "apis/";
     String urlPart = "api/dialog";
     var url = Uri.parse(DestinationUtil.pythonBackend() + urlPart);
     Map<String, String> body = new Map();
@@ -105,10 +104,9 @@ class ServerUtil {
     body['date'] =
         (message?.dateSent ?? message?.date ?? DateTime.now()).toString();
     String data = convert.jsonEncode(body);
-//    data = Uri.encodeQueryComponent(data);
     var header = {"Content-Type": "application/json"};
     header.addAll(authHeader);
-    final dio = ApiClient().dio;
+    final dio = sl<ApiClient>().dio;
     final response =
         await dio.postUri(url, data: data, options: Options(headers: header));
 
@@ -116,7 +114,6 @@ class ServerUtil {
       final jsonResponse = response.data is String
           ? convert.jsonDecode(response.data as String)
           : response.data as Map<String, dynamic>;
-//      print(jsonResponse);
       Transaction transaction =
           await TransactionController.fromJson(jsonResponse);
       if (transaction != null) {
@@ -141,10 +138,9 @@ class ServerUtil {
       "isShadow": isShadow ? 1 : 0
     };
     String data = convert.jsonEncode(requestBody);
-//    data = Uri.encodeQueryComponent(data);
     var headers = {"Content-Type": "application/json"};
     headers.addAll(authHeader);
-    final dio = ApiClient().dio;
+    final dio = sl<ApiClient>().dio;
     final response =
         await dio.postUri(url, data: data, options: Options(headers: headers));
     print(response.data);

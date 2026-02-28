@@ -5,6 +5,7 @@ import 'package:tracko/services/api_client.dart';
 import 'package:tracko/Utils/AppLog.dart';
 import 'package:tracko/Utils/HealthCheckUtil.dart';
 import 'package:tracko/services/SessionService.dart';
+import 'package:tracko/di/di.dart';
 import 'package:dio/dio.dart';
 
 class BackendSetupPage extends StatefulWidget {
@@ -52,7 +53,7 @@ class _BackendSetupPageState extends State<BackendSetupPage> {
       await ApiConfig.setBaseUrl(url);
 
       // 2. Update running ApiClient instance
-      ApiClient().updateBaseUrl(url);
+      sl<ApiClient>().updateBaseUrl(url);
 
       // 3. Verify connection
       // We attempt to hit the health endpoint with a short timeout.
@@ -64,7 +65,7 @@ class _BackendSetupPageState extends State<BackendSetupPage> {
 
       // 4. Try to fetch user session (best effort, initializes session if token exists)
       try {
-        await SessionService.fetchMe(forceRefresh: true);
+        await sl<SessionService>().fetchMe(forceRefresh: true);
       } catch (_) {
         // Ignore session fetch errors here, as the user might just need to login
       }

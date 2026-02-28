@@ -1,5 +1,6 @@
 import 'package:tracko/Utils/enums.dart';
 import 'package:tracko/services/SessionService.dart';
+import 'package:tracko/di/di.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -43,7 +44,7 @@ class CommonUtil {
     if (amount == null) {
       amount = 0;
     }
-    String symbol = SessionService.currentCurrencySymbol;
+    String symbol = sl<SessionService>().currentCurrencySymbol;
     String code = currencyCode ?? 'INR';
     if (currencyCode != null) {
       symbol = getCurrencySymbol(currencyCode);

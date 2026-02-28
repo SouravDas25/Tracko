@@ -5,7 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:tracko/config/api_config.dart';
 import 'package:tracko/pages/backend_setup_page/backend_setup_page.dart';
 import 'package:tracko/Utils/AppLog.dart';
-
+import 'package:tracko/di/di.dart';
 import 'package:tracko/services/SessionService.dart';
 
 class LoginPage extends StatelessWidget {
@@ -61,7 +61,7 @@ class _LoginPage extends State<LoginForm> {
       AppLog.d('[LoginPage] session-check: start');
       setState(() => _checkingExistingSession = true);
       try {
-        final hasToken = await AuthService().isLoggedIn();
+        final hasToken = await sl<AuthService>().isLoggedIn();
         AppLog.d('[LoginPage] session-check: hasToken=$hasToken');
         if (!mounted) return;
         if (!hasToken) {
@@ -70,7 +70,7 @@ class _LoginPage extends State<LoginForm> {
         }
 
         AppLog.d('[LoginPage] session-check: verifying token via /me');
-        await SessionService.fetchMe(forceRefresh: true);
+        await sl<SessionService>().fetchMe(forceRefresh: true);
         AppLog.d('[LoginPage] session-check: /me success; navigating to /home');
         if (!mounted) return;
         Navigator.pushReplacementNamed(context, '/home');
@@ -78,7 +78,7 @@ class _LoginPage extends State<LoginForm> {
         AppLog.d(
             '[LoginPage] session-check: /me failed; logging out and staying on /login');
         try {
-          await SessionService.logout();
+          await sl<SessionService>().logout();
           AppLog.d('[LoginPage] session-check: logout complete');
         } catch (_) {
           AppLog.d('[LoginPage] session-check: logout failed (ignored)');
@@ -123,14 +123,14 @@ class _LoginPage extends State<LoginForm> {
     setState(() => _submitting = true);
     try {
       AppLog.d('[LoginPage] submit: start');
-      final auth = AuthService();
+      final auth = sl<AuthService>();
       final token = await auth.signInBasic(
         username: _usernameController.text.trim(),
         password: _passwordController.text,
       );
       if (token != null && token.isNotEmpty) {
         AppLog.d('[LoginPage] submit: token received; fetching /me');
-        await SessionService.fetchMe(forceRefresh: true);
+        await sl<SessionService>().fetchMe(forceRefresh: true);
         AppLog.d('[LoginPage] submit: /me success; navigating to /home');
 
         if (!mounted) return;

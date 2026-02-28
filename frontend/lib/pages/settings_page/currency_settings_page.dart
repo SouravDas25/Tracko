@@ -7,6 +7,7 @@ import 'package:tracko/models/user_currency.dart';
 import 'package:tracko/repositories/user_currency_repository.dart';
 import 'package:tracko/services/SessionService.dart';
 import 'package:tracko/services/exchange_rate_service.dart';
+import 'package:tracko/di/di.dart';
 import 'package:flutter/material.dart';
 
 class CurrencySettingsPage extends StatefulWidget {
@@ -17,19 +18,21 @@ class CurrencySettingsPage extends StatefulWidget {
 class _CurrencySettingsPageState extends State<CurrencySettingsPage> {
   late String baseCurrency;
   List<UserCurrency> secondaryCurrencies = [];
-  final UserCurrencyRepository _repo = UserCurrencyRepository();
-  final ExchangeRateService _rateService = ExchangeRateService();
+  late final UserCurrencyRepository _repo;
+  late final ExchangeRateService _rateService;
   bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
+    _repo = sl<UserCurrencyRepository>();
+    _rateService = sl<ExchangeRateService>();
     _loadData();
   }
 
   _loadData() async {
     try {
-      final user = await SessionService.fetchMe();
+      final user = await sl<SessionService>().fetchMe();
       baseCurrency = user.baseCurrency;
       secondaryCurrencies = await _repo.getAll();
     } catch (e) {

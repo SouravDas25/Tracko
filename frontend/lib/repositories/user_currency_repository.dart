@@ -3,7 +3,9 @@ import 'package:tracko/models/user_currency.dart';
 import 'package:tracko/services/api_client.dart';
 
 class UserCurrencyRepository {
-  final _api = ApiClient();
+  final ApiClient _api;
+
+  UserCurrencyRepository({ApiClient? api}) : _api = api ?? ApiClient();
 
   Future<List<UserCurrency>> getAll() async {
     final res = await _api.get<List<dynamic>>(ApiConfig.userCurrencies);

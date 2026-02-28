@@ -7,6 +7,7 @@ import 'package:tracko/component/FLushDialog.dart';
 import 'package:tracko/component/screen.dart';
 import 'package:tracko/models/contact.dart';
 import 'package:tracko/repositories/contact_repository.dart';
+import 'package:tracko/di/di.dart';
 
 class ContactPage extends StatefulWidget {
   @override
@@ -16,8 +17,14 @@ class ContactPage extends StatefulWidget {
 }
 
 class _ContactPageState extends AsyncLoadState<ContactPage> {
-  final _repo = ContactRepository();
+  late final ContactRepository _repo;
   List<Contact> contacts = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _repo = sl<ContactRepository>();
+  }
 
   @override
   asyncLoad() async {

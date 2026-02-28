@@ -11,7 +11,9 @@ import '../Utils/AppLog.dart';
 import '../models/transaction_period_summary.dart';
 
 class TransactionRepository {
-  final _api = ApiClient();
+  final ApiClient _api;
+
+  TransactionRepository({ApiClient? api}) : _api = api ?? ApiClient();
 
   Future<List<TransactionPeriodSummary>> getMonthlySummaries(int year,
       {List<int>? accountIds}) async {

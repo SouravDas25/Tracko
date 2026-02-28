@@ -3,7 +3,9 @@ import 'package:tracko/models/recurring_transaction.dart';
 import 'package:tracko/services/api_client.dart';
 
 class RecurringTransactionRepository {
-  final _api = ApiClient();
+  final ApiClient _api;
+
+  RecurringTransactionRepository({ApiClient? api}) : _api = api ?? ApiClient();
 
   Future<List<RecurringTransaction>> getAll() async {
     final res = await _api.get<List<dynamic>>(ApiConfig.recurringTransactions);

@@ -3,6 +3,7 @@ import 'package:tracko/component/AsynLoadState.dart';
 import 'package:tracko/models/contact.dart';
 import 'package:tracko/repositories/contact_repository.dart';
 import 'package:flutter/material.dart';
+import 'package:tracko/di/di.dart';
 
 class SelectBackendContactPage extends StatefulWidget {
   createState() {
@@ -19,7 +20,7 @@ class _CustomContact {
 
 class _SelectBackendContactList
     extends AsyncLoadState<SelectBackendContactPage> {
-  final _repo = ContactRepository();
+  late final ContactRepository _repo;
 
   List<_CustomContact> visibleContacts = <_CustomContact>[];
   List<_CustomContact> allContacts = <_CustomContact>[];
@@ -30,6 +31,12 @@ class _SelectBackendContactList
 
   TextEditingController searchController = new TextEditingController();
   String filter = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _repo = sl<ContactRepository>();
+  }
 
   @override
   void dispose() {

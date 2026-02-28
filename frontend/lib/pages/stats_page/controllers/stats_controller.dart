@@ -7,6 +7,7 @@ import 'package:tracko/models/account.dart';
 import 'package:tracko/repositories/account_repository.dart';
 import 'package:tracko/Utils/ChartUtil.dart';
 import 'package:tracko/services/api_client.dart';
+import 'package:tracko/di/di.dart';
 
 enum StatsRange { weekly, monthly, yearly, custom }
 
@@ -106,7 +107,7 @@ class StatsController extends ChangeNotifier {
 
   Future<void> _loadAccounts() async {
     try {
-      final repo = AccountRepository();
+      final repo = sl<AccountRepository>();
       _accounts = await repo.getAllAccounts();
       notifyListeners();
     } catch (e) {
@@ -223,7 +224,7 @@ class StatsController extends ChangeNotifier {
       final kindType = _kind == StatsKind.expense
           ? TransactionType.DEBIT
           : TransactionType.CREDIT;
-      final api = ApiClient();
+      final api = sl<ApiClient>();
       final res = await api.get<Map<String, dynamic>>(
         '${ApiConfig.stats}/summary',
         query: {

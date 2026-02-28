@@ -11,6 +11,7 @@ import 'package:tracko/repositories/split_repository.dart';
 import 'package:tracko/repositories/transaction_repository.dart';
 import 'package:flutter/material.dart' hide Split;
 import 'package:intl/intl.dart';
+import 'package:tracko/di/di.dart';
 
 class SplitByContact extends StatefulWidget {
   final Contact contact;
@@ -27,8 +28,15 @@ class _SplitByContactState extends AsyncLoadState<SplitByContact> {
   double dueAmount = 0.0;
   List<Split> splits = [];
 
-  final _splitRepo = SplitRepository();
-  final _txRepo = TransactionRepository();
+  late final SplitRepository _splitRepo;
+  late final TransactionRepository _txRepo;
+
+  @override
+  void initState() {
+    super.initState();
+    _splitRepo = sl<SplitRepository>();
+    _txRepo = sl<TransactionRepository>();
+  }
 
   @override
   asyncLoad() async {
