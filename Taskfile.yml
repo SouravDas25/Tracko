@@ -105,10 +105,20 @@ tasks:
       
   # Generate release APK
   release:apk:
-    desc: Generate release APK for Android
+    desc: Generate release APK for Android and copy to dist folder
     dir: "{{.FRONTEND_DIR}}"
     cmds:
       - cmd: flutter build apk --release
+      - cmd: >-
+          powershell -NoLogo -NoProfile -Command "New-Item -ItemType Directory -Force -Path ..\dist | Out-Null"
+        platforms: [windows]
+      - cmd: mkdir -p ../dist
+        platforms: [linux, darwin]
+      - cmd: >-
+          powershell -NoLogo -NoProfile -Command "Copy-Item -Path 'build\app\outputs\flutter-apk\app-release.apk' -Destination '..\dist\app-release.apk' -Force"
+        platforms: [windows]
+      - cmd: cp build/app/outputs/flutter-apk/app-release.apk ../dist/app-release.apk
+        platforms: [linux, darwin]
       
 
   docker:tar:

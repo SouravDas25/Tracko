@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:tracko/Utils/CommonUtil.dart';
 import 'package:tracko/Utils/WidgetUtil.dart';
 import 'package:tracko/pages/stats_page/controllers/stats_controller.dart';
-import 'package:tracko/scratch/ChartUtil.dart';
+import 'package:tracko/Utils/ChartUtil.dart';
 
 class StatsCategoryList extends StatelessWidget {
   final bool loading;

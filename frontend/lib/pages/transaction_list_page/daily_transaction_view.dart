@@ -27,7 +27,8 @@ class DailyTransactionView extends StatefulWidget {
   }
 }
 
-class _DailyTransactionViewState extends RefreshableState<DailyTransactionView> {
+class _DailyTransactionViewState
+    extends RefreshableState<DailyTransactionView> {
   RefreshController refreshController = new RefreshController();
   List<Transaction> transactions = [];
   List<dynamic> selections = [];
@@ -238,7 +239,7 @@ class _DailyTransactionViewState extends RefreshableState<DailyTransactionView> 
   initTransactionData({bool isRefresh = true}) async {
     AppLog.d(
         '[DailyTransactionView] initTransactionData start selections=$selections isRefresh=$isRefresh');
-    
+
     if (isRefresh) {
       _currentPage = 0;
       _hasMore = true;
@@ -256,11 +257,15 @@ class _DailyTransactionViewState extends RefreshableState<DailyTransactionView> 
     }
     AppLog.d(
         '[DailyTransactionView] parsed accountIds=$accountIds month=$selectedMonth page=$_currentPage');
-    
+
     // Load transactions for the selected month with pagination
-    List<Transaction> newTransactions = await TransactionController.getTransactionsForSelectedMonthPaginated(
-        accountIds: accountIds, month: selectedMonth, page: _currentPage, size: _pageSize);
-    
+    List<Transaction> newTransactions =
+        await TransactionController.getTransactionsForSelectedMonthPaginated(
+            accountIds: accountIds,
+            month: selectedMonth,
+            page: _currentPage,
+            size: _pageSize);
+
     if (newTransactions.length < _pageSize) {
       _hasMore = false;
       refreshController.loadNoData();
@@ -273,7 +278,7 @@ class _DailyTransactionViewState extends RefreshableState<DailyTransactionView> 
     } else {
       transactions.addAll(newTransactions);
     }
-    
+
     _currentPage++;
 
     AppLog.d(

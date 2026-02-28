@@ -27,7 +27,8 @@ class HealthCheckUtil {
         AppLog.d("HealthCheckUtil: Health check passed");
         return true;
       }
-      AppLog.d("HealthCheckUtil: Health check failed with response: $healthData");
+      AppLog.d(
+          "HealthCheckUtil: Health check failed with response: $healthData");
       return false;
     } catch (e) {
       AppLog.d("HealthCheckUtil: Health check failed: $e");

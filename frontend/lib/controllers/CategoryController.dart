@@ -2,7 +2,7 @@ import 'package:tracko/Utils/enums.dart';
 import 'package:tracko/exceptions/CategoryIsUsedByTransactionExceptions.dart';
 import 'package:tracko/models/category.dart';
 import 'package:tracko/models/transaction.dart';
-import 'package:tracko/scratch/ChartUtil.dart';
+import 'package:tracko/Utils/ChartUtil.dart';
 import 'package:tracko/repositories/category_repository.dart';
 import 'package:tracko/repositories/transaction_repository.dart';
 import 'package:tracko/services/SessionService.dart';

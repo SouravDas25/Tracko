@@ -2,7 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:tracko/Utils/CommonUtil.dart';
 import 'package:tracko/component/Indicator.dart';
-import 'package:tracko/scratch/ChartUtil.dart';
+import 'package:tracko/Utils/ChartUtil.dart';
 
 class StatsPieChart extends StatefulWidget {
   final bool loading;

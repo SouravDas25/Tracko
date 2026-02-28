@@ -41,7 +41,7 @@ class SplitManagerSection extends StatelessWidget {
   Widget build(BuildContext context) {
     bool disableSlide = splitList.length <= 1;
     List<TrakoContact> contactsList = splitList.toList();
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -57,8 +57,8 @@ class SplitManagerSection extends StatelessWidget {
               ),
             ),
             IconButton(
-              icon: Icon(Icons.call_split,
-                  color: Theme.of(context).primaryColor),
+              icon:
+                  Icon(Icons.call_split, color: Theme.of(context).primaryColor),
               onPressed: () => onCallSplitPage(),
               tooltip: "Split Transaction",
             ),

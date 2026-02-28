@@ -5,7 +5,7 @@ import 'package:tracko/Utils/enums.dart';
 import 'package:tracko/config/api_config.dart';
 import 'package:tracko/models/account.dart';
 import 'package:tracko/repositories/account_repository.dart';
-import 'package:tracko/scratch/ChartUtil.dart';
+import 'package:tracko/Utils/ChartUtil.dart';
 import 'package:tracko/services/api_client.dart';
 
 enum StatsRange { weekly, monthly, yearly, custom }

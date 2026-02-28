@@ -12,14 +12,28 @@ class LoginPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
         appBar: TrackoMenuBar.MenuBar(),
-        body: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: ListView(children: [
-            Image.asset("assets/images/login_img2.jpg"),
-            LoginForm(),
-          ]),
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600, minWidth: 200),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ListView(children: [
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: screenHeight * 0.1),
+                  child: Image.asset(
+                    "assets/images/expense-icon.png",
+                    height: screenHeight * 0.30,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+                LoginForm(),
+              ]),
+            ),
+          ),
         ));
   }
 }
@@ -47,7 +61,12 @@ class _LoginPage extends State<LoginForm> {
       if (loggedIn) {
         // Ensure session is initialized
         await SessionService.getCurrentUser();
-        Navigator.pushReplacementNamed(context, '/home');
+
+        // Check again if we are still logged in.
+        // If SessionService.getCurrentUser() triggered a 401, ApiClient would have logged us out.
+        if (mounted && await AuthService().isLoggedIn()) {
+          Navigator.pushReplacementNamed(context, '/home');
+        }
       }
     });
   }
