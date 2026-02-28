@@ -87,7 +87,7 @@ public class BudgetCalculationService {
                 categoriesToProcess = Collections.emptyList();
             }
         } else {
-            categoriesToProcess = categoryRepository.findByUserIdAndCategoryType(userId, CATEGORY_TYPE_EXPENSE)
+            categoriesToProcess = categoryRepository.findByUserIdAndCategoryTypeOrderByNameAsc(userId, CATEGORY_TYPE_EXPENSE)
                     .stream()
                     .filter(this::isBudgetableExpenseCategory)
                     .collect(Collectors.toList());

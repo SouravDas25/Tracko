@@ -299,7 +299,7 @@ class _CategoryTransactionsPageState extends State<CategoryTransactionsPage> {
       final txRepo = sl<TransactionRepository>();
       final catId = (widget.category.id ?? 0);
 
-      final txs = await txRepo.getAll(
+      final txResponse = await txRepo.getAllPaginated(
         startDate: widget.startDate,
         endDate: widget.endDate,
         categoryId: catId,
@@ -308,6 +308,8 @@ class _CategoryTransactionsPageState extends State<CategoryTransactionsPage> {
         size: _pageSize,
         expand: false,
       );
+
+      final List<Transaction> txs = txResponse['transactions'];
 
       final filtered = <Transaction>[];
       for (final t in txs) {
@@ -324,7 +326,7 @@ class _CategoryTransactionsPageState extends State<CategoryTransactionsPage> {
 
       filtered.sort((a, b) => b.date.compareTo(a.date));
 
-      if (txs.length < _pageSize) {
+      if (!(txResponse['hasNext'] ?? false)) {
         _hasMore = false;
       }
 

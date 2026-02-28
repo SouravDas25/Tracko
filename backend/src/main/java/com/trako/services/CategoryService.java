@@ -23,10 +23,29 @@ public class CategoryService {
     }
 
     public List<Category> findByUserId(String userId) {
-        return categoryRepository.findByUserId(userId);
+        return categoryRepository.findByUserIdOrderByNameAsc(userId);
     }
 
     public Category save(Category category) {
+        if (category.getName() != null) {
+            category.setName(category.getName().trim());
+        }
+        if (category.getUserId() == null) {
+            throw new IllegalArgumentException("userId is required");
+        }
+        if (category.getName() == null || category.getName().isBlank()) {
+            throw new IllegalArgumentException("name is required");
+        }
+
+        boolean duplicate;
+        if (category.getId() == null) {
+            duplicate = categoryRepository.existsByUserIdAndNameIgnoreCase(category.getUserId(), category.getName());
+        } else {
+            duplicate = categoryRepository.existsByUserIdAndNameIgnoreCaseAndIdNot(category.getUserId(), category.getName(), category.getId());
+        }
+        if (duplicate) {
+            throw new IllegalArgumentException("Category name already exists");
+        }
         return categoryRepository.save(category);
     }
 

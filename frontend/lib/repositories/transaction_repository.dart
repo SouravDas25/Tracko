@@ -95,6 +95,60 @@ class TransactionRepository {
     }).toList();
   }
 
+  Future<Map<String, dynamic>> getAllPaginated({
+    int? month,
+    int? year,
+    DateTime? startDate,
+    DateTime? endDate,
+    List<int>? accountIds,
+    int? categoryId,
+    int page = 0,
+    int size = 500,
+    bool expand = false,
+  }) async {
+    final isSingleAccount = accountIds != null && accountIds.length == 1;
+    final path = isSingleAccount
+        ? "${ApiConfig.accounts}/${accountIds!.first}/transactions"
+        : ApiConfig.transactions;
+
+    final res = await _api.get<Map<String, dynamic>>(
+      path,
+      query: {
+        if (month != null) 'month': month,
+        if (year != null) 'year': year,
+        if (startDate != null)
+          'startDate': startDate.toIso8601String().split('T').first,
+        if (endDate != null)
+          'endDate': endDate.toIso8601String().split('T').first,
+        'page': page,
+        'size': size,
+        'expand': expand,
+        if (!isSingleAccount && accountIds != null && accountIds.isNotEmpty)
+          'accountIds': accountIds.join(','),
+        if (categoryId != null) 'categoryId': categoryId,
+      },
+    );
+
+    final rows = (res['transactions'] as List<dynamic>?) ?? const <dynamic>[];
+    final transactions = rows.map((e) {
+      final row = e as Map<String, dynamic>;
+      if (expand) {
+        return _toLegacyFromExpanded(row);
+      }
+      return _toLegacy(row);
+    }).toList();
+
+    return {
+      'transactions': transactions,
+      'hasNext': res['hasNext'] ?? false,
+      'hasPrevious': res['hasPrevious'] ?? false,
+      'page': res['page'] ?? 0,
+      'size': res['size'] ?? size,
+      'totalPages': res['totalPages'] ?? 0,
+      'totalElements': res['totalElements'] ?? 0,
+    };
+  }
+
   Future<void> deleteById(int id) async {
     await _api.delete<void>("${ApiConfig.transactions}/$id");
   }

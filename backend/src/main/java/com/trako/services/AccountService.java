@@ -23,10 +23,29 @@ public class AccountService {
     }
 
     public List<Account> findByUserId(String userId) {
-        return accountRepository.findByUserId(userId);
+        return accountRepository.findByUserIdOrderByNameAsc(userId);
     }
 
     public Account save(Account account) {
+        if (account.getName() != null) {
+            account.setName(account.getName().trim());
+        }
+        if (account.getUserId() == null) {
+            throw new IllegalArgumentException("userId is required");
+        }
+        if (account.getName() == null || account.getName().isBlank()) {
+            throw new IllegalArgumentException("name is required");
+        }
+
+        boolean duplicate;
+        if (account.getId() == null) {
+            duplicate = accountRepository.existsByUserIdAndNameIgnoreCase(account.getUserId(), account.getName());
+        } else {
+            duplicate = accountRepository.existsByUserIdAndNameIgnoreCaseAndIdNot(account.getUserId(), account.getName(), account.getId());
+        }
+        if (duplicate) {
+            throw new IllegalArgumentException("Account name already exists");
+        }
         return accountRepository.save(account);
     }
 

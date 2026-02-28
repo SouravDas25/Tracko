@@ -173,6 +173,34 @@ databaseChangeLog:
             indexName: idx_categories_user
             columns: [ { column: { name: user_id } } ]
 
+  - changeSet:
+      id: 014-unique-accounts-user-name
+      author: sd25
+      preConditions:
+        - not:
+            - uniqueConstraintExists:
+                tableName: accounts
+                constraintName: uq_accounts_user_name
+      changes:
+        - addUniqueConstraint:
+            tableName: accounts
+            columnNames: user_id, name
+            constraintName: uq_accounts_user_name
+
+  - changeSet:
+      id: 015-unique-categories-user-name
+      author: sd25
+      preConditions:
+        - not:
+            - uniqueConstraintExists:
+                tableName: categories
+                constraintName: uq_categories_user_type_name
+      changes:
+        - addUniqueConstraint:
+            tableName: categories
+            columnNames: user_id, category_type, name
+            constraintName: uq_categories_user_type_name
+
         - createTable:
             tableName: transactions
             columns:

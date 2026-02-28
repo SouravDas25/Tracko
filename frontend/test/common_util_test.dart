@@ -1,7 +1,26 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tracko/Utils/CommonUtil.dart';
+import 'package:tracko/di/di.dart';
+import 'package:tracko/services/SessionService.dart';
+import 'package:mockito/mockito.dart';
+import 'package:tracko/services/auth_service.dart';
+import 'package:tracko/repositories/user_repository.dart';
+import 'package:tracko/services/api_client.dart';
+
+class MockSessionService extends Mock implements SessionService {
+  @override
+  String get currentCurrencySymbol => '₹';
+}
 
 void main() {
+  setUp(() {
+    sl.registerLazySingleton<SessionService>(() => MockSessionService());
+  });
+
+  tearDown(() {
+    sl.reset();
+  });
+
   group('CommonUtil.toCurrency', () {
     test('formats INR with Indian grouping and no unit', () {
       expect(CommonUtil.toCurrency(1234.0, currencyCode: 'INR'), '₹1,234');

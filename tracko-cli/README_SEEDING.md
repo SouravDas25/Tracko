@@ -98,8 +98,14 @@ After running the seeding script, you can use the Tracko CLI with the provided t
 # List accounts
 python tracko_cli.py --base-url http://localhost:8080 --token <TOKEN> accounts list
 
+# (Alternative) Run via module
+python -m tracko_cli --base-url http://localhost:8080 --token <TOKEN> accounts list
+
 # List transactions
 python tracko_cli.py --base-url http://localhost:8080 --token <TOKEN> transactions list
+
+# (Alternative) Run via module
+python -m tracko_cli --base-url http://localhost:8080 --token <TOKEN> transactions list
 
 # Get a transaction by ID
 python tracko_cli.py --base-url http://localhost:8080 --token <TOKEN> transactions get --id 1

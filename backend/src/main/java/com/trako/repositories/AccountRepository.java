@@ -9,5 +9,8 @@ import java.util.List;
 @Repository
 public interface AccountRepository extends JpaRepository<Account, Long> {
     List<Account> findByUserId(String userId);
+    List<Account> findByUserIdOrderByNameAsc(String userId);
+    boolean existsByUserIdAndNameIgnoreCase(String userId, String name);
+    boolean existsByUserIdAndNameIgnoreCaseAndIdNot(String userId, String name, Long id);
     void deleteByUserId(String userId);
 }

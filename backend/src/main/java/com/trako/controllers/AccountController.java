@@ -234,7 +234,7 @@ public class AccountController {
         }
 
         List<Long> accountIds = List.of(id);
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "date"));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "date").and(Sort.by(Sort.Direction.DESC, "id")));
 
         if (expand) {
             Page<TransactionDetailDTO> dtoPage;

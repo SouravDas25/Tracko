@@ -60,13 +60,13 @@ public class AccountServiceTest {
 
     @Test
     public void testFindByUserId() {
-        when(accountRepository.findByUserId("user123")).thenReturn(Arrays.asList(testAccount));
+        when(accountRepository.findByUserIdOrderByNameAsc("user123")).thenReturn(Arrays.asList(testAccount));
 
         List<Account> accounts = accountService.findByUserId("user123");
 
         assertThat(accounts).hasSize(1);
         assertThat(accounts.get(0).getUserId()).isEqualTo("user123");
-        verify(accountRepository, times(1)).findByUserId("user123");
+        verify(accountRepository, times(1)).findByUserIdOrderByNameAsc("user123");
     }
 
     @Test

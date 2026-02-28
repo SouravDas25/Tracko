@@ -224,7 +224,11 @@ class _DailyTransactionViewState
       if (mounted) {
         setState(() {});
       }
-      refreshController.loadComplete();
+      if (!_hasMore) {
+        refreshController.loadNoData();
+      } else {
+        refreshController.loadComplete();
+      }
     } catch (e) {
       refreshController.loadFailed();
     }
@@ -253,14 +257,16 @@ class _DailyTransactionViewState
         '[DailyTransactionView] parsed accountIds=$accountIds month=$selectedMonth page=$_currentPage');
 
     // Load transactions for the selected month with pagination
-    List<Transaction> newTransactions =
+    var response =
         await TransactionController.getTransactionsForSelectedMonthPaginated(
             accountIds: accountIds,
             month: selectedMonth,
             page: _currentPage,
             size: _pageSize);
 
-    if (newTransactions.length < _pageSize) {
+    List<Transaction> newTransactions = response.transactions;
+
+    if (!response.hasNext) {
       _hasMore = false;
       refreshController.loadNoData();
     } else {

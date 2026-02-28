@@ -7,7 +7,10 @@ import 'package:tracko/di/di.dart';
 class AccountController {
   static Future<List<Account>> getAllAccounts() async {
     final repo = sl<AccountRepository>();
-    return await repo.getAllAccounts();
+    final accounts = await repo.getAllAccounts();
+    accounts
+        .sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    return accounts;
   }
 
   static deleteAccount(int id) async {

@@ -13,7 +13,10 @@ import 'package:tracko/di/di.dart';
 class CategoryController {
   static Future<List<Category>> getAllCategories() async {
     final repo = sl<CategoryRepository>();
-    return await repo.getAll();
+    final categories = await repo.getAll();
+    categories
+        .sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    return categories;
   }
 
   static Future<Category> findById(int id) async {

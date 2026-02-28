@@ -10,6 +10,7 @@ import 'package:tracko/models/account.dart';
 import 'package:tracko/models/category.dart';
 import 'package:tracko/models/split.dart';
 import 'package:tracko/models/transaction.dart';
+import 'package:tracko/models/paginated_transactions.dart';
 import 'package:tracko/models/user.dart';
 import 'package:tracko/repositories/transaction_repository.dart';
 import 'package:tracko/repositories/split_repository.dart';
@@ -258,7 +259,7 @@ class TransactionController {
     return transactions;
   }
 
-  static Future<List<Transaction>> getTransactionsForSelectedMonthPaginated(
+  static Future<PaginatedTransactions> getTransactionsForSelectedMonthPaginated(
       {List<int>? accountIds,
       DateTime? month,
       int page = 0,
@@ -266,7 +267,7 @@ class TransactionController {
     final txRepo = sl<TransactionRepository>();
     final DateTime start = month ?? SettingUtil.currentMonth;
 
-    List<Transaction> transactions = await txRepo.getAll(
+    final response = await txRepo.getAllPaginated(
       month: start.month,
       year: start.year,
       accountIds: accountIds,
@@ -275,7 +276,15 @@ class TransactionController {
       expand: true,
     );
 
-    return transactions;
+    return PaginatedTransactions(
+      transactions: response['transactions'],
+      hasNext: response['hasNext'],
+      hasPrevious: response['hasPrevious'],
+      page: response['page'],
+      size: response['size'],
+      totalPages: response['totalPages'],
+      totalElements: response['totalElements'],
+    );
   }
 
   static Future<double> getMonthIncome(DateTime month,
