@@ -13,6 +13,7 @@ import com.trako.repositories.CategoryRepository;
 import com.trako.repositories.ContactRepository;
 import com.trako.repositories.SplitRepository;
 import com.trako.repositories.TransactionRepository;
+import com.trako.repositories.UserCurrencyRepository;
 import com.trako.repositories.UsersRepository;
 import com.trako.services.TransactionWriteService;
 import com.trako.util.JwtTokenUtil;
@@ -76,6 +77,9 @@ public class TransactionIntegrationTest {
 
     @Autowired
     private UsersRepository usersRepository;
+
+    @Autowired
+    private UserCurrencyRepository userCurrencyRepository;
 
     @Autowired
     private JwtTokenUtil jwtTokenUtil;
@@ -1545,5 +1549,194 @@ public class TransactionIntegrationTest {
 
         Transaction updated = transactionRepository.findById(saved.getId()).orElseThrow();
         assertEquals(newAccount.getId(), updated.getAccountId());
+    }
+
+    @Test
+    public void testUpdateTransaction_RecalculatesAmount_WhenCurrencyFieldsChange() throws Exception {
+        // 1. Create a transaction with foreign currency
+        Transaction transaction = new Transaction();
+        transaction.setTransactionType(1); // Expense
+        transaction.setName("Foreign Txn");
+        // amount will be calculated: 10 * 1.5 = 15.0
+        transaction.setOriginalAmount(10.00);
+        transaction.setOriginalCurrency("EUR");
+        transaction.setExchangeRate(1.5);
+        transaction.setDate(new Date());
+        transaction.setAccountId(testAccount.getId());
+        transaction.setCategoryId(testCategory.getId());
+        
+        // We let the service calculate the amount on creation
+        Transaction saved = transactionWriteService.saveForUser(testUser.getId(), transaction);
+        assertEquals(15.00, saved.getAmount(), 0.001);
+
+        // 2. Update with new exchange rate (should recalculate amount)
+        // New amount should be: 10 * 2.0 = 20.0
+        Map<String, Object> updatePayload = new HashMap<>();
+        updatePayload.put("exchangeRate", 2.0);
+        
+        // We DO NOT send "amount". We expect the backend to recalculate it because we changed exchangeRate.
+
+        mockMvc.perform(put("/api/transactions/" + saved.getId())
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updatePayload)))
+                .andExpect(status().isOk())
+                // Assert that the amount is updated to 20.0
+                .andExpect(jsonPath("$.result.amount").value(20.00))
+                .andExpect(jsonPath("$.result.exchangeRate").value(2.0));
+
+        // 3. Update with new original amount (should recalculate amount)
+        // New amount should be: 20 * 2.0 = 40.0
+        Map<String, Object> updatePayload2 = new HashMap<>();
+        updatePayload2.put("originalAmount", 20.00);
+
+        mockMvc.perform(put("/api/transactions/" + saved.getId())
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updatePayload2)))
+                .andExpect(status().isOk())
+                // Assert that the amount is updated to 40.0
+                .andExpect(jsonPath("$.result.amount").value(40.00))
+                .andExpect(jsonPath("$.result.originalAmount").value(20.00));
+    }
+
+    @Test
+    public void testUpdateTransaction_RecalculatesAmount_WhenOriginalCurrencyChanges() throws Exception {
+        // 1. Setup: Create a UserCurrency for "GBP" with rate 1.2
+        com.trako.entities.UserCurrency userCurrency = new com.trako.entities.UserCurrency();
+        userCurrency.setUser(testUser);
+        userCurrency.setCurrencyCode("GBP");
+        userCurrency.setExchangeRate(1.2);
+        userCurrencyRepository.save(userCurrency);
+
+        // 2. Create a transaction with initial currency (e.g. USD default or implicit)
+        Transaction transaction = new Transaction();
+        transaction.setTransactionType(1);
+        transaction.setName("Trip");
+        transaction.setAmount(100.00); 
+        transaction.setDate(new Date());
+        transaction.setAccountId(testAccount.getId());
+        transaction.setCategoryId(testCategory.getId());
+        Transaction saved = transactionWriteService.saveForUser(testUser.getId(), transaction);
+
+        // 3. Update transaction to use "GBP" and originalAmount 100.
+        // Expected amount: 100 * 1.2 = 120.0
+        Map<String, Object> updatePayload = new HashMap<>();
+        updatePayload.put("originalCurrency", "GBP");
+        updatePayload.put("originalAmount", 100.00);
+        // We do NOT send exchangeRate, so it should be looked up from UserCurrency
+
+        mockMvc.perform(put("/api/transactions/" + saved.getId())
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updatePayload)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.amount").value(120.00))
+                .andExpect(jsonPath("$.result.originalCurrency").value("GBP"))
+                .andExpect(jsonPath("$.result.exchangeRate").value(1.2));
+    }
+
+    @Test
+    public void testUpdateTransaction_DoesNotRecalculate_WhenExplicitAmountProvided() throws Exception {
+        // 1. Create a transaction
+        Transaction transaction = new Transaction();
+        transaction.setTransactionType(1);
+        transaction.setName("Explicit Amount Txn");
+        transaction.setAmount(50.00);
+        transaction.setDate(new Date());
+        transaction.setAccountId(testAccount.getId());
+        transaction.setCategoryId(testCategory.getId());
+        Transaction saved = transactionWriteService.saveForUser(testUser.getId(), transaction);
+
+        // 2. Update with currency fields BUT also provide explicit amount.
+        // If logic was strict: 10 * 2.0 = 20.0.
+        // But we send amount = 99.99.
+        Map<String, Object> updatePayload = new HashMap<>();
+        updatePayload.put("originalAmount", 10.00);
+        updatePayload.put("exchangeRate", 2.0);
+        updatePayload.put("amount", 99.99); // Explicit override
+
+        mockMvc.perform(put("/api/transactions/" + saved.getId())
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updatePayload)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.amount").value(99.99)) // Explicit amount wins
+                .andExpect(jsonPath("$.result.originalAmount").value(10.00))
+                .andExpect(jsonPath("$.result.exchangeRate").value(2.0));
+    }
+
+    @Test
+    public void testUpdateTransaction_BaseToSecondary() throws Exception {
+        // 1. Setup: Create a UserCurrency for "GBP" with rate 1.2
+        com.trako.entities.UserCurrency userCurrency = new com.trako.entities.UserCurrency();
+        userCurrency.setUser(testUser);
+        userCurrency.setCurrencyCode("GBP");
+        userCurrency.setExchangeRate(1.2);
+        userCurrencyRepository.save(userCurrency);
+
+        // 2. Create Base Txn (Implicit Base Currency)
+        Transaction transaction = new Transaction();
+        transaction.setTransactionType(1);
+        transaction.setName("Base Txn");
+        transaction.setAmount(100.00);
+        transaction.setDate(new Date());
+        transaction.setAccountId(testAccount.getId());
+        transaction.setCategoryId(testCategory.getId());
+        Transaction saved = transactionWriteService.saveForUser(testUser.getId(), transaction);
+
+        // 3. Update to GBP (Secondary)
+        // Should use the stored exchange rate (1.2)
+        Map<String, Object> updatePayload = new HashMap<>();
+        updatePayload.put("originalCurrency", "GBP");
+        updatePayload.put("originalAmount", 100.00);
+
+        mockMvc.perform(put("/api/transactions/" + saved.getId())
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updatePayload)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.amount").value(120.00))
+                .andExpect(jsonPath("$.result.originalCurrency").value("GBP"));
+    }
+
+    @Test
+    public void testUpdateTransaction_SecondaryToBase() throws Exception {
+        // 1. Setup: Create a UserCurrency for "GBP" with rate 1.2
+        com.trako.entities.UserCurrency userCurrency = new com.trako.entities.UserCurrency();
+        userCurrency.setUser(testUser);
+        userCurrency.setCurrencyCode("GBP");
+        userCurrency.setExchangeRate(1.2);
+        userCurrencyRepository.save(userCurrency);
+
+        // 2. Create Secondary Txn (GBP)
+        Transaction transaction = new Transaction();
+        transaction.setTransactionType(1);
+        transaction.setName("Secondary Txn");
+        transaction.setOriginalCurrency("GBP");
+        transaction.setOriginalAmount(100.00);
+        // Service will calculate amount = 120.0
+        transaction.setDate(new Date());
+        transaction.setAccountId(testAccount.getId());
+        transaction.setCategoryId(testCategory.getId());
+        Transaction saved = transactionWriteService.saveForUser(testUser.getId(), transaction);
+        assertEquals(120.00, saved.getAmount(), 0.001);
+
+        // 3. Update to Base (INR)
+        // We MUST provide amount explicitely because we are switching to base.
+        // And we want to ensure "originalCurrency" updates even if we provide amount.
+        Map<String, Object> updatePayload = new HashMap<>();
+        updatePayload.put("amount", 50.00);
+        updatePayload.put("originalAmount", 50.00);
+        updatePayload.put("originalCurrency", "INR");
+        updatePayload.put("exchangeRate", 1.0);
+
+        mockMvc.perform(put("/api/transactions/" + saved.getId())
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updatePayload)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.amount").value(50.00))
+                .andExpect(jsonPath("$.result.originalCurrency").value("INR"));
     }
 }

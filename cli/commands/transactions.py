@@ -100,7 +100,6 @@ def setup_transfers_parser(subparsers):
 def cmd_transactions_get(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     client = TrackoClient(base_url, token)
-    client = TrackoClient(base_url, token)
     result = client.get(f"/api/transactions/{int(args.id)}")
     print_result(result, raw=args.raw)
     return 0 if result.get("ok") else 1
@@ -449,7 +448,7 @@ def cmd_transactions_add(args: argparse.Namespace) -> int:
         except Exception:
             print("Invalid --amount", file=sys.stderr)
             return 2
-    result = client.post(f"/api/transactions/{int(args.id)}", json_body=body)
+    result = client.post("/api/transactions", json_body=body)
     print_result(result, raw=args.raw)
     return 0 if result["ok"] else 1
 

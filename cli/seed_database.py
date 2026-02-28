@@ -67,6 +67,27 @@ def login_existing_user(base_url: str):
     return None
 
 
+def get_existing_resources_map(base_url: str, token: str, endpoint: str, key_field: str = "name"):
+    """Fetch existing resources and return a map of key_field -> id"""
+    url = tracko_http.join_url(base_url, endpoint)
+    result = tracko_http.http_request("GET", url, token=token)
+    resource_map = {}
+    
+    if result.get("ok"):
+        response_data = result.get("json", {})
+        items = []
+        if "result" in response_data and isinstance(response_data["result"], list):
+            items = response_data["result"]
+        elif isinstance(response_data, list):
+            items = response_data
+            
+        for item in items:
+            if key_field in item and "id" in item:
+                resource_map[item[key_field]] = item["id"]
+                    
+    return resource_map
+
+
 def create_accounts(base_url: str, token: str):
     """Create sample accounts"""
     log("Creating sample accounts...")
@@ -79,10 +100,22 @@ def create_accounts(base_url: str, token: str):
         {"name": "Investment Account"}
     ]
     
+    # Fetch existing accounts
+    existing_map = get_existing_resources_map(base_url, token, "/api/accounts")
+    
     account_ids = []
     url = tracko_http.join_url(base_url, "/api/accounts")
     
     for account_data in accounts:
+        name = account_data["name"]
+        
+        # Check if already exists
+        if name in existing_map:
+            acc_id = existing_map[name]
+            account_ids.append(acc_id)
+            log(f"Account already exists: {name} (ID: {acc_id})")
+            continue
+
         result = tracko_http.http_request("POST", url, token=token, json_body=account_data)
         if result.get("ok"):
             response_data = result.get("json", {})
@@ -95,13 +128,14 @@ def create_accounts(base_url: str, token: str):
             
             if account_id:
                 account_ids.append(account_id)
-                log(f"Created account: {account_data['name']} (ID: {account_id})")
+                log(f"Created account: {name} (ID: {account_id})")
             else:
-                log(f"Created account: {account_data['name']} (ID: None - response format issue)")
+                log(f"Created account: {name} (ID: None - response format issue)")
                 # Still add None to maintain list structure
                 account_ids.append(None)
         else:
-            log(f"Failed to create account {account_data['name']}: {result.get('text', 'Unknown error')}")
+            log(f"Failed to create account {name}: {result.get('text', 'Unknown error')}")
+            account_ids.append(None)
     
     return account_ids
 
@@ -125,10 +159,22 @@ def create_categories(base_url: str, token: str):
         {"name": "Other Income"}
     ]
     
+    # Fetch existing categories
+    existing_map = get_existing_resources_map(base_url, token, "/api/categories")
+    
     category_ids = []
     url = tracko_http.join_url(base_url, "/api/categories")
     
     for category_data in categories:
+        name = category_data["name"]
+        
+        # Check if already exists
+        if name in existing_map:
+            cat_id = existing_map[name]
+            category_ids.append(cat_id)
+            log(f"Category already exists: {name} (ID: {cat_id})")
+            continue
+
         result = tracko_http.http_request("POST", url, token=token, json_body=category_data)
         if result.get("ok"):
             response_data = result.get("json", {})
@@ -141,13 +187,14 @@ def create_categories(base_url: str, token: str):
             
             if category_id:
                 category_ids.append(category_id)
-                log(f"Created category: {category_data['name']} (ID: {category_id})")
+                log(f"Created category: {name} (ID: {category_id})")
             else:
-                log(f"Created category: {category_data['name']} (ID: None - response format issue)")
+                log(f"Created category: {name} (ID: None - response format issue)")
                 # Still add None to maintain list structure
                 category_ids.append(None)
         else:
-            log(f"Failed to create category {category_data['name']}: {result.get('text', 'Unknown error')}")
+            log(f"Failed to create category {name}: {result.get('text', 'Unknown error')}")
+            category_ids.append(None)
     
     return category_ids
 
@@ -164,10 +211,22 @@ def create_contacts(base_url: str, token: str):
         {"name": "Eve Wilson", "phoneNo": "9876543214", "email": "eve@example.com"}
     ]
     
+    # Fetch existing contacts
+    existing_map = get_existing_resources_map(base_url, token, "/api/contacts")
+    
     contact_ids = []
     url = tracko_http.join_url(base_url, "/api/contacts")
     
     for contact_data in contacts:
+        name = contact_data["name"]
+        
+        # Check if already exists
+        if name in existing_map:
+            contact_id = existing_map[name]
+            contact_ids.append(contact_id)
+            log(f"Contact already exists: {name} (ID: {contact_id})")
+            continue
+
         result = tracko_http.http_request("POST", url, token=token, json_body=contact_data)
         if result.get("ok"):
             response_data = result.get("json", {})
@@ -180,13 +239,14 @@ def create_contacts(base_url: str, token: str):
             
             if contact_id:
                 contact_ids.append(contact_id)
-                log(f"Created contact: {contact_data['name']} (ID: {contact_id})")
+                log(f"Created contact: {name} (ID: {contact_id})")
             else:
-                log(f"Created contact: {contact_data['name']} (ID: None - response format issue)")
+                log(f"Created contact: {name} (ID: None - response format issue)")
                 # Still add None to maintain list structure
                 contact_ids.append(None)
         else:
-            log(f"Failed to create contact {contact_data['name']}: {result.get('text', 'Unknown error')}")
+            log(f"Failed to create contact {name}: {result.get('text', 'Unknown error')}")
+            contact_ids.append(None)
     
     return contact_ids
 

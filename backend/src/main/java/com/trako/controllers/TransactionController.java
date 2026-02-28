@@ -493,17 +493,30 @@ public class TransactionController {
             txToUpdate.setAccountId(request.accountId() != null ? request.accountId() : existing.getAccountId());
             txToUpdate.setCategoryId(request.categoryId() != null ? request.categoryId() : existing.getCategoryId());
             txToUpdate.setTransactionType(request.transactionType() != null ? request.transactionType() : existing.getTransactionType());
-            txToUpdate.setAmount(request.amount() != null ? request.amount() : existing.getAmount());
-            txToUpdate.setName(request.name() != null ? request.name() : existing.getName());
-            txToUpdate.setComments(request.comments() != null ? request.comments() : existing.getComments());
-            txToUpdate.setDate(request.date() != null ? request.date() : existing.getDate());
-            txToUpdate.setIsCountable(request.isCountable() != null ? request.isCountable() : existing.getIsCountable());
             
             // Currency fields - if any are provided, we should probably take them.
             // If not provided, keep existing.
             txToUpdate.setOriginalCurrency(request.originalCurrency() != null ? request.originalCurrency() : existing.getOriginalCurrency());
             txToUpdate.setOriginalAmount(request.originalAmount() != null ? request.originalAmount() : existing.getOriginalAmount());
             txToUpdate.setExchangeRate(request.exchangeRate() != null ? request.exchangeRate() : existing.getExchangeRate());
+
+            // Amount handling:
+            // 1. If request has explicit amount, use it.
+            // 2. If request changes currency fields (originalAmount/Currency/Rate), set amount to NULL to force recalculation in service.
+            // 3. Otherwise, keep existing amount.
+            boolean currencyFieldsChanged = request.originalCurrency() != null || 
+                                          request.originalAmount() != null || 
+                                          request.exchangeRate() != null;
+            
+            if (request.amount() != null) {
+                txToUpdate.setAmount(request.amount());
+            } else if (currencyFieldsChanged) {
+                txToUpdate.setAmount(null); // Forces computeAmountIfMissing in TransactionWriteService
+            } else {
+                txToUpdate.setAmount(existing.getAmount());
+            }
+
+            txToUpdate.setName(request.name() != null ? request.name() : existing.getName());
             
             // linkedTransactionId should not be set manually for regular transactions usually, 
             // but we preserve it if it was there (though if it was there, isExistingTransfer would be true)
