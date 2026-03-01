@@ -3,11 +3,3 @@ databaseChangeLog:
       file: db/changelog/000-consolidated-changelog.yaml
   - include:
       file: db/changelog/001-add-recurring-transactions.yaml
-  - include:
-      file: db/changelog/002-add-currency-to-recurring-transactions.yaml
-  - include:
-      file: db/changelog/004-rename-firebase-id-to-password.yaml
-  - include:
-      file: db/changelog/005-on-delete-restrict.yaml
-  - include:
-      file: db/changelog/006-recurring-fks-on-delete-restrict.yaml

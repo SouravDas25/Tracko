@@ -27,6 +27,15 @@ databaseChangeLog:
                   name: amount
                   type: DOUBLE
               - column:
+                  name: original_currency
+                  type: VARCHAR(3)
+              - column:
+                  name: original_amount
+                  type: DOUBLE
+              - column:
+                  name: exchange_rate
+                  type: DOUBLE
+              - column:
                   name: account_id
                   type: BIGINT
                   constraints:
@@ -72,8 +81,63 @@ databaseChangeLog:
               - column:
                   name: created_at
                   type: TIMESTAMP
-                  defaultValueDate: CURRENT_TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
               - column:
                   name: updated_at
                   type: TIMESTAMP
-                  defaultValueDate: CURRENT_TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+
+        - addForeignKeyConstraint:
+            baseTableName: recurring_transactions
+            baseColumnNames: account_id
+            referencedTableName: accounts
+            referencedColumnNames: id
+            constraintName: fk_recurring_account
+            onDelete: RESTRICT
+
+        - addForeignKeyConstraint:
+            baseTableName: recurring_transactions
+            baseColumnNames: to_account_id
+            referencedTableName: accounts
+            referencedColumnNames: id
+            constraintName: fk_recurring_to_account
+            onDelete: RESTRICT
+
+        - addForeignKeyConstraint:
+            baseTableName: recurring_transactions
+            baseColumnNames: category_id
+            referencedTableName: categories
+            referencedColumnNames: id
+            constraintName: fk_recurring_category
+            onDelete: RESTRICT
+
+        - addForeignKeyConstraint:
+            baseTableName: recurring_transactions
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_recurring_user
+            onDelete: CASCADE
+
+        - createIndex:
+            indexName: idx_recurring_user
+            tableName: recurring_transactions
+            columns:
+              - column:
+                  name: user_id
+
+        - createIndex:
+            indexName: idx_recurring_next_run
+            tableName: recurring_transactions
+            columns:
+              - column:
+                  name: next_run_date
+
+        - createIndex:
+            indexName: idx_recurring_active_next_run
+            tableName: recurring_transactions
+            columns:
+              - column:
+                  name: is_active
+              - column:
+                  name: next_run_date
