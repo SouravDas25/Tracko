@@ -102,16 +102,19 @@ def create_accounts(base_url: str, token: str):
     
     # Fetch existing accounts
     existing_map = get_existing_resources_map(base_url, token, "/api/accounts")
+    # Normalize for case-insensitive and trim-aware comparison
+    existing_map_norm = {str(k).strip().casefold(): v for k, v in existing_map.items()}
     
     account_ids = []
     url = tracko_http.join_url(base_url, "/api/accounts")
     
     for account_data in accounts:
         name = account_data["name"]
+        norm_name = str(name).strip().casefold()
         
-        # Check if already exists
-        if name in existing_map:
-            acc_id = existing_map[name]
+        # Check if already exists (case-insensitive, trim-aware)
+        if norm_name in existing_map_norm:
+            acc_id = existing_map_norm[norm_name]
             account_ids.append(acc_id)
             log(f"Account already exists: {name} (ID: {acc_id})")
             continue
@@ -161,16 +164,19 @@ def create_categories(base_url: str, token: str):
     
     # Fetch existing categories
     existing_map = get_existing_resources_map(base_url, token, "/api/categories")
+    # Normalize for case-insensitive and trim-aware comparison
+    existing_map_norm = {str(k).strip().casefold(): v for k, v in existing_map.items()}
     
     category_ids = []
     url = tracko_http.join_url(base_url, "/api/categories")
     
     for category_data in categories:
         name = category_data["name"]
+        norm_name = str(name).strip().casefold()
         
-        # Check if already exists
-        if name in existing_map:
-            cat_id = existing_map[name]
+        # Check if already exists (case-insensitive, trim-aware)
+        if norm_name in existing_map_norm:
+            cat_id = existing_map_norm[norm_name]
             category_ids.append(cat_id)
             log(f"Category already exists: {name} (ID: {cat_id})")
             continue
@@ -251,7 +257,7 @@ def create_contacts(base_url: str, token: str):
     return contact_ids
 
 
-def create_transactions(base_url: str, token: str, account_ids: list, category_ids: list):
+def create_transactions(base_url: str, token: str, account_ids: list, category_ids: list, base_currency: str = "INR"):
     """Create sample transactions"""
     log("Creating sample transactions...")
     
@@ -335,6 +341,7 @@ def create_transactions(base_url: str, token: str, account_ids: list, category_i
                     # Expense transactions (more frequent)
                     if random.random() < 0.7:  # 70% chance of expense
                         expense = random.choice(expense_data)
+                        amount = round(random.uniform(*expense["amount_range"]), 2)
                         transactions.append({
                             "transactionType": 1,  # DEBIT/EXPENSE
                             "name": expense["name"],
@@ -343,12 +350,14 @@ def create_transactions(base_url: str, token: str, account_ids: list, category_i
                             "accountId": random.choice(valid_account_ids),
                             "categoryId": random.choice(valid_category_ids[:8]),  # Expense categories
                             "isCountable": 1,
-                            "amount": round(random.uniform(*expense["amount_range"]), 2)
+                            "originalAmount": amount,
+                            "originalCurrency": base_currency
                         })
                     
                     # Income transactions (less frequent)
                     elif random.random() < 0.3:  # 30% chance of income
                         income = random.choice(income_data)
+                        amount = round(random.uniform(*income["amount_range"]), 2)
                         transactions.append({
                             "transactionType": 2,  # CREDIT/INCOME
                             "name": income["name"],
@@ -357,7 +366,8 @@ def create_transactions(base_url: str, token: str, account_ids: list, category_i
                             "accountId": valid_account_ids[0],  # Usually to main account
                             "categoryId": random.choice(valid_category_ids[8:]),  # Income categories
                             "isCountable": 1,
-                            "amount": round(random.uniform(*income["amount_range"]), 2)
+                            "originalAmount": amount,
+                            "originalCurrency": base_currency
                         })
     
     # Generate 10 transactions for the current month as well
@@ -373,6 +383,7 @@ def create_transactions(base_url: str, token: str, account_ids: list, category_i
         # Bias towards expenses for current month
         if random.random() < 0.8:
             expense = random.choice(expense_data)
+            amount = round(random.uniform(*expense["amount_range"]), 2)
             current_month_transactions.append({
                 "transactionType": 1,
                 "name": expense["name"],
@@ -381,10 +392,12 @@ def create_transactions(base_url: str, token: str, account_ids: list, category_i
                 "accountId": random.choice(valid_account_ids),
                 "categoryId": random.choice(valid_category_ids[:8]),
                 "isCountable": 1,
-                "amount": round(random.uniform(*expense["amount_range"]), 2),
+                "originalAmount": amount,
+                "originalCurrency": base_currency
             })
         else:
             income = random.choice(income_data)
+            amount = round(random.uniform(*income["amount_range"]), 2)
             current_month_transactions.append({
                 "transactionType": 2,
                 "name": income["name"],
@@ -393,7 +406,8 @@ def create_transactions(base_url: str, token: str, account_ids: list, category_i
                 "accountId": valid_account_ids[0],
                 "categoryId": random.choice(valid_category_ids[8:]),
                 "isCountable": 1,
-                "amount": round(random.uniform(*income["amount_range"]), 2),
+                "originalAmount": amount,
+                "originalCurrency": base_currency
             })
     transactions.extend(current_month_transactions)
     log(f"Generated {len(transactions)} transactions including current month")
@@ -415,7 +429,7 @@ def create_transactions(base_url: str, token: str, account_ids: list, category_i
     return created_count
 
 
-def create_transfers(base_url: str, token: str, account_ids: list):
+def create_transfers(base_url: str, token: str, account_ids: list, base_currency: str = "INR"):
     """Create sample transfer transactions"""
     log("Creating sample transfer transactions...")
     valid_account_ids = [aid for aid in account_ids if aid is not None]
@@ -428,7 +442,8 @@ def create_transfers(base_url: str, token: str, account_ids: list):
             "accountId": valid_account_ids[0],        # Source account
             "toAccountId": valid_account_ids[2] if len(valid_account_ids) > 2 else valid_account_ids[1],
             "transactionType": 1,                     # DEBIT for source account
-            "amount": 500.0,
+            "originalAmount": 500.0,
+            "originalCurrency": base_currency,
             "name": "Weekly Cash Withdrawal",
             "comments": "Cash for weekly expenses",
             "date": int((datetime.now() - timedelta(days=7)).timestamp() * 1000),
@@ -438,7 +453,8 @@ def create_transfers(base_url: str, token: str, account_ids: list):
             "accountId": valid_account_ids[0],        # Source account
             "toAccountId": valid_account_ids[4] if len(valid_account_ids) > 4 else valid_account_ids[-1],
             "transactionType": 1,                     # DEBIT for source account
-            "amount": 1000.0,
+            "originalAmount": 1000.0,
+            "originalCurrency": base_currency,
             "name": "Monthly Investment",
             "comments": "Monthly investment contribution",
             "date": int((datetime.now() - timedelta(days=3)).timestamp() * 1000),
@@ -448,7 +464,8 @@ def create_transfers(base_url: str, token: str, account_ids: list):
             "accountId": valid_account_ids[1],        # Source account
             "toAccountId": valid_account_ids[0],
             "transactionType": 1,                     # DEBIT for source account
-            "amount": 2000.0,
+            "originalAmount": 2000.0,
+            "originalCurrency": base_currency,
             "name": "Credit Card Payment",
             "comments": "Monthly credit card bill payment",
             "date": int((datetime.now() - timedelta(days=10)).timestamp() * 1000),
@@ -458,7 +475,8 @@ def create_transfers(base_url: str, token: str, account_ids: list):
             "accountId": valid_account_ids[0],        # Source account
             "toAccountId": valid_account_ids[3] if len(valid_account_ids) > 3 else valid_account_ids[-1],
             "transactionType": 1,                     # DEBIT for source account
-            "amount": 300.0,
+            "originalAmount": 300.0,
+            "originalCurrency": base_currency,
             "name": "Mobile Recharge",
             "comments": "Loading Paytm wallet",
             "date": int((datetime.now() - timedelta(days=2)).timestamp() * 1000),
@@ -468,7 +486,8 @@ def create_transfers(base_url: str, token: str, account_ids: list):
             "accountId": valid_account_ids[2] if len(valid_account_ids) > 2 else valid_account_ids[0],  # Source account
             "toAccountId": valid_account_ids[0],
             "transactionType": 1,                     # DEBIT for source account
-            "amount": 150.0,
+            "originalAmount": 150.0,
+            "originalCurrency": base_currency,
             "name": "Cash Deposit",
             "comments": "Depositing excess cash",
             "date": int((datetime.now() - timedelta(days=1)).timestamp() * 1000),
@@ -482,7 +501,7 @@ def create_transfers(base_url: str, token: str, account_ids: list):
         result = tracko_http.http_request("POST", url, token=token, json_body=tr)
         if result.get("ok"):
             created_count += 1
-            log(f"Created transfer: {tr['name']} (${tr['amount']} from {tr['accountId']} to {tr['toAccountId']})")
+            log(f"Created transfer: {tr['name']} (${tr['originalAmount']} from {tr['accountId']} to {tr['toAccountId']})")
         else:
             log(f"Failed to create transfer {tr['name']}: {result.get('text', 'Unknown error')}")
     log(f"Created {created_count} transfers total")
@@ -560,24 +579,29 @@ def create_currencies(base_url: str, token: str):
     return created_count
 
 
-def get_current_user_id(base_url: str, token: str):
-    """Get the current user's ID from the API"""
+def get_current_user_details(base_url: str, token: str):
+    """Get the current user's details from the API"""
     url = tracko_http.join_url(base_url, "/api/user/me")
     result = tracko_http.http_request("GET", url, token=token)
     
     if result.get("ok"):
         user_data = result.get("json", {})
-        # The user ID is nested under result.id
         if "result" in user_data and user_data["result"]:
-            return user_data["result"].get("id")
+            return user_data["result"]
         elif "id" in user_data:
-            return user_data.get("id")
+            return user_data
     
-    log("Failed to get current user ID")
+    log("Failed to get current user details")
     return None
 
 
-def create_sample_splits(base_url: str, token: str, account_ids: list, category_ids: list):
+def get_current_user_id(base_url: str, token: str):
+    """Get the current user's ID from the API"""
+    details = get_current_user_details(base_url, token)
+    return details.get("id") if details else None
+
+
+def create_sample_splits(base_url: str, token: str, account_ids: list, category_ids: list, base_currency: str = "INR"):
     """Create sample split transactions"""
     log("Creating sample split transactions...")
     
@@ -604,7 +628,8 @@ def create_sample_splits(base_url: str, token: str, account_ids: list, category_
         "accountId": valid_account_ids[0],
         "categoryId": valid_category_ids[0],  # Food & Dining
         "isCountable": 1,
-        "amount": 300.0
+        "originalAmount": 300.0,
+        "originalCurrency": base_currency
     }
     
     result = tracko_http.http_request("POST", url, token=token, json_body=transaction_data)
@@ -674,6 +699,11 @@ def main():
     
     log("Successfully authenticated!")
     
+    # Get user details for base currency
+    user_details = get_current_user_details(base_url, token)
+    base_currency = user_details.get("baseCurrency", "INR") if user_details else "INR"
+    log(f"User base currency: {base_currency}")
+
     # Create sample data
     account_ids = create_accounts(base_url, token)
     category_ids = create_categories(base_url, token)
@@ -681,7 +711,7 @@ def main():
     
     # Create transactions (requires accounts and categories)
     if account_ids and category_ids:
-        transaction_count = create_transactions(base_url, token, account_ids, category_ids)
+        transaction_count = create_transactions(base_url, token, account_ids, category_ids, base_currency)
     else:
         transaction_count = 0
         log("Skipping transactions due to missing accounts or categories")
@@ -698,14 +728,14 @@ def main():
     
     # Create transfer transactions (requires accounts)
     if account_ids:
-        transfer_count = create_transfers(base_url, token, account_ids)
+        transfer_count = create_transfers(base_url, token, account_ids, base_currency)
     else:
         transfer_count = 0
         log("Skipping transfers due to missing accounts")
     
     # Create sample splits (requires accounts, categories)
     if account_ids and category_ids:
-        split_count = create_sample_splits(base_url, token, account_ids, category_ids)
+        split_count = create_sample_splits(base_url, token, account_ids, category_ids, base_currency)
     else:
         split_count = 0
         log("Skipping splits due to missing accounts or categories")

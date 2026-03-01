@@ -141,7 +141,6 @@ public class RecurringTransactionService {
                     null, // id
                     rt.getAccountId(), // accountId
                     rt.getNextRunDate(), // date
-                    rt.getAmount(), // amount
                     rt.getName(), // name
                     "Recurring Transaction: " + rt.getFrequency(), // comments
                     rt.getCategoryId(), // categoryId

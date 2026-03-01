@@ -453,7 +453,6 @@ public class TransactionController {
                     request.id(),
                     request.accountId(),
                     request.date(),
-                    request.amount(),
                     request.name(),
                     request.comments(),
                     request.categoryId(),

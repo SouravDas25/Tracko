@@ -53,3 +53,6 @@ class Transaction(BaseModel):
     originalAmount: Optional[float] = None
     originalCurrency: Optional[str] = None
     exchangeRate: Optional[float] = None
+    linkedTransactionId: Optional[int] = None
+    toAccountId: Optional[int] = None
+    fromAccountId: Optional[int] = None

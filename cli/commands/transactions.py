@@ -61,6 +61,8 @@ def setup_parser(subparsers):
     sp2.add_argument("--not-countable", action="store_false", dest="countable")
     sp2.add_argument("--currency")
     sp2.add_argument("--exchange-rate", type=float)
+    sp2.add_argument("--to-account-id", type=int, help="For transfers: ID of the destination account")
+    sp2.add_argument("--from-account-id", type=int, help="For transfers: ID of the source account")
     sp2.set_defaults(func=cmd_transactions_update)
 
     sp2 = sub_tx.add_parser("delete")
@@ -141,24 +143,32 @@ def cmd_transactions_update(args: argparse.Namespace) -> int:
     if args.countable is not None:
         body["isCountable"] = 1 if args.countable else 0
 
+    # Handle transfer fields
+    if args.to_account_id is not None:
+        body["toAccountId"] = int(args.to_account_id)
+    
+    if args.from_account_id is not None:
+        body["fromAccountId"] = int(args.from_account_id)
+
     currency = getattr(args, "currency", None)
+    # If currency is provided, we must set originalCurrency.
+    # If not provided, we don't necessarily need to set it for UPDATE unless amount is changing?
+    # But if amount is changing, we should set originalAmount.
+    
     if currency is not None:
         body["originalCurrency"] = str(currency).upper()
-        if args.amount is not None:
-            try:
-                body["originalAmount"] = float(args.amount)
-            except Exception:
-                print("Invalid --amount", file=sys.stderr)
-                return 2
-        exchange_rate = getattr(args, "exchange_rate", None)
-        if exchange_rate is not None:
-            body["exchangeRate"] = float(exchange_rate)
-    elif args.amount is not None:
+    
+    if args.amount is not None:
         try:
-            body["amount"] = float(args.amount)
+            amt = float(args.amount)
+            body["originalAmount"] = amt
         except Exception:
             print("Invalid --amount", file=sys.stderr)
             return 2
+
+    exchange_rate = getattr(args, "exchange_rate", None)
+    if exchange_rate is not None:
+        body["exchangeRate"] = float(exchange_rate)
 
     if not body:
         print("No fields to update provided.", file=sys.stderr)
@@ -336,9 +346,22 @@ def cmd_transactions_list(args: argparse.Namespace) -> int:
     return 0 if result["ok"] else 1
 
 
+def _get_user_base_currency(client: TrackoClient) -> str:
+    resp = client.get("/api/user/me")
+    if resp.get("ok"):
+        payload = resp.get("json", {})
+        # Handle {result: {...}} or direct {...}
+        data = payload.get("result") if "result" in payload else payload
+        if isinstance(data, dict):
+            return data.get("baseCurrency", "INR")  # Default to INR if not set
+    return "INR"
+
+
 def cmd_transactions_add(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     client = TrackoClient(base_url, token)
+    
+    # helper to resolve IDs
     def _resolve_id_by_name(path: str, name: str, label: str) -> int | None:
         if not name or not str(name).strip():
             return None
@@ -430,24 +453,26 @@ def cmd_transactions_add(args: argparse.Namespace) -> int:
         "isCountable": 1 if args.countable else 0,
     }
 
+    # Handle currency and amount
+    # Backend now requires originalCurrency and originalAmount
     currency = getattr(args, "currency", None)
-    if currency:
-        try:
-            original_amount = float(args.amount)
-        except Exception:
-            print("Invalid --amount", file=sys.stderr)
-            return 2
-        body["originalAmount"] = original_amount
-        body["originalCurrency"] = str(currency).upper()
-        exchange_rate = getattr(args, "exchange_rate", None)
-        if exchange_rate is not None:
-            body["exchangeRate"] = float(exchange_rate)
-    else:
-        try:
-            body["amount"] = float(args.amount)
-        except Exception:
-            print("Invalid --amount", file=sys.stderr)
-            return 2
+    if not currency:
+        currency = _get_user_base_currency(client)
+    
+    body["originalCurrency"] = str(currency).upper()
+    
+    try:
+        amount_val = float(args.amount)
+    except Exception:
+        print("Invalid --amount", file=sys.stderr)
+        return 2
+
+    body["originalAmount"] = amount_val
+
+    exchange_rate = getattr(args, "exchange_rate", None)
+    if exchange_rate is not None:
+        body["exchangeRate"] = float(exchange_rate)
+    
     result = client.post("/api/transactions", json_body=body)
     print_result(result, raw=args.raw)
     return 0 if result["ok"] else 1
@@ -516,7 +541,8 @@ def cmd_transactions_import_csv(args: argparse.Namespace) -> int:
                 "date": epoch_ms,
                 "accountId": int(args.account_id),
                 "isCountable": 1,
-                "amount": amount,
+                "originalAmount": amount,
+                "originalCurrency": _get_user_base_currency(client),
             }
             result = client.post("/api/transactions", json_body=body)
             if result.get("ok"):
@@ -540,11 +566,20 @@ def cmd_transfers_create(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     client = TrackoClient(base_url, token)
 
+    try:
+        amount_val = float(args.amount)
+    except Exception:
+        print("Invalid --amount", file=sys.stderr)
+        return 2
+
+    currency = _get_user_base_currency(client)
+
     body = {
         "accountId": int(args.from_account_id),
         "toAccountId": int(args.to_account_id),
-        "amount": float(args.amount),
-        "transactionType": 1,
+        "originalAmount": amount_val,
+        "originalCurrency": currency,
+        "transactionType": 1, 
         "name": args.name or "Transfer",
         "comments": args.comments,
         "isCountable": 0,

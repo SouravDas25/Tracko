@@ -7,8 +7,8 @@ import java.util.Date;
 /**
  * Unified request model for creating transactions and transfers.
  * 
- * <p>For regular transactions: Include accountId, categoryId, transactionType, amount, etc.
- * <p>For transfers: Include accountId (or fromAccountId), toAccountId, and amount.
+ * <p>For regular transactions: Include accountId, categoryId, transactionType, originalAmount, originalCurrency, etc.
+ * <p>For transfers: Include accountId (or fromAccountId), toAccountId, originalAmount, and originalCurrency.
  * The presence of toAccountId indicates this is a transfer request.
  */
 public record TransactionRequest(
@@ -16,7 +16,6 @@ public record TransactionRequest(
     Long id,
     Long accountId,  // For transactions, this is the account. For transfers, this is the source (fromAccountId)
     Date date,
-    Double amount,
     String name,
     String comments,
     
