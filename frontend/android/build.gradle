@@ -6,14 +6,25 @@ buildscript {
 
     dependencies {
         classpath 'com.android.tools.build:gradle:8.2.1'
-        classpath 'com.google.gms:google-services:4.4.0'
+        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:2.1.10'
     }
 }
+
+ext.kotlin_version = '2.1.10'
 
 allprojects {
     repositories {
         google()
         mavenCentral()
+    }
+}
+
+subprojects {
+    configurations.configureEach {
+        resolutionStrategy {
+            force 'net.bytebuddy:byte-buddy:1.14.19'
+            force 'net.bytebuddy:byte-buddy-agent:1.14.19'
+        }
     }
 }
 

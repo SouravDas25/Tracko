@@ -36,7 +36,6 @@ Successfully migrated all business logic and data persistence from Flutter UI's 
 
 #### Authentication
 - `POST /api/oauth/token` - Login
-- `POST /api/signUp` - User registration
 
 #### Accounts
 - `GET /api/accounts` - List all

@@ -66,7 +66,7 @@ public class BudgetRolloverDebugTest {
         testUser.setName("Test User");
         testUser.setPhoneNo("1234567890");
         testUser.setEmail("test@example.com");
-        testUser.setFireBaseId("password");
+        testUser.setPassword("password");
         testUser = usersRepository.save(testUser);
 
         // Create Account
@@ -91,9 +91,11 @@ public class BudgetRolloverDebugTest {
 
         // 1. Add Income for Previous Month
         Transaction prevIncome = new Transaction();
-        prevIncome.setTransactionType(2); // Income
+        prevIncome.setTransactionType(TransactionType.CREDIT); // Income
         prevIncome.setName("Prev Salary");
-        prevIncome.setAmount(1000.0);
+        prevIncome.setOriginalAmount(1000.0);
+        prevIncome.setOriginalCurrency("INR");
+        prevIncome.setExchangeRate(1.0);
         prevIncome.setDate(java.sql.Date.valueOf(prev.withDayOfMonth(15)));
         prevIncome.setAccountId(testAccount.getId());
         prevIncome.setCategoryId(testCategory.getId());
@@ -112,9 +114,11 @@ public class BudgetRolloverDebugTest {
 
         // 3. Add Expense in Previous Month
         Transaction expense = new Transaction();
-        expense.setTransactionType(1); // Expense
+        expense.setTransactionType(TransactionType.DEBIT); // Expense
         expense.setName("Prev Expense");
-        expense.setAmount(50.0);
+        expense.setOriginalAmount(50.0);
+        expense.setOriginalCurrency("INR");
+        expense.setExchangeRate(1.0);
         expense.setDate(java.sql.Date.valueOf(prev.withDayOfMonth(20)));
         expense.setAccountId(testAccount.getId());
         expense.setCategoryId(testCategory.getId());

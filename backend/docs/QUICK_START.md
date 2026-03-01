@@ -71,7 +71,6 @@ flutter run
 
 ### Authentication
 ```dart
-POST /api/signUp        // Register
 POST /api/oauth/token   // Login
 ```
 

@@ -5,6 +5,7 @@ import com.trako.filters.JwtRequestFilter;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -17,11 +18,11 @@ public class TestJwtSecurityConfig {
                                                          JwtRequestFilter jwtRequestFilter,
                                                          JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())
+                .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(jwtAuthenticationEntryPoint))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/login", "/api/oauth/token", "/api/signUp", "/api/health").permitAll()
+                        .requestMatchers("/api/login", "/api/oauth/token", "/api/health").permitAll()
                         .anyRequest().authenticated()
                 );
 

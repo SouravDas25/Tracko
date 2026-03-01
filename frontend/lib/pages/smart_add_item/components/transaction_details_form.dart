@@ -24,6 +24,7 @@ class TransactionDetailsForm extends StatelessWidget {
   final Function(int) onTransferToAccountChanged;
   final Function onAddAccount;
   final TextEditingController nameController;
+  final String dateLabel;
 
   const TransactionDetailsForm({
     Key? key,
@@ -43,6 +44,7 @@ class TransactionDetailsForm extends StatelessWidget {
     required this.onTransferToAccountChanged,
     required this.onAddAccount,
     required this.nameController,
+    this.dateLabel = 'Date',
   }) : super(key: key);
 
   @override
@@ -56,7 +58,7 @@ class TransactionDetailsForm extends StatelessWidget {
           readOnly: true,
           resetIcon: null,
           decoration: InputDecoration(
-            labelText: 'Date',
+            labelText: dateLabel,
             prefixIcon: Icon(Icons.calendar_today_outlined),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
@@ -111,9 +113,8 @@ class TransactionDetailsForm extends StatelessWidget {
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
                       borderSide: BorderSide(
-                          color: Theme.of(context)
-                              .dividerColor
-                              .withOpacity(0.1)),
+                          color:
+                              Theme.of(context).dividerColor.withOpacity(0.1)),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
@@ -145,8 +146,7 @@ class TransactionDetailsForm extends StatelessWidget {
                   color: Theme.of(context).cardColor,
                   shape: BoxShape.circle,
                   border: Border.all(
-                      color:
-                          Theme.of(context).dividerColor.withOpacity(0.1)),
+                      color: Theme.of(context).dividerColor.withOpacity(0.1)),
                 ),
                 child: InkWell(
                   customBorder: CircleBorder(),
@@ -155,10 +155,9 @@ class TransactionDetailsForm extends StatelessWidget {
                       context: context,
                       builder: (_) => CategoryDialog(
                         callback: onAddCategory,
-                        categoryType:
-                            transactionType == TransactionType.CREDIT
-                                ? 'INCOME'
-                                : 'EXPENSE',
+                        categoryType: transactionType == TransactionType.CREDIT
+                            ? 'INCOME'
+                            : 'EXPENSE',
                       ),
                     );
                   },
@@ -178,18 +177,21 @@ class TransactionDetailsForm extends StatelessWidget {
 
         // Accounts
         if (transactionType == TransactionType.TRANSFER) ...[
-          _buildAccountDropdown(context, "From Account", transferFromAccountId, (val) {
+          _buildAccountDropdown(context, "From Account", transferFromAccountId,
+              (val) {
             onTransferFromAccountChanged(val ?? 0);
           }),
           SizedBox(height: 16),
-          _buildAccountDropdown(context, "To Account", transferToAccountId, (val) {
+          _buildAccountDropdown(context, "To Account", transferToAccountId,
+              (val) {
             onTransferToAccountChanged(val ?? 0);
           }),
         ] else ...[
           Row(
             children: [
               Expanded(
-                child: _buildAccountDropdown(context, "Account", accountId, (val) {
+                child:
+                    _buildAccountDropdown(context, "Account", accountId, (val) {
                   onAccountChanged(val ?? 0);
                 }),
               ),
@@ -254,8 +256,8 @@ class TransactionDetailsForm extends StatelessWidget {
     );
   }
 
-  Widget _buildAccountDropdown(BuildContext context,
-      String label, int? value, Function(int?) onChanged) {
+  Widget _buildAccountDropdown(BuildContext context, String label, int? value,
+      Function(int?) onChanged) {
     final ids = accounts.map((a) => a.id).whereType<int>().toSet();
     final int? safeValue =
         (value != null && value != 0 && ids.contains(value)) ? value : null;

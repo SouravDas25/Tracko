@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/api_config.dart';
-import '../Utils/ServerUtil.dart';
 import '../Utils/WidgetUtil.dart';
 import '../Utils/AppLog.dart';
 import 'SessionService.dart';
+import 'package:tracko/di/di.dart';
 
 class ApiClient {
   static final ApiClient _instance = ApiClient._internal();
@@ -62,14 +62,6 @@ class ApiClient {
           return;
         }
         var token = await _readToken();
-        if (token == null || token.isEmpty) {
-          // Backward-compat: older parts of the app store auth token here.
-          token = ServerUtil.authJwtToken;
-          if (token != null && token.isNotEmpty) {
-            // Keep both auth systems in sync.
-            await _writeToken(token);
-          }
-        }
         if (token != null && token.isNotEmpty) {
           options.headers['Authorization'] = 'Bearer $token';
           AppLog.d('[ApiClient] auth header attached for ${options.path}');
@@ -88,36 +80,62 @@ class ApiClient {
       },
       onError: (DioException err, handler) async {
         final code = err.response?.statusCode;
+        if (code == 401 || code == 403) {
+          AppLog.d(
+              '[ApiClient] onError auth-failure code=$code path=${err.requestOptions.path} autoSigningOut=$_isAutoSigningOut');
+        }
         if ((code == 401 || code == 403) && !_isAutoSigningOut) {
           _isAutoSigningOut = true;
           _suppressAuthHeader = true;
+          AppLog.d('[ApiClient] auto-signout: start');
           try {
             // Perform a full logout to remove any persisted tokens and
             // reset in-memory/session state. This prevents the login
             // page from immediately redirecting back to home due to a
             // lingering token, which can cause a navigation loop.
-            await SessionService.logout();
+            await sl<SessionService>().logout();
+            AppLog.d('[ApiClient] auto-signout: logout complete');
           } catch (_) {
+            AppLog.d('[ApiClient] auto-signout: logout failed (ignored)');
             // ignore
           }
 
           try {
             final state = WidgetUtil.globalHomeTabState;
             if (state != null && state.mounted) {
-              Navigator.of(state.context).pushNamedAndRemoveUntil(
-                '/login',
-                (route) => false,
-              );
+              final currentRoute = ModalRoute.of(state.context)?.settings.name;
+              if (currentRoute != '/login') {
+                AppLog.d(
+                    '[ApiClient] auto-signout: navigating to /login from route=$currentRoute');
+                Navigator.of(state.context).pushNamedAndRemoveUntil(
+                  '/login',
+                  (route) => false,
+                );
+              } else {
+                AppLog.d(
+                    '[ApiClient] auto-signout: already on /login; skipping navigation');
+              }
+            } else {
+              AppLog.d(
+                  '[ApiClient] auto-signout: no globalHomeTabState available; cannot navigate');
             }
           } catch (_) {
+            AppLog.d('[ApiClient] auto-signout: navigation failed (ignored)');
             // ignore
           } finally {
+            AppLog.d('[ApiClient] auto-signout: end');
             _isAutoSigningOut = false;
+            _suppressAuthHeader = false;
           }
         }
         handler.next(err);
       },
     ));
+  }
+
+  void updateBaseUrl(String url) {
+    _dio.options.baseUrl = url;
+    AppLog.d('[ApiClient] Base URL updated to: $url');
   }
 
   Dio get dio => _dio;

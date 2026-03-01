@@ -8,9 +8,11 @@ import com.trako.services.SplitService;
 import com.trako.services.UserService;
 import com.trako.util.Response;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
 
@@ -34,6 +36,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/splits")
+@Validated
 public class SplitController {
 
     @Autowired
@@ -57,6 +60,10 @@ public class SplitController {
 
     @GetMapping("/contact/{contactId}")
     public ResponseEntity<?> getByContactId(@PathVariable Long contactId) {
+        return getByContactIdValidated(contactId);
+    }
+
+    public ResponseEntity<?> getByContactIdValidated(@PathVariable @Positive Long contactId) {
         String currentUserId = userService.loggedInUser().getId();
         var contactOpt = contactRepository.findById(contactId);
         if (contactOpt.isEmpty() || !currentUserId.equals(contactOpt.get().getUserId())) {
@@ -68,6 +75,10 @@ public class SplitController {
 
     @GetMapping("/contact/{contactId}/unsettled")
     public ResponseEntity<?> getUnsettledByContactId(@PathVariable Long contactId) {
+        return getUnsettledByContactIdValidated(contactId);
+    }
+
+    public ResponseEntity<?> getUnsettledByContactIdValidated(@PathVariable @Positive Long contactId) {
         String currentUserId = userService.loggedInUser().getId();
         var contactOpt = contactRepository.findById(contactId);
         if (contactOpt.isEmpty() || !currentUserId.equals(contactOpt.get().getUserId())) {
@@ -78,7 +89,7 @@ public class SplitController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getById(@PathVariable Long id) {
+    public ResponseEntity<?> getById(@PathVariable @Positive Long id) {
         String currentUserId = userService.loggedInUser().getId();
         Split split = splitService.findById(id).orElse(null);
         if (split == null) {
@@ -94,7 +105,7 @@ public class SplitController {
     }
 
     @GetMapping("/transaction/{transactionId}")
-    public ResponseEntity<?> getByTransactionId(@PathVariable Long transactionId) {
+    public ResponseEntity<?> getByTransactionId(@PathVariable @Positive Long transactionId) {
         String currentUserId = userService.loggedInUser().getId();
         Transaction tx = transactionRepository.findById(transactionId).orElse(null);
         if (tx == null) {
@@ -111,22 +122,9 @@ public class SplitController {
         return Response.ok(splits);
     }
 
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<?> getByUserId(@PathVariable String userId) {
+    @GetMapping("/unsettled")
+    public ResponseEntity<?> getMyUnsettled() {
         String currentUserId = userService.loggedInUser().getId();
-        if (!currentUserId.equals(userId)) {
-            return Response.unauthorized();
-        }
-        List<Split> splits = splitService.findByUserId(currentUserId);
-        return Response.ok(splits);
-    }
-
-    @GetMapping("/user/{userId}/unsettled")
-    public ResponseEntity<?> getUnsettledByUserId(@PathVariable String userId) {
-        String currentUserId = userService.loggedInUser().getId();
-        if (!currentUserId.equals(userId)) {
-            return Response.unauthorized();
-        }
         List<Split> splits = splitService.findUnsettledByUserId(currentUserId);
         return Response.ok(splits);
     }
@@ -158,7 +156,7 @@ public class SplitController {
     }
 
     @PatchMapping("/settle/{splitId}")
-    public ResponseEntity<?> settle(@PathVariable Long splitId) {
+    public ResponseEntity<?> settle(@PathVariable @Positive Long splitId) {
         String currentUserId = userService.loggedInUser().getId();
         Split split = splitService.findById(splitId).orElse(null);
         if (split == null) {
@@ -175,7 +173,7 @@ public class SplitController {
     }
 
     @PatchMapping("/unsettle/{splitId}")
-    public ResponseEntity<?> unsettle(@PathVariable Long splitId) {
+    public ResponseEntity<?> unsettle(@PathVariable @Positive Long splitId) {
         String currentUserId = userService.loggedInUser().getId();
         Split split = splitService.findById(splitId).orElse(null);
         if (split == null) {
@@ -192,7 +190,7 @@ public class SplitController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable Long id) {
+    public ResponseEntity<?> delete(@PathVariable @Positive Long id) {
         String currentUserId = userService.loggedInUser().getId();
         Split split = splitService.findById(id).orElse(null);
         if (split == null) {

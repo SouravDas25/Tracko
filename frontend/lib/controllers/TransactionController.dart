@@ -5,56 +5,25 @@ import 'package:tracko/Utils/enums.dart';
 import 'package:tracko/Utils/AppLog.dart';
 import 'package:tracko/controllers/SplitController.dart';
 import 'package:tracko/controllers/UserController.dart';
-import 'package:tracko/dtos/TrackoContact.dart';
 import 'package:tracko/models/contact.dart' as backend;
 import 'package:tracko/models/account.dart';
 import 'package:tracko/models/category.dart';
 import 'package:tracko/models/split.dart';
 import 'package:tracko/models/transaction.dart';
+import 'package:tracko/models/paginated_transactions.dart';
 import 'package:tracko/models/user.dart';
-import 'package:tracko/services/SessionService.dart';
 import 'package:tracko/repositories/transaction_repository.dart';
 import 'package:tracko/repositories/split_repository.dart';
 import 'package:tracko/repositories/contact_repository.dart';
+import 'package:tracko/models/transaction_period_summary.dart';
+import 'package:tracko/di/di.dart';
 
 import 'CategoryController.dart';
 
 class TransactionController {
-  static String? _pickUserId(User user) {
-    final gid = user.globalId.trim();
-    if (gid.isNotEmpty) return gid;
-
-    final id = user.id;
-    if (id != null) return id.toString();
-
-    return null;
-  }
-
-  static Future<String?> _resolveUserId() async {
-    try {
-      final user = SessionService.currentUser();
-      final id = _pickUserId(user);
-      if (id != null && id.isNotEmpty) return id;
-    } catch (_) {
-      // Fall through to backend user lookup
-    }
-
-    try {
-      final user = await SessionService.getCurrentUser();
-      final id = _pickUserId(user);
-      if (id != null && id.isNotEmpty) return id;
-    } catch (_) {
-      // ignore and return null
-    }
-
-    AppLog.d(
-        '[TransactionController] _resolveUserId failed to resolve user id');
-    return null;
-  }
-
   static Future<bool> saveTransaction(Transaction transaction) async {
-    final txRepo = TransactionRepository();
-    final splitRepo = SplitRepository();
+    final txRepo = sl<TransactionRepository>();
+    final splitRepo = sl<SplitRepository>();
     bool isUserCountable = true;
 
     if (transaction.transactionType == TransactionType.TRANSFER) {
@@ -115,12 +84,10 @@ class TransactionController {
   }
 
   static Future<bool> saveSplitsInTransaction(Transaction transaction) async {
-    final splitRepo = SplitRepository();
-    User rootUser = SessionService.currentUser();
+    final splitRepo = sl<SplitRepository>();
 
-    final participants = transaction.contacts
-        .where((c) => c.contactId != null)
-        .toList(growable: false);
+    final participants =
+        transaction.contacts.where((c) => c.id != null).toList(growable: false);
 
     if (participants.isEmpty) {
       return true;
@@ -130,12 +97,12 @@ class TransactionController {
     final share = transaction.amount / totalPeople;
 
     for (int i = 0; i < participants.length; i++) {
-      TrakoContact contact = participants.elementAt(i);
+      final contact = participants.elementAt(i);
       Split split = new Split();
       split.amount = share;
       split.transactionId = transaction.id ?? 0;
       split.isSettled = 0;
-      split.contactId = contact.contactId;
+      split.contactId = contact.id;
 
       // Create split via backend API
       Split created = await splitRepo.create(split);
@@ -144,14 +111,15 @@ class TransactionController {
     return true;
   }
 
-  static Future<Set<TrakoContact>> loadSplits(Transaction transaction) async {
-    final splitRepo = SplitRepository();
-    final contactRepo = ContactRepository();
+  static Future<Set<backend.Contact>> loadSplits(
+      Transaction transaction) async {
+    final splitRepo = sl<SplitRepository>();
+    final contactRepo = sl<ContactRepository>();
     final txId = transaction.id ?? 0;
 
     if (txId == 0) {
       transaction.splits = [];
-      transaction.contacts = {SessionService.currentUserContact()};
+      transaction.contacts = <backend.Contact>{};
       return transaction.contacts;
     }
 
@@ -168,21 +136,14 @@ class TransactionController {
       // ignore
     }
 
-    transaction.contacts = Set<TrakoContact>();
-    // Always include current user
-    transaction.contacts.add(SessionService.currentUserContact());
+    transaction.contacts = <backend.Contact>{};
 
     for (final s in splits) {
       final cid = s.contactId;
       if (cid == null) continue;
       final c = contactsById[cid];
       if (c == null) continue;
-      final tc = TrakoContact();
-      tc.contactId = cid;
-      tc.name = c.name;
-      tc.phoneNo = c.phoneNo;
-      tc.email = c.email;
-      transaction.contacts.add(tc);
+      transaction.contacts.add(c);
     }
 
     return transaction.contacts;
@@ -190,13 +151,10 @@ class TransactionController {
 
   static Future<double> getTotalBetween(DateTime begin, DateTime end,
       [int? accountId]) async {
-    final txRepo = TransactionRepository();
-    final user = SessionService.currentUser();
-    final userId = (user.id ?? '').toString();
+    final txRepo = sl<TransactionRepository>();
 
     final summary = accountId == null
         ? await txRepo.getSummary(
-            userId,
             begin,
             end,
           )
@@ -248,11 +206,7 @@ class TransactionController {
     DateTime end, {
     List<int>? accountIds,
   }) async {
-    final txRepo = TransactionRepository();
-    final userId = await _resolveUserId();
-    if (userId == null) {
-      return <String, dynamic>{};
-    }
+    final txRepo = sl<TransactionRepository>();
 
     if (accountIds != null && accountIds.length == 1) {
       return await txRepo.getAccountSummary(
@@ -263,20 +217,15 @@ class TransactionController {
       );
     }
 
-    return await txRepo.getSummary(userId, begin, end, accountIds: accountIds);
+    return await txRepo.getSummary(begin, end, accountIds: accountIds);
   }
 
   static Future<int> totalTransactionCount({List<int>? accountIds}) async {
-    final txRepo = TransactionRepository();
-    final userId = await _resolveUserId();
-    if (userId == null) {
-      return 0;
-    }
+    final txRepo = sl<TransactionRepository>();
     DateTime month = SettingUtil.currentMonth;
     DateTime nextMonth = SettingUtil.nextMonth;
 
     final summary = await txRepo.getSummary(
-      userId,
       month,
       nextMonth,
       accountIds: accountIds,
@@ -286,27 +235,18 @@ class TransactionController {
 
   static Future<List<Transaction>> getTransactionsForSelectedMonth(
       {List<int>? accountIds, DateTime? month}) async {
-    final txRepo = TransactionRepository();
-    final userId = await _resolveUserId();
-    AppLog.d(
-        '[TransactionController] getTransactionsForSelectedMonth userId=$userId accountIds=$accountIds month=$month');
-    if (userId == null) {
-      AppLog.d(
-          '[TransactionController] getTransactionsForSelectedMonth early return: userId is null');
-      return <Transaction>[];
-    }
-
+    final txRepo = sl<TransactionRepository>();
     final DateTime start = month ?? SettingUtil.currentMonth;
     final DateTime end = DateTime.utc(start.year, start.month + 1);
 
-    List<Transaction> transactions = await txRepo.getByUserIdAndDateRange(
-      userId,
+    List<Transaction> transactions = await txRepo.getAll(
       startDate: start,
       endDate: end,
       accountIds: accountIds,
+      page: 0,
+      size: 10000,
+      expand: true,
     );
-    AppLog.d(
-        '[TransactionController] date-range returned count=${transactions.length} start=$start end=$end');
 
     if (accountIds != null && accountIds.isNotEmpty) {
       final allowed = accountIds.toSet();
@@ -319,20 +259,15 @@ class TransactionController {
     return transactions;
   }
 
-  static Future<List<Transaction>> getTransactionsForSelectedMonthPaginated(
+  static Future<PaginatedTransactions> getTransactionsForSelectedMonthPaginated(
       {List<int>? accountIds,
       DateTime? month,
       int page = 0,
       int size = 20}) async {
-    final txRepo = TransactionRepository();
-    final userId = await _resolveUserId();
-    if (userId == null) {
-      return <Transaction>[];
-    }
-
+    final txRepo = sl<TransactionRepository>();
     final DateTime start = month ?? SettingUtil.currentMonth;
 
-    List<Transaction> transactions = await txRepo.getAll(
+    final response = await txRepo.getAllPaginated(
       month: start.month,
       year: start.year,
       accountIds: accountIds,
@@ -341,7 +276,15 @@ class TransactionController {
       expand: true,
     );
 
-    return transactions;
+    return PaginatedTransactions(
+      transactions: response['transactions'],
+      hasNext: response['hasNext'],
+      hasPrevious: response['hasPrevious'],
+      page: response['page'],
+      size: response['size'],
+      totalPages: response['totalPages'],
+      totalElements: response['totalElements'],
+    );
   }
 
   static Future<double> getMonthIncome(DateTime month,
@@ -366,6 +309,18 @@ class TransactionController {
     return (summary['totalExpense'] as num?)?.toDouble() ?? 0.0;
   }
 
+  static Future<List<TransactionPeriodSummary>> getMonthlySummaries(int year,
+      {List<int>? accountIds}) async {
+    final txRepo = sl<TransactionRepository>();
+    return await txRepo.getMonthlySummaries(year, accountIds: accountIds);
+  }
+
+  static Future<List<TransactionPeriodSummary>> getYearlySummaries(
+      {List<int>? accountIds}) async {
+    final txRepo = sl<TransactionRepository>();
+    return await txRepo.getYearlySummaries(accountIds: accountIds);
+  }
+
   static _preloadTransactions(Transaction transaction) async {
     // Load category via CategoryController (already migrated to backend)
     transaction.category =
@@ -374,13 +329,8 @@ class TransactionController {
   }
 
   static Future<List<Transaction>> getRecentTransaction() async {
-    final txRepo = TransactionRepository();
+    final txRepo = sl<TransactionRepository>();
     DateTime month = SettingUtil.currentMonth;
-    final userId = await _resolveUserId();
-    if (userId == null) {
-      return <Transaction>[];
-    }
-
     List<Transaction> transactions = await txRepo.getAll(
       month: month.month,
       year: month.year,
@@ -417,7 +367,7 @@ class TransactionController {
       transaction.categoryId = 0;
       transaction.category = null;
     }
-    transaction.contacts = Set();
+    transaction.contacts = <backend.Contact>{};
     TransactionController._preloadTransactions(transaction);
 //    if (transaction.logo == null && transaction.category != null) {
 //      transaction.logo =
@@ -431,14 +381,14 @@ class TransactionController {
   }
 
   static Future<Transaction> findById(int id) async {
-    final txRepo = TransactionRepository();
+    final txRepo = sl<TransactionRepository>();
     return await txRepo.getById(id);
   }
 
   static Future<int> deleteById(int transactionId) async {
     // Use backend repositories
-    final splitRepo = SplitRepository();
-    final txRepo = TransactionRepository();
+    final splitRepo = sl<SplitRepository>();
+    final txRepo = sl<TransactionRepository>();
     // Remove splits first to mirror previous logic
     final splits = await splitRepo.getByTransactionId(transactionId);
     for (final s in splits) {
@@ -452,13 +402,13 @@ class TransactionController {
 
   static void clear() async {
     // Backend route doesn't expose bulk delete; perform best-effort by fetching and deleting
-    final txRepo = TransactionRepository();
-    final userId = await _resolveUserId();
-    if (userId == null) {
-      return;
-    }
+    final txRepo = sl<TransactionRepository>();
 
-    final all = await txRepo.getByUserId(userId);
+    final all = await txRepo.getAll(
+      page: 0,
+      size: 10000,
+      expand: false,
+    );
     for (final t in all) {
       if (t.id != null) {
         await txRepo.deleteById(t.id!);

@@ -5,6 +5,7 @@ import 'package:tracko/repositories/split_repository.dart';
 import 'package:tracko/repositories/contact_repository.dart';
 import 'package:tracko/repositories/transaction_repository.dart';
 import 'package:tracko/controllers/CategoryController.dart';
+import 'package:tracko/di/di.dart';
 
 class SplitController {
   static String? _normalizeUserId(String userId) {
@@ -18,7 +19,7 @@ class SplitController {
   }
 
   static Future<double> getDueAmountByUserId(String userId) async {
-    final splitRepo = SplitRepository();
+    final splitRepo = sl<SplitRepository>();
     final uid = _normalizeUserId(userId);
     if (uid == null) return 0.0;
     List<Split> splits = await splitRepo.getByUserId(uid);
@@ -38,9 +39,9 @@ class SplitController {
 
   static Future<List<Split>> findByUserIdKey(String userId,
       {bool preload = true}) async {
-    final splitRepo = SplitRepository();
-    final contactRepo = ContactRepository();
-    final txRepo = TransactionRepository();
+    final splitRepo = sl<SplitRepository>();
+    final contactRepo = sl<ContactRepository>();
+    final txRepo = sl<TransactionRepository>();
     final userIdStr = _normalizeUserId(userId);
     if (userIdStr == null) return <Split>[];
 
@@ -106,7 +107,7 @@ class SplitController {
   }
 
   static Future<int> settleAllByUserId(String userId) async {
-    final splitRepo = SplitRepository();
+    final splitRepo = sl<SplitRepository>();
     final uid = _normalizeUserId(userId);
     if (uid == null) return 0;
     List<Split> splitList = await splitRepo.getByUserId(uid);
@@ -118,7 +119,7 @@ class SplitController {
   }
 
   static Future<int> settleSplit(Split split, {int? settleTo}) async {
-    final splitRepo = SplitRepository();
+    final splitRepo = sl<SplitRepository>();
     if (split.id == null) return 0;
 
     // Use settle endpoint if available, otherwise update manually
@@ -139,7 +140,7 @@ class SplitController {
   }
 
   static removeByTransactionId(int transactionId) async {
-    final splitRepo = SplitRepository();
+    final splitRepo = sl<SplitRepository>();
     List<Split> splits = await splitRepo.getByTransactionId(transactionId);
 
     for (Split split in splits) {

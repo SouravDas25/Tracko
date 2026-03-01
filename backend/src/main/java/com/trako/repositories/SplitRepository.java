@@ -21,6 +21,11 @@ public interface SplitRepository extends JpaRepository<Split, Long>, JpaSpecific
     List<Split> findByContactId(Long contactId);
 
     List<Split> findByContactIdAndIsSettled(Long contactId, Integer isSettled);
+
+    void deleteByUserId(String userId);
+    void deleteByTransactionIdIn(List<Long> transactionIds);
+
+    boolean existsByContactId(Long contactId);
     
     @Modifying
     @Query("UPDATE Split s SET s.isSettled = 1, s.settledAt = CURRENT_TIMESTAMP WHERE s.id = ?1")

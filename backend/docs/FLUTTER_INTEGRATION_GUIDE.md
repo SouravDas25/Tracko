@@ -61,7 +61,6 @@ class ApiConfig {
   
   // API Endpoints
   static const String AUTH_LOGIN = '/api/oauth/token';
-  static const String AUTH_SIGNUP = '/api/signUp';
   static const String ACCOUNTS = '/api/accounts';
   static const String CATEGORIES = '/api/categories';
   static const String TRANSACTIONS = '/api/transactions';
@@ -396,40 +395,6 @@ import 'api_client.dart';
 class AuthService {
   final _apiClient = ApiClient();
   final _storage = const FlutterSecureStorage();
-  
-  // Sign up
-  Future<String> signUp({
-    required String phoneNo,
-    required String firebaseUuid,
-    required String name,
-    String? email,
-    String? profilePic,
-    String? baseCurrency,
-  }) async {
-    try {
-      final response = await _apiClient.post<Map<String, dynamic>>(
-        ApiConfig.AUTH_SIGNUP,
-        data: {
-          'phoneNo': phoneNo,
-          'uuid': firebaseUuid, // Maps to fireBaseId via @JsonProperty
-          'name': name,
-          'email': email,
-          'profilePic': profilePic,
-          'baseCurrency': baseCurrency ?? 'INR',
-        },
-      );
-      
-      // Store JWT token from header
-      final token = response['token'] ?? response['jwtToken'];
-      if (token != null) {
-        await _storage.write(key: 'jwt_token', value: token);
-      }
-      
-      return response['userId'] ?? response['id'];
-    } catch (e) {
-      throw Exception('Sign up failed: $e');
-    }
-  }
   
   // Sign in
   Future<String> signIn({

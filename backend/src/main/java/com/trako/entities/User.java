@@ -27,8 +27,8 @@ public class User extends AbstractBaseEntity {
     @Column(name = "profile_pic")
     private String profilePic;
 
-    @Column(name = "fire_base_id")
-    private String fireBaseId;
+    @Column(name = "password")
+    private String password;
 
     @Column(name = "global_id", length = 64, unique = true)
     private String globalId;
@@ -95,12 +95,12 @@ public class User extends AbstractBaseEntity {
         this.profilePic = profilePic;
     }
 
-    public String getFireBaseId() {
-        return fireBaseId;
+    public String getPassword() {
+        return password;
     }
 
-    public void setFireBaseId(String fireBaseId) {
-        this.fireBaseId = fireBaseId;
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public String getGlobalId() {
@@ -159,9 +159,7 @@ public class User extends AbstractBaseEntity {
                 ", phoneNo='" + phoneNo + '\'' +
                 ", email='" + email + '\'' +
                 ", profilePic='" + profilePic + '\'' +
-                ", fireBaseId='" + fireBaseId + '\'' +
+                ", password='[PROTECTED]'" +
                 '}';
     }
-
-
 }

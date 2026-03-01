@@ -1,6 +1,7 @@
 package com.trako.repositories;
 
 import com.trako.entities.*;
+import com.trako.entities.TransactionType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,10 +44,12 @@ public class SplitRepositoryTest {
         entityManager.persist(testCategory);
 
         testTransaction = new Transaction();
-        testTransaction.setTransactionType(1);
+        testTransaction.setTransactionType(TransactionType.DEBIT);
         testTransaction.setName("Dinner");
         testTransaction.setDate(new Date());
-        testTransaction.setAmount(100.00);
+        testTransaction.setOriginalAmount(100.00);
+        testTransaction.setOriginalCurrency("INR");
+        testTransaction.setExchangeRate(1.0);
         testTransaction.setAccountId(testAccount.getId());
         testTransaction.setCategoryId(testCategory.getId());
         entityManager.persist(testTransaction);

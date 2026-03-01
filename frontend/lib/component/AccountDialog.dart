@@ -4,6 +4,7 @@ import 'package:tracko/models/user.dart';
 import 'package:tracko/repositories/account_repository.dart';
 import 'package:tracko/services/SessionService.dart';
 import 'package:flutter/material.dart';
+import 'package:tracko/di/di.dart';
 
 class AccountDialog extends StatefulWidget {
   final Function callback;
@@ -32,15 +33,9 @@ class _AccountDialogState extends State<AccountDialog> {
       isEdit = true;
     } else {
       account = Account();
-      // Default to user's base currency if available, else INR
-      try {
-        User user = SessionService.currentUser();
-        if (user.baseCurrency.isNotEmpty) {
-          selectedCurrency = user.baseCurrency;
-        }
-      } catch (e) {
-        // ignore
-      }
+      selectedCurrency = sl<SessionService>().currentCurrencySymbol == '₹'
+          ? 'INR'
+          : 'INR'; // Just default to INR, backend handles defaults too
     }
   }
 
@@ -52,17 +47,13 @@ class _AccountDialogState extends State<AccountDialog> {
     account.name = name;
     account.currency = selectedCurrency;
 
-    User user = SessionService.currentUser();
-    account.userId = user.id;
-    final repo = AccountRepository();
+    final repo = sl<AccountRepository>();
 
     if (account.id == null) {
-      final created = await repo.createAccount(
-          account.name, user.globalId, account.currency);
+      final created = await repo.createAccount(account.name, account.currency);
       account.id = created.id;
     } else {
-      await repo.updateAccount(
-          account.id!, account.name, user.globalId, account.currency);
+      await repo.updateAccount(account.id!, account.name, account.currency);
     }
     print(account);
     widget.callback();

@@ -71,7 +71,7 @@ public class BudgetServiceIntegrationTest {
         testUser.setName("Budget User");
         testUser.setPhoneNo("5551234567");
         testUser.setEmail("budget@example.com");
-        testUser.setFireBaseId("pass");
+        testUser.setPassword("pass");
         testUser = usersRepository.save(testUser);
 
         // Seed Account
@@ -110,8 +110,10 @@ public class BudgetServiceIntegrationTest {
         // income.setUserId(testUser.getId());
         income.setAccountId(testAccount.getId());
         income.setCategoryId(incomeCategory.getId());
-        income.setAmount(1000.0);
-        income.setTransactionType(2); // CREDIT/INCOME
+        income.setOriginalAmount(1000.0);
+        income.setOriginalCurrency("INR");
+        income.setExchangeRate(1.0);
+        income.setTransactionType(TransactionType.CREDIT); // CREDIT/INCOME
         income.setIsCountable(1);
         income.setDate(date(2026, 1, 5));
         income.setName("Salary");
@@ -123,8 +125,10 @@ public class BudgetServiceIntegrationTest {
         // expense.setUserId(testUser.getId());
         expense.setAccountId(testAccount.getId());
         expense.setCategoryId(expenseCategory.getId());
-        expense.setAmount(50.0);
-        expense.setTransactionType(1); // DEBIT/EXPENSE
+        expense.setOriginalAmount(50.0);
+        expense.setOriginalCurrency("INR");
+        expense.setExchangeRate(1.0);
+        expense.setTransactionType(TransactionType.DEBIT); // DEBIT/EXPENSE
         expense.setIsCountable(1);
         expense.setDate(date(2026, 1, 10));
         expense.setName("Grocery Run");
@@ -164,8 +168,10 @@ public class BudgetServiceIntegrationTest {
         // incomeJan.setUserId(testUser.getId());
         incomeJan.setAccountId(testAccount.getId());
         incomeJan.setCategoryId(incomeCategory.getId());
-        incomeJan.setAmount(1000.0);
-        incomeJan.setTransactionType(2);
+        incomeJan.setOriginalAmount(1000.0);
+        incomeJan.setOriginalCurrency("INR");
+        incomeJan.setExchangeRate(1.0);
+        incomeJan.setTransactionType(TransactionType.CREDIT);
         incomeJan.setIsCountable(1);
         incomeJan.setDate(date(2026, 1, 5));
         incomeJan.setName("Jan Salary");
@@ -176,8 +182,10 @@ public class BudgetServiceIntegrationTest {
         // expenseJan.setUserId(testUser.getId());
         expenseJan.setAccountId(testAccount.getId());
         expenseJan.setCategoryId(expenseCategory.getId());
-        expenseJan.setAmount(100.0);
-        expenseJan.setTransactionType(1);
+        expenseJan.setOriginalAmount(100.0);
+        expenseJan.setOriginalCurrency("INR");
+        expenseJan.setExchangeRate(1.0);
+        expenseJan.setTransactionType(TransactionType.DEBIT);
         expenseJan.setIsCountable(1);
         expenseJan.setDate(date(2026, 1, 10));
         expenseJan.setName("Jan Expense");
@@ -215,8 +223,10 @@ public class BudgetServiceIntegrationTest {
         // income.setUserId(testUser.getId());
         income.setAccountId(testAccount.getId());
         income.setCategoryId(incomeCategory.getId());
-        income.setAmount(100.0);
-        income.setTransactionType(2);
+        income.setOriginalAmount(100.0);
+        income.setOriginalCurrency("INR");
+        income.setExchangeRate(1.0);
+        income.setTransactionType(TransactionType.CREDIT);
         income.setIsCountable(1);
         income.setDate(date(2026, 1, 1));
         income.setName("Small Salary");

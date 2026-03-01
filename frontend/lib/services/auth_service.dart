@@ -5,8 +5,10 @@ import '../config/api_config.dart';
 import 'api_client.dart';
 
 class AuthService {
-  final _api = ApiClient();
+  final ApiClient _api;
   final _storage = const FlutterSecureStorage();
+
+  AuthService({required ApiClient api}) : _api = api;
 
   Future<void> _writeToken(String token) async {
     if (kIsWeb) {
@@ -34,36 +36,14 @@ class AuthService {
     await _storage.delete(key: 'jwt_token');
   }
 
-  Future<String> signUp({
-    required String phoneNo,
-    required String name,
-    String? email,
-    String? profilePic,
-    String? baseCurrency,
-  }) async {
-    final res =
-        await _api.post<Map<String, dynamic>>(ApiConfig.authSignUp, data: {
-      'phoneNo': phoneNo,
-      'name': name,
-      'email': email,
-      'profilePic': profilePic,
-      'baseCurrency': baseCurrency ?? 'INR',
-    });
-    // If backend sends token in body/header, store it when available
-    final token = res['token'] ?? res['jwtToken'];
-    if (token is String) {
-      await _writeToken(token);
-      ApiClient.resetAuthSuppression();
-    }
-    return (res['id'] ?? res['userId'] ?? '').toString();
-  }
-
   Future<String?> signIn({
     required String phoneNo,
+    required String password,
   }) async {
     final res =
         await _api.post<Map<String, dynamic>>(ApiConfig.authLogin, data: {
       'phoneNo': phoneNo,
+      'password': password,
     });
     final token = res['token'] ?? res['jwtToken'];
     if (token is String) {

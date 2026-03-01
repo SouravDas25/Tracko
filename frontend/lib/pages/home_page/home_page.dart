@@ -8,7 +8,7 @@ import 'package:tracko/component/interfaces.dart';
 import 'package:tracko/controllers/CategoryController.dart';
 import 'package:tracko/controllers/TransactionController.dart';
 import 'package:tracko/models/transaction.dart';
-import 'package:tracko/scratch/ChartUtil.dart';
+import 'package:tracko/Utils/ChartUtil.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';

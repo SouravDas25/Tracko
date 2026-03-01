@@ -1,11 +1,9 @@
-import 'package:tracko/Utils/CommonUtil.dart';
 import 'package:tracko/Utils/WidgetUtil.dart';
 import 'package:tracko/component/AsynLoadState.dart';
-import 'package:tracko/component/FLushDialog.dart';
-import 'package:tracko/dtos/TrackoContact.dart';
-import 'package:tracko/services/SessionService.dart';
-// import 'package:contacts_service/contacts_service.dart'; // TODO: Replace with AGP 8+ compatible alternative
+import 'package:tracko/models/contact.dart';
+import 'package:tracko/repositories/contact_repository.dart';
 import 'package:flutter/material.dart';
+import 'package:tracko/di/di.dart';
 
 //
 // ignore: camel_case_types
@@ -16,16 +14,17 @@ class SelectContactPage extends StatefulWidget {
 }
 
 class CustomContact {
-  final TrakoContact? contact;
+  final Contact contact;
   bool isChecked;
 
   CustomContact({
-    this.contact,
+    required this.contact,
     this.isChecked = false,
   });
 }
 
 class SelectContactList extends AsyncLoadState<SelectContactPage> {
+  late final ContactRepository _repo;
   List<CustomContact> visibleContacts = <CustomContact>[];
   List<CustomContact> allContacts = <CustomContact>[];
   List<CustomContact> selectedContacts = <CustomContact>[];
@@ -38,15 +37,15 @@ class SelectContactList extends AsyncLoadState<SelectContactPage> {
   TextEditingController searchController = new TextEditingController();
   String filter = '';
 
+  @override
+  void initState() {
+    _repo = sl<ContactRepository>();
+    super.initState();
+  }
+
   initContactsData() async {
-    bool b = await CommonUtil.getContactsPermission();
-    if (b) {
-      await refreshContacts();
-      searchController.addListener(searchContact);
-    } else {
-      FlushDialog.flash(context, "Permission Denied",
-          "You have to grant contacts permission to use this feature.");
-    }
+    await refreshContacts();
+    searchController.addListener(searchContact);
   }
 
   void searchContact() {
@@ -54,8 +53,7 @@ class SelectContactList extends AsyncLoadState<SelectContactPage> {
       filter = searchController.text.toLowerCase();
       visibleContacts = allContacts
           .where((customContact) =>
-              customContact.contact?.name?.toLowerCase().contains(filter) ==
-              true)
+              customContact.contact.name.toLowerCase().contains(filter))
           .toList();
     });
   }
@@ -68,46 +66,26 @@ class SelectContactList extends AsyncLoadState<SelectContactPage> {
 
   refreshContacts() async {
     setState(() {});
-    void initContacts() async {
-      // TODO: Re-enable after replacing contacts_service with AGP 8+ compatible alternative
-      // var contacts = await ContactsService.getContacts(withThumbnails: false);
-      // _populateContacts(contacts);
-    }
-
-    void _populateContacts(Iterable<dynamic> contacts) {
-      allContacts.clear();
-      for (var contact in contacts) {
-        if (contact.displayName != null) {
-          allContacts
-              .add(CustomContact(contact: TrakoContact.fromContact(contact)));
-        }
-      }
-      allContacts.sort(
-          (a, b) => (a.contact?.name ?? '').compareTo(b.contact?.name ?? ''));
-      setState(() {
-        visibleContacts = allContacts;
-      });
-    }
-
+    final list = await _repo.listMine();
+    allContacts = list
+        .where((c) => c.id != null)
+        .map((c) => CustomContact(contact: c))
+        .toList();
+    allContacts.sort((a, b) => a.contact.name.compareTo(b.contact.name));
     setState(() {
       visibleContacts = allContacts;
     });
   }
 
   void _onSubmit() async {
-    List<TrakoContact> returningContact = [];
-    for (CustomContact c in selectedContacts) {
-      if (c.contact != null) returningContact.add(c.contact!);
-    }
-    TrakoContact rootUserContact = SessionService.currentUserContact();
-    returningContact.add(rootUserContact);
+    final returningContact =
+        selectedContacts.map((c) => c.contact).toList(growable: false);
     Navigator.pop(context, returningContact);
     setState(() {});
   }
 
   void onCheckBoxHit(CustomContact customContact, bool value) {
-    if (customContact.contact?.phoneNo == null ||
-        (customContact.contact?.phoneNo?.length ?? 0) <= 0) {
+    if (customContact.contact.phoneNo.isEmpty) {
       WidgetUtil.toast("No contact number associated.");
       return;
     }
@@ -139,11 +117,9 @@ class SelectContactList extends AsyncLoadState<SelectContactPage> {
   Widget completeWidget(BuildContext context) {
     ListTile _buildListTile(CustomContact customContact) {
       return ListTile(
-        leading: WidgetUtil.textAvatar(customContact.contact?.name ?? ''),
-        title: Text(customContact.contact?.name ?? ""),
-        subtitle: customContact.contact?.phoneNo != null
-            ? Text(customContact.contact?.phoneNo ?? '')
-            : Text(''),
+        leading: WidgetUtil.textAvatar(customContact.contact.name),
+        title: Text(customContact.contact.name),
+        subtitle: Text(customContact.contact.phoneNo),
         trailing: Checkbox(
             activeColor: Colors.green,
             value: customContact.isChecked,
@@ -189,16 +165,16 @@ class SelectContactList extends AsyncLoadState<SelectContactPage> {
         child: Row(
             children: selectedContacts
                 .map((CustomContact cc) => Chip(
-                      avatar: WidgetUtil.textAvatar(cc.contact?.name ?? ''),
+                      avatar: WidgetUtil.textAvatar(cc.contact.name),
                       onDeleted: () => onCheckBoxHit(cc, false),
-                      label: Text(cc.contact?.name ?? ''),
+                      label: Text(cc.contact.name),
                     ))
                 .toList()),
       ));
     }
     body.add(new Expanded(
         child: new ListView.builder(
-      itemCount: visibleContacts?.length,
+      itemCount: visibleContacts.length,
       itemBuilder: (BuildContext context, int index) {
         CustomContact _contact = visibleContacts[index];
         return _buildListTile(_contact);

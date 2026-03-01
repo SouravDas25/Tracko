@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:tracko/Utils/enums.dart';
-import 'package:tracko/dtos/TrackoContact.dart';
 import 'package:tracko/models/account.dart';
 import 'package:tracko/models/category.dart';
+import 'package:tracko/models/contact.dart';
 import 'package:tracko/models/split.dart';
 
 class Transaction {
@@ -23,7 +23,7 @@ class Transaction {
   int? linkedTransactionId;
 
   List<Split> splits = [];
-  Set<TrakoContact> contacts = {};
+  Set<Contact> contacts = {};
   Category? category;
   Account? account;
 

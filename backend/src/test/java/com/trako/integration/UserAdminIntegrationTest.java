@@ -58,7 +58,7 @@ public class UserAdminIntegrationTest {
         admin.setName("Admin");
         admin.setPhoneNo("0000000000");
         admin.setEmail("admin@mail.com");
-        admin.setFireBaseId("password");
+        admin.setPassword("password");
         admin.setIsShadow(0);
         admin.setIsAdmin(1);
         usersRepository.save(admin);
@@ -67,36 +67,36 @@ public class UserAdminIntegrationTest {
         normal.setName("Normal");
         normal.setPhoneNo("1111111111");
         normal.setEmail("normal@mail.com");
-        normal.setFireBaseId("password");
+        normal.setPassword("password");
         normal.setIsShadow(0);
         normal.setIsAdmin(0);
         usersRepository.save(normal);
 
         var adminPrincipal = new org.springframework.security.core.userdetails.User(
                 admin.getPhoneNo(),
-                admin.getFireBaseId(),
+                admin.getPassword(),
                 Collections.emptyList()
         );
         adminBearer = "Bearer " + jwtTokenUtil.generateToken(adminPrincipal);
 
         var userPrincipal = new org.springframework.security.core.userdetails.User(
                 normal.getPhoneNo(),
-                normal.getFireBaseId(),
+                normal.getPassword(),
                 Collections.emptyList()
         );
         userBearer = "Bearer " + jwtTokenUtil.generateToken(userPrincipal);
     }
 
     @Test
-    public void adminCanCreateUserViaSave() throws Exception {
+    public void adminCanCreateUserViaCreate() throws Exception {
         var body = new java.util.HashMap<String, Object>();
         body.put("name", "Created User");
         body.put("phoneNo", "2222222222");
         body.put("email", "created@mail.com");
-        body.put("uuid", "password");
+        body.put("password", "password");
         body.put("isShadow", 0);
 
-        mockMvc.perform(post("/api/user/save")
+        mockMvc.perform(post("/api/user/create")
                 .header("Authorization", adminBearer)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(body)))
@@ -109,27 +109,28 @@ public class UserAdminIntegrationTest {
     }
 
     @Test
-    public void nonAdminCannotCreateOtherUserViaSave() throws Exception {
+    public void nonAdminCannotCreateOtherUserViaCreate() throws Exception {
         var body = new java.util.HashMap<String, Object>();
         body.put("name", "Hacker");
         body.put("phoneNo", "3333333333");
         body.put("email", "hacker@mail.com");
-        body.put("uuid", "password");
+        body.put("password", "password");
         body.put("isShadow", 0);
 
-        mockMvc.perform(post("/api/user/save")
+        mockMvc.perform(post("/api/user/create")
                 .header("Authorization", userBearer)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(body)))
-                .andExpect(status().isOk());
+                .andExpect(status().isUnauthorized());
 
         User notCreated = usersRepository.findByPhoneNo("3333333333");
         assertNull(notCreated);
 
+        // Verify original user was NOT modified
         User normal = usersRepository.findByPhoneNo("1111111111");
         assertNotNull(normal);
-        assertEquals("Hacker", normal.getName());
-        assertEquals("hacker@mail.com", normal.getEmail());
+        assertEquals("Normal", normal.getName());
+        assertEquals("normal@mail.com", normal.getEmail());
     }
 
     @Test
@@ -138,7 +139,7 @@ public class UserAdminIntegrationTest {
         target.setName("Target");
         target.setPhoneNo("4444444444");
         target.setEmail("target@mail.com");
-        target.setFireBaseId("password");
+        target.setPassword("password");
         target.setIsShadow(0);
         target.setIsAdmin(0);
         target = usersRepository.save(target);
@@ -157,7 +158,7 @@ public class UserAdminIntegrationTest {
         target.setName("Target");
         target.setPhoneNo("4444444444");
         target.setEmail("target@mail.com");
-        target.setFireBaseId("password");
+        target.setPassword("password");
         target.setIsShadow(0);
         target.setIsAdmin(0);
         target = usersRepository.save(target);
@@ -190,22 +191,17 @@ public class UserAdminIntegrationTest {
     }
 
     @Test
-    public void nonAdminSaveUpdatesSelfOnly() throws Exception {
+    public void nonAdminCanUpdateOwnProfileViaMeEndpoint() throws Exception {
         var body = new java.util.HashMap<String, Object>();
         body.put("name", "Normal Updated");
-        body.put("phoneNo", "3333333333");
         body.put("email", "normal.updated@mail.com");
-        body.put("uuid", "password");
-        body.put("isShadow", 0);
+        body.put("profilePic", "https://example.com/pic.jpg");
 
-        mockMvc.perform(post("/api/user/save")
+        mockMvc.perform(post("/api/user/me")
                         .header("Authorization", userBearer)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(body)))
                 .andExpect(status().isOk());
-
-        User shouldNotExist = usersRepository.findByPhoneNo("3333333333");
-        assertNull(shouldNotExist);
 
         User normal = usersRepository.findByPhoneNo("1111111111");
         assertNotNull(normal);

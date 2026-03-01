@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:tracko/Utils/CommonUtil.dart';
 import 'package:tracko/Utils/enums.dart';
 import 'package:tracko/models/category.dart';
@@ -10,7 +11,18 @@ import 'package:tracko/pages/stats_page/components/stats_pie_chart.dart';
 import 'package:tracko/pages/stats_page/controllers/stats_controller.dart';
 
 class StatsPage extends StatefulWidget {
-  const StatsPage({super.key});
+  final DateTime? initialDate;
+  final StatsKind? initialKind;
+  final int? initialAccountId;
+  final bool showAppBar;
+
+  const StatsPage({
+    super.key,
+    this.initialDate,
+    this.initialKind,
+    this.initialAccountId,
+    this.showAppBar = false,
+  });
 
   @override
   State<StatsPage> createState() => _StatsPageState();
@@ -22,7 +34,11 @@ class _StatsPageState extends State<StatsPage> {
   @override
   void initState() {
     super.initState();
-    _controller = StatsController();
+    _controller = StatsController(
+      initialDate: widget.initialDate,
+      initialKind: widget.initialKind,
+      initialAccountId: widget.initialAccountId,
+    );
     _controller.addListener(_onControllerUpdate);
   }
 
@@ -58,8 +74,178 @@ class _StatsPageState extends State<StatsPage> {
           endDate: _controller.periodEndExclusive!,
           range: _controller.range.name,
           transactionType: txType,
+          accountId: _controller.selectedAccount?.id,
         ),
       ),
+    );
+  }
+
+  Future<DateTimeRange?> _pickCustomRange(BuildContext context) async {
+    DateTime start = _controller.customStartDate ??
+        DateTime(DateTime.now().year, DateTime.now().month, 1);
+    DateTime end = _controller.customEndDate ?? DateTime.now();
+    bool isYearMode = false;
+
+    // Generate year list (2000 to Current + 1)
+    final currentYear = DateTime.now().year;
+    final years = List.generate(currentYear - 2000 + 2, (index) => 2000 + index)
+        .reversed
+        .toList();
+
+    return await showDialog<DateTimeRange>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text("Select Date Range"),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SwitchListTile(
+                    title: const Text("Select entire years"),
+                    value: isYearMode,
+                    activeColor: Theme.of(context).primaryColor,
+                    onChanged: (val) {
+                      setState(() {
+                        isYearMode = val;
+                        if (isYearMode) {
+                          // Snap to year boundaries
+                          start = DateTime(start.year, 1, 1);
+                          end = DateTime(end.year, 12, 31);
+                        }
+                      });
+                    },
+                  ),
+                  const Divider(),
+                  if (isYearMode) ...[
+                    // YEAR SELECTION MODE
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text("From Year:",
+                              style: TextStyle(fontWeight: FontWeight.w600)),
+                          DropdownButton<int>(
+                            value: years.contains(start.year)
+                                ? start.year
+                                : years.first,
+                            items: years.map((y) {
+                              return DropdownMenuItem(
+                                value: y,
+                                child: Text(y.toString()),
+                              );
+                            }).toList(),
+                            onChanged: (val) {
+                              if (val != null) {
+                                setState(() {
+                                  start = DateTime(val, 1, 1);
+                                  if (end.year < val) {
+                                    end = DateTime(val, 12, 31);
+                                  }
+                                });
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text("To Year:",
+                              style: TextStyle(fontWeight: FontWeight.w600)),
+                          DropdownButton<int>(
+                            value: years.contains(end.year)
+                                ? end.year
+                                : years.first,
+                            items: years.map((y) {
+                              return DropdownMenuItem(
+                                value: y,
+                                child: Text(y.toString()),
+                              );
+                            }).toList(),
+                            onChanged: (val) {
+                              if (val != null) {
+                                setState(() {
+                                  end = DateTime(val, 12, 31);
+                                  if (start.year > val) {
+                                    start = DateTime(val, 1, 1);
+                                  }
+                                });
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ] else ...[
+                    // SPECIFIC DATE MODE
+                    ListTile(
+                      title: const Text("Start Date"),
+                      subtitle: Text(DateFormat('MMM dd, yyyy').format(start)),
+                      trailing: const Icon(Icons.calendar_today),
+                      onTap: () async {
+                        final d = await showDatePicker(
+                          context: context,
+                          initialDate: start,
+                          firstDate: DateTime(2000),
+                          lastDate:
+                              DateTime.now().add(const Duration(days: 365)),
+                        );
+                        if (d != null) {
+                          setState(() {
+                            start = d;
+                            if (end.isBefore(start)) {
+                              end = start;
+                            }
+                          });
+                        }
+                      },
+                    ),
+                    ListTile(
+                      title: const Text("End Date"),
+                      subtitle: Text(DateFormat('MMM dd, yyyy').format(end)),
+                      trailing: const Icon(Icons.calendar_today),
+                      onTap: () async {
+                        final d = await showDatePicker(
+                          context: context,
+                          initialDate: end,
+                          firstDate: DateTime(2000),
+                          lastDate:
+                              DateTime.now().add(const Duration(days: 365)),
+                        );
+                        if (d != null) {
+                          setState(() {
+                            end = d;
+                            if (start.isAfter(end)) {
+                              start = end;
+                            }
+                          });
+                        }
+                      },
+                    ),
+                  ],
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("Cancel"),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(
+                      context, DateTimeRange(start: start, end: end)),
+                  child: const Text("Apply"),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 
@@ -68,21 +254,48 @@ class _StatsPageState extends State<StatsPage> {
     return Scaffold(
       body: CustomScrollView(
         slivers: [
+          if (widget.showAppBar)
+            const SliverAppBar(
+              title: Text("Statistics"),
+              pinned: true,
+            ),
           SliverToBoxAdapter(
             child: StatsFilterSection(
               range: _controller.range,
               kind: _controller.kind,
-              onRangeChanged: _controller.setRange,
+              selectedAccount: _controller.selectedAccount,
+              accounts: _controller.accounts,
+              onRangeChanged: (range) async {
+                if (range == StatsRange.custom) {
+                  final DateTimeRange? picked = await _pickCustomRange(context);
+                  if (picked != null) {
+                    _controller.setCustomRange(picked.start, picked.end);
+                  }
+                } else {
+                  _controller.setRange(range);
+                }
+              },
               onKindChanged: _controller.setKind,
+              onAccountChanged: _controller.setAccount,
             ),
           ),
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-              child: Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                      color: Theme.of(context).dividerColor.withOpacity(0.1)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.02),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    )
+                  ],
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(12.0),
                   child: StatsLineChart(
@@ -102,6 +315,7 @@ class _StatsPageState extends State<StatsPage> {
               context: context,
               dateText: _controller.formattedDateRange,
               isLoading: _controller.loading,
+              disableNavigation: _controller.range == StatsRange.custom,
               onPrevious: () => _controller.shiftAnchor(-1),
               onNext: () => _controller.shiftAnchor(1),
             ),
@@ -118,10 +332,20 @@ class _StatsPageState extends State<StatsPage> {
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-              child: Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                      color: Theme.of(context).dividerColor.withOpacity(0.1)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.02),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    )
+                  ],
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(12.0),
                   child: StatsPieChart(
@@ -154,6 +378,7 @@ class _StickyStatsHeaderDelegate extends SliverPersistentHeaderDelegate {
   final BuildContext context;
   final String dateText;
   final bool isLoading;
+  final bool disableNavigation;
   final VoidCallback onPrevious;
   final VoidCallback onNext;
 
@@ -161,6 +386,7 @@ class _StickyStatsHeaderDelegate extends SliverPersistentHeaderDelegate {
     required this.context,
     required this.dateText,
     required this.isLoading,
+    this.disableNavigation = false,
     required this.onPrevious,
     required this.onNext,
   });
@@ -180,9 +406,11 @@ class _StickyStatsHeaderDelegate extends SliverPersistentHeaderDelegate {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               IconButton(
-                icon:
-                    const Icon(Icons.chevron_left_rounded, color: Colors.white),
-                onPressed: isLoading ? null : onPrevious,
+                icon: Icon(
+                  Icons.chevron_left_rounded,
+                  color: disableNavigation ? Colors.white38 : Colors.white,
+                ),
+                onPressed: isLoading || disableNavigation ? null : onPrevious,
               ),
               Text(
                 dateText,
@@ -193,9 +421,11 @@ class _StickyStatsHeaderDelegate extends SliverPersistentHeaderDelegate {
                 ),
               ),
               IconButton(
-                icon: const Icon(Icons.chevron_right_rounded,
-                    color: Colors.white),
-                onPressed: isLoading ? null : onNext,
+                icon: Icon(
+                  Icons.chevron_right_rounded,
+                  color: disableNavigation ? Colors.white38 : Colors.white,
+                ),
+                onPressed: isLoading || disableNavigation ? null : onNext,
               ),
             ],
           ),
@@ -214,6 +444,7 @@ class _StickyStatsHeaderDelegate extends SliverPersistentHeaderDelegate {
   bool shouldRebuild(_StickyStatsHeaderDelegate oldDelegate) {
     return dateText != oldDelegate.dateText ||
         isLoading != oldDelegate.isLoading ||
+        disableNavigation != oldDelegate.disableNavigation ||
         onPrevious != oldDelegate.onPrevious ||
         onNext != oldDelegate.onNext;
   }

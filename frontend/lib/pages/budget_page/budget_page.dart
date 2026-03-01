@@ -7,6 +7,7 @@ import 'package:tracko/models/budget_response.dart';
 import 'package:tracko/pages/budget_page/widgets/allocation_dialog.dart';
 import 'package:tracko/pages/budget_page/widgets/budget_category_tile.dart';
 import 'package:tracko/services/budget_service.dart';
+import 'package:tracko/di/di.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 class BudgetPage extends StatefulWidget {
@@ -16,7 +17,7 @@ class BudgetPage extends StatefulWidget {
 
 class _BudgetPageState extends State<BudgetPage> {
   DateTime _selectedDate = DateTime.now();
-  final BudgetService _budgetService = BudgetService();
+  late final BudgetService _budgetService;
   BudgetResponse? _budgetData;
   bool _isLoading = true;
   final RefreshController _refreshController = RefreshController();
@@ -26,6 +27,7 @@ class _BudgetPageState extends State<BudgetPage> {
   @override
   void initState() {
     super.initState();
+    _budgetService = sl<BudgetService>();
     _loadBudgetData();
   }
 

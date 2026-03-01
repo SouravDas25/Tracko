@@ -5,11 +5,14 @@ import com.trako.config.TestJwtSecurityConfig;
 import com.trako.entities.Account;
 import com.trako.entities.Category;
 import com.trako.entities.Transaction;
+import com.trako.entities.TransactionType;
+import com.trako.entities.Frequency;
 import com.trako.entities.User;
 import com.trako.models.request.AccountSaveRequest;
 import com.trako.repositories.AccountRepository;
 import com.trako.repositories.CategoryRepository;
 import com.trako.repositories.TransactionRepository;
+import com.trako.repositories.RecurringTransactionRepository;
 import com.trako.repositories.UsersRepository;
 import com.trako.services.TransactionWriteService;
 import com.trako.util.JwtTokenUtil;
@@ -66,6 +69,9 @@ public class AccountIntegrationTest {
     @Autowired
     private JwtTokenUtil jwtTokenUtil;
 
+    @Autowired
+    private RecurringTransactionRepository recurringTransactionRepository;
+
     private User testUser;
     private String bearerToken;
 
@@ -80,12 +86,12 @@ public class AccountIntegrationTest {
         testUser.setName("Test User");
         testUser.setPhoneNo("1234567890");
         testUser.setEmail("test@example.com");
-        testUser.setFireBaseId("password");
+        testUser.setPassword("password");
         testUser = usersRepository.save(testUser);
 
         UserDetails principal = new org.springframework.security.core.userdetails.User(
                 testUser.getPhoneNo(),
-                testUser.getFireBaseId(),
+                testUser.getPassword(),
                 Collections.emptyList()
         );
         bearerToken = "Bearer " + jwtTokenUtil.generateToken(principal);
@@ -121,9 +127,11 @@ public class AccountIntegrationTest {
 
         // Countable income + expense on A1 (should go into account_month_summary)
         Transaction income = new Transaction();
-        income.setTransactionType(2);
+        income.setTransactionType(TransactionType.CREDIT);
         income.setName("Income");
-        income.setAmount(1000.0);
+        income.setOriginalAmount(1000.0);
+        income.setOriginalCurrency("INR");
+        income.setExchangeRate(1.0);
         income.setDate(jan10);
         income.setAccountId(a1.getId());
         income.setCategoryId(salary.getId());
@@ -131,9 +139,11 @@ public class AccountIntegrationTest {
         transactionWriteService.saveForUser(testUser.getId(), income);
 
         Transaction expense = new Transaction();
-        expense.setTransactionType(1);
+        expense.setTransactionType(TransactionType.DEBIT);
         expense.setName("Expense");
-        expense.setAmount(200.0);
+        expense.setOriginalAmount(200.0);
+        expense.setOriginalCurrency("INR");
+        expense.setExchangeRate(1.0);
         expense.setDate(feb05);
         expense.setAccountId(a1.getId());
         expense.setCategoryId(food.getId());
@@ -147,6 +157,8 @@ public class AccountIntegrationTest {
                 a2.getId(),
                 feb05,
                 50.0,
+                "INR",
+                1.0,
                 "T1",
                 ""
         );
@@ -157,6 +169,8 @@ public class AccountIntegrationTest {
                 a1.getId(),
                 feb05,
                 30.0,
+                "INR",
+                1.0,
                 "T2",
                 ""
         );
@@ -219,18 +233,29 @@ public class AccountIntegrationTest {
     }
 
     @Test
-    public void testGetAccountsByOtherUserUnauthorized() throws Exception {
-        // Another user id
+    public void testGetAllAccounts_doesNotReturnOtherUsersAccounts() throws Exception {
         User other = new User();
         other.setName("OtherU");
         other.setPhoneNo("2002002000");
         other.setEmail("otheru@example.com");
-        other.setFireBaseId("other_pass");
+        other.setPassword("other_pass");
         other = usersRepository.save(other);
 
-        mockMvc.perform(get("/api/accounts/user/" + other.getId())
+        Account mine = new Account();
+        mine.setName("Mine");
+        mine.setUserId(testUser.getId());
+        accountRepository.save(mine);
+
+        Account foreign = new Account();
+        foreign.setName("Foreign");
+        foreign.setUserId(other.getId());
+        accountRepository.save(foreign);
+
+        mockMvc.perform(get("/api/accounts")
                         .header("Authorization", bearerToken))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result", hasSize(1)))
+                .andExpect(jsonPath("$.result[0].name").value("Mine"));
     }
 
     @Test
@@ -239,7 +264,7 @@ public class AccountIntegrationTest {
         other.setName("OtherAcc");
         other.setPhoneNo("3003003000");
         other.setEmail("otheracc@example.com");
-        other.setFireBaseId("otheracc_pass");
+        other.setPassword("otheracc_pass");
         other = usersRepository.save(other);
 
         Account foreign = new Account();
@@ -258,7 +283,7 @@ public class AccountIntegrationTest {
         other.setName("UpdOtherAcc");
         other.setPhoneNo("4004004000");
         other.setEmail("updother@example.com");
-        other.setFireBaseId("updother_pass");
+        other.setPassword("updother_pass");
         other = usersRepository.save(other);
 
         Account foreign = new Account();
@@ -282,7 +307,7 @@ public class AccountIntegrationTest {
         other.setName("DelOtherAcc");
         other.setPhoneNo("5005005000");
         other.setEmail("delother@example.com");
-        other.setFireBaseId("delother_pass");
+        other.setPassword("delother_pass");
         other = usersRepository.save(other);
 
         Account foreign = new Account();
@@ -300,6 +325,79 @@ public class AccountIntegrationTest {
         mockMvc.perform(get("/api/accounts/999999")
                         .header("Authorization", bearerToken))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void testDeleteAccount_Fails_WhenTransactionsExist() throws Exception {
+        // Create a category and a transaction under the account
+        Account a = new Account();
+        a.setName("A");
+        a.setUserId(testUser.getId());
+        a = accountRepository.save(a);
+
+        Category cat = new Category();
+        cat.setName("TestCat");
+        cat.setUserId(testUser.getId());
+        cat = categoryRepository.save(cat);
+
+        Transaction txn = new Transaction();
+        txn.setTransactionType(TransactionType.DEBIT);
+        txn.setName("Tx");
+        txn.setOriginalAmount(10.0);
+        txn.setOriginalCurrency("INR");
+        txn.setExchangeRate(1.0);
+        txn.setDate(new Date());
+        txn.setAccountId(a.getId());
+        txn.setCategoryId(cat.getId());
+        txn.setIsCountable(1);
+        transactionWriteService.saveForUser(testUser.getId(), txn);
+
+        mockMvc.perform(delete("/api/accounts/" + a.getId())
+                        .header("Authorization", bearerToken))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("Cannot delete account")));
+    }
+
+    @Test
+    public void testDeleteAccount_Fails_WhenRecurringReferencesExist() throws Exception {
+        // Create accounts
+        Account a1 = new Account();
+        a1.setName("A1");
+        a1.setUserId(testUser.getId());
+        a1 = accountRepository.save(a1);
+
+        Account a2 = new Account();
+        a2.setName("A2");
+        a2.setUserId(testUser.getId());
+        a2 = accountRepository.save(a2);
+
+        // Minimal category
+        Category cat = new Category();
+        cat.setName("RecurringCat");
+        cat.setUserId(testUser.getId());
+        cat = categoryRepository.save(cat);
+
+        // Create a recurring transaction referencing the account to be deleted
+        com.trako.entities.RecurringTransaction rt = new com.trako.entities.RecurringTransaction();
+        rt.setUserId(testUser.getId());
+        rt.setName("R1");
+        rt.setOriginalAmount(100.0);
+        rt.setOriginalCurrency("INR");
+        rt.setExchangeRate(1.0);
+        rt.setAccountId(a1.getId());
+        rt.setToAccountId(a2.getId());
+        rt.setCategoryId(cat.getId());
+        rt.setTransactionType(TransactionType.CREDIT);
+        rt.setFrequency(Frequency.MONTHLY);
+        rt.setStartDate(new Date());
+        rt.setNextRunDate(new Date());
+        rt.setIsActive(true);
+        recurringTransactionRepository.save(rt);
+
+        mockMvc.perform(delete("/api/accounts/" + a1.getId())
+                        .header("Authorization", bearerToken))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("Recurring transactions reference this account")));
     }
 
     @Test
@@ -364,7 +462,7 @@ public class AccountIntegrationTest {
     }
 
     @Test
-    public void testGetAccountsByUserId() throws Exception {
+    public void testGetAllAccounts_isScopedToAuthenticatedUser() throws Exception {
         Account account1 = new Account();
         account1.setName("Savings");
         account1.setUserId(testUser.getId());
@@ -375,7 +473,7 @@ public class AccountIntegrationTest {
         account2.setUserId(testUser.getId());
         accountRepository.save(account2);
 
-        mockMvc.perform(get("/api/accounts/user/" + testUser.getId())
+        mockMvc.perform(get("/api/accounts")
                         .header("Authorization", bearerToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result", hasSize(2)))

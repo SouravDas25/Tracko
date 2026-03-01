@@ -24,6 +24,7 @@ public class Split {
     private String userId;
 
     @NotNull
+    @jakarta.validation.constraints.Positive
     @Column(name = "amount")
     private Double amount;
 

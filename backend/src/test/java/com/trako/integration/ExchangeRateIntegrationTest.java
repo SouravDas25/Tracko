@@ -52,10 +52,10 @@ public class ExchangeRateIntegrationTest {
         user.setName("X");
         user.setPhoneNo("9999999999");
         user.setEmail("x@example.com");
-        user.setFireBaseId("pass");
+        user.setPassword("pass");
         usersRepository.save(user);
         UserDetails principal = new org.springframework.security.core.userdetails.User(
-                user.getPhoneNo(), user.getFireBaseId(), Collections.emptyList());
+                user.getPhoneNo(), user.getPassword(), Collections.emptyList());
         bearerToken = "Bearer " + jwtTokenUtil.generateToken(principal);
     }
 

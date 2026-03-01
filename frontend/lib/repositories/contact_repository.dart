@@ -3,7 +3,9 @@ import 'package:tracko/models/contact.dart';
 import 'package:tracko/services/api_client.dart';
 
 class ContactRepository {
-  final _api = ApiClient();
+  final ApiClient _api;
+
+  ContactRepository({ApiClient? api}) : _api = api ?? ApiClient();
 
   Future<List<Contact>> listMine() async {
     final res = await _api.get<List<dynamic>>(ApiConfig.contacts);

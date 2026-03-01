@@ -60,13 +60,13 @@ public class SessionIntegrationTest {
         testUser.setName("Test User");
         testUser.setPhoneNo("1234567890");
         testUser.setEmail("test@example.com");
-        testUser.setFireBaseId("password");
+        testUser.setPassword("password");
         testUser = usersRepository.save(testUser);
 
         // For /api/oauth/token we mock the authentication manager so we don't depend on password encoding config.
         UserDetails principal = new org.springframework.security.core.userdetails.User(
                 testUser.getPhoneNo(),
-                testUser.getFireBaseId(),
+                testUser.getPassword(),
                 Collections.emptyList()
         );
         Authentication auth = new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
@@ -77,7 +77,7 @@ public class SessionIntegrationTest {
     public void loginSuccessReturnsJwtToken() throws Exception {
         LoginRequest req = new LoginRequest();
         req.setUsername(testUser.getPhoneNo());
-        req.setPassword(testUser.getFireBaseId());
+        req.setPassword(testUser.getPassword());
 
         mockMvc.perform(post("/api/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -102,50 +102,11 @@ public class SessionIntegrationTest {
     public void oauthTokenReturnsJwtToken() throws Exception {
         AuthicationRequest req = new AuthicationRequest();
         req.setPhoneNo(testUser.getPhoneNo());
-        req.setFirebaseUuid(testUser.getFireBaseId());
+        req.setPassword(testUser.getPassword());
 
         mockMvc.perform(post("/api/oauth/token")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").isNotEmpty());
-    }
-
-    @Test
-    public void signUpWithoutUuidReturnsUnauthorized() throws Exception {
-        UserSaveRequest req = new UserSaveRequest();
-        req.setName("NoUuid");
-        req.setPhoneNo("9998887777");
-        // uuid missing
-
-        mockMvc.perform(post("/api/signUp")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(req)))
-                .andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    public void testSignUpThenLoginSuccess() throws Exception {
-        // 1. Sign Up
-        UserSaveRequest signUpReq = new UserSaveRequest();
-        signUpReq.setName("New User");
-        signUpReq.setPhoneNo("1112223333");
-        signUpReq.setFireBaseId("password123");
-        signUpReq.setEmail("newuser@example.com");
-
-        mockMvc.perform(post("/api/signUp")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(signUpReq)))
-                .andExpect(status().isOk());
-
-        // 2. Login
-        LoginRequest loginReq = new LoginRequest();
-        loginReq.setUsername("1112223333");
-        loginReq.setPassword("password123");
-
-        mockMvc.perform(post("/api/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(loginReq)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.token").isNotEmpty());
     }

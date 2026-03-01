@@ -1,6 +1,7 @@
 package com.trako.repositories;
 
 import com.trako.entities.Transaction;
+import com.trako.entities.TransactionType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -112,45 +113,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
         Pageable pageable
     );
 
-    @Query("SELECT t.accountId AS accountId, " +
-            "SUM(CASE WHEN t.transactionType = 2 THEN t.amount " +
-            "         WHEN t.transactionType = 1 THEN -t.amount " +
-            "         ELSE 0 END) AS balance " +
-            "FROM Transaction t " +
-            "WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId) " +
-            "AND (t.isCountable = 1 OR (:transferCategoryId IS NOT NULL AND t.categoryId = :transferCategoryId)) " +
-            "GROUP BY t.accountId")
-    List<Map<String, Object>> findAccountBalancesByUserId(
-            @Param("userId") String userId,
-            @Param("transferCategoryId") Long transferCategoryId
-    );
-
-    @Query("SELECT " +
-            "SUM(CASE WHEN t.transactionType = 2 THEN t.amount " +
-            "         WHEN t.transactionType = 1 THEN -t.amount " +
-            "         ELSE 0 END) " +
-            "FROM Transaction t " +
-            "WHERE t.accountId = :accountId " +
-            "AND (t.isCountable = 1 OR (:transferCategoryId IS NOT NULL AND t.categoryId = :transferCategoryId))")
-    Double findBalanceByAccountId(
-            @Param("accountId") Long accountId,
-            @Param("transferCategoryId") Long transferCategoryId
-    );
-
-    @Query("SELECT COALESCE(SUM(CASE WHEN t.transactionType = 2 THEN t.amount " +
-            "         WHEN t.transactionType = 1 THEN -t.amount " +
-            "         ELSE 0 END), 0) " +
-            "FROM Transaction t " +
-            "WHERE t.accountId = :accountId " +
-            "AND t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId) " +
-            "AND t.linkedTransactionId IS NOT NULL")
-    Double sumTransferDeltaForAccount(
-            @Param("userId") String userId,
-            @Param("accountId") Long accountId
-    );
-
-    @Query("SELECT COALESCE(SUM(CASE WHEN t.transactionType = 2 THEN t.amount " +
-            "         WHEN t.transactionType = 1 THEN -t.amount " +
+    @Query("SELECT COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.CREDIT THEN t.amount " +
+            "         WHEN t.transactionType = com.trako.entities.TransactionType.DEBIT THEN -t.amount " +
             "         ELSE 0 END), 0) " +
             "FROM Transaction t " +
             "WHERE t.accountId = :accountId " +
@@ -164,8 +128,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             @Param("endDate") Date endDate
     );
 
-    @Query("SELECT COALESCE(SUM(CASE WHEN t.transactionType = 2 THEN t.amount " +
-            "         WHEN t.transactionType = 1 THEN -t.amount " +
+    @Query("SELECT COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.CREDIT THEN t.amount " +
+            "         WHEN t.transactionType = com.trako.entities.TransactionType.DEBIT THEN -t.amount " +
             "         ELSE 0 END), 0) " +
             "FROM Transaction t " +
             "WHERE t.accountId = :accountId " +
@@ -177,8 +141,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     );
 
     @Query("SELECT t.accountId AS accountId, " +
-            "COALESCE(SUM(CASE WHEN t.transactionType = 2 THEN t.amount " +
-            "         WHEN t.transactionType = 1 THEN -t.amount " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.CREDIT THEN t.amount " +
+            "         WHEN t.transactionType = com.trako.entities.TransactionType.DEBIT THEN -t.amount " +
             "         ELSE 0 END), 0) AS balance " +
             "FROM Transaction t " +
             "WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId) " +
@@ -188,16 +152,64 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             @Param("userId") String userId
     );
 
-    @Query("SELECT t.accountId AS accountId, " +
-            "COALESCE(SUM(CASE WHEN t.transactionType = 2 THEN t.amount " +
-            "         WHEN t.transactionType = 1 THEN -t.amount " +
-            "         ELSE 0 END), 0) AS transferDelta " +
+    @Query("SELECT " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.CREDIT THEN t.amount ELSE 0 END), 0), " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.DEBIT THEN t.amount ELSE 0 END), 0), " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.CREDIT THEN t.amount " +
+            "         WHEN t.transactionType = com.trako.entities.TransactionType.DEBIT THEN -t.amount " +
+            "         ELSE 0 END), 0), " +
+            "COUNT(t) " +
             "FROM Transaction t " +
             "WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId) " +
-            "AND t.linkedTransactionId IS NOT NULL " +
-            "GROUP BY t.accountId")
-    List<Map<String, Object>> sumTransferDeltasByAccountForUser(
-            @Param("userId") String userId
+            "AND t.isCountable = 1 " +
+            "AND t.date >= :startDate AND t.date < :endDate")
+    Object[] sumCountableTotalsForUserInRange(
+            @Param("userId") String userId,
+            @Param("startDate") Date startDate,
+            @Param("endDate") Date endDate
+    );
+
+    @Query("SELECT " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.CREDIT THEN t.amount ELSE 0 END), 0), " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.DEBIT THEN t.amount ELSE 0 END), 0), " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.CREDIT THEN t.amount " +
+            "         WHEN t.transactionType = com.trako.entities.TransactionType.DEBIT THEN -t.amount " +
+            "         ELSE 0 END), 0), " +
+            "COUNT(t) " +
+            "FROM Transaction t " +
+            "WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId AND a.id IN :accountIds) " +
+            "AND t.isCountable = 1 " +
+            "AND t.date >= :startDate AND t.date < :endDate")
+    Object[] sumCountableTotalsForUserInRangeAndAccounts(
+            @Param("userId") String userId,
+            @Param("accountIds") List<Long> accountIds,
+            @Param("startDate") Date startDate,
+            @Param("endDate") Date endDate
+    );
+
+    @Query("SELECT COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.CREDIT THEN t.amount " +
+            "         WHEN t.transactionType = com.trako.entities.TransactionType.DEBIT THEN -t.amount " +
+            "         ELSE 0 END), 0) " +
+            "FROM Transaction t " +
+            "WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId) " +
+            "AND t.isCountable = 1 " +
+            "AND t.date < :startDate")
+    Double sumNetBeforeDateForUser(
+            @Param("userId") String userId,
+            @Param("startDate") Date startDate
+    );
+
+    @Query("SELECT COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.CREDIT THEN t.amount " +
+            "         WHEN t.transactionType = com.trako.entities.TransactionType.DEBIT THEN -t.amount " +
+            "         ELSE 0 END), 0) " +
+            "FROM Transaction t " +
+            "WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId AND a.id IN :accountIds) " +
+            "AND t.isCountable = 1 " +
+            "AND t.date < :startDate")
+    Double sumNetBeforeDateForUserAndAccounts(
+            @Param("userId") String userId,
+            @Param("accountIds") List<Long> accountIds,
+            @Param("startDate") Date startDate
     );
 
     @Query("SELECT " +
@@ -261,5 +273,144 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     );
     
     List<Transaction> findByAccountId(Long accountId);
+    List<Transaction> findByAccountIdIn(List<Long> accountIds);
     List<Transaction> findByCategoryId(Long categoryId);
+
+    boolean existsByAccountId(Long accountId);
+    boolean existsByCategoryId(Long categoryId);
+
+    void deleteByAccountIdIn(List<Long> accountIds);
+    
+    @Query("SELECT YEAR(t.date) as y, MONTH(t.date) as m, " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.CREDIT THEN t.amount ELSE 0 END), 0), " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.DEBIT THEN t.amount ELSE 0 END), 0), " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.CREDIT THEN t.amount " +
+            "         WHEN t.transactionType = com.trako.entities.TransactionType.DEBIT THEN -t.amount " +
+            "         ELSE 0 END), 0), " +
+            "COUNT(t) " +
+            "FROM Transaction t " +
+            "WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId) " +
+            "AND t.isCountable = 1 " +
+            "AND YEAR(t.date) = :year " +
+            "GROUP BY YEAR(t.date), MONTH(t.date) " +
+            "ORDER BY y DESC, m DESC")
+    List<Object[]> findMonthlySummariesForUserAndYear(
+            @Param("userId") String userId,
+            @Param("year") int year
+    );
+
+    @Query("SELECT YEAR(t.date) as y, " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.CREDIT THEN t.amount ELSE 0 END), 0), " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.DEBIT THEN t.amount ELSE 0 END), 0), " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.CREDIT THEN t.amount " +
+            "         WHEN t.transactionType = com.trako.entities.TransactionType.DEBIT THEN -t.amount " +
+            "         ELSE 0 END), 0), " +
+            "COUNT(t) " +
+            "FROM Transaction t " +
+            "WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId) " +
+            "AND t.isCountable = 1 " +
+            "GROUP BY YEAR(t.date) " +
+            "ORDER BY y DESC")
+    List<Object[]> findYearlySummariesForUser(
+            @Param("userId") String userId
+    );
+
+    @Query("SELECT YEAR(t.date) as y, MONTH(t.date) as m, " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.CREDIT THEN t.amount ELSE 0 END), 0), " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.DEBIT THEN t.amount ELSE 0 END), 0), " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.CREDIT THEN t.amount " +
+            "         WHEN t.transactionType = com.trako.entities.TransactionType.DEBIT THEN -t.amount " +
+            "         ELSE 0 END), 0), " +
+            "COUNT(t) " +
+            "FROM Transaction t " +
+            "WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId AND a.id IN :accountIds) " +
+            "AND t.isCountable = 1 " +
+            "AND YEAR(t.date) = :year " +
+            "GROUP BY YEAR(t.date), MONTH(t.date) " +
+            "ORDER BY y DESC, m DESC")
+    List<Object[]> findMonthlySummariesForUserAndYearAndAccounts(
+            @Param("userId") String userId,
+            @Param("year") int year,
+            @Param("accountIds") List<Long> accountIds
+    );
+
+    @Query("SELECT YEAR(t.date) as y, " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.CREDIT THEN t.amount ELSE 0 END), 0), " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.DEBIT THEN t.amount ELSE 0 END), 0), " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.CREDIT THEN t.amount " +
+            "         WHEN t.transactionType = com.trako.entities.TransactionType.DEBIT THEN -t.amount " +
+            "         ELSE 0 END), 0), " +
+            "COUNT(t) " +
+            "FROM Transaction t " +
+            "WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId AND a.id IN :accountIds) " +
+            "AND t.isCountable = 1 " +
+            "GROUP BY YEAR(t.date) " +
+            "ORDER BY y DESC")
+    List<Object[]> findYearlySummariesForUserAndAccounts(
+            @Param("userId") String userId,
+            @Param("accountIds") List<Long> accountIds
+    );
+
+    @Query("SELECT t.date, SUM(t.amount) " +
+            "FROM Transaction t " +
+            "WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId) " +
+            "AND t.isCountable = 1 " +
+            "AND t.transactionType = :transactionType " +
+            "AND (:accountId IS NULL OR t.accountId = :accountId) " +
+            "GROUP BY t.date " +
+            "ORDER BY t.date ASC")
+    List<Object[]> sumAmountsByDateForUser(
+            @Param("userId") String userId,
+            @Param("transactionType") TransactionType transactionType,
+            @Param("accountId") Long accountId
+    );
+
+    @Query("SELECT t.date, SUM(t.amount) " +
+            "FROM Transaction t " +
+            "WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId) " +
+            "AND t.isCountable = 1 " +
+            "AND t.transactionType = :transactionType " +
+            "AND (:accountId IS NULL OR t.accountId = :accountId) " +
+            "AND t.categoryId = :categoryId " +
+            "GROUP BY t.date " +
+            "ORDER BY t.date ASC")
+    List<Object[]> sumAmountsByDateForCategory(
+            @Param("userId") String userId,
+            @Param("transactionType") TransactionType transactionType,
+            @Param("accountId") Long accountId,
+            @Param("categoryId") Long categoryId
+    );
+
+    @Query("SELECT t.categoryId, SUM(t.amount) " +
+            "FROM Transaction t " +
+            "WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId) " +
+            "AND t.isCountable = 1 " +
+            "AND t.transactionType = :transactionType " +
+            "AND (:accountId IS NULL OR t.accountId = :accountId) " +
+            "AND t.date >= :startDate AND t.date < :endDate " +
+            "GROUP BY t.categoryId")
+    List<Object[]> sumAmountsByCategoryForUserInRange(
+            @Param("userId") String userId,
+            @Param("transactionType") TransactionType transactionType,
+            @Param("accountId") Long accountId,
+            @Param("startDate") Date startDate,
+            @Param("endDate") Date endDate
+    );
+
+    @Query("SELECT SUM(t.amount) " +
+            "FROM Transaction t " +
+            "WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId) " +
+            "AND t.isCountable = 1 " +
+            "AND t.transactionType = :transactionType " +
+            "AND (:accountId IS NULL OR t.accountId = :accountId) " +
+            "AND t.categoryId = :categoryId " +
+            "AND t.date >= :startDate AND t.date < :endDate")
+    Double sumAmountForCategoryInRange(
+            @Param("userId") String userId,
+            @Param("transactionType") TransactionType transactionType,
+            @Param("accountId") Long accountId,
+            @Param("categoryId") Long categoryId,
+            @Param("startDate") Date startDate,
+            @Param("endDate") Date endDate
+    );
 }

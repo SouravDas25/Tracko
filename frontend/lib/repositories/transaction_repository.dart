@@ -4,13 +4,51 @@ import '../models/account.dart' as legacy_account;
 import '../models/category.dart' as legacy_category;
 import '../models/contact.dart' as legacy_contact;
 import '../models/split.dart' as legacy_split;
-import '../dtos/TrackoContact.dart';
 import '../services/api_client.dart';
 import '../Utils/enums.dart';
 import '../Utils/AppLog.dart';
 
+import '../models/transaction_period_summary.dart';
+
 class TransactionRepository {
-  final _api = ApiClient();
+  final ApiClient _api;
+
+  TransactionRepository({ApiClient? api}) : _api = api ?? ApiClient();
+
+  Future<List<TransactionPeriodSummary>> getMonthlySummaries(int year,
+      {List<int>? accountIds}) async {
+    final isSingleAccount = accountIds != null && accountIds.length == 1;
+    final path = isSingleAccount
+        ? "${ApiConfig.accounts}/${accountIds!.first}/summary/monthly"
+        : "${ApiConfig.transactions}/summary/monthly";
+
+    final res = await _api.get<List<dynamic>>(
+      path,
+      query: {
+        'year': year,
+        if (!isSingleAccount && accountIds != null && accountIds.isNotEmpty)
+          'accountIds': accountIds.join(','),
+      },
+    );
+    return res.map((e) => TransactionPeriodSummary.fromJson(e)).toList();
+  }
+
+  Future<List<TransactionPeriodSummary>> getYearlySummaries(
+      {List<int>? accountIds}) async {
+    final isSingleAccount = accountIds != null && accountIds.length == 1;
+    final path = isSingleAccount
+        ? "${ApiConfig.accounts}/${accountIds!.first}/summary/yearly"
+        : "${ApiConfig.transactions}/summary/yearly";
+
+    final res = await _api.get<List<dynamic>>(
+      path,
+      query: {
+        if (!isSingleAccount && accountIds != null && accountIds.isNotEmpty)
+          'accountIds': accountIds.join(','),
+      },
+    );
+    return res.map((e) => TransactionPeriodSummary.fromJson(e)).toList();
+  }
 
   Future<List<legacy.Transaction>> getAll({
     int? month,
@@ -55,6 +93,60 @@ class TransactionRepository {
       }
       return _toLegacy(row);
     }).toList();
+  }
+
+  Future<Map<String, dynamic>> getAllPaginated({
+    int? month,
+    int? year,
+    DateTime? startDate,
+    DateTime? endDate,
+    List<int>? accountIds,
+    int? categoryId,
+    int page = 0,
+    int size = 500,
+    bool expand = false,
+  }) async {
+    final isSingleAccount = accountIds != null && accountIds.length == 1;
+    final path = isSingleAccount
+        ? "${ApiConfig.accounts}/${accountIds!.first}/transactions"
+        : ApiConfig.transactions;
+
+    final res = await _api.get<Map<String, dynamic>>(
+      path,
+      query: {
+        if (month != null) 'month': month,
+        if (year != null) 'year': year,
+        if (startDate != null)
+          'startDate': startDate.toIso8601String().split('T').first,
+        if (endDate != null)
+          'endDate': endDate.toIso8601String().split('T').first,
+        'page': page,
+        'size': size,
+        'expand': expand,
+        if (!isSingleAccount && accountIds != null && accountIds.isNotEmpty)
+          'accountIds': accountIds.join(','),
+        if (categoryId != null) 'categoryId': categoryId,
+      },
+    );
+
+    final rows = (res['transactions'] as List<dynamic>?) ?? const <dynamic>[];
+    final transactions = rows.map((e) {
+      final row = e as Map<String, dynamic>;
+      if (expand) {
+        return _toLegacyFromExpanded(row);
+      }
+      return _toLegacy(row);
+    }).toList();
+
+    return {
+      'transactions': transactions,
+      'hasNext': res['hasNext'] ?? false,
+      'hasPrevious': res['hasPrevious'] ?? false,
+      'page': res['page'] ?? 0,
+      'size': res['size'] ?? size,
+      'totalPages': res['totalPages'] ?? 0,
+      'totalElements': res['totalElements'] ?? 0,
+    };
   }
 
   Future<void> deleteById(int id) async {
@@ -169,12 +261,7 @@ class TransactionRepository {
         final c = legacy_contact.Contact.fromJson(contactJson);
         s.contact = c;
 
-        final tc = TrakoContact();
-        tc.contactId = c.id;
-        tc.name = c.name;
-        tc.phoneNo = c.phoneNo;
-        tc.email = c.email;
-        t.contacts.add(tc);
+        t.contacts.add(c);
       }
       return s;
     }).toList();
@@ -284,27 +371,19 @@ class TransactionRepository {
     if (t.linkedTransactionId != null)
       payload['linkedTransactionId'] = t.linkedTransactionId;
 
-    final hasOriginalCurrency =
-        (t.originalCurrency != null && t.originalCurrency!.isNotEmpty);
-    final hasOriginalAmount = (t.originalAmount != null);
+    // Always send original currency fields as required by backend
+    payload['originalCurrency'] = t.originalCurrency;
+    payload['originalAmount'] = t.originalAmount;
+    payload['exchangeRate'] = t.exchangeRate;
 
-    // Only include amount for base-currency transactions.
-    // IMPORTANT: Transaction.amount is non-nullable in Flutter (defaults to 0.0),
-    // so checking for null is not enough. If original currency info is present,
-    // omit amount to let backend compute base amount and persist it.
-    if (!(hasOriginalCurrency && hasOriginalAmount)) {
-      payload['amount'] = t.amount;
-    }
-    // Only include exchangeRate if explicitly provided; otherwise backend will fetch
-    if (t.exchangeRate != null) {
-      payload['exchangeRate'] = t.exchangeRate;
-    }
+    // Amount is now computed by DB, but we can send it if needed (backend ignores it for persistence)
+    // payload['amount'] = t.amount;
+
     return payload;
   }
 
   // Aggregation methods - backend calculates
-  Future<Map<String, dynamic>> getSummary(
-      String userId, DateTime startDate, DateTime endDate,
+  Future<Map<String, dynamic>> getSummary(DateTime startDate, DateTime endDate,
       {List<int>? accountIds}) async {
     final res = await _api.get<Map<String, dynamic>>(
       "${ApiConfig.transactions}/summary",

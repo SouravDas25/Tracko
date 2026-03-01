@@ -4,7 +4,8 @@ import 'package:integration_test/integration_test.dart';
 import 'package:tracko/main.dart' as app;
 
 /// Waits for a widget to appear on the screen.
-Future<void> waitFor(WidgetTester tester, Finder finder, {Duration timeout = const Duration(seconds: 30)}) async {
+Future<void> waitFor(WidgetTester tester, Finder finder,
+    {Duration timeout = const Duration(seconds: 30)}) async {
   final end = DateTime.now().add(timeout);
   do {
     if (DateTime.now().isAfter(end)) {
@@ -19,7 +20,8 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   group('Tracko Backend Integration Tests', () {
-        testWidgets('Complete authentication bypass and setup flow', (WidgetTester tester) async {
+    testWidgets('Complete authentication bypass and setup flow',
+        (WidgetTester tester) async {
       // Start the app
       app.main();
       await tester.pumpAndSettle();
@@ -59,7 +61,8 @@ void main() {
       print('✅ Authentication bypass successful');
     });
 
-        testWidgets('User setup with backend integration', (WidgetTester tester) async {
+    testWidgets('User setup with backend integration',
+        (WidgetTester tester) async {
       // Start the app
       app.main();
       await tester.pumpAndSettle();
@@ -109,7 +112,7 @@ void main() {
       print('✅ User setup and backend integration successful');
     });
 
-        testWidgets('Session persistence test', (WidgetTester tester) async {
+    testWidgets('Session persistence test', (WidgetTester tester) async {
       // Start the app
       app.main();
       await tester.pumpAndSettle();
@@ -155,7 +158,7 @@ void main() {
       print('✅ Session persistence verified');
     });
 
-        testWidgets('Backend API connectivity test', (WidgetTester tester) async {
+    testWidgets('Backend API connectivity test', (WidgetTester tester) async {
       // This test verifies that the app can communicate with backend
       app.main();
       await tester.pumpAndSettle();

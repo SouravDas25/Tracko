@@ -12,4 +12,6 @@ public interface BudgetMonthRepository extends JpaRepository<BudgetMonth, Long> 
     
     // Find the latest closed budget month for a user (for rollover calculation)
     Optional<BudgetMonth> findFirstByUserIdAndIsClosedTrueOrderByYearDescMonthDesc(String userId);
+    
+    void deleteByUserId(String userId);
 }

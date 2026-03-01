@@ -1,0 +1,131 @@
+package com.trako.integration;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.trako.config.TestJwtSecurityConfig;
+import com.trako.entities.User;
+import com.trako.models.request.UserSaveRequest;
+import com.trako.repositories.UsersRepository;
+import com.trako.util.JwtTokenUtil;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Collections;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
+@Import(TestJwtSecurityConfig.class)
+@Transactional
+public class UserCreationIntegrationTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Autowired
+    private UsersRepository usersRepository;
+
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
+
+    @MockBean
+    private AuthenticationManager authenticationManager;
+
+    private User adminUser;
+    private User regularUser;
+    private String adminToken;
+    private String regularToken;
+    private String adminPhone;
+    private String regularPhone;
+
+    @BeforeEach
+    public void setup() {
+        usersRepository.deleteAll();
+
+        // Create Admin User
+        adminUser = new User();
+        adminUser.setName("Admin User");
+        adminPhone = generateUniquePhone();
+        adminUser.setPhoneNo(adminPhone);
+        adminUser.setPassword("admin_pass");
+        adminUser.setIsAdmin(1);
+        adminUser = usersRepository.save(adminUser);
+        adminToken = "Bearer " + jwtTokenUtil.generateToken(new org.springframework.security.core.userdetails.User(adminUser.getPhoneNo(), adminUser.getPassword(), Collections.emptyList()));
+
+        // Create Regular User
+        regularUser = new User();
+        regularUser.setName("Regular User");
+        regularPhone = generateUniquePhone();
+        regularUser.setPhoneNo(regularPhone);
+        regularUser.setPassword("user_pass");
+        regularUser.setIsAdmin(0);
+        regularUser = usersRepository.save(regularUser);
+        regularToken = "Bearer " + jwtTokenUtil.generateToken(new org.springframework.security.core.userdetails.User(regularUser.getPhoneNo(), regularUser.getPassword(), Collections.emptyList()));
+    }
+
+    private String generateUniquePhone() {
+        long base = Math.abs(System.nanoTime());
+        long tenDigits = (base % 1_000_000_0000L) + 1_000_000_000L; // ensure 10 digits, not starting with 0
+        return String.valueOf(tenDigits);
+    }
+
+    @Test
+    public void testAdminCanCreateNewUser() throws Exception {
+        UserSaveRequest request = new UserSaveRequest();
+        request.setName("New User");
+        request.setPhoneNo("7777777777");
+        request.setPassword("new_pass");
+
+        mockMvc.perform(post("/api/user/create")
+                .header("Authorization", adminToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk());
+
+        User newUser = usersRepository.findByPhoneNo("7777777777");
+        assertNotNull(newUser);
+        assertEquals("New User", newUser.getName());
+    }
+
+    @Test
+    public void testRegularUserCannotCreateNewUser() throws Exception {
+        UserSaveRequest request = new UserSaveRequest();
+        request.setName("Hacker User");
+        request.setPhoneNo("7777777777"); // Trying to create this number
+        request.setPassword("new_pass");
+
+        mockMvc.perform(post("/api/user/create")
+                .header("Authorization", regularToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized());
+
+        // Verify "7777777777" was NOT created
+        User newUser = usersRepository.findByPhoneNo("7777777777");
+        assertNull(newUser);
+
+        // Verify regularUser was NOT modified
+        User updatedUser = usersRepository.findById(regularUser.getId()).orElse(null);
+        assertNotNull(updatedUser);
+        assertEquals("Regular User", updatedUser.getName());
+        assertEquals(regularPhone, updatedUser.getPhoneNo());
+    }
+}

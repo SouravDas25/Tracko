@@ -2,7 +2,6 @@ package com.trako.controllers;
 
 import com.trako.models.request.AuthicationRequest;
 import com.trako.models.request.LoginRequest;
-import com.trako.models.request.UserSaveRequest;
 import com.trako.models.responses.JwtResponse;
 import com.trako.services.UserService;
 import com.trako.util.JwtTokenUtil;
@@ -10,7 +9,6 @@ import com.trako.util.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -22,6 +20,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.Valid;
 
 @RestController
 public class SessionController {
@@ -44,10 +43,10 @@ public class SessionController {
     private PasswordEncoder passwordEncoder;
 
     @PostMapping("/api/oauth/token")
-    public ResponseEntity<?> signIn(@RequestBody AuthicationRequest authicationRequest) {
+    public ResponseEntity<?> signIn(@Valid @RequestBody AuthicationRequest authicationRequest) {
 
         UsernamePasswordAuthenticationToken token =
-                new UsernamePasswordAuthenticationToken(authicationRequest.getPhoneNo(), authicationRequest.getFirebaseUuid());
+                new UsernamePasswordAuthenticationToken(authicationRequest.getPhoneNo(), authicationRequest.getPassword());
         Authentication authenticate = authenticationManager.authenticate(token);
 
         String jwtToken = jwtTokenUtil.generateToken((UserDetails) authenticate.getPrincipal());
@@ -56,7 +55,7 @@ public class SessionController {
     }
 
     @PostMapping("/api/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest) {
         try {
             UserDetails user = userDetailsService.loadUserByUsername(loginRequest.getUsername());
 
@@ -78,21 +77,6 @@ public class SessionController {
             log.warn("AuthenticationException during login for username={}", loginRequest.getUsername());
             return Response.unauthorized();
         }
-    }
-
-    @PostMapping(value = "/api/signUp")
-    ResponseEntity<?> signUp(@RequestBody UserSaveRequest userSaveRequest) {
-        if (userSaveRequest.getFireBaseId() == null || userSaveRequest.getFireBaseId().isEmpty())
-            return Response.unauthorized();
-        String id = userService.save(userSaveRequest);
-        if (id == null)
-            Response.badRequest("Phone Number Incorrect");
-        log.info("User Saved : {}", id);
-        UserDetails userDetails = userDetailsService.loadUserByUsername(userSaveRequest.getPhoneNo());
-        String jwtToken = jwtTokenUtil.generateToken(userDetails);
-        HttpHeaders responseHeaders = new HttpHeaders();
-        responseHeaders.set("Jwt-Token", jwtToken);
-        return Response.ok(id, "User Saved Successfully.", responseHeaders);
     }
 
 

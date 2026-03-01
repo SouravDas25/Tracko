@@ -7,14 +7,17 @@ import com.trako.services.CategoryService;
 import com.trako.services.UserService;
 import com.trako.util.Response;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/categories")
+@Validated
 public class CategoryController {
 
     @Autowired
@@ -31,7 +34,7 @@ public class CategoryController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getById(@PathVariable Long id) {
+    public ResponseEntity<?> getById(@PathVariable @Positive Long id) {
         String currentUserId = userService.loggedInUser().getId();
         Category category = categoryService.findById(id).orElse(null);
         if (category == null) {
@@ -41,16 +44,6 @@ public class CategoryController {
             return Response.unauthorized();
         }
         return Response.ok(category);
-    }
-
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<?> getByUserId(@PathVariable String userId) {
-        String currentUserId = userService.loggedInUser().getId();
-        if (!currentUserId.equals(userId)) {
-            return Response.unauthorized();
-        }
-        List<Category> categories = categoryService.findByUserId(currentUserId);
-        return Response.ok(categories);
     }
 
     @PostMapping
@@ -65,7 +58,7 @@ public class CategoryController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> update(@PathVariable Long id, @Valid @RequestBody CategorySaveRequest request) {
+    public ResponseEntity<?> update(@PathVariable @Positive Long id, @Valid @RequestBody CategorySaveRequest request) {
         Category category = categoryService.findById(id)
                 .orElse(null);
 
@@ -86,7 +79,7 @@ public class CategoryController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable Long id) {
+    public ResponseEntity<?> delete(@PathVariable @Positive Long id) {
         String currentUserId = userService.loggedInUser().getId();
         Category category = categoryService.findById(id).orElse(null);
         if (category == null) {

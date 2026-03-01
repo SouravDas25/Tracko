@@ -4,7 +4,9 @@ import 'package:tracko/models/budget_response.dart';
 import 'package:tracko/services/api_client.dart';
 
 class BudgetService {
-  final ApiClient _apiClient = ApiClient();
+  final ApiClient _apiClient;
+
+  BudgetService({ApiClient? apiClient}) : _apiClient = apiClient ?? ApiClient();
 
   Future<BudgetResponse> getBudgetDetails(int month, int year) async {
     final Map<String, dynamic> data = await _apiClient.get(

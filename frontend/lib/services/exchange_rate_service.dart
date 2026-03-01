@@ -2,7 +2,9 @@ import 'package:tracko/config/api_config.dart';
 import 'package:tracko/services/api_client.dart';
 
 class ExchangeRateService {
-  final _api = ApiClient();
+  final ApiClient _api;
+
+  ExchangeRateService({ApiClient? api}) : _api = api ?? ApiClient();
 
   Future<double?> getExchangeRate(
       String fromCurrency, String toCurrency) async {

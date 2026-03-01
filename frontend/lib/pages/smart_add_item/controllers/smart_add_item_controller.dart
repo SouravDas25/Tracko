@@ -4,16 +4,14 @@ import 'package:tracko/component/select_backend_contact.dart';
 import 'package:tracko/controllers/AccountController.dart';
 import 'package:tracko/controllers/CategoryController.dart';
 import 'package:tracko/controllers/TransactionController.dart';
-import 'package:tracko/controllers/UserController.dart';
-import 'package:tracko/dtos/TrackoContact.dart';
 import 'package:tracko/models/account.dart';
 import 'package:tracko/models/category.dart';
 import 'package:tracko/models/contact.dart';
 import 'package:tracko/models/transaction.dart';
-import 'package:tracko/models/user.dart';
 import 'package:tracko/repositories/contact_repository.dart';
 import 'package:tracko/services/SessionService.dart';
 import 'package:tracko/Utils/enums.dart';
+import 'package:tracko/di/di.dart';
 
 class SmartAddItemController extends ChangeNotifier {
   final Transaction transaction;
@@ -43,16 +41,17 @@ class SmartAddItemController extends ChangeNotifier {
   List<String> availableCurrencies = ['INR'];
   Map<String, double> currencyRates = {};
 
-  List<User> frequentSplitters = [];
-  Set<TrakoContact> splitList = {};
+  List<Contact> frequentSplitters = [];
+  Set<Contact> splitList = {};
   List<Category> categories = [];
   List<Account> accounts = [];
   List<Contact> myContacts = [];
-  final _contactRepo = ContactRepository();
+  late final ContactRepository _contactRepo;
 
   bool isLoading = true;
 
   SmartAddItemController(this.transaction) : isEdit = transaction.id != null {
+    _contactRepo = sl<ContactRepository>();
     _initFromTransaction();
     _setupListeners();
     initData();
@@ -82,9 +81,7 @@ class SmartAddItemController extends ChangeNotifier {
     nameController.text = transaction.name;
     transactionType = transaction.transactionType;
 
-    if (transaction.contacts != null) {
-      splitList.addAll(transaction.contacts);
-    }
+    splitList = Set<Contact>.from(transaction.contacts);
 
     _rebuildSplitControllers();
   }
@@ -99,7 +96,7 @@ class SmartAddItemController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final user = await SessionService.getCurrentUser();
+      final user = await sl<SessionService>().fetchMe();
       baseCurrency = user.baseCurrency.isNotEmpty ? user.baseCurrency : 'INR';
 
       availableCurrencies = [baseCurrency];
@@ -171,12 +168,10 @@ class SmartAddItemController extends ChangeNotifier {
 
       final loadedContacts =
           await TransactionController.loadSplits(transaction);
-      splitList = Set<TrakoContact>.from(loadedContacts);
+      splitList = Set<Contact>.from(loadedContacts);
 
       if (splitList.isEmpty && transactionType == TransactionType.DEBIT) {
-        frequentSplitters = await UserController.getFrequentSplitters();
-        TrakoContact userContact = SessionService.currentUserContact();
-        splitList.add(userContact);
+        frequentSplitters = await _contactRepo.listMine();
       }
       _rebuildSplitControllers();
     } catch (e) {
@@ -193,7 +188,7 @@ class SmartAddItemController extends ChangeNotifier {
       controller.dispose();
     }
     splitAmountControllers =
-        List.generate(splitList.length, (_) => TextEditingController());
+        List.generate(splitList.length + 1, (_) => TextEditingController());
   }
 
   void updateCalculatedAmount() {
@@ -275,59 +270,30 @@ class SmartAddItemController extends ChangeNotifier {
     notifyListeners();
   }
 
-  String _normalizePhone(String? phone) {
-    if (phone == null) return '';
-    final digitsOnly = phone.replaceAll(RegExp(r'[^0-9]'), '');
-    if (digitsOnly.length <= 10) return digitsOnly;
-    return digitsOnly.substring(digitsOnly.length - 10);
-  }
-
-  Future<void> addSplit(User user) async {
-    frequentSplitters.remove(user);
-    TrakoContact contact = UserController.user2Contact(user);
-
-    if (myContacts.isEmpty) {
-      try {
-        myContacts = await _contactRepo.listMine();
-      } catch (_) {}
-    }
-
-    try {
-      final userPhone = _normalizePhone(user.phoneNo);
-      if (userPhone.isNotEmpty) {
-        final match = myContacts.firstWhere(
-            (c) => _normalizePhone(c.phoneNo) == userPhone,
-            orElse: () => Contact());
-        if (match.id != null) {
-          contact.contactId = match.id;
-        }
-      }
-    } catch (e) {}
-
-    if (!splitList.contains(contact)) {
-      splitList.add(contact);
+  Future<void> addSplit(Contact backendContact) async {
+    frequentSplitters.remove(backendContact);
+    if (!splitList.contains(backendContact)) {
+      splitList.add(backendContact);
       splitAmountControllers.add(TextEditingController());
       notifyListeners();
     }
   }
 
-  void syncSplits(List<TrakoContact> contacts) {
+  void syncSplits(List<Contact> contacts) {
     frequentSplitters.clear();
-    splitList.clear();
-    for (var contact in contacts) {
-      if (!splitList.contains(contact)) {
-        splitList.add(contact);
-      }
-    }
+    splitList = Set<Contact>.from(contacts);
     _rebuildSplitControllers();
     notifyListeners();
   }
 
-  void removeSplit(TrakoContact contact, int index) {
+  void removeSplit(Contact contact, int index) {
     splitList.remove(contact);
-    if (index < splitAmountControllers.length) {
-      splitAmountControllers[index].dispose();
-      splitAmountControllers.removeAt(index);
+    // index=0 is reserved for implicit "You" row in UI
+    final controllerIndex = index;
+    if (controllerIndex > 0 &&
+        controllerIndex < splitAmountControllers.length) {
+      splitAmountControllers[controllerIndex].dispose();
+      splitAmountControllers.removeAt(controllerIndex);
     }
     notifyListeners();
   }
@@ -363,16 +329,19 @@ class SmartAddItemController extends ChangeNotifier {
     // Clone or use existing (be careful with mutation if save fails)
     // Here we mutate as per original logic but controller isolates it a bit
 
+    // Always set original fields, even for base currency
+    transaction.originalCurrency = selectedCurrency;
+    transaction.originalAmount = inputAmount;
+
     if (selectedCurrency != baseCurrency) {
-      transaction.originalCurrency = selectedCurrency;
-      transaction.originalAmount = inputAmount;
-      transaction.exchangeRate = null;
+      transaction.exchangeRate =
+          double.tryParse(exchangeRateController.text) ?? 1.0;
     } else {
-      transaction.amount = inputAmount;
-      transaction.originalCurrency = null;
-      transaction.originalAmount = null;
-      transaction.exchangeRate = null;
+      transaction.exchangeRate = 1.0;
     }
+
+    // Legacy amount field (still used for display in UI until refreshed)
+    transaction.amount = (inputAmount * (transaction.exchangeRate ?? 1.0));
 
     transaction.date = date;
     transaction.name = nameController.text.trim();
@@ -397,15 +366,13 @@ class SmartAddItemController extends ChangeNotifier {
     transaction.transactionType = transactionType;
 
     transaction.contacts.clear();
-    if (splitList.isNotEmpty) {
-      transaction.contacts.addAll(splitList);
-    }
+    transaction.contacts.addAll(splitList);
 
     return transaction;
   }
 
   Future<void> callSplitPage(BuildContext context) async {
-    List<TrakoContact>? result = await Navigator.push(
+    List<Contact>? result = await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => SelectBackendContactPage()),
     );

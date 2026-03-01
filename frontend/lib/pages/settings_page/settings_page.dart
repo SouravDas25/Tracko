@@ -9,9 +9,16 @@ import 'package:tracko/models/user.dart';
 import 'package:tracko/pages/account_page/AccountPage.dart';
 import 'package:tracko/pages/category_page/category_page.dart';
 import 'package:tracko/pages/contact_page/contact_page.dart';
+import '../recurring_transaction_page/recurring_transaction_list_page.dart';
 import 'package:tracko/pages/settings_page/currency_settings_page.dart';
+import 'package:tracko/repositories/user_repository.dart';
+import 'package:tracko/Utils/HealthCheckUtil.dart';
 import 'package:tracko/services/SessionService.dart';
+import 'package:tracko/services/api_client.dart';
+import 'package:tracko/di/di.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:tracko/config/api_config.dart';
 import 'package:intl/intl.dart' as DateFormatter;
 
 class SettingsPage extends StatefulWidget {
@@ -33,28 +40,166 @@ class _SettingsPage extends State<SettingsPage> {
 
   void initData() async {
     try {
-      user = await SessionService.getCurrentUser();
+      user = await sl<SessionService>().fetchMe();
     } catch (e) {
       print("Error loading user: $e");
     }
-    if (this.mounted) setState(() {});
+    setState(() {});
   }
 
   void _showResetDatabaseDialog() {
     DeleteDialog.show(
         context: context,
-        title: "Reset Database",
-        message: "Are sure you want to delete all your transaction ?",
+        title: "Reset Data",
+        message:
+            "Are you sure you want to delete ALL your data? This action cannot be undone.",
         deleteCallback: () async {
-          await SessionService.logout();
-          await _logout();
+          LoadingDialog.show(context);
+          try {
+            await sl<UserRepository>().resetUserData();
+            Navigator.pop(context); // Hide loading
+            await _logout();
+          } catch (e) {
+            Navigator.pop(context); // Hide loading
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Failed to reset data: $e')),
+            );
+          }
         });
   }
 
+  void _showResetTransactionsDialog() {
+    DeleteDialog.show(
+        context: context,
+        title: "Reset Transactions",
+        message:
+            "Are you sure you want to delete ALL your transactions? Accounts and Categories will be kept. This action cannot be undone.",
+        deleteCallback: () async {
+          LoadingDialog.show(context);
+          try {
+            await sl<UserRepository>().resetUserTransactions();
+            Navigator.pop(context); // Hide loading
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('All transactions deleted successfully')),
+            );
+          } catch (e) {
+            Navigator.pop(context); // Hide loading
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Failed to reset transactions: $e')),
+            );
+          }
+        });
+  }
+
+  void _showUpdateUrlDialog() {
+    final controller = TextEditingController(text: ApiConfig.baseUrl);
+    bool isChecking = false;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            title: Text("Update Backend URL"),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: controller,
+                  enabled: !isChecking,
+                  decoration: InputDecoration(
+                    labelText: "Backend URL",
+                    hintText: "http://192.168.1.100:8080",
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  "Restart app might be required for changes to take full effect.",
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+                if (isChecking) ...[
+                  SizedBox(height: 16),
+                  CircularProgressIndicator(),
+                  SizedBox(height: 8),
+                  Text("Verifying connection..."),
+                ],
+              ],
+            ),
+            actions: isChecking
+                ? []
+                : [
+                    TextButton(
+                      onPressed: () async {
+                        await ApiConfig.reset();
+                        sl<ApiClient>().updateBaseUrl(ApiConfig.baseUrl);
+                        if (mounted) setState(() {});
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                              content: Text('Backend URL reset to default')),
+                        );
+                      },
+                      style:
+                          TextButton.styleFrom(foregroundColor: Colors.orange),
+                      child: Text("Reset Default"),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text("Cancel"),
+                    ),
+                    TextButton(
+                      onPressed: () async {
+                        final url = controller.text.trim();
+                        if (url.isEmpty) return;
+
+                        var cleanUrl = url;
+                        if (cleanUrl.endsWith('/')) {
+                          cleanUrl = cleanUrl.substring(0, cleanUrl.length - 1);
+                        }
+
+                        setDialogState(() {
+                          isChecking = true;
+                        });
+
+                        final success =
+                            await HealthCheckUtil.checkHealth(cleanUrl);
+
+                        if (success) {
+                          await ApiConfig.setBaseUrl(cleanUrl);
+                          sl<ApiClient>().updateBaseUrl(ApiConfig.baseUrl);
+                          if (mounted) setState(() {});
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Backend URL updated')),
+                          );
+                        } else {
+                          setDialogState(() {
+                            isChecking = false;
+                          });
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content:
+                                  Text('Connection failed or invalid response'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      },
+                      child: Text("Save"),
+                    ),
+                  ],
+          );
+        },
+      ),
+    );
+  }
+
   Future<void> _logout() async {
-    await SessionService.logout();
+    await sl<SessionService>().logout();
     Navigator.of(context).pushNamedAndRemoveUntil(
-      "/welcome",
+      "/login",
       (route) => false,
     );
   }
@@ -79,6 +224,7 @@ class _SettingsPage extends State<SettingsPage> {
     required VoidCallback onTap,
     Widget? trailing,
     Color? iconColor,
+    String? subtitle,
   }) {
     final color = iconColor ?? Theme.of(context).primaryColor;
     return ListTile(
@@ -91,6 +237,9 @@ class _SettingsPage extends State<SettingsPage> {
         child: Icon(icon, color: color),
       ),
       title: Text(title, style: TextStyle(fontSize: 16)),
+      subtitle: subtitle != null
+          ? Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.grey))
+          : null,
       trailing: trailing ?? Icon(Icons.chevron_right, color: Colors.grey),
       onTap: onTap,
     );
@@ -150,10 +299,6 @@ class _SettingsPage extends State<SettingsPage> {
                     ],
                   ),
                 ),
-                Text(
-                  ConstantUtil.version,
-                  style: TextStyle(color: secondaryTextColor, fontSize: 12),
-                ),
               ],
             ),
           ),
@@ -198,8 +343,27 @@ class _SettingsPage extends State<SettingsPage> {
               MaterialPageRoute(builder: (context) => CurrencySettingsPage()),
             ),
           ),
+          _buildSettingsTile(
+            icon: Icons.repeat,
+            title: "Recurring Transactions",
+            iconColor: Colors.purpleAccent,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => RecurringTransactionListPage()),
+            ),
+          ),
 
           _buildSectionHeader("SYSTEM SETTINGS"),
+
+          _buildSettingsTile(
+            icon: Icons.link,
+            title: "Backend URL",
+            subtitle: ApiConfig.baseUrl,
+            iconColor: Colors.blueGrey,
+            trailing: Icon(Icons.edit, size: 20, color: Colors.grey),
+            onTap: _showUpdateUrlDialog,
+          ),
 
           _buildSettingsTile(
             icon: Icons.calendar_today,
@@ -218,6 +382,20 @@ class _SettingsPage extends State<SettingsPage> {
                 setState(() {});
               }
             },
+          ),
+
+          _buildSettingsTile(
+            icon: Icons.restore,
+            title: "Reset Transactions",
+            iconColor: Colors.orange,
+            onTap: _showResetTransactionsDialog,
+          ),
+
+          _buildSettingsTile(
+            icon: Icons.delete_forever,
+            title: "Reset Data",
+            iconColor: Colors.red,
+            onTap: _showResetDatabaseDialog,
           ),
 
           Divider(),

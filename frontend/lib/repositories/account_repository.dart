@@ -4,7 +4,9 @@ import '../models/account.dart' as legacy;
 import '../services/api_client.dart';
 
 class AccountRepository {
-  final _api = ApiClient();
+  final ApiClient _api;
+
+  AccountRepository({ApiClient? api}) : _api = api ?? ApiClient();
 
   Future<List<legacy.Account>> getAllAccounts() async {
     final res = await _api.get<List<dynamic>>(ApiConfig.accounts);
@@ -36,18 +38,17 @@ class AccountRepository {
     }
   }
 
-  Future<legacy.Account> createAccount(
-      String name, String userId, String currency) async {
+  Future<legacy.Account> createAccount(String name, String currency) async {
     final res = await _api.post<Map<String, dynamic>>(ApiConfig.accounts,
-        data: {'name': name, 'userId': userId, 'currency': currency});
+        data: {'name': name, 'currency': currency});
     return _toLegacyAccount(res);
   }
 
   Future<legacy.Account> updateAccount(
-      int id, String name, String userId, String currency) async {
+      int id, String name, String currency) async {
     final res = await _api.put<Map<String, dynamic>>(
         '${ApiConfig.accounts}/$id',
-        data: {'name': name, 'userId': userId, 'currency': currency});
+        data: {'name': name, 'currency': currency});
     return _toLegacyAccount(res);
   }
 

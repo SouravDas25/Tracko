@@ -1,7 +1,7 @@
 package com.trako.dtos;
 
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Positive;
 
 public class BudgetAllocationRequestDTO {
     @NotNull
@@ -14,7 +14,7 @@ public class BudgetAllocationRequestDTO {
     private Long categoryId;
     
     @NotNull
-    @PositiveOrZero
+    @Positive
     private Double amount;
 
     public Integer getMonth() {

@@ -51,6 +51,9 @@ public class GlobalStartupSeeder implements ApplicationRunner {
     @Autowired
     private JsonStoreService jsonStoreService;
 
+    @Autowired
+    private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+
     @Override
     public void run(ApplicationArguments args) {
         log.info("GlobalStartupSeeder: starting");
@@ -104,7 +107,7 @@ public class GlobalStartupSeeder implements ApplicationRunner {
         );
     }
 
-    private void seedUserIfMissing(String name, String phoneNo, String email, String fireBaseId, Integer isShadow, Integer isAdmin) {
+    private void seedUserIfMissing(String name, String phoneNo, String email, String password, Integer isShadow, Integer isAdmin) {
         try {
             User existing = usersRepository.findByPhoneNo(phoneNo);
             if (existing != null) {
@@ -117,10 +120,12 @@ public class GlobalStartupSeeder implements ApplicationRunner {
                     existing.setIsShadow(isShadow);
                     changed = true;
                 }
-                if (existing.getFireBaseId() == null || !existing.getFireBaseId().equals(fireBaseId)) {
-                    existing.setFireBaseId(fireBaseId);
+                
+                if (existing.getPassword() == null || !passwordEncoder.matches(password, existing.getPassword())) {
+                    existing.setPassword(passwordEncoder.encode(password));
                     changed = true;
                 }
+
                 if (existing.getEmail() == null || !existing.getEmail().equals(email)) {
                     existing.setEmail(email);
                     changed = true;
@@ -139,7 +144,7 @@ public class GlobalStartupSeeder implements ApplicationRunner {
             u.setName(name);
             u.setPhoneNo(phoneNo);
             u.setEmail(email);
-            u.setFireBaseId(fireBaseId);
+            u.setPassword(passwordEncoder.encode(password));
             u.setIsShadow(isShadow);
             u.setIsAdmin(isAdmin);
             u.setGlobalId(UUID.randomUUID().toString().replace("-", ""));

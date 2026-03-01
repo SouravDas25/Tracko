@@ -1,9 +1,17 @@
 package com.trako.models.request;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
 public class AuthicationRequest {
 
+    @NotBlank
+    @Size(max = 32)
     String phoneNo;
-    String firebaseUuid;
+
+    @NotBlank
+    @Size(max = 250)
+    String password;
 
     public String getPhoneNo() {
         return phoneNo;
@@ -13,11 +21,11 @@ public class AuthicationRequest {
         this.phoneNo = phoneNo;
     }
 
-    public String getFirebaseUuid() {
-        return firebaseUuid;
+    public String getPassword() {
+        return password;
     }
 
-    public void setFirebaseUuid(String firebaseUuid) {
-        this.firebaseUuid = firebaseUuid;
+    public void setPassword(String password) {
+        this.password = password;
     }
 }

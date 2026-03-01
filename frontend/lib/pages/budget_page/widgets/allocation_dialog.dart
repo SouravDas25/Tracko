@@ -4,6 +4,7 @@ import 'package:tracko/Utils/CommonUtil.dart';
 import 'package:tracko/models/budget_allocation_request.dart';
 import 'package:tracko/services/budget_service.dart';
 import 'package:tracko/services/SessionService.dart';
+import 'package:tracko/di/di.dart';
 
 class AllocationDialog extends StatefulWidget {
   final int categoryId;
@@ -31,13 +32,14 @@ class AllocationDialog extends StatefulWidget {
 
 class _AllocationDialogState extends State<AllocationDialog> {
   final _amountController = TextEditingController();
-  final _budgetService = BudgetService();
+  late final BudgetService _budgetService;
   final _focusNode = FocusNode();
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
+    _budgetService = sl<BudgetService>();
     _amountController.text = widget.currentAllocation == 0
         ? ''
         : widget.currentAllocation.toStringAsFixed(2);
@@ -132,7 +134,7 @@ class _AllocationDialogState extends State<AllocationDialog> {
             ],
             decoration: InputDecoration(
               labelText: 'Allocated Amount',
-              prefixText: SessionService.currentCurrencySymbol,
+              prefixText: sl<SessionService>().currentCurrencySymbol,
               border: OutlineInputBorder(),
             ),
           ),

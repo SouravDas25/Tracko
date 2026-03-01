@@ -85,13 +85,13 @@ public class BudgetIntegrationTest {
         testUser.setName("Test User");
         testUser.setPhoneNo("1234567890");
         testUser.setEmail("test@example.com");
-        testUser.setFireBaseId("password");
+        testUser.setPassword("password");
         testUser = usersRepository.save(testUser);
 
         // Generate Token
         UserDetails principal = new org.springframework.security.core.userdetails.User(
                 testUser.getPhoneNo(),
-                testUser.getFireBaseId(),
+                testUser.getPassword(),
                 Collections.emptyList()
         );
         bearerToken = "Bearer " + jwtTokenUtil.generateToken(principal);
@@ -118,9 +118,11 @@ public class BudgetIntegrationTest {
         cal.set(2024, java.util.Calendar.JANUARY, 15);
         
         Transaction income = new Transaction();
-        income.setTransactionType(2); // Credit/Income
+        income.setTransactionType(TransactionType.CREDIT); // Credit/Income
         income.setName("Salary");
-        income.setAmount(1000.0);
+        income.setOriginalAmount(1000.0);
+        income.setOriginalCurrency("INR");
+        income.setExchangeRate(1.0);
         income.setDate(cal.getTime());
         income.setAccountId(testAccount.getId());
         income.setCategoryId(testCategory.getId());
@@ -147,9 +149,11 @@ public class BudgetIntegrationTest {
     public void testGetAvailableToAssign() throws Exception {
         // 1. Add Income Transaction (Type 2)
         Transaction income = new Transaction();
-        income.setTransactionType(2); // Credit/Income
+        income.setTransactionType(TransactionType.CREDIT); // Credit/Income
         income.setName("Salary");
-        income.setAmount(1000.0);
+        income.setOriginalAmount(1000.0);
+        income.setOriginalCurrency("INR");
+        income.setExchangeRate(1.0);
         income.setDate(new Date()); // Today
         income.setAccountId(testAccount.getId());
         income.setCategoryId(testCategory.getId()); 
@@ -186,9 +190,11 @@ public class BudgetIntegrationTest {
 
         // Create Previous Month Income
         Transaction prevIncome = new Transaction();
-        prevIncome.setTransactionType(2); // Credit/Income
+        prevIncome.setTransactionType(TransactionType.CREDIT); // Credit/Income
         prevIncome.setName("Prev Salary");
-        prevIncome.setAmount(1000.0);
+        prevIncome.setOriginalAmount(1000.0);
+        prevIncome.setOriginalCurrency("INR");
+        prevIncome.setExchangeRate(1.0);
         prevIncome.setDate(java.sql.Date.valueOf(prev.withDayOfMonth(1)));
         prevIncome.setAccountId(testAccount.getId());
         prevIncome.setCategoryId(testCategory.getId());
@@ -227,9 +233,11 @@ public class BudgetIntegrationTest {
 
         // Add Income for Prev Month to ensure we have funds
         Transaction income = new Transaction();
-        income.setTransactionType(2); // Income
+        income.setTransactionType(TransactionType.CREDIT); // Income
         income.setName("Prev Income");
-        income.setAmount(1000.0);
+        income.setOriginalAmount(1000.0);
+        income.setOriginalCurrency("INR");
+        income.setExchangeRate(1.0);
         income.setDate(java.sql.Date.valueOf(prev.withDayOfMonth(1)));
         income.setAccountId(testAccount.getId());
         income.setCategoryId(testCategory.getId());
@@ -238,9 +246,11 @@ public class BudgetIntegrationTest {
 
         // 2. Add Expense in Prev Month
         Transaction expense = new Transaction();
-        expense.setTransactionType(1); // Expense
+        expense.setTransactionType(TransactionType.DEBIT); // Expense
         expense.setName("Prev Expense");
-        expense.setAmount(50.0);
+        expense.setOriginalAmount(50.0);
+        expense.setOriginalCurrency("INR");
+        expense.setExchangeRate(1.0);
         expense.setDate(java.sql.Date.valueOf(prev.withDayOfMonth(15)));
         expense.setAccountId(testAccount.getId());
         expense.setCategoryId(testCategory.getId());
@@ -269,9 +279,11 @@ public class BudgetIntegrationTest {
 
         // 0. Add Income to allow allocation
         Transaction income = new Transaction();
-        income.setTransactionType(2); // Credit/Income
+        income.setTransactionType(TransactionType.CREDIT); // Credit/Income
         income.setName("Salary");
-        income.setAmount(1000.0);
+        income.setOriginalAmount(1000.0);
+        income.setOriginalCurrency("INR");
+        income.setExchangeRate(1.0);
         income.setDate(new Date());
         income.setAccountId(testAccount.getId());
         income.setCategoryId(testCategory.getId());
@@ -280,9 +292,11 @@ public class BudgetIntegrationTest {
 
         // 1. Add Expense Transaction (Type 1)
         Transaction expense = new Transaction();
-        expense.setTransactionType(1); // Debit/Expense
+        expense.setTransactionType(TransactionType.DEBIT); // Debit/Expense
         expense.setName("Groceries");
-        expense.setAmount(50.0);
+        expense.setOriginalAmount(50.0);
+        expense.setOriginalCurrency("INR");
+        expense.setExchangeRate(1.0);
         expense.setDate(new Date()); // Today
         expense.setAccountId(testAccount.getId());
         expense.setCategoryId(testCategory.getId());
@@ -318,9 +332,11 @@ public class BudgetIntegrationTest {
     public void testOverAllocation() throws Exception {
         // 1. Add Income Transaction (1000.0)
         Transaction income = new Transaction();
-        income.setTransactionType(2); // Credit/Income
+        income.setTransactionType(TransactionType.CREDIT); // Credit/Income
         income.setName("Salary");
-        income.setAmount(1000.0);
+        income.setOriginalAmount(1000.0);
+        income.setOriginalCurrency("INR");
+        income.setExchangeRate(1.0);
         income.setDate(new Date());
         income.setAccountId(testAccount.getId());
         income.setCategoryId(testCategory.getId());
@@ -373,9 +389,11 @@ public class BudgetIntegrationTest {
 
         // 1. Add Income (1000)
         Transaction income = new Transaction();
-        income.setTransactionType(2); 
+        income.setTransactionType(TransactionType.CREDIT); 
         income.setName("Income");
-        income.setAmount(1000.0);
+        income.setOriginalAmount(1000.0);
+        income.setOriginalCurrency("INR");
+        income.setExchangeRate(1.0);
         income.setDate(new Date());
         income.setAccountId(testAccount.getId());
         income.setCategoryId(testCategory.getId());
@@ -384,9 +402,11 @@ public class BudgetIntegrationTest {
 
         // 2. Add Expense (100)
         Transaction expense = new Transaction();
-        expense.setTransactionType(1);
+        expense.setTransactionType(TransactionType.DEBIT);
         expense.setName("Expense");
-        expense.setAmount(100.0);
+        expense.setOriginalAmount(100.0);
+        expense.setOriginalCurrency("INR");
+        expense.setExchangeRate(1.0);
         expense.setDate(new Date());
         expense.setAccountId(testAccount.getId());
         expense.setCategoryId(testCategory.getId());

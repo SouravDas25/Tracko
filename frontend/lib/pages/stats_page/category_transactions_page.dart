@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:intl/intl.dart';
 import 'package:tracko/Utils/CommonUtil.dart';
 import 'package:tracko/Utils/enums.dart';
 import 'package:tracko/component/horizontal_scroll_container.dart';
@@ -11,6 +12,7 @@ import 'package:tracko/models/transaction.dart';
 import 'package:tracko/repositories/transaction_repository.dart';
 import 'package:tracko/services/api_client.dart';
 import 'package:tracko/services/SessionService.dart';
+import 'package:tracko/di/di.dart';
 
 class CategoryTransactionsPage extends StatefulWidget {
   final Category category;
@@ -18,6 +20,7 @@ class CategoryTransactionsPage extends StatefulWidget {
   final DateTime endDate;
   final String range;
   final int transactionType; // DEBIT or CREDIT
+  final int? accountId;
 
   const CategoryTransactionsPage({
     super.key,
@@ -26,6 +29,7 @@ class CategoryTransactionsPage extends StatefulWidget {
     required this.endDate,
     required this.range,
     required this.transactionType,
+    this.accountId,
   });
 
   @override
@@ -36,23 +40,37 @@ class CategoryTransactionsPage extends StatefulWidget {
 class _CategoryTransactionsPageState extends State<CategoryTransactionsPage> {
   bool _loading = false;
   String? _error;
-  List<Transaction> _transactions = const [];
+  List<Transaction> _transactions = [];
 
   double _total = 0.0;
   List<_SeriesPoint> _series = const [];
   double _seriesMaxY = 0.0;
-  final ScrollController _chartScrollController = ScrollController();
+
+  // Pagination
+  final ScrollController _scrollController = ScrollController();
+  final int _pageSize = 50;
+  int _page = 0;
+  bool _isLoadingMore = false;
+  bool _hasMore = true;
 
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScroll);
     _load();
   }
 
   @override
   void dispose() {
-    _chartScrollController.dispose();
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      _loadMore();
+    }
   }
 
   String _fmtDate(DateTime d) {
@@ -91,6 +109,13 @@ class _CategoryTransactionsPageState extends State<CategoryTransactionsPage> {
     final maxX = spots.length == 1 ? 1.0 : spots.last.x;
     final maxY = _seriesMaxY <= 0 ? 1.0 : _seriesMaxY;
     final leftInterval = maxY <= 0 ? 1.0 : (maxY / 4);
+
+    // Dynamic interval for bottom titles to prevent crowding
+    // Aim for about 5-6 labels max
+    double bottomInterval = 1.0;
+    if (maxX > 6) {
+      bottomInterval = (maxX / 6).ceilToDouble();
+    }
 
     return SizedBox(
       height: 220,
@@ -136,7 +161,7 @@ class _CategoryTransactionsPageState extends State<CategoryTransactionsPage> {
               sideTitles: SideTitles(
                 showTitles: true,
                 reservedSize: 52,
-                interval: 1,
+                interval: bottomInterval,
                 getTitlesWidget: (value, meta) {
                   if ((value - value.roundToDouble()).abs() > 0.001) {
                     return const SizedBox.shrink();
@@ -184,12 +209,14 @@ class _CategoryTransactionsPageState extends State<CategoryTransactionsPage> {
     setState(() {
       _loading = true;
       _error = null;
+      _page = 0;
+      _hasMore = true;
+      _transactions = [];
     });
 
     try {
-      final api = ApiClient();
-      final txRepo = TransactionRepository();
-      final userId = (SessionService.currentUser().id ?? '').toString();
+      // 1. Load Chart Data (Summary)
+      final api = sl<ApiClient>();
 
       final catId = (widget.category.id ?? 0);
       if (catId == 0) {
@@ -204,6 +231,11 @@ class _CategoryTransactionsPageState extends State<CategoryTransactionsPage> {
           'categoryId': catId,
           // Use the period start as anchor so backend computes the same window.
           'date': _fmtDate(widget.startDate),
+          if (widget.accountId != null) 'accountId': widget.accountId,
+          if (widget.range == 'custom') ...{
+            'startDate': _fmtDate(widget.startDate),
+            'endDate': _fmtDate(widget.endDate),
+          }
         },
       );
 
@@ -221,34 +253,22 @@ class _CategoryTransactionsPageState extends State<CategoryTransactionsPage> {
           ? 0.0
           : series.map((p) => p.y).reduce((a, b) => a > b ? a : b);
 
-      final txs = await txRepo.getAll(
-        startDate: widget.startDate,
-        endDate: widget.endDate,
-        categoryId: catId,
-        page: 0,
-        size: 2000,
-        expand: false,
-      );
-
-      final filtered = <Transaction>[];
-      for (final t in txs) {
-        if (t.transactionType == TransactionType.TRANSFER) continue;
-        if (t.transactionType != widget.transactionType) continue;
-        if (t.categoryId != (widget.category.id ?? 0)) continue;
-        t.category = widget.category;
-        filtered.add(t);
+      if (mounted) {
+        setState(() {
+          _series = series;
+          _seriesMaxY = maxY;
+          _total = total;
+        });
       }
 
-      filtered.sort((a, b) => b.date.compareTo(a.date));
+      // 2. Load Initial Page of Transactions
+      await _loadTransactions();
 
-      if (!mounted) return;
-      setState(() {
-        _transactions = filtered;
-        _series = series;
-        _seriesMaxY = maxY;
-        _total = total;
-        _loading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _loading = false;
+        });
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -258,6 +278,66 @@ class _CategoryTransactionsPageState extends State<CategoryTransactionsPage> {
         _seriesMaxY = 0.0;
         _total = 0.0;
       });
+    }
+  }
+
+  Future<void> _loadMore() async {
+    if (_isLoadingMore || !_hasMore) return;
+    setState(() {
+      _isLoadingMore = true;
+    });
+    await _loadTransactions();
+    if (mounted) {
+      setState(() {
+        _isLoadingMore = false;
+      });
+    }
+  }
+
+  Future<void> _loadTransactions() async {
+    try {
+      final txRepo = sl<TransactionRepository>();
+      final catId = (widget.category.id ?? 0);
+
+      final txResponse = await txRepo.getAllPaginated(
+        startDate: widget.startDate,
+        endDate: widget.endDate,
+        categoryId: catId,
+        accountIds: widget.accountId != null ? [widget.accountId!] : null,
+        page: _page,
+        size: _pageSize,
+        expand: false,
+      );
+
+      final List<Transaction> txs = txResponse['transactions'];
+
+      final filtered = <Transaction>[];
+      for (final t in txs) {
+        if (t.transactionType == TransactionType.TRANSFER) continue;
+        if (t.transactionType != widget.transactionType) continue;
+        if (t.categoryId != (widget.category.id ?? 0)) continue;
+        // Verify account match locally if repository didn't filter strictly enough
+        if (widget.accountId != null && t.accountId != widget.accountId)
+          continue;
+
+        t.category = widget.category;
+        filtered.add(t);
+      }
+
+      filtered.sort((a, b) => b.date.compareTo(a.date));
+
+      if (!(txResponse['hasNext'] ?? false)) {
+        _hasMore = false;
+      }
+
+      if (mounted) {
+        setState(() {
+          _transactions.addAll(filtered);
+          _page++;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading more transactions: $e');
     }
   }
 
@@ -284,7 +364,20 @@ class _CategoryTransactionsPageState extends State<CategoryTransactionsPage> {
                             borderRadius: BorderRadius.circular(12)),
                         child: Padding(
                           padding: const EdgeInsets.all(12.0),
-                          child: _buildLineChart(),
+                          child: Column(
+                            children: [
+                              Text(
+                                '${DateFormat('MMM dd, yyyy').format(widget.startDate)} - ${DateFormat('MMM dd, yyyy').format(widget.endDate.subtract(const Duration(days: 1)))}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: Theme.of(context).hintColor,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              _buildLineChart(),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -299,11 +392,26 @@ class _CategoryTransactionsPageState extends State<CategoryTransactionsPage> {
                       ),
                     ),
                     Expanded(
-                      child: (_transactions.isEmpty)
+                      child: (_transactions.isEmpty && !_hasMore)
                           ? const Center(child: Text('No transactions'))
                           : ListView.builder(
-                              itemCount: _transactions.length,
+                              controller: _scrollController,
+                              itemCount:
+                                  _transactions.length + (_hasMore ? 1 : 0),
                               itemBuilder: (context, index) {
+                                if (index >= _transactions.length) {
+                                  return const Padding(
+                                    padding: EdgeInsets.all(16.0),
+                                    child: Center(
+                                      child: SizedBox(
+                                        width: 24,
+                                        height: 24,
+                                        child: CircularProgressIndicator(
+                                            strokeWidth: 2),
+                                      ),
+                                    ),
+                                  );
+                                }
                                 final tx = _transactions[index];
                                 return TransactionTile(this, tx,
                                     (dynamic parent, Transaction t) async {

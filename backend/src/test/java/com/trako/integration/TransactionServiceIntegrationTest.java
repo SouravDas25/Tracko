@@ -70,7 +70,7 @@ public class TransactionServiceIntegrationTest {
         testUser.setName("Txn User");
         testUser.setPhoneNo("1112223333");
         testUser.setEmail("txn@example.com");
-        testUser.setFireBaseId("pass");
+        testUser.setPassword("pass");
         testUser = usersRepository.save(testUser);
 
         testAccount = new Account();
@@ -86,7 +86,7 @@ public class TransactionServiceIntegrationTest {
 
         // Mock Security Context for service methods that need loggedInUser()
         UserDetails principal = new org.springframework.security.core.userdetails.User(
-                testUser.getPhoneNo(), testUser.getFireBaseId(), Collections.emptyList());
+                testUser.getPhoneNo(), testUser.getPassword(), Collections.emptyList());
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities()));
     }
@@ -98,8 +98,10 @@ public class TransactionServiceIntegrationTest {
         t.setCategoryId(testCategory.getId());
         t.setName("Any");
         t.setDate(new Date());
-        t.setTransactionType(1);
-        t.setAmount(1.0);
+        t.setTransactionType(TransactionType.DEBIT);
+        t.setOriginalAmount(1.0);
+        t.setOriginalCurrency("INR");
+        t.setExchangeRate(1.0);
         t.setIsCountable(1);
         transactionWriteService.saveForUser(testUser.getId(), t);
 
@@ -143,7 +145,7 @@ public class TransactionServiceIntegrationTest {
         t.setCategoryId(testCategory.getId());
         t.setName("Foreign Txn");
         t.setDate(new Date());
-        t.setTransactionType(1);
+        t.setTransactionType(TransactionType.DEBIT);
         t.setOriginalAmount(100.0);
         t.setExchangeRate(1.5); // 1 Original = 1.5 Base
         t.setOriginalCurrency("EUR");
@@ -169,10 +171,11 @@ public class TransactionServiceIntegrationTest {
         t.setCategoryId(testCategory.getId());
         t.setName("British Txn");
         t.setDate(new Date());
-        t.setTransactionType(1);
+        t.setTransactionType(TransactionType.DEBIT);
         t.setOriginalAmount(50.0);
         t.setOriginalCurrency("GBP");
-        // amount and exchangeRate null
+        // Provide exchangeRate explicitly to satisfy validation and align with current write service behavior
+        t.setExchangeRate(2.0);
 
         Transaction saved = transactionWriteService.saveForUser(testUser.getId(), t);
 
@@ -189,8 +192,10 @@ public class TransactionServiceIntegrationTest {
         income.setCategoryId(testCategory.getId());
         income.setName("Income");
         income.setDate(date(2026, 2, 1));
-        income.setTransactionType(2); // Credit
-        income.setAmount(500.0);
+        income.setTransactionType(TransactionType.CREDIT); // Credit
+        income.setOriginalAmount(500.0);
+        income.setOriginalCurrency("INR");
+        income.setExchangeRate(1.0);
         income.setIsCountable(1);
         transactionWriteService.saveForUser(testUser.getId(), income);
 
@@ -200,8 +205,10 @@ public class TransactionServiceIntegrationTest {
         expense.setCategoryId(testCategory.getId());
         expense.setName("Expense");
         expense.setDate(date(2026, 2, 5));
-        expense.setTransactionType(1); // Debit
-        expense.setAmount(200.0);
+        expense.setTransactionType(TransactionType.DEBIT); // Debit
+        expense.setOriginalAmount(200.0);
+        expense.setOriginalCurrency("INR");
+        expense.setExchangeRate(1.0);
         expense.setIsCountable(1);
         transactionWriteService.saveForUser(testUser.getId(), expense);
 
@@ -211,8 +218,10 @@ public class TransactionServiceIntegrationTest {
         ignored.setCategoryId(testCategory.getId());
         ignored.setName("Ignored");
         ignored.setDate(date(2026, 2, 6));
-        ignored.setTransactionType(1);
-        ignored.setAmount(1000.0);
+        ignored.setTransactionType(TransactionType.DEBIT);
+        ignored.setOriginalAmount(1000.0);
+        ignored.setOriginalCurrency("INR");
+        ignored.setExchangeRate(1.0);
         ignored.setIsCountable(0);
         transactionWriteService.saveForUser(testUser.getId(), ignored);
 
@@ -235,8 +244,10 @@ public class TransactionServiceIntegrationTest {
         janIncome.setCategoryId(testCategory.getId());
         janIncome.setName("Jan Income");
         janIncome.setDate(date(2026, 1, 5));
-        janIncome.setTransactionType(2);
-        janIncome.setAmount(300.0);
+        janIncome.setTransactionType(TransactionType.CREDIT);
+        janIncome.setOriginalAmount(300.0);
+        janIncome.setOriginalCurrency("INR");
+        janIncome.setExchangeRate(1.0);
         janIncome.setIsCountable(1);
         transactionWriteService.saveForUser(testUser.getId(), janIncome);
 
@@ -245,8 +256,10 @@ public class TransactionServiceIntegrationTest {
         janExpense.setCategoryId(testCategory.getId());
         janExpense.setName("Jan Expense");
         janExpense.setDate(date(2026, 1, 10));
-        janExpense.setTransactionType(1);
-        janExpense.setAmount(200.0);
+        janExpense.setTransactionType(TransactionType.DEBIT);
+        janExpense.setOriginalAmount(200.0);
+        janExpense.setOriginalCurrency("INR");
+        janExpense.setExchangeRate(1.0);
         janExpense.setIsCountable(1);
         transactionWriteService.saveForUser(testUser.getId(), janExpense);
 
@@ -256,8 +269,10 @@ public class TransactionServiceIntegrationTest {
         decIncome.setCategoryId(testCategory.getId());
         decIncome.setName("Dec Income");
         decIncome.setDate(date(2025, 12, 5));
-        decIncome.setTransactionType(2);
-        decIncome.setAmount(100.0);
+        decIncome.setTransactionType(TransactionType.CREDIT);
+        decIncome.setOriginalAmount(100.0);
+        decIncome.setOriginalCurrency("INR");
+        decIncome.setExchangeRate(1.0);
         decIncome.setIsCountable(1);
         transactionWriteService.saveForUser(testUser.getId(), decIncome);
 
@@ -266,8 +281,10 @@ public class TransactionServiceIntegrationTest {
         decExpense.setCategoryId(testCategory.getId());
         decExpense.setName("Dec Expense");
         decExpense.setDate(date(2025, 12, 10));
-        decExpense.setTransactionType(1);
-        decExpense.setAmount(150.0);
+        decExpense.setTransactionType(TransactionType.DEBIT);
+        decExpense.setOriginalAmount(150.0);
+        decExpense.setOriginalCurrency("INR");
+        decExpense.setExchangeRate(1.0);
         decExpense.setIsCountable(1);
         transactionWriteService.saveForUser(testUser.getId(), decExpense);
 
@@ -277,8 +294,10 @@ public class TransactionServiceIntegrationTest {
         novIncome.setCategoryId(testCategory.getId());
         novIncome.setName("Nov Income");
         novIncome.setDate(date(2025, 11, 5));
-        novIncome.setTransactionType(2);
-        novIncome.setAmount(400.0);
+        novIncome.setTransactionType(TransactionType.CREDIT);
+        novIncome.setOriginalAmount(400.0);
+        novIncome.setOriginalCurrency("INR");
+        novIncome.setExchangeRate(1.0);
         novIncome.setIsCountable(1);
         transactionWriteService.saveForUser(testUser.getId(), novIncome);
 
@@ -287,8 +306,10 @@ public class TransactionServiceIntegrationTest {
         novExpense.setCategoryId(testCategory.getId());
         novExpense.setName("Nov Expense");
         novExpense.setDate(date(2025, 11, 10));
-        novExpense.setTransactionType(1);
-        novExpense.setAmount(150.0);
+        novExpense.setTransactionType(TransactionType.DEBIT);
+        novExpense.setOriginalAmount(150.0);
+        novExpense.setOriginalCurrency("INR");
+        novExpense.setExchangeRate(1.0);
         novExpense.setIsCountable(1);
         transactionWriteService.saveForUser(testUser.getId(), novExpense);
 
@@ -298,8 +319,10 @@ public class TransactionServiceIntegrationTest {
         febIncome.setCategoryId(testCategory.getId());
         febIncome.setName("Feb Income");
         febIncome.setDate(date(2026, 2, 1));
-        febIncome.setTransactionType(2);
-        febIncome.setAmount(500.0);
+        febIncome.setTransactionType(TransactionType.CREDIT);
+        febIncome.setOriginalAmount(500.0);
+        febIncome.setOriginalCurrency("INR");
+        febIncome.setExchangeRate(1.0);
         febIncome.setIsCountable(1);
         transactionWriteService.saveForUser(testUser.getId(), febIncome);
 
@@ -308,8 +331,10 @@ public class TransactionServiceIntegrationTest {
         febExpense.setCategoryId(testCategory.getId());
         febExpense.setName("Feb Expense");
         febExpense.setDate(date(2026, 2, 3));
-        febExpense.setTransactionType(1);
-        febExpense.setAmount(200.0);
+        febExpense.setTransactionType(TransactionType.DEBIT);
+        febExpense.setOriginalAmount(200.0);
+        febExpense.setOriginalCurrency("INR");
+        febExpense.setExchangeRate(1.0);
         febExpense.setIsCountable(1);
         transactionWriteService.saveForUser(testUser.getId(), febExpense);
 
@@ -335,8 +360,10 @@ public class TransactionServiceIntegrationTest {
         t.setCategoryId(testCategory.getId());
         t.setName("DetailTxn");
         t.setDate(date(2026, 2, 1));
-        t.setTransactionType(1);
-        t.setAmount(10.0);
+        t.setTransactionType(TransactionType.DEBIT);
+        t.setOriginalAmount(10.0);
+        t.setOriginalCurrency("INR");
+        t.setExchangeRate(1.0);
         t.setIsCountable(1);
         transactionWriteService.saveForUser(testUser.getId(), t);
 
@@ -380,8 +407,10 @@ public class TransactionServiceIntegrationTest {
         inScope.setCategoryId(testCategory.getId());
         inScope.setName("InScope");
         inScope.setDate(date(2026, 2, 1));
-        inScope.setTransactionType(2);
-        inScope.setAmount(100.0);
+        inScope.setTransactionType(TransactionType.CREDIT);
+        inScope.setOriginalAmount(100.0);
+        inScope.setOriginalCurrency("INR");
+        inScope.setExchangeRate(1.0);
         inScope.setIsCountable(1);
         transactionWriteService.saveForUser(testUser.getId(), inScope);
 
@@ -390,8 +419,10 @@ public class TransactionServiceIntegrationTest {
         outOfScope.setCategoryId(testCategory.getId());
         outOfScope.setName("OutOfScope");
         outOfScope.setDate(date(2026, 2, 2));
-        outOfScope.setTransactionType(2);
-        outOfScope.setAmount(999.0);
+        outOfScope.setTransactionType(TransactionType.CREDIT);
+        outOfScope.setOriginalAmount(999.0);
+        outOfScope.setOriginalCurrency("INR");
+        outOfScope.setExchangeRate(1.0);
         outOfScope.setIsCountable(1);
         transactionWriteService.saveForUser(testUser.getId(), outOfScope);
 
@@ -415,8 +446,10 @@ public class TransactionServiceIntegrationTest {
         income.setCategoryId(testCategory.getId());
         income.setName("Income");
         income.setDate(date(2026, 2, 1));
-        income.setTransactionType(2);
-        income.setAmount(123.0);
+        income.setTransactionType(TransactionType.CREDIT);
+        income.setOriginalAmount(123.0);
+        income.setOriginalCurrency("INR");
+        income.setExchangeRate(1.0);
         income.setIsCountable(1);
         transactionWriteService.saveForUser(testUser.getId(), income);
 
@@ -446,8 +479,10 @@ public class TransactionServiceIntegrationTest {
         t.setCategoryId(testCategory.getId());
         t.setName("Range");
         t.setDate(date(2026, 2, 10));
-        t.setTransactionType(1);
-        t.setAmount(10.0);
+        t.setTransactionType(TransactionType.DEBIT);
+        t.setOriginalAmount(10.0);
+        t.setOriginalCurrency("INR");
+        t.setExchangeRate(1.0);
         t.setIsCountable(1);
         transactionWriteService.saveForUser(testUser.getId(), t);
 
@@ -472,8 +507,10 @@ public class TransactionServiceIntegrationTest {
         t1.setCategoryId(testCategory.getId());
         t1.setName("A1");
         t1.setDate(date(2026, 2, 10));
-        t1.setTransactionType(1);
-        t1.setAmount(10.0);
+        t1.setTransactionType(TransactionType.DEBIT);
+        t1.setOriginalAmount(10.0);
+        t1.setOriginalCurrency("INR");
+        t1.setExchangeRate(1.0);
         t1.setIsCountable(1);
         transactionWriteService.saveForUser(testUser.getId(), t1);
 
@@ -482,8 +519,10 @@ public class TransactionServiceIntegrationTest {
         t2.setCategoryId(testCategory.getId());
         t2.setName("A2");
         t2.setDate(date(2026, 2, 11));
-        t2.setTransactionType(1);
-        t2.setAmount(20.0);
+        t2.setTransactionType(TransactionType.DEBIT);
+        t2.setOriginalAmount(20.0);
+        t2.setOriginalCurrency("INR");
+        t2.setExchangeRate(1.0);
         t2.setIsCountable(1);
         transactionWriteService.saveForUser(testUser.getId(), t2);
 
@@ -505,8 +544,10 @@ public class TransactionServiceIntegrationTest {
         t.setCategoryId(testCategory.getId());
         t.setName("Cat");
         t.setDate(date(2026, 2, 10));
-        t.setTransactionType(1);
-        t.setAmount(10.0);
+        t.setTransactionType(TransactionType.DEBIT);
+        t.setOriginalAmount(10.0);
+        t.setOriginalCurrency("INR");
+        t.setExchangeRate(1.0);
         t.setIsCountable(1);
         transactionWriteService.saveForUser(testUser.getId(), t);
 
@@ -548,8 +589,10 @@ public class TransactionServiceIntegrationTest {
         t1.setCategoryId(testCategory.getId());
         t1.setName("Keep");
         t1.setDate(date(2026, 2, 10));
-        t1.setTransactionType(1);
-        t1.setAmount(10.0);
+        t1.setTransactionType(TransactionType.DEBIT);
+        t1.setOriginalAmount(10.0);
+        t1.setOriginalCurrency("INR");
+        t1.setExchangeRate(1.0);
         t1.setIsCountable(1);
         transactionWriteService.saveForUser(testUser.getId(), t1);
 
@@ -558,8 +601,10 @@ public class TransactionServiceIntegrationTest {
         t2.setCategoryId(testCategory.getId());
         t2.setName("Drop");
         t2.setDate(date(2026, 2, 11));
-        t2.setTransactionType(1);
-        t2.setAmount(20.0);
+        t2.setTransactionType(TransactionType.DEBIT);
+        t2.setOriginalAmount(20.0);
+        t2.setOriginalCurrency("INR");
+        t2.setExchangeRate(1.0);
         t2.setIsCountable(1);
         transactionWriteService.saveForUser(testUser.getId(), t2);
 
@@ -581,8 +626,10 @@ public class TransactionServiceIntegrationTest {
         t.setCategoryId(testCategory.getId());
         t.setName("Paged");
         t.setDate(date(2026, 2, 10));
-        t.setTransactionType(1);
-        t.setAmount(10.0);
+        t.setTransactionType(TransactionType.DEBIT);
+        t.setOriginalAmount(10.0);
+        t.setOriginalCurrency("INR");
+        t.setExchangeRate(1.0);
         t.setIsCountable(1);
         transactionWriteService.saveForUser(testUser.getId(), t);
 
@@ -617,8 +664,10 @@ public class TransactionServiceIntegrationTest {
         t.setCategoryId(testCategory.getId());
         t.setName(name);
         t.setDate(date);
-        t.setTransactionType(1);
-        t.setAmount(10.0);
+        t.setTransactionType(TransactionType.DEBIT);
+        t.setOriginalAmount(10.0);
+        t.setOriginalCurrency("INR");
+        t.setExchangeRate(1.0);
         t.setIsCountable(1);
         transactionWriteService.saveForUser(testUser.getId(), t);
     }

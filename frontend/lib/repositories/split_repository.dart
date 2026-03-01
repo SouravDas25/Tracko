@@ -3,7 +3,9 @@ import '../models/split.dart' as legacy;
 import '../services/api_client.dart';
 
 class SplitRepository {
-  final _api = ApiClient();
+  final ApiClient _api;
+
+  SplitRepository({ApiClient? api}) : _api = api ?? ApiClient();
 
   int? _asInt(dynamic v) {
     if (v == null) return null;

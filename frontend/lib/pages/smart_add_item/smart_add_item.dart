@@ -60,7 +60,7 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
     } finally {
       await LoadingDialog.hide(context);
     }
-    
+
     if (isSuccessfulSave && mounted) {
       Navigator.of(context).pop(isSuccessfulSave);
       await widget.complete(widget.transaction);
@@ -88,7 +88,8 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
                 )
               ]
             : [],
-        title: Text(_controller.isEdit ? "Edit Transaction" : "New Transaction"),
+        title:
+            Text(_controller.isEdit ? "Edit Transaction" : "New Transaction"),
         centerTitle: true,
         elevation: 0,
       ),
@@ -131,8 +132,10 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
                     transferToAccountId: _controller.transferToAccountId,
                     accounts: _controller.accounts,
                     onAccountChanged: _controller.setAccount,
-                    onTransferFromAccountChanged: _controller.setTransferFromAccount,
-                    onTransferToAccountChanged: _controller.setTransferToAccount,
+                    onTransferFromAccountChanged:
+                        _controller.setTransferFromAccount,
+                    onTransferToAccountChanged:
+                        _controller.setTransferToAccount,
                     onAddAccount: () {
                       _controller.initData();
                     },
@@ -143,9 +146,11 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
                     SplitManagerSection(
                       frequentSplitters: _controller.frequentSplitters,
                       splitList: _controller.splitList,
-                      splitAmountControllers: _controller.splitAmountControllers,
-                      amount: _controller.castAmountText2Double(_controller.amountController.text),
-                      currencySymbol: _controller.selectedCurrency, 
+                      splitAmountControllers:
+                          _controller.splitAmountControllers,
+                      amount: _controller.castAmountText2Double(
+                          _controller.amountController.text),
+                      currencySymbol: _controller.selectedCurrency,
                       onCallSplitPage: () => _controller.callSplitPage(context),
                       onAddSplit: _controller.addSplit,
                       onDeleteSplit: _controller.removeSplit,
@@ -156,11 +161,13 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
                   SizedBox(height: 24),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _controller.transactionType == TransactionType.DEBIT
-                          ? Colors.redAccent
-                          : (_controller.transactionType == TransactionType.TRANSFER
-                              ? Colors.blueGrey
-                              : Colors.teal),
+                      backgroundColor:
+                          _controller.transactionType == TransactionType.DEBIT
+                              ? Colors.redAccent
+                              : (_controller.transactionType ==
+                                      TransactionType.TRANSFER
+                                  ? Colors.blueGrey
+                                  : Colors.teal),
                       padding: EdgeInsets.symmetric(vertical: 16),
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(

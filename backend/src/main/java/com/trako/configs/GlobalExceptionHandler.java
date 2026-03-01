@@ -20,6 +20,7 @@ import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.security.access.AccessDeniedException;
 import com.trako.exceptions.AuthorizationException;
+import jakarta.validation.ConstraintViolationException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -49,8 +50,31 @@ public class GlobalExceptionHandler {
         return Response.badRequest(message);
     }
 
-    @ExceptionHandler({MethodArgumentTypeMismatchException.class, HttpMessageNotReadableException.class})
-    public ResponseEntity<?> handleBadRequest(Exception ex) {
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<?> handleConstraintViolation(ConstraintViolationException ex) {
+        String message = ex.getConstraintViolations()
+                .stream()
+                .findFirst()
+                .map(v -> v.getMessage())
+                .orElse("Validation failed");
+        log.warn("Bad request: {}", message);
+        return Response.badRequest(message);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<?> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        String message = "Invalid value for parameter '" + ex.getName() + "'";
+        if (ex.getCause() != null && ex.getCause().getCause() instanceof IllegalArgumentException) {
+            message = ex.getCause().getCause().getMessage();
+        } else if (ex.getCause() instanceof IllegalArgumentException) {
+            message = ex.getCause().getMessage();
+        }
+        log.warn("Bad request: {}", message);
+        return Response.badRequest(message);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<?> handleMessageNotReadable(HttpMessageNotReadableException ex) {
         log.warn("Bad request");
         return Response.badRequest("Bad request");
     }

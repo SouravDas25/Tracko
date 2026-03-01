@@ -1,10 +1,9 @@
 import 'package:tracko/Utils/WidgetUtil.dart';
 import 'package:tracko/component/AsynLoadState.dart';
-import 'package:tracko/dtos/TrackoContact.dart';
 import 'package:tracko/models/contact.dart';
 import 'package:tracko/repositories/contact_repository.dart';
-import 'package:tracko/services/SessionService.dart';
 import 'package:flutter/material.dart';
+import 'package:tracko/di/di.dart';
 
 class SelectBackendContactPage extends StatefulWidget {
   createState() {
@@ -21,7 +20,7 @@ class _CustomContact {
 
 class _SelectBackendContactList
     extends AsyncLoadState<SelectBackendContactPage> {
-  final _repo = ContactRepository();
+  late final ContactRepository _repo;
 
   List<_CustomContact> visibleContacts = <_CustomContact>[];
   List<_CustomContact> allContacts = <_CustomContact>[];
@@ -32,6 +31,12 @@ class _SelectBackendContactList
 
   TextEditingController searchController = new TextEditingController();
   String filter = '';
+
+  @override
+  void initState() {
+    _repo = sl<ContactRepository>();
+    super.initState();
+  }
 
   @override
   void dispose() {
@@ -67,19 +72,8 @@ class _SelectBackendContactList
   }
 
   void _onSubmit() async {
-    List<TrakoContact> returningContact = [];
-    for (_CustomContact c in selectedContacts) {
-      final tc = TrakoContact();
-      tc.name = c.contact.name;
-      tc.phoneNo = c.contact.phoneNo;
-      tc.email = c.contact.email;
-      tc.contactId = c.contact.id;
-      returningContact.add(tc);
-    }
-
-    TrakoContact rootUserContact = SessionService.currentUserContact();
-    returningContact.add(rootUserContact);
-
+    final returningContact =
+        selectedContacts.map((c) => c.contact).toList(growable: false);
     Navigator.pop(context, returningContact);
     setState(() {});
   }

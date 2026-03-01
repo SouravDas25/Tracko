@@ -3,6 +3,7 @@ import 'package:tracko/models/user.dart';
 import 'package:tracko/repositories/category_repository.dart';
 import 'package:tracko/services/SessionService.dart';
 import 'package:flutter/material.dart';
+import 'package:tracko/di/di.dart';
 
 // ignore: must_be_immutable
 class CategoryDialog extends StatelessWidget {
@@ -35,9 +36,8 @@ class CategoryDialog extends StatelessWidget {
     Category category = this.category ?? Category();
     category.name = name;
     category.categoryType = _selectedCategoryType.trim().toUpperCase();
-    User user = SessionService.currentUser();
-    category.userId = user.id;
-    final repo = CategoryRepository();
+
+    final repo = sl<CategoryRepository>();
     if (category.id == null) {
       final created =
           await repo.create(category.name, categoryType: category.categoryType);

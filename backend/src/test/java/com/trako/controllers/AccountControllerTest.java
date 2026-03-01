@@ -58,12 +58,12 @@ public class AccountControllerTest {
         testUser.setName("Test User");
         testUser.setPhoneNo("1234567890");
         testUser.setEmail("test@example.com");
-        testUser.setFireBaseId("password");
+        testUser.setPassword("password");
         testUser = usersRepository.save(testUser);
 
         UserDetails principal = new org.springframework.security.core.userdetails.User(
                 testUser.getPhoneNo(),
-                testUser.getFireBaseId(),
+                testUser.getPassword(),
                 java.util.Collections.emptyList()
         );
         bearerToken = "Bearer " + jwtTokenUtil.generateToken(principal);
@@ -91,8 +91,8 @@ public class AccountControllerTest {
     }
 
     @Test
-    public void testGetByUserId() throws Exception {
-        mockMvc.perform(get("/api/accounts/user/" + testUser.getId())
+    public void testGetAll_isScopedToAuthenticatedUser() throws Exception {
+        mockMvc.perform(get("/api/accounts")
                         .header("Authorization", bearerToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result[0].userId").value(testUser.getId()));

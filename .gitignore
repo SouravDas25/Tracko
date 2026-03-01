@@ -73,3 +73,14 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+money-manager-converter
+
+backend/**.db
+frontend/.flutter-plugins-dependencies
+
+# Node.js (if any)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

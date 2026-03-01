@@ -1,21 +1,21 @@
 package com.trako.models.responses;
 
-public class ApiResponse {
-    private Object result;
+public class ApiResponse<T> {
+    private T result;
     private String message;
 
-    public static ApiResponse make(Object object, String message) {
-        ApiResponse apiResponse = new ApiResponse();
+    public static <T> ApiResponse<T> make(T object, String message) {
+        ApiResponse<T> apiResponse = new ApiResponse<>();
         apiResponse.message = message;
         apiResponse.result = object;
         return apiResponse;
     }
 
-    public Object getResult() {
+    public T getResult() {
         return result;
     }
 
-    public void setResult(Object result) {
+    public void setResult(T result) {
         this.result = result;
     }
 

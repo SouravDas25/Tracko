@@ -2,7 +2,10 @@ import 'package:tracko/component/menu_bar.dart' as TrackoMenuBar;
 import 'package:flutter/material.dart';
 import 'package:tracko/services/auth_service.dart';
 import 'package:dio/dio.dart';
-
+import 'package:tracko/config/api_config.dart';
+import 'package:tracko/pages/backend_setup_page/backend_setup_page.dart';
+import 'package:tracko/Utils/AppLog.dart';
+import 'package:tracko/di/di.dart';
 import 'package:tracko/services/SessionService.dart';
 
 class LoginPage extends StatelessWidget {
@@ -10,14 +13,28 @@ class LoginPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
         appBar: TrackoMenuBar.MenuBar(),
-        body: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: ListView(children: [
-            Image.asset("assets/images/login_img2.jpg"),
-            LoginForm(),
-          ]),
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600, minWidth: 200),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ListView(children: [
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: screenHeight * 0.1),
+                  child: Image.asset(
+                    "assets/images/expense-icon.png",
+                    height: screenHeight * 0.30,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+                LoginForm(),
+              ]),
+            ),
+          ),
         ));
   }
 }
@@ -35,17 +52,41 @@ class _LoginPage extends State<LoginForm> {
   final _passwordController = TextEditingController();
   bool _submitting = false;
   bool _obscurePassword = true;
+  bool _checkingExistingSession = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final loggedIn = await AuthService().isLoggedIn();
-      if (!mounted) return;
-      if (loggedIn) {
-        // Ensure session is initialized
-        await SessionService.getCurrentUser();
+      AppLog.d('[LoginPage] session-check: start');
+      setState(() => _checkingExistingSession = true);
+      try {
+        final hasToken = await sl<AuthService>().isLoggedIn();
+        AppLog.d('[LoginPage] session-check: hasToken=$hasToken');
+        if (!mounted) return;
+        if (!hasToken) {
+          AppLog.d('[LoginPage] session-check: no token; stay on /login');
+          return;
+        }
+
+        AppLog.d('[LoginPage] session-check: verifying token via /me');
+        await sl<SessionService>().fetchMe(forceRefresh: true);
+        AppLog.d('[LoginPage] session-check: /me success; navigating to /home');
+        if (!mounted) return;
         Navigator.pushReplacementNamed(context, '/home');
+      } catch (_) {
+        AppLog.d(
+            '[LoginPage] session-check: /me failed; logging out and staying on /login');
+        try {
+          await sl<SessionService>().logout();
+          AppLog.d('[LoginPage] session-check: logout complete');
+        } catch (_) {
+          AppLog.d('[LoginPage] session-check: logout failed (ignored)');
+          // ignore
+        }
+      } finally {
+        AppLog.d('[LoginPage] session-check: end');
+        if (mounted) setState(() => _checkingExistingSession = false);
       }
     });
   }
@@ -81,29 +122,35 @@ class _LoginPage extends State<LoginForm> {
 
     setState(() => _submitting = true);
     try {
-      final auth = AuthService();
+      AppLog.d('[LoginPage] submit: start');
+      final auth = sl<AuthService>();
       final token = await auth.signInBasic(
         username: _usernameController.text.trim(),
         password: _passwordController.text,
       );
       if (token != null && token.isNotEmpty) {
-        // Fetch user profile to initialize session and currency settings
-        await SessionService.getCurrentUser(forceRefresh: true);
+        AppLog.d('[LoginPage] submit: token received; fetching /me');
+        await sl<SessionService>().fetchMe(forceRefresh: true);
+        AppLog.d('[LoginPage] submit: /me success; navigating to /home');
 
         if (!mounted) return;
         Navigator.pushReplacementNamed(context, '/home');
       } else {
+        AppLog.d(
+            '[LoginPage] submit: empty token; showing invalid credentials');
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Invalid email or password.')),
         );
       }
     } catch (e) {
+      AppLog.d('[LoginPage] submit: failed error=$e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(_friendlyError(e))),
       );
     } finally {
+      AppLog.d('[LoginPage] submit: end');
       if (mounted) setState(() => _submitting = false);
     }
   }
@@ -115,6 +162,11 @@ class _LoginPage extends State<LoginForm> {
       child: Column(
         children: <Widget>[
           const SizedBox(height: 20),
+          if (_checkingExistingSession)
+            const Padding(
+              padding: EdgeInsets.only(bottom: 12),
+              child: LinearProgressIndicator(minHeight: 2),
+            ),
           TextFormField(
             controller: _usernameController,
             decoration: InputDecoration(
@@ -204,19 +256,25 @@ class _LoginPage extends State<LoginForm> {
             ),
           ),
           const SizedBox(height: 16),
-          TextButton(
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.teal,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          if (!ApiConfig.isProduction)
+            TextButton.icon(
+              onPressed: _submitting
+                  ? null
+                  : () async {
+                      await ApiConfig.reset();
+                      if (context.mounted) {
+                        Navigator.of(context).pushReplacement(
+                          MaterialPageRoute(
+                              builder: (context) => const BackendSetupPage()),
+                        );
+                      }
+                    },
+              icon: const Icon(Icons.settings_ethernet),
+              label: const Text('Change Backend URL'),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.grey,
+              ),
             ),
-            onPressed: _submitting
-                ? null
-                : () => Navigator.pushNamed(context, '/phone_login'),
-            child: const Text(
-              'Login with phone instead',
-              style: TextStyle(fontSize: 16),
-            ),
-          ),
         ],
       ),
     );

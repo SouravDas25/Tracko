@@ -60,12 +60,12 @@ public class JsonStoreIntegrationTest {
         testUser.setName("Test User");
         testUser.setPhoneNo("1234567890");
         testUser.setEmail("test@example.com");
-        testUser.setFireBaseId("password");
+        testUser.setPassword("password");
         testUser = usersRepository.save(testUser);
 
         UserDetails principal = new org.springframework.security.core.userdetails.User(
                 testUser.getPhoneNo(),
-                testUser.getFireBaseId(),
+                testUser.getPassword(),
                 Collections.emptyList()
         );
         bearerToken = "Bearer " + jwtTokenUtil.generateToken(principal);

@@ -1,4 +1,22 @@
 databaseChangeLog:
+  - property:
+      name: clob.type
+      value: text
+      dbms: postgresql
+  - property:
+      name: clob.type
+      value: varchar(10000)
+      dbms: h2
+
+  - property:
+      name: double.type
+      value: double
+      dbms: h2
+  - property:
+      name: double.type
+      value: double precision
+      dbms: postgresql
+
   - changeSet:
       id: 001-initial-schema
       author: sd25
@@ -11,7 +29,7 @@ databaseChangeLog:
               - column: { name: phone_no, type: varchar(32) }
               - column: { name: email, type: varchar(255) }
               - column: { name: profile_pic, type: varchar(512) }
-              - column: { name: fire_base_id, type: varchar(128) }
+              - column: { name: password, type: varchar(128) }
               - column: { name: is_shadow, type: int }
               - column: { name: global_id, type: varchar(64) }
               - column: { name: base_currency, type: varchar(3), defaultValue: "INR" }
@@ -53,7 +71,7 @@ databaseChangeLog:
                     nullable: false
               - column:
                   name: exchange_rate
-                  type: DOUBLE
+                  type: ${double.type}
                   constraints:
                     nullable: false
         - addForeignKeyConstraint:
@@ -173,6 +191,34 @@ databaseChangeLog:
             indexName: idx_categories_user
             columns: [ { column: { name: user_id } } ]
 
+  - changeSet:
+      id: 014-unique-accounts-user-name
+      author: sd25
+      preConditions:
+        - not:
+            - uniqueConstraintExists:
+                tableName: accounts
+                constraintName: uq_accounts_user_name
+      changes:
+        - addUniqueConstraint:
+            tableName: accounts
+            columnNames: user_id, name
+            constraintName: uq_accounts_user_name
+
+  - changeSet:
+      id: 015-unique-categories-user-name
+      author: sd25
+      preConditions:
+        - not:
+            - uniqueConstraintExists:
+                tableName: categories
+                constraintName: uq_categories_user_type_name
+      changes:
+        - addUniqueConstraint:
+            tableName: categories
+            columnNames: user_id, category_type, name
+            constraintName: uq_categories_user_type_name
+
         - createTable:
             tableName: transactions
             columns:
@@ -181,27 +227,36 @@ databaseChangeLog:
               - column: { name: name, type: varchar(128), constraints: { nullable: false } }
               - column: { name: comments, type: varchar(512) }
               - column: { name: date, type: timestamp, constraints: { nullable: false } }
-              - column: { name: amount, type: "numeric(12,2)", constraints: { nullable: false } }
               - column: { name: account_id, type: bigint, constraints: { nullable: false } }
               - column: { name: category_id, type: bigint, constraints: { nullable: false } }
               - column: { name: is_countable, type: int, defaultValue: "1" }
               - column: { name: original_currency, type: varchar(3) }
-              - column: { name: original_amount, type: double }
-              - column: { name: exchange_rate, type: double }
+              - column:
+                  name: original_amount
+                  type: ${double.type}
+              - column:
+                  name: exchange_rate
+                  type: ${double.type}
+        - sql:
+            dbms: postgresql
+            sql: "ALTER TABLE transactions ADD COLUMN amount DOUBLE PRECISION GENERATED ALWAYS AS (original_amount * exchange_rate) STORED;"
+        - sql:
+            dbms: h2
+            sql: "ALTER TABLE transactions ADD COLUMN amount DOUBLE GENERATED ALWAYS AS (original_amount * exchange_rate);"
         - addForeignKeyConstraint:
             baseTableName: transactions
             baseColumnNames: account_id
             referencedTableName: accounts
             referencedColumnNames: id
             constraintName: fk_transactions_account
-            onDelete: CASCADE
+            onDelete: RESTRICT
         - addForeignKeyConstraint:
             baseTableName: transactions
             baseColumnNames: category_id
             referencedTableName: categories
             referencedColumnNames: id
             constraintName: fk_transactions_category
-            onDelete: CASCADE
+            onDelete: RESTRICT
         - createIndex:
             tableName: transactions
             indexName: idx_transactions_date
@@ -216,7 +271,11 @@ databaseChangeLog:
               - column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
               - column: { name: transaction_id, type: bigint, constraints: { nullable: false } }
               - column: { name: user_id, type: varchar(36), constraints: { nullable: false } }
-              - column: { name: amount, type: "numeric(12,2)", constraints: { nullable: false } }
+              - column:
+                  name: amount
+                  type: ${double.type}
+                  constraints:
+                    nullable: false
               - column: { name: contact_id, type: BIGINT }
               - column: { name: settled_at, type: timestamp }
               - column: { name: is_settled, type: int, defaultValue: "0" }
@@ -240,7 +299,7 @@ databaseChangeLog:
             referencedTableName: contacts
             referencedColumnNames: id
             constraintName: fk_splits_contact
-            onDelete: SET NULL
+            onDelete: RESTRICT
         - createIndex:
             tableName: splits
             indexName: idx_splits_transaction
@@ -260,7 +319,9 @@ databaseChangeLog:
             tableName: json_store
             columns:
               - column: { name: name, type: varchar(64), constraints: { primaryKey: true, nullable: false } }
-              - column: { name: json_value, type: text }
+              - column: 
+                    name: json_value 
+                    type: ${clob.type}
 
   - changeSet:
       id: 006-add-zbb-tables
@@ -273,7 +334,10 @@ databaseChangeLog:
               - column: { name: budget_month, type: int, constraints: { nullable: false } }
               - column: { name: budget_year, type: int, constraints: { nullable: false } }
               - column: { name: user_id, type: varchar(36), constraints: { nullable: false } }
-              - column: { name: total_budget, type: double, defaultValueNumeric: 0.0 }
+              - column:
+                  name: total_budget
+                  type: ${double.type}
+                  defaultValueNumeric: 0.0
               - column: { name: is_closed, type: boolean, defaultValueBoolean: false }
               - column: { name: created_at, type: timestamp, defaultValueComputed: "CURRENT_TIMESTAMP" }
               - column: { name: updated_at, type: timestamp, defaultValueComputed: "CURRENT_TIMESTAMP" }
@@ -296,9 +360,18 @@ databaseChangeLog:
               - column: { name: budget_month_id, type: bigint, constraints: { nullable: false } }
               - column: { name: category_id, type: bigint, constraints: { nullable: false } }
               - column: { name: user_id, type: varchar(36), constraints: { nullable: false } }
-              - column: { name: allocated_amount, type: double, defaultValueNumeric: 0.0 }
-              - column: { name: actual_spent, type: double, defaultValueNumeric: 0.0 }
-              - column: { name: remaining_balance, type: double, defaultValueNumeric: 0.0 }
+              - column:
+                  name: allocated_amount
+                  type: ${double.type}
+                  defaultValueNumeric: 0.0
+              - column:
+                  name: actual_spent
+                  type: ${double.type}
+                  defaultValueNumeric: 0.0
+              - column:
+                  name: remaining_balance
+                  type: ${double.type}
+                  defaultValueNumeric: 0.0
         - addForeignKeyConstraint:
             baseTableName: budget_category_allocations
             baseColumnNames: budget_month_id
@@ -312,7 +385,7 @@ databaseChangeLog:
             referencedTableName: categories
             referencedColumnNames: id
             constraintName: fk_bca_category
-            onDelete: CASCADE
+            onDelete: RESTRICT
         - addForeignKeyConstraint:
             baseTableName: budget_category_allocations
             baseColumnNames: user_id
@@ -331,7 +404,11 @@ databaseChangeLog:
               - column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
               - column: { name: user_id, type: varchar(36), constraints: { nullable: false } }
               - column: { name: rule_name, type: varchar(255), constraints: { nullable: false } }
-              - column: { name: allocation_percentage, type: double, constraints: { nullable: false } }
+              - column:
+                  name: allocation_percentage
+                  type: ${double.type}
+                  constraints:
+                    nullable: false
               - column: { name: is_active, type: boolean, defaultValueBoolean: true }
               - column: { name: created_at, type: timestamp, defaultValueComputed: "CURRENT_TIMESTAMP" }
               - column: { name: updated_at, type: timestamp, defaultValueComputed: "CURRENT_TIMESTAMP" }
@@ -343,105 +420,11 @@ databaseChangeLog:
             constraintName: fk_allocation_rules_user
             onDelete: CASCADE
 
-  - changeSet:
-      id: 011-add-account-month-summary
-      author: sd25
-      changes:
-        - createTable:
-            tableName: account_month_summary
-            columns:
-              - column:
-                  name: id
-                  type: BIGINT
-                  autoIncrement: true
-                  constraints:
-                    primaryKey: true
-                    nullable: false
-              - column:
-                  name: user_id
-                  type: VARCHAR(36)
-                  constraints:
-                    nullable: false
-              - column:
-                  name: account_id
-                  type: BIGINT
-                  constraints:
-                    nullable: false
-              - column:
-                  name: summary_year
-                  type: INT
-                  constraints:
-                    nullable: false
-              - column:
-                  name: summary_month
-                  type: INT
-                  constraints:
-                    nullable: false
-              - column:
-                  name: income_total
-                  type: DOUBLE
-                  defaultValueNumeric: 0
-              - column:
-                  name: expense_total
-                  type: DOUBLE
-                  defaultValueNumeric: 0
-              - column:
-                  name: net_total
-                  type: DOUBLE
-                  defaultValueNumeric: 0
-              - column:
-                  name: count_countable
-                  type: INT
-                  defaultValueNumeric: 0
-              - column:
-                  name: created_at
-                  type: TIMESTAMP
-              - column:
-                  name: updated_at
-                  type: TIMESTAMP
-        - addUniqueConstraint:
-            tableName: account_month_summary
-            columnNames: user_id, account_id, summary_year, summary_month
-            constraintName: uk_account_month_summary_user_account_year_month
-        - createIndex:
-            tableName: account_month_summary
-            indexName: idx_account_month_summary_user_year_month
-            columns:
-              - column:
-                  name: user_id
-              - column:
-                  name: summary_year
-              - column:
-                  name: summary_month
-        - createIndex:
-            tableName: account_month_summary
-            indexName: idx_account_month_summary_user_account
-            columns:
-              - column:
-                  name: user_id
-              - column:
-                  name: account_id
-        - addForeignKeyConstraint:
-            baseTableName: account_month_summary
-            baseColumnNames: user_id
-            referencedTableName: users
-            referencedColumnNames: id
-            constraintName: fk_account_month_summary_user
-            onDelete: CASCADE
-        - addForeignKeyConstraint:
-            baseTableName: account_month_summary
-            baseColumnNames: account_id
-            referencedTableName: accounts
-            referencedColumnNames: id
-            constraintName: fk_account_month_summary_account
-            onDelete: CASCADE
 
   - changeSet:
       id: 012a-add-linked-transaction-id-column
       author: sd25
       preConditions:
-        - onFail: MARK_RAN
-        - onError: MARK_RAN
         - not:
             - columnExists:
                 tableName: transactions
@@ -460,8 +443,6 @@ databaseChangeLog:
       id: 012b-create-index-linked-transaction-id
       author: sd25
       preConditions:
-        - onFail: MARK_RAN
-        - onError: MARK_RAN
         - not:
             - indexExists:
                 tableName: transactions
@@ -474,9 +455,3 @@ databaseChangeLog:
               - column:
                   name: linked_transaction_id
 
-  - changeSet:
-      id: 013-drop-account-month-summary
-      author: sd25
-      changes:
-        - dropTable:
-            tableName: account_month_summary

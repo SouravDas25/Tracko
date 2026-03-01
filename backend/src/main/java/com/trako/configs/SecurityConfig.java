@@ -29,10 +29,13 @@ public class SecurityConfig {
 
     private static final String[] WHITE_LIST_API = {
             "/api/oauth/token",
-            "/api/signUp",
             "/api/login",
             "/api/health",
-            "/h2-console/**"
+            "/h2-console/**",
+            // OpenAPI / Swagger UI
+            "/v3/api-docs/**",
+            "/swagger-ui.html",
+            "/swagger-ui/**"
     };
 
     @Bean
@@ -46,7 +49,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    @Profile("dev")
+    @Profile({"dev", "test"})
     public SecurityFilterChain devSecurityFilterChain(HttpSecurity http,
                                                       JwtRequestFilter jwtRequestFilter,
                                                       JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,

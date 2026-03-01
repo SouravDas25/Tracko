@@ -1,13 +1,14 @@
 package com.trako.models.request;
 
+import com.trako.entities.TransactionType;
 import jakarta.validation.constraints.NotNull;
 import java.util.Date;
 
 /**
  * Unified request model for creating transactions and transfers.
  * 
- * <p>For regular transactions: Include accountId, categoryId, transactionType, amount, etc.
- * <p>For transfers: Include accountId (or fromAccountId), toAccountId, and amount.
+ * <p>For regular transactions: Include accountId, categoryId, transactionType, originalAmount, originalCurrency, etc.
+ * <p>For transfers: Include accountId (or fromAccountId), toAccountId, originalAmount, and originalCurrency.
  * The presence of toAccountId indicates this is a transfer request.
  */
 public record TransactionRequest(
@@ -15,13 +16,12 @@ public record TransactionRequest(
     Long id,
     Long accountId,  // For transactions, this is the account. For transfers, this is the source (fromAccountId)
     Date date,
-    Double amount,
     String name,
     String comments,
     
     // Regular transaction fields
     Long categoryId,
-    Integer transactionType,  // 1=DEBIT, 2=CREDIT
+    TransactionType transactionType,  // 1=DEBIT, 2=CREDIT
     Integer isCountable,
     String originalCurrency,
     Double originalAmount,

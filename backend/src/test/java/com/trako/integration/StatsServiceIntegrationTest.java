@@ -3,6 +3,7 @@ package com.trako.integration;
 import com.trako.config.TestJwtSecurityConfig;
 import com.trako.dtos.StatsResponseDTO;
 import com.trako.entities.*;
+import com.trako.entities.TransactionType;
 import com.trako.repositories.AccountRepository;
 import com.trako.repositories.CategoryRepository;
 import com.trako.repositories.TransactionRepository;
@@ -67,7 +68,7 @@ public class StatsServiceIntegrationTest {
         user.setName("Stats Svc");
         user.setPhoneNo("7777777777");
         user.setEmail("statssvc@example.com");
-        user.setFireBaseId("pass");
+        user.setPassword("pass");
         user = usersRepository.save(user);
 
         account = new Account();
@@ -96,6 +97,57 @@ public class StatsServiceIntegrationTest {
     }
 
     @Test
+    public void customRangeShortReturnsDailySeries() {
+        Date start = date(2026, 1, 1);
+        Date end = date(2026, 1, 10); // 10 days inclusive
+
+        saveTx(food.getId(), TransactionType.DEBIT, 1, 10.0, date(2026, 1, 2));
+        saveTx(food.getId(), TransactionType.DEBIT, 1, 20.0, date(2026, 1, 5));
+
+        StatsResponseDTO dto = statsService.getStats(user.getId(), StatsService.Range.custom, TransactionType.DEBIT, null, null, start, end);
+
+        assertNotNull(dto);
+        assertEquals("custom", dto.getRange());
+        assertNotNull(dto.getSeries());
+        // Should span 10 days (Jan 1 to Jan 10 inclusive)
+        assertEquals(10, dto.getSeries().size());
+        // Labels should be daily format YYYY-MM-DD
+        assertTrue(dto.getSeries().get(0).getLabel().matches("\\d{4}-\\d{2}-\\d{2}"));
+        assertEquals("2026-01-01", dto.getSeries().get(0).getLabel());
+        assertEquals("2026-01-10", dto.getSeries().get(9).getLabel());
+    }
+
+    @Test
+    public void customRangeLongReturnsMonthlySeries() {
+        Date start = date(2026, 1, 1);
+        Date end = date(2026, 4, 1); // Spans into April (> 62 days threshold)
+
+        saveTx(food.getId(), TransactionType.DEBIT, 1, 10.0, date(2026, 1, 15));
+        saveTx(food.getId(), TransactionType.DEBIT, 1, 20.0, date(2026, 2, 15));
+        saveTx(food.getId(), TransactionType.DEBIT, 1, 30.0, date(2026, 3, 15));
+        saveTx(food.getId(), TransactionType.DEBIT, 1, 40.0, date(2026, 4, 1)); // Transaction on the last day
+
+        StatsResponseDTO dto = statsService.getStats(user.getId(), StatsService.Range.custom, TransactionType.DEBIT, null, null, start, end);
+
+        assertNotNull(dto);
+        assertEquals("custom", dto.getRange());
+        assertNotNull(dto.getSeries());
+        // Should span 4 months: Jan, Feb, Mar, Apr
+        assertEquals(4, dto.getSeries().size());
+        
+        // Labels should be monthly format MMM YYYY (e.g. "Jan 2026")
+        assertEquals("Jan 2026", dto.getSeries().get(0).getLabel());
+        assertEquals("Feb 2026", dto.getSeries().get(1).getLabel());
+        assertEquals("Mar 2026", dto.getSeries().get(2).getLabel());
+        assertEquals("Apr 2026", dto.getSeries().get(3).getLabel());
+        
+        assertEquals(10.0, dto.getSeries().get(0).getValue(), 0.001);
+        assertEquals(20.0, dto.getSeries().get(1).getValue(), 0.001);
+        assertEquals(30.0, dto.getSeries().get(2).getValue(), 0.001);
+        assertEquals(40.0, dto.getSeries().get(3).getValue(), 0.001);
+    }
+
+    @Test
     public void categoriesAreSortedByAmountDescForCurrentPeriod() {
         // Anchor within the same week for deterministic “current period” selection
         Date anchor = date(2026, 1, 8);
@@ -108,11 +160,11 @@ public class StatsServiceIntegrationTest {
         // Out of current week (still affects series, but not category breakdown for current period)
         saveExpense(travel.getId(), 999.0, date(2025, 12, 15));
 
-        StatsResponseDTO dto = statsService.getStats(user.getId(), StatsService.Range.weekly, 1, anchor);
+        StatsResponseDTO dto = statsService.getStats(user.getId(), StatsService.Range.weekly, TransactionType.DEBIT, null, anchor, null, null);
 
         assertNotNull(dto);
         assertEquals("weekly", dto.getRange());
-        assertEquals(1, dto.getTransactionType());
+        assertEquals(TransactionType.DEBIT, dto.getTransactionType());
 
         // Category breakdown should be sorted desc by amount
         assertNotNull(dto.getCategories());
@@ -138,16 +190,16 @@ public class StatsServiceIntegrationTest {
     public void monthlyStatsBuildsMonthlySeriesAndSkipsInvalidCategoryIds() {
         Date anchor = date(2026, 2, 10);
 
-        saveTx(food.getId(), 1, 1, 10.0, date(2026, 1, 5));
-        saveTx(food.getId(), 1, 1, 20.0, date(2026, 2, 5));
-        saveTx(travel.getId(), 1, 1, 5.0, date(2026, 2, 6));
-        saveTx(food.getId(), 1, 1, null, date(2026, 2, 7));
+        saveTx(food.getId(), TransactionType.DEBIT, 1, 10.0, date(2026, 1, 5));
+        saveTx(food.getId(), TransactionType.DEBIT, 1, 20.0, date(2026, 2, 5));
+        saveTx(travel.getId(), TransactionType.DEBIT, 1, 5.0, date(2026, 2, 6));
+        saveTx(food.getId(), TransactionType.DEBIT, 1, null, date(2026, 2, 7));
 
-        StatsResponseDTO dto = statsService.getStats(user.getId(), StatsService.Range.monthly, 1, anchor);
+        StatsResponseDTO dto = statsService.getStats(user.getId(), StatsService.Range.monthly, TransactionType.DEBIT, null, anchor, null, null);
 
         assertNotNull(dto);
         assertEquals("monthly", dto.getRange());
-        assertEquals(1, dto.getTransactionType());
+        assertEquals(TransactionType.DEBIT, dto.getTransactionType());
 
         assertNotNull(dto.getSeries());
         assertTrue(dto.getSeries().stream().anyMatch(p -> "Jan 2026".equals(p.getLabel())));
@@ -163,10 +215,10 @@ public class StatsServiceIntegrationTest {
         Date anchor = date(2026, 12, 15);
 
         for (int m = 1; m <= 12; m++) {
-            saveTx(food.getId(), 1, 1, 1.0, date(2026, m, 2));
+            saveTx(food.getId(), TransactionType.DEBIT, 1, 1.0, date(2026, m, 2));
         }
 
-        StatsResponseDTO dto = statsService.getStats(user.getId(), StatsService.Range.monthly, 1, anchor);
+        StatsResponseDTO dto = statsService.getStats(user.getId(), StatsService.Range.monthly, TransactionType.DEBIT, null, anchor, null, null);
 
         assertNotNull(dto);
         assertEquals("monthly", dto.getRange());
@@ -179,10 +231,10 @@ public class StatsServiceIntegrationTest {
     public void yearlyStatsBuildsYearlySeries() {
         Date anchor = date(2026, 6, 1);
 
-        saveTx(food.getId(), 1, 1, 10.0, date(2025, 12, 31));
-        saveTx(food.getId(), 1, 1, 20.0, date(2026, 1, 1));
+        saveTx(food.getId(), TransactionType.DEBIT, 1, 10.0, date(2025, 12, 31));
+        saveTx(food.getId(), TransactionType.DEBIT, 1, 20.0, date(2026, 1, 1));
 
-        StatsResponseDTO dto = statsService.getStats(user.getId(), StatsService.Range.yearly, 1, anchor);
+        StatsResponseDTO dto = statsService.getStats(user.getId(), StatsService.Range.yearly, TransactionType.DEBIT, null, anchor, null, null);
 
         assertNotNull(dto);
         assertEquals("yearly", dto.getRange());
@@ -197,10 +249,10 @@ public class StatsServiceIntegrationTest {
     public void statsHasEmptySeriesWhenNoMatchingKindTransactions() {
         Date anchor = date(2026, 1, 8);
 
-        saveTx(food.getId(), 2, 1, 50.0, date(2026, 1, 7));
-        saveTx(food.getId(), 1, null, 50.0, date(2026, 1, 7));
+        saveTx(food.getId(), TransactionType.CREDIT, 1, 50.0, date(2026, 1, 7));
+        saveTx(food.getId(), TransactionType.DEBIT, null, 50.0, date(2026, 1, 7));
 
-        StatsResponseDTO dto = statsService.getStats(user.getId(), StatsService.Range.weekly, 1, anchor);
+        StatsResponseDTO dto = statsService.getStats(user.getId(), StatsService.Range.weekly, TransactionType.DEBIT, null, anchor, null, null);
 
         assertNotNull(dto);
         assertNotNull(dto.getSeries());
@@ -215,15 +267,15 @@ public class StatsServiceIntegrationTest {
     public void categoryStatsWeeklyFiltersByCategoryAndComputesTotalForCurrentPeriod() {
         Date anchor = date(2026, 1, 8);
 
-        saveTx(food.getId(), 1, 1, 40.0, date(2026, 1, 7));
-        saveTx(travel.getId(), 1, 1, 999.0, date(2026, 1, 7));
-        saveTx(food.getId(), 1, 1, 500.0, date(2025, 12, 15));
+        saveTx(food.getId(), TransactionType.DEBIT, 1, 40.0, date(2026, 1, 7));
+        saveTx(travel.getId(), TransactionType.DEBIT, 1, 999.0, date(2026, 1, 7));
+        saveTx(food.getId(), TransactionType.DEBIT, 1, 500.0, date(2025, 12, 15));
 
-        var dto = statsService.getCategoryStats(user.getId(), StatsService.Range.weekly, 1, anchor, food.getId());
+        var dto = statsService.getCategoryStats(user.getId(), StatsService.Range.weekly, TransactionType.DEBIT, null, anchor, food.getId(), null, null);
 
         assertNotNull(dto);
         assertEquals("weekly", dto.getRange());
-        assertEquals(1, dto.getTransactionType());
+        assertEquals(TransactionType.DEBIT, dto.getTransactionType());
         assertEquals(food.getId(), dto.getCategoryId());
         assertNotNull(dto.getSeries());
         assertTrue(dto.getSeries().size() >= 1);
@@ -234,7 +286,7 @@ public class StatsServiceIntegrationTest {
     public void categoryStatsWithNullCategoryReturnsEmpty() {
         Date anchor = date(2026, 1, 8);
 
-        var dto = statsService.getCategoryStats(user.getId(), StatsService.Range.weekly, 1, anchor, null);
+        var dto = statsService.getCategoryStats(user.getId(), StatsService.Range.weekly, TransactionType.DEBIT, null, anchor, null, null, null);
 
         assertNotNull(dto);
         assertNotNull(dto.getSeries());
@@ -245,52 +297,23 @@ public class StatsServiceIntegrationTest {
 
     @Test
     public void filterCategoryAndMonthLabelUnreachableBranchesAreCoveredViaReflection() throws Exception {
-        Method filterCategory = StatsService.class.getDeclaredMethod("filterCategory", List.class, Long.class);
-        filterCategory.setAccessible(true);
-
         Method monthLabel = StatsService.class.getDeclaredMethod("monthLabel", int.class);
         monthLabel.setAccessible(true);
-
-        List<Transaction> txs = new ArrayList<>();
-        txs.add(newTx(food.getId(), 1, 1, 10.0, date(2026, 1, 2)));
-
-        @SuppressWarnings("unchecked")
-        List<Transaction> empty1 = (List<Transaction>) filterCategory.invoke(statsService, null, food.getId());
-        assertNotNull(empty1);
-        assertEquals(0, empty1.size());
-
-        @SuppressWarnings("unchecked")
-        List<Transaction> empty2 = (List<Transaction>) filterCategory.invoke(statsService, txs, null);
-        assertNotNull(empty2);
-        assertEquals(0, empty2.size());
-
-        Transaction nullCat = newTx(food.getId(), 1, 1, 10.0, date(2026, 1, 2));
-        nullCat.setCategoryId(null);
-        txs.add(nullCat);
-
-        Transaction zeroCat = newTx(food.getId(), 1, 1, 10.0, date(2026, 1, 2));
-        zeroCat.setCategoryId(0L);
-        txs.add(zeroCat);
-
-        @SuppressWarnings("unchecked")
-        List<Transaction> matches = (List<Transaction>) filterCategory.invoke(statsService, txs, food.getId());
-        assertNotNull(matches);
-        assertEquals(1, matches.size());
 
         String unknown = (String) monthLabel.invoke(statsService, 13);
         assertEquals("", unknown);
     }
 
     private void saveExpense(Long categoryId, double amount, Date d) {
-        saveTx(categoryId, 1, 1, amount, d);
+        saveTx(categoryId, TransactionType.DEBIT, 1, amount, d);
     }
 
-    private void saveTx(Long categoryId, Integer transactionType, Integer isCountable, Double amount, Date d) {
+    private void saveTx(Long categoryId, TransactionType transactionType, Integer isCountable, Double amount, Date d) {
         Transaction t = newTx(categoryId, transactionType, isCountable, amount, d);
         transactionWriteService.saveForUser(user.getId(), t);
     }
 
-    private Transaction newTx(Long categoryId, Integer transactionType, Integer isCountable, Double amount, Date d) {
+    private Transaction newTx(Long categoryId, TransactionType transactionType, Integer isCountable, Double amount, Date d) {
         Transaction t = new Transaction();
         t.setAccountId(account.getId());
         t.setCategoryId(categoryId);
@@ -299,10 +322,14 @@ public class StatsServiceIntegrationTest {
         if (amount == null) {
             // Keep TransactionWriteService happy while ensuring this row doesn't impact stats totals.
             t.setIsCountable(0);
-            t.setAmount(0.0);
+            t.setOriginalAmount(0.0);
+            t.setOriginalCurrency("INR");
+            t.setExchangeRate(1.0);
         } else {
             t.setIsCountable(isCountable);
-            t.setAmount(amount);
+            t.setOriginalAmount(amount);
+            t.setOriginalCurrency("INR");
+            t.setExchangeRate(1.0);
         }
         t.setDate(d);
         return t;

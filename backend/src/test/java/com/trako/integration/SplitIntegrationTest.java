@@ -3,6 +3,7 @@ package com.trako.integration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trako.config.TestJwtSecurityConfig;
 import com.trako.entities.*;
+import com.trako.entities.TransactionType;
 import com.trako.repositories.*;
 import com.trako.services.TransactionWriteService;
 import com.trako.util.JwtTokenUtil;
@@ -86,12 +87,12 @@ public class SplitIntegrationTest {
         testUser.setName("Test User");
         testUser.setPhoneNo("1234567890");
         testUser.setEmail("test@example.com");
-        testUser.setFireBaseId("password");
+        testUser.setPassword("password");
         testUser = usersRepository.save(testUser);
 
         var principal = new org.springframework.security.core.userdetails.User(
                 testUser.getPhoneNo(),
-                testUser.getFireBaseId(),
+                testUser.getPassword(),
                 Collections.emptyList()
         );
         bearerToken = "Bearer " + jwtTokenUtil.generateToken(principal);
@@ -100,12 +101,12 @@ public class SplitIntegrationTest {
         otherUser.setName("Other User");
         otherUser.setPhoneNo("5555555555");
         otherUser.setEmail("other@example.com");
-        otherUser.setFireBaseId("password");
+        otherUser.setPassword("password");
         otherUser = usersRepository.save(otherUser);
 
         var otherPrincipal = new org.springframework.security.core.userdetails.User(
                 otherUser.getPhoneNo(),
-                otherUser.getFireBaseId(),
+                otherUser.getPassword(),
                 Collections.emptyList()
         );
         otherBearerToken = "Bearer " + jwtTokenUtil.generateToken(otherPrincipal);
@@ -121,9 +122,11 @@ public class SplitIntegrationTest {
         testCategory = categoryRepository.save(testCategory);
 
         testTransaction = new Transaction();
-        testTransaction.setTransactionType(1);
+        testTransaction.setTransactionType(TransactionType.DEBIT);
         testTransaction.setName("Dinner");
-        testTransaction.setAmount(100.00);
+        testTransaction.setOriginalAmount(100.00);
+        testTransaction.setOriginalCurrency("INR");
+        testTransaction.setExchangeRate(1.0);
         testTransaction.setDate(new Date());
         testTransaction.setAccountId(testAccount.getId());
         testTransaction.setCategoryId(testCategory.getId());
@@ -159,6 +162,34 @@ public class SplitIntegrationTest {
         split.setUserId(testUser.getId());
         split.setAmount(50.00);
         split.setIsSettled(0);
+
+        mockMvc.perform(post("/api/splits")
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(split)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void testCreateSplit_zeroAmount_returnsBadRequest() throws Exception {
+        Split split = new Split();
+        split.setTransactionId(testTransaction.getId());
+        split.setUserId(testUser.getId());
+        split.setAmount(0.0);
+
+        mockMvc.perform(post("/api/splits")
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(split)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void testCreateSplit_negativeAmount_returnsBadRequest() throws Exception {
+        Split split = new Split();
+        split.setTransactionId(testTransaction.getId());
+        split.setUserId(testUser.getId());
+        split.setAmount(-10.0);
 
         mockMvc.perform(post("/api/splits")
                         .header("Authorization", bearerToken)
@@ -224,7 +255,7 @@ public class SplitIntegrationTest {
         split.setAmount(50.00);
         splitRepository.save(split);
 
-        mockMvc.perform(get("/api/splits/user/" + testUser.getId())
+        mockMvc.perform(get("/api/splits")
                         .header("Authorization", bearerToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result", hasSize(1)))
@@ -247,7 +278,7 @@ public class SplitIntegrationTest {
         split2.setIsSettled(1);
         splitRepository.save(split2);
 
-        mockMvc.perform(get("/api/splits/user/" + testUser.getId() + "/unsettled")
+        mockMvc.perform(get("/api/splits/unsettled")
                         .header("Authorization", bearerToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result", hasSize(1)))
@@ -255,9 +286,15 @@ public class SplitIntegrationTest {
     }
 
     @Test
-    public void testGetSplitsByUserId_whenDifferentUserId_returnsUnauthorized() throws Exception {
-        mockMvc.perform(get("/api/splits/user/" + otherUser.getId())
-                        .header("Authorization", bearerToken))
+    public void testGetSplitById_whenOwnedByAnotherUser_returnsUnauthorized() throws Exception {
+        Split foreign = new Split();
+        foreign.setTransactionId(testTransaction.getId());
+        foreign.setUserId(testUser.getId());
+        foreign.setAmount(50.00);
+        foreign = splitRepository.save(foreign);
+
+        mockMvc.perform(get("/api/splits/" + foreign.getId())
+                        .header("Authorization", otherBearerToken))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -424,9 +461,11 @@ public class SplitIntegrationTest {
         // 5. Manually create a transaction for the settlement (Income)
         // This simulates the user explicitly recording the repayment transaction.
         Transaction settlementTransaction = new Transaction();
-        settlementTransaction.setTransactionType(2); // Credit/Income
+        settlementTransaction.setTransactionType(TransactionType.CREDIT); // Credit/Income
         settlementTransaction.setName("Settlement from " + testContact.getName());
-        settlementTransaction.setAmount(savedSplit.getAmount());
+        settlementTransaction.setOriginalAmount(savedSplit.getAmount());
+        settlementTransaction.setOriginalCurrency("INR");
+        settlementTransaction.setExchangeRate(1.0);
         settlementTransaction.setDate(new Date());
         settlementTransaction.setAccountId(testTransaction.getAccountId());
         settlementTransaction.setCategoryId(testTransaction.getCategoryId());

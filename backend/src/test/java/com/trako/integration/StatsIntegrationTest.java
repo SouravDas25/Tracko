@@ -5,6 +5,7 @@ import com.trako.dtos.CategoryStatDTO;
 import com.trako.dtos.CategoryStatsResponseDTO;
 import com.trako.dtos.StatsPointDTO;
 import com.trako.dtos.StatsResponseDTO;
+import com.trako.entities.TransactionType;
 import com.trako.repositories.UsersRepository;
 import com.trako.services.StatsService;
 import com.trako.util.JwtTokenUtil;
@@ -20,6 +21,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import static org.hamcrest.Matchers.hasSize;
@@ -56,34 +58,34 @@ public class StatsIntegrationTest {
         user.setName("StatsUser");
         user.setPhoneNo("9090909090");
         user.setEmail("stats@example.com");
-        user.setFireBaseId("pass");
+        user.setPassword("pass");
         usersRepository.save(user);
 
         UserDetails principal = new org.springframework.security.core.userdetails.User(
-                user.getPhoneNo(), user.getFireBaseId(), Collections.emptyList());
+                user.getPhoneNo(), user.getPassword(), Collections.emptyList());
         bearerToken = "Bearer " + jwtTokenUtil.generateToken(principal);
 
         StatsResponseDTO dto = new StatsResponseDTO(
                 "weekly",
-                1,
+                TransactionType.DEBIT,
                 "2026-01-01",
                 "2026-01-07",
                 123.0,
                 List.of(new StatsPointDTO("2026-01-01", 123.0)),
                 List.of(new CategoryStatDTO(10L, "Food", 123.0))
         );
-        when(statsService.getStats(anyString(), any(StatsService.Range.class), anyInt(), any())).thenReturn(dto);
+        when(statsService.getStats(anyString(), any(StatsService.Range.class), any(TransactionType.class), nullable(Long.class), any(), nullable(Date.class), nullable(Date.class))).thenReturn(dto);
 
         CategoryStatsResponseDTO catDto = new CategoryStatsResponseDTO(
                 "weekly",
-                1,
+                TransactionType.DEBIT,
                 10L,
                 "2026-01-01",
                 "2026-01-07",
                 50.0,
                 List.of(new StatsPointDTO("2026-01-01", 50.0))
         );
-        when(statsService.getCategoryStats(anyString(), any(StatsService.Range.class), anyInt(), any(), anyLong()))
+        when(statsService.getCategoryStats(anyString(), any(StatsService.Range.class), any(TransactionType.class), nullable(Long.class), any(), anyLong(), nullable(Date.class), nullable(Date.class)))
                 .thenReturn(catDto);
     }
 
@@ -111,7 +113,7 @@ public class StatsIntegrationTest {
                         .queryParam("range", "bad")
                         .queryParam("transactionType", "1"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Invalid range. Use weekly|monthly|yearly"));
+                .andExpect(jsonPath("$.message").value("Invalid range. Use weekly|monthly|yearly|custom"));
     }
 
     @Test
@@ -119,9 +121,9 @@ public class StatsIntegrationTest {
         mockMvc.perform(get("/api/stats/summary")
                         .header("Authorization", bearerToken)
                         .queryParam("range", "weekly")
-                        .queryParam("transactionType", "3"))
+                        .queryParam("transactionType", "99"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Invalid transactionType. Use 1 (DEBIT) or 2 (CREDIT)"));
+                .andExpect(jsonPath("$.message").value("Unknown TransactionType value: 99"));
     }
 
     @Test

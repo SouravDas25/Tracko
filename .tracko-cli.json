@@ -1,0 +1,13 @@
+{
+  "active_profile": "default",
+  "profiles": {
+    "default": {
+      "base_url": "http://localhost:8080",
+      "token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI5OTk5OTk5OTk5IiwiaWF0IjoxNzcyMzk0OTQwLCJleHAiOjE3NzI0MTI5NDB9.lniAHStNLgmP4CpLnSFTgzE2_8uIokwGiaoOlOWaefY"
+    },
+    "prod": {
+      "base_url": "https://trako.myc",
+      "token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI4NDU2MjE1Njc2IiwiaWF0IjoxNzcyNDAwNTIwLCJleHAiOjE3NzI0MTg1MjB9.mFnBnzv7Kxhd98yjQcl9uSFoCE9qh0ZW_QLDoSbwU64"
+    }
+  }
+}

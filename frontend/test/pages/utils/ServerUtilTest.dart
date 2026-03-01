@@ -35,7 +35,7 @@ void main() {
       assert(isSuccessful == true);
 
       GlobalAccountResponse globalAccountResponse =
-      await ServerUtil.getGlobalAccount("1234567890");
+          await ServerUtil.getGlobalAccount("1234567890");
       print(globalAccountResponse);
       assert(globalAccountResponse != null);
       assert(globalAccountResponse.id != null);

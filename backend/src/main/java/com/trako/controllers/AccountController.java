@@ -1,6 +1,7 @@
 package com.trako.controllers;
 
 import com.trako.entities.Account;
+import com.trako.dtos.TransactionPeriodSummaryDTO;
 import com.trako.dtos.TransactionSummaryDTO;
 import com.trako.dtos.TransactionDetailDTO;
 import com.trako.models.request.AccountSaveRequest;
@@ -18,6 +19,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.validation.annotation.Validated;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -30,6 +34,7 @@ import static com.trako.util.Response.notFound;
 
 @RestController
 @RequestMapping("/api/accounts")
+@Validated
 public class AccountController {
 
     @Autowired
@@ -99,7 +104,7 @@ public class AccountController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getById(@PathVariable Long id) {
+    public ResponseEntity<?> getById(@PathVariable @Positive Long id) {
         String currentUserId = userService.loggedInUser().getId();
         Account account = accountService.findById(id).orElse(null);
         if (account == null) {
@@ -117,7 +122,7 @@ public class AccountController {
 
     @GetMapping("/{id}/summary")
     public ResponseEntity<?> getAccountSummary(
-            @PathVariable Long id,
+            @PathVariable @Positive Long id,
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate,
             @RequestParam(required = false, defaultValue = "true") boolean includeRollover) {
@@ -139,9 +144,55 @@ public class AccountController {
         return Response.ok(summary);
     }
 
+    /**
+     * GET /api/accounts/{id}/summary/monthly
+     * Returns monthly summaries for a specific account.
+     */
+    @GetMapping("/{id}/summary/monthly")
+    public ResponseEntity<?> getAccountMonthlySummaries(
+            @PathVariable @Positive Long id,
+            @RequestParam(required = false) Integer year) {
+        String currentUserId = userService.loggedInUser().getId();
+        Account account = accountService.findById(id).orElse(null);
+        if (account == null) {
+            return notFound("Account not found");
+        }
+        if (!currentUserId.equals(account.getUserId())) {
+            return Response.unauthorized();
+        }
+
+        int resolvedYear = (year == null) ? Calendar.getInstance().get(Calendar.YEAR) : year;
+        List<TransactionPeriodSummaryDTO> summaries = transactionService.getMonthlySummaries(currentUserId, resolvedYear, List.of(id));
+        return Response.ok(summaries);
+    }
+
+    /**
+     * GET /api/accounts/{id}/summary/yearly
+     * Returns yearly summaries for a specific account.
+     */
+    @GetMapping("/{id}/summary/yearly")
+    public ResponseEntity<?> getAccountYearlySummaries(@PathVariable Long id) {
+        // note: validated via annotation below
+        return getAccountYearlySummariesValidated(id);
+    }
+
+    public ResponseEntity<?> getAccountYearlySummariesValidated(@PathVariable @Positive Long id) {
+        String currentUserId = userService.loggedInUser().getId();
+        Account account = accountService.findById(id).orElse(null);
+        if (account == null) {
+            return notFound("Account not found");
+        }
+        if (!currentUserId.equals(account.getUserId())) {
+            return Response.unauthorized();
+        }
+
+        List<TransactionPeriodSummaryDTO> summaries = transactionService.getYearlySummaries(currentUserId, List.of(id));
+        return Response.ok(summaries);
+    }
+
     @GetMapping("/{id}/transactions")
     public ResponseEntity<?> getAccountTransactions(
-            @PathVariable Long id,
+            @PathVariable @Positive Long id,
             @RequestParam(required = false) Integer month,
             @RequestParam(required = false) Integer year,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
@@ -183,7 +234,7 @@ public class AccountController {
         }
 
         List<Long> accountIds = List.of(id);
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "date"));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "date").and(Sort.by(Sort.Direction.DESC, "id")));
 
         if (expand) {
             Page<TransactionDetailDTO> dtoPage;
@@ -256,16 +307,6 @@ public class AccountController {
         return Response.ok(payload);
     }
 
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<?> getByUserId(@PathVariable String userId) {
-        String currentUserId = userService.loggedInUser().getId();
-        if (!currentUserId.equals(userId)) {
-            return Response.unauthorized();
-        }
-        List<Account> accounts = accountService.findByUserId(currentUserId);
-        return Response.ok(accounts);
-    }
-
     @PostMapping
     public ResponseEntity<?> create(@Valid @RequestBody AccountSaveRequest request) {
         Account account = new Account();
@@ -280,7 +321,7 @@ public class AccountController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> update(@PathVariable Long id, @Valid @RequestBody AccountSaveRequest request) {
+    public ResponseEntity<?> update(@PathVariable @Positive Long id, @Valid @RequestBody AccountSaveRequest request) {
         String currentUserId = userService.loggedInUser().getId();
         Account existing = accountService.findById(id).orElse(null);
         if (existing == null) {
@@ -300,7 +341,7 @@ public class AccountController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable Long id) {
+    public ResponseEntity<?> delete(@PathVariable @Positive Long id) {
         String currentUserId = userService.loggedInUser().getId();
         Account existing = accountService.findById(id).orElse(null);
         if (existing == null) {

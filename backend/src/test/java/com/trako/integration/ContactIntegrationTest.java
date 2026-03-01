@@ -61,12 +61,12 @@ public class ContactIntegrationTest {
         testUser.setName("Test User");
         testUser.setPhoneNo("1234567890");
         testUser.setEmail("test@example.com");
-        testUser.setFireBaseId("password");
+        testUser.setPassword("password");
         testUser = usersRepository.save(testUser);
 
         UserDetails principal = new org.springframework.security.core.userdetails.User(
                 testUser.getPhoneNo(),
-                testUser.getFireBaseId(),
+                testUser.getPassword(),
                 Collections.emptyList()
         );
         bearerToken = "Bearer " + jwtTokenUtil.generateToken(principal);
@@ -210,7 +210,7 @@ public class ContactIntegrationTest {
         other.setName("Other");
         other.setPhoneNo("2002002000");
         other.setEmail("other@example.com");
-        other.setFireBaseId("other_pass");
+        other.setPassword("other_pass");
         other = usersRepository.save(other);
 
         Contact foreign = new Contact();

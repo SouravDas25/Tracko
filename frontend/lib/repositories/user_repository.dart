@@ -4,37 +4,16 @@ import 'package:tracko/services/api_client.dart';
 import 'package:tracko/config/api_config.dart';
 
 class UserRepository {
-  final ApiClient _api = ApiClient();
+  final ApiClient _api;
 
-  Future<User?> getById(String id) async {
-    try {
-      final res = await _api.get<List<dynamic>>("${ApiConfig.users}/$id");
-      if (res.isEmpty) return null;
-      return _fromBackend(res.first as Map<String, dynamic>);
-    } catch (e) {
-      return null;
-    }
-  }
+  UserRepository({ApiClient? api}) : _api = api ?? ApiClient();
 
-  Future<User?> getMe() async {
+  Future<User> getMe() async {
     try {
       final res = await _api.get<Map<String, dynamic>>("${ApiConfig.users}/me");
       return _fromBackend(res);
     } catch (e) {
-      return null;
-    }
-  }
-
-  Future<User?> getByPhoneNumber(String phoneNo) async {
-    try {
-      final res = await _api.get<List<dynamic>>(
-        "${ApiConfig.users}/byPhoneNo",
-        query: {'phone_no': phoneNo},
-      );
-      if (res.isEmpty) return null;
-      return _fromBackend(res.first as Map<String, dynamic>);
-    } catch (e) {
-      return null;
+      rethrow;
     }
   }
 
@@ -43,19 +22,12 @@ class UserRepository {
     return res.map((e) => _fromBackend(e as Map<String, dynamic>)).toList();
   }
 
-  Future<String> save(User user, {bool isShadow = false}) async {
-    final payload = {
-      'name': user.name,
-      'phoneNo': user.phoneNo,
-      'email': user.email ?? '',
-      'profilePic': user.profilePic ?? '',
-      'isShadow': isShadow,
-      'baseCurrency': user.baseCurrency,
-    };
+  Future<void> resetUserData() async {
+    await _api.delete("${ApiConfig.users}/data");
+  }
 
-    final res =
-        await _api.post<String>("${ApiConfig.users}/save", data: payload);
-    return res;
+  Future<void> resetUserTransactions() async {
+    await _api.delete("${ApiConfig.users}/transactions");
   }
 
   User _fromBackend(Map<String, dynamic> json) {
@@ -67,13 +39,13 @@ class UserRepository {
     user.email = (json['email'] as String?) ?? '';
     user.profilePic = (json['profilePic'] as String?) ?? '';
     user.baseCurrency = (json['baseCurrency'] as String?) ?? 'INR';
-    
+
     if (json['secondaryCurrencies'] != null) {
       user.secondaryCurrencies = (json['secondaryCurrencies'] as List)
           .map((e) => UserCurrency.fromJson(e as Map<String, dynamic>))
           .toList();
     }
-    
+
     return user;
   }
 }

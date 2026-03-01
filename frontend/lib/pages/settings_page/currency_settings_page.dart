@@ -7,6 +7,7 @@ import 'package:tracko/models/user_currency.dart';
 import 'package:tracko/repositories/user_currency_repository.dart';
 import 'package:tracko/services/SessionService.dart';
 import 'package:tracko/services/exchange_rate_service.dart';
+import 'package:tracko/di/di.dart';
 import 'package:flutter/material.dart';
 
 class CurrencySettingsPage extends StatefulWidget {
@@ -15,24 +16,33 @@ class CurrencySettingsPage extends StatefulWidget {
 }
 
 class _CurrencySettingsPageState extends State<CurrencySettingsPage> {
-  late User user;
-  final UserCurrencyRepository _repo = UserCurrencyRepository();
-  final ExchangeRateService _rateService = ExchangeRateService();
+  late String baseCurrency;
+  List<UserCurrency> secondaryCurrencies = [];
+  late final UserCurrencyRepository _repo;
+  late final ExchangeRateService _rateService;
   bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _refreshUser();
+    _repo = sl<UserCurrencyRepository>();
+    _rateService = sl<ExchangeRateService>();
+    _loadData();
   }
 
-  _refreshUser() async {
-    // Force refresh user from backend to get latest currencies
-    user = await SessionService.getCurrentUser(forceRefresh: true);
-    if (mounted) {
-      setState(() {
-        isLoading = false;
-      });
+  _loadData() async {
+    try {
+      final user = await sl<SessionService>().fetchMe();
+      baseCurrency = user.baseCurrency;
+      secondaryCurrencies = await _repo.getAll();
+    } catch (e) {
+      print(e);
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
   }
 
@@ -40,9 +50,9 @@ class _CurrencySettingsPageState extends State<CurrencySettingsPage> {
     String selectedCurrency = existing?.currencyCode ??
         ConstantUtil.CURRENCIES.firstWhere(
             (c) =>
-                c != user.baseCurrency &&
-                !user.secondaryCurrencies.any((sc) => sc.currencyCode == c),
-            orElse: () => user.baseCurrency);
+                c != baseCurrency &&
+                !secondaryCurrencies.any((sc) => sc.currencyCode == c),
+            orElse: () => baseCurrency);
     TextEditingController rateController =
         TextEditingController(text: existing?.exchangeRate.toString() ?? '');
 
@@ -51,9 +61,9 @@ class _CurrencySettingsPageState extends State<CurrencySettingsPage> {
     showDialog(
       context: context,
       builder: (context) {
-        return StatefulBuilder(builder: (context, setState) {
+        return StatefulBuilder(builder: (context, setStateDialog) {
           _fetchRate() async {
-            setState(() {
+            setStateDialog(() {
               isFetching = true;
             });
             try {
@@ -61,7 +71,7 @@ class _CurrencySettingsPageState extends State<CurrencySettingsPage> {
               // 1 SecondaryCurrency (selectedCurrency) = X BaseCurrency
               // So we fetch rates for selectedCurrency and look for BaseCurrency
               double? rate = await _rateService.getExchangeRate(
-                  selectedCurrency, user.baseCurrency);
+                  selectedCurrency, baseCurrency);
 
               if (rate != null) {
                 rateController.text = rate.toString();
@@ -74,7 +84,7 @@ class _CurrencySettingsPageState extends State<CurrencySettingsPage> {
               print(e);
             } finally {
               if (mounted) {
-                setState(() {
+                setStateDialog(() {
                   isFetching = false;
                 });
               }
@@ -92,9 +102,9 @@ class _CurrencySettingsPageState extends State<CurrencySettingsPage> {
                     decoration: InputDecoration(labelText: "Currency"),
                     items: ConstantUtil.CURRENCIES
                         .where((c) =>
-                            c != user.baseCurrency &&
+                            c != baseCurrency &&
                             (existing != null ||
-                                !user.secondaryCurrencies
+                                !secondaryCurrencies
                                     .any((sc) => sc.currencyCode == c) ||
                                 c == selectedCurrency))
                         .map((c) => DropdownMenuItem(
@@ -104,7 +114,7 @@ class _CurrencySettingsPageState extends State<CurrencySettingsPage> {
                             ))
                         .toList(),
                     onChanged: (val) {
-                      setState(() {
+                      setStateDialog(() {
                         selectedCurrency = val!;
                         // Optionally auto-fetch when currency changes?
                         // Let's keep it manual via button for now to avoid spamming
@@ -127,8 +137,7 @@ class _CurrencySettingsPageState extends State<CurrencySettingsPage> {
                             TextInputType.numberWithOptions(decimal: true),
                         decoration: InputDecoration(
                           labelText: "Exchange Rate",
-                          helperText:
-                              "1 $selectedCurrency = ? ${user.baseCurrency}",
+                          helperText: "1 $selectedCurrency = ? $baseCurrency",
                         ),
                       ),
                     ),
@@ -161,7 +170,14 @@ class _CurrencySettingsPageState extends State<CurrencySettingsPage> {
                     double rate = double.parse(rateController.text);
                     await _repo.save(UserCurrency(
                         currencyCode: selectedCurrency, exchangeRate: rate));
-                    await _refreshUser();
+
+                    // Fetch updated list from API directly
+                    final updatedList = await _repo.getAll();
+
+                    setState(() {
+                      secondaryCurrencies = updatedList;
+                    });
+
                     Navigator.pop(context); // Close loading
                     Navigator.pop(context); // Close dialog
                   } catch (e) {
@@ -182,7 +198,12 @@ class _CurrencySettingsPageState extends State<CurrencySettingsPage> {
     try {
       LoadingDialog.show(context);
       await _repo.delete(code);
-      await _refreshUser();
+
+      final updatedList = await _repo.getAll();
+      setState(() {
+        secondaryCurrencies = updatedList;
+      });
+
       Navigator.pop(context);
     } catch (e) {
       Navigator.pop(context);
@@ -191,7 +212,7 @@ class _CurrencySettingsPageState extends State<CurrencySettingsPage> {
   }
 
   _refreshAllRates() async {
-    if (user.secondaryCurrencies.isEmpty) {
+    if (secondaryCurrencies.isEmpty) {
       WidgetUtil.toast("No secondary currencies to update");
       return;
     }
@@ -200,11 +221,11 @@ class _CurrencySettingsPageState extends State<CurrencySettingsPage> {
       LoadingDialog.show(context);
       // Fetch rates where 1 Base = X Secondary
       // We need 1 Secondary = Y Base, which is 1/X
-      final rates = await _rateService.getRatesForBase(user.baseCurrency);
+      final rates = await _rateService.getRatesForBase(baseCurrency);
 
       if (rates != null) {
         int updatedCount = 0;
-        for (var uc in user.secondaryCurrencies) {
+        for (var uc in secondaryCurrencies) {
           final code = uc.currencyCode;
           if (rates.containsKey(code)) {
             final rateToSecondary = rates[code];
@@ -216,7 +237,12 @@ class _CurrencySettingsPageState extends State<CurrencySettingsPage> {
             }
           }
         }
-        await _refreshUser();
+
+        final updatedList = await _repo.getAll();
+        setState(() {
+          secondaryCurrencies = updatedList;
+        });
+
         Navigator.pop(context); // hide loading
         WidgetUtil.toast("Updated $updatedCount currencies");
       } else {
@@ -259,9 +285,9 @@ class _CurrencySettingsPageState extends State<CurrencySettingsPage> {
           ListTile(
             title: Text("Base Currency"),
             subtitle: Text(
-                "${user.baseCurrency} (${CommonUtil.getCurrencySymbol(user.baseCurrency)})"),
+                "$baseCurrency (${CommonUtil.getCurrencySymbol(baseCurrency)})"),
             leading: CircleAvatar(
-                child: Text(CommonUtil.getCurrencySymbol(user.baseCurrency))),
+                child: Text(CommonUtil.getCurrencySymbol(baseCurrency))),
           ),
           Divider(),
           Padding(
@@ -270,17 +296,17 @@ class _CurrencySettingsPageState extends State<CurrencySettingsPage> {
                 style:
                     TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
           ),
-          if (user.secondaryCurrencies.isEmpty)
+          if (secondaryCurrencies.isEmpty)
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Text("No secondary currencies configured."),
             ),
-          ...user.secondaryCurrencies.map((uc) {
+          ...secondaryCurrencies.map((uc) {
             return ListTile(
               title: Text(
                   "${uc.currencyCode} (${CommonUtil.getCurrencySymbol(uc.currencyCode)})"),
               subtitle: Text(
-                  "Rate: 1 ${uc.currencyCode} = ${uc.exchangeRate} ${user.baseCurrency}"),
+                  "Rate: 1 ${uc.currencyCode} = ${uc.exchangeRate} $baseCurrency"),
               leading: Icon(Icons.monetization_on_outlined),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,

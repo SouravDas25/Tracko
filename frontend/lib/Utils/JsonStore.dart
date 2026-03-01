@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'package:tracko/models/json_store.dart';
 import 'package:tracko/repositories/json_store_repository.dart';
+import 'package:tracko/di/di.dart';
 
 class JsonStore {
-  static final _repo = JsonStoreRepository();
+  static JsonStoreRepository get _repo => sl<JsonStoreRepository>();
 
   static Future<bool?> has(String key) async {
     final obj = await get(key);

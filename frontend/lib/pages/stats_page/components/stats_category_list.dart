@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:tracko/Utils/CommonUtil.dart';
 import 'package:tracko/Utils/WidgetUtil.dart';
 import 'package:tracko/pages/stats_page/controllers/stats_controller.dart';
+import 'package:tracko/Utils/ChartUtil.dart';
 
 class StatsCategoryList extends StatelessWidget {
   final bool loading;
@@ -50,8 +51,11 @@ class StatsCategoryList extends StatelessWidget {
     }
 
     return Column(
-      children: stats.map((s) {
+      children: stats.asMap().entries.map((entry) {
+        final index = entry.key;
+        final s = entry.value;
         final percentage = total > 0 ? (s.amount / total) : 0.0;
+        final categoryColor = ChartUtil.getColor(index);
 
         return Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
@@ -73,7 +77,7 @@ class StatsCategoryList extends StatelessWidget {
                   children: [
                     WidgetUtil.textAvatar(
                       s.categoryName,
-                      backgroundColor: kindColor.withOpacity(0.8),
+                      backgroundColor: categoryColor.withOpacity(0.8),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -108,9 +112,10 @@ class StatsCategoryList extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(4),
                                   child: LinearProgressIndicator(
                                     value: percentage,
-                                    backgroundColor: kindColor.withOpacity(0.1),
+                                    backgroundColor:
+                                        categoryColor.withOpacity(0.1),
                                     valueColor: AlwaysStoppedAnimation<Color>(
-                                      kindColor,
+                                      categoryColor,
                                     ),
                                     minHeight: 6,
                                   ),
