@@ -5,6 +5,7 @@ import com.trako.config.TestJwtSecurityConfig;
 import com.trako.entities.Account;
 import com.trako.entities.Category;
 import com.trako.entities.Transaction;
+import com.trako.entities.TransactionType;
 import com.trako.entities.Frequency;
 import com.trako.entities.User;
 import com.trako.models.request.AccountSaveRequest;
@@ -126,7 +127,7 @@ public class AccountIntegrationTest {
 
         // Countable income + expense on A1 (should go into account_month_summary)
         Transaction income = new Transaction();
-        income.setTransactionType(2);
+        income.setTransactionType(TransactionType.CREDIT);
         income.setName("Income");
         income.setOriginalAmount(1000.0);
         income.setOriginalCurrency("INR");
@@ -138,7 +139,7 @@ public class AccountIntegrationTest {
         transactionWriteService.saveForUser(testUser.getId(), income);
 
         Transaction expense = new Transaction();
-        expense.setTransactionType(1);
+        expense.setTransactionType(TransactionType.DEBIT);
         expense.setName("Expense");
         expense.setOriginalAmount(200.0);
         expense.setOriginalCurrency("INR");
@@ -340,7 +341,7 @@ public class AccountIntegrationTest {
         cat = categoryRepository.save(cat);
 
         Transaction txn = new Transaction();
-        txn.setTransactionType(1);
+        txn.setTransactionType(TransactionType.DEBIT);
         txn.setName("Tx");
         txn.setOriginalAmount(10.0);
         txn.setOriginalCurrency("INR");
@@ -386,7 +387,7 @@ public class AccountIntegrationTest {
         rt.setAccountId(a1.getId());
         rt.setToAccountId(a2.getId());
         rt.setCategoryId(cat.getId());
-        rt.setTransactionType(2);
+        rt.setTransactionType(TransactionType.CREDIT);
         rt.setFrequency(Frequency.MONTHLY);
         rt.setStartDate(new Date());
         rt.setNextRunDate(new Date());

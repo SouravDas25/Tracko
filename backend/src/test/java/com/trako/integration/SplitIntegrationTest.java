@@ -3,6 +3,7 @@ package com.trako.integration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trako.config.TestJwtSecurityConfig;
 import com.trako.entities.*;
+import com.trako.entities.TransactionType;
 import com.trako.repositories.*;
 import com.trako.services.TransactionWriteService;
 import com.trako.util.JwtTokenUtil;
@@ -121,7 +122,7 @@ public class SplitIntegrationTest {
         testCategory = categoryRepository.save(testCategory);
 
         testTransaction = new Transaction();
-        testTransaction.setTransactionType(1);
+        testTransaction.setTransactionType(TransactionType.DEBIT);
         testTransaction.setName("Dinner");
         testTransaction.setOriginalAmount(100.00);
         testTransaction.setOriginalCurrency("INR");
@@ -161,6 +162,34 @@ public class SplitIntegrationTest {
         split.setUserId(testUser.getId());
         split.setAmount(50.00);
         split.setIsSettled(0);
+
+        mockMvc.perform(post("/api/splits")
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(split)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void testCreateSplit_zeroAmount_returnsBadRequest() throws Exception {
+        Split split = new Split();
+        split.setTransactionId(testTransaction.getId());
+        split.setUserId(testUser.getId());
+        split.setAmount(0.0);
+
+        mockMvc.perform(post("/api/splits")
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(split)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void testCreateSplit_negativeAmount_returnsBadRequest() throws Exception {
+        Split split = new Split();
+        split.setTransactionId(testTransaction.getId());
+        split.setUserId(testUser.getId());
+        split.setAmount(-10.0);
 
         mockMvc.perform(post("/api/splits")
                         .header("Authorization", bearerToken)
@@ -432,7 +461,7 @@ public class SplitIntegrationTest {
         // 5. Manually create a transaction for the settlement (Income)
         // This simulates the user explicitly recording the repayment transaction.
         Transaction settlementTransaction = new Transaction();
-        settlementTransaction.setTransactionType(2); // Credit/Income
+        settlementTransaction.setTransactionType(TransactionType.CREDIT); // Credit/Income
         settlementTransaction.setName("Settlement from " + testContact.getName());
         settlementTransaction.setOriginalAmount(savedSplit.getAmount());
         settlementTransaction.setOriginalCurrency("INR");

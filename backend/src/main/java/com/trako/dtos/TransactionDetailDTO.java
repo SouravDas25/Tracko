@@ -4,12 +4,13 @@ import com.trako.entities.Account;
 import com.trako.entities.Category;
 import com.trako.entities.Transaction;
 
+import com.trako.entities.TransactionType;
 import java.util.Date;
 import java.util.List;
 
 public class TransactionDetailDTO {
     private Long id;
-    private Integer transactionType;
+    private TransactionType transactionType;
     private String name;
     private String comments;
     private Date date;
@@ -51,11 +52,11 @@ public class TransactionDetailDTO {
         this.id = id;
     }
 
-    public Integer getTransactionType() {
+    public TransactionType getTransactionType() {
         return transactionType;
     }
 
-    public void setTransactionType(Integer transactionType) {
+    public void setTransactionType(TransactionType transactionType) {
         this.transactionType = transactionType;
     }
 

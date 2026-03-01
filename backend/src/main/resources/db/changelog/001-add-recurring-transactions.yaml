@@ -1,7 +1,7 @@
 databaseChangeLog:
   - changeSet:
       id: 001-add-recurring-transactions
-      author: cascade
+      author: Sourav
       changes:
         - createTable:
             tableName: recurring_transactions

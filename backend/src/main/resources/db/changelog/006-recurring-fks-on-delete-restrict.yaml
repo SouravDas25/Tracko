@@ -1,7 +1,7 @@
 databaseChangeLog:
   - changeSet:
       id: 006-recurring-fks-on-delete-restrict
-      author: cascade
+      author: Sourav
       preConditions:
         - tableExists:
             tableName: recurring_transactions

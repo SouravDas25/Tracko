@@ -3,6 +3,7 @@ package com.trako.services;
 import com.trako.entities.Account;
 import com.trako.entities.Category;
 import com.trako.entities.Transaction;
+import com.trako.entities.TransactionType;
 import com.trako.entities.UserCurrency;
 import com.trako.exceptions.AuthorizationException;
 import com.trako.exceptions.NotFoundException;
@@ -44,8 +45,8 @@ public class TransactionWriteService {
     @Autowired
     private CategoryRepository categoryRepository;
 
-    private static final int TYPE_DEBIT = 1;
-    private static final int TYPE_CREDIT = 2;
+    // private static final int TYPE_DEBIT = 1;
+    // private static final int TYPE_CREDIT = 2;
 
     @Transactional
     /**
@@ -151,9 +152,8 @@ public class TransactionWriteService {
         transaction.setComments(request.comments());
         transaction.setIsCountable(request.isCountable());
         
-        // Handle case where request might have amount instead of originalAmount (for backward compatibility in tests)
-        Double originalAmount = request.originalAmount() != null ? request.originalAmount() : request.amount();
-        transaction.setOriginalAmount(originalAmount);
+        // Only support originalAmount; no fallback to legacy 'amount'
+        transaction.setOriginalAmount(request.originalAmount());
         transaction.setOriginalCurrency(request.originalCurrency());
         transaction.setExchangeRate(request.exchangeRate());
         transaction.setLinkedTransactionId(request.linkedTransactionId());
@@ -218,7 +218,7 @@ public class TransactionWriteService {
         Transaction debit = new Transaction();
         debit.setAccountId(fromAccountId);
         debit.setCategoryId(transferCategoryId);
-        debit.setTransactionType(TYPE_DEBIT);
+        debit.setTransactionType(TransactionType.DEBIT);
         debit.setOriginalAmount(originalAmount);
         debit.setOriginalCurrency(originalCurrency);
         debit.setExchangeRate(exchangeRate);
@@ -240,7 +240,7 @@ public class TransactionWriteService {
         Transaction credit = new Transaction();
         credit.setAccountId(toAccountId);
         credit.setCategoryId(transferCategoryId);
-        credit.setTransactionType(TYPE_CREDIT);
+        credit.setTransactionType(TransactionType.CREDIT);
         credit.setOriginalAmount(originalAmount);
         credit.setOriginalCurrency(originalCurrency);
         credit.setExchangeRate(exchangeRate);
@@ -347,7 +347,7 @@ public class TransactionWriteService {
                     .orElseThrow(() -> new IllegalArgumentException("Linked transaction not found: " + existing.getLinkedTransactionId()));
 
             // Determine which is debit and which is credit
-            boolean isDebit = existing.getTransactionType() != null && existing.getTransactionType() == 1;
+            boolean isDebit = existing.getTransactionType() != null && existing.getTransactionType() == TransactionType.DEBIT;
             Long fromAccountId = isDebit ? transaction.getAccountId() : linkedTx.getAccountId();
             Long toAccountId = isDebit ? linkedTx.getAccountId() : transaction.getAccountId();
 
@@ -433,8 +433,8 @@ public class TransactionWriteService {
                 .orElseThrow(() -> new IllegalArgumentException("Linked transaction not found: " + linkedId));
 
         // Determine which is debit and which is credit
-        Transaction debit = transaction.getTransactionType() != null && transaction.getTransactionType() == TYPE_DEBIT ? transaction : linkedTx;
-        Transaction credit = transaction.getTransactionType() != null && transaction.getTransactionType() == TYPE_CREDIT ? transaction : linkedTx;
+        Transaction debit = transaction.getTransactionType() != null && transaction.getTransactionType() == TransactionType.DEBIT ? transaction : linkedTx;
+        Transaction credit = transaction.getTransactionType() != null && transaction.getTransactionType() == TransactionType.CREDIT ? transaction : linkedTx;
 
         // Verify ownership of both accounts
         Account debitAccount = accountRepository.findById(debit.getAccountId())

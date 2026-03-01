@@ -1,5 +1,6 @@
 package com.trako.models.request;
 
+import com.trako.entities.TransactionType;
 import jakarta.validation.constraints.NotNull;
 import java.util.Date;
 
@@ -21,7 +22,7 @@ public record TransactionRequest(
     
     // Regular transaction fields
     Long categoryId,
-    Integer transactionType,  // 1=DEBIT, 2=CREDIT
+    TransactionType transactionType,  // 1=DEBIT, 2=CREDIT
     Integer isCountable,
     String originalCurrency,
     Double originalAmount,

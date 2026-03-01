@@ -6,6 +6,7 @@ import com.trako.dtos.TransactionSummaryDTO;
 import com.trako.entities.Account;
 import com.trako.entities.Category;
 import com.trako.entities.Transaction;
+import com.trako.entities.TransactionType;
 import com.trako.entities.User;
 import com.trako.entities.UserCurrency;
 import com.trako.exceptions.AuthorizationException;
@@ -85,7 +86,7 @@ public class TransactionController {
                 .filter(t -> !(t.getCategoryId() != null
                         && t.getCategoryId().equals(transferCategoryId)
                         && t.getIsCountable() != null && t.getIsCountable() == 0
-                        && t.getTransactionType() != null && t.getTransactionType() == 2)) // hide CREDIT side
+                        && t.getTransactionType() != null && t.getTransactionType() == TransactionType.CREDIT)) // hide CREDIT side
                 .collect(Collectors.toList());
     }
 
@@ -98,7 +99,7 @@ public class TransactionController {
         for (var t : transactions) {
             if (t.getCategoryId() != null && t.getCategoryId().equals(transferCategoryId)
                     && t.getIsCountable() != null && t.getIsCountable() == 0) {
-                t.setTransactionType(3); // mark as TRANSFER for response rendering
+                t.setTransactionType(TransactionType.TRANSFER); // mark as TRANSFER for response rendering
             }
         }
         return transactions;
@@ -115,7 +116,7 @@ public class TransactionController {
                     return !(dto.getCategoryId() != null
                             && dto.getCategoryId().equals(transferCategoryId)
                             && dto.getIsCountable() != null && dto.getIsCountable() == 0
-                            && dto.getTransactionType() != null && dto.getTransactionType() == 2);
+                            && dto.getTransactionType() != null && dto.getTransactionType() == TransactionType.CREDIT);
                 })
                 .collect(Collectors.toList());
     }
@@ -129,7 +130,7 @@ public class TransactionController {
         for (var dto : dtos) {
             if (dto.getCategoryId() != null && dto.getCategoryId().equals(transferCategoryId)
                     && dto.getIsCountable() != null && dto.getIsCountable() == 0) {
-                dto.setTransactionType(3); // mark as TRANSFER for response rendering
+                dto.setTransactionType(TransactionType.TRANSFER); // mark as TRANSFER for response rendering
             }
         }
         return dtos;
@@ -441,6 +442,9 @@ public class TransactionController {
                 if (request.originalAmount() == null) {
                      return Response.badRequest("Original amount is required");
                 }
+                if (request.originalAmount() <= 0) {
+                     return Response.badRequest("Original amount must be greater than 0");
+                }
                 
                 Double exchangeRate = resolveExchangeRate(user, request.originalCurrency(), request.exchangeRate());
 
@@ -508,8 +512,8 @@ public class TransactionController {
             
             // CASE 1: Updating a TRANSFER
             if (isExistingTransfer || request.isTransfer()) {
-                boolean isDebitSide = existing.getTransactionType() != null && existing.getTransactionType() == 1;
-                boolean isCreditSide = existing.getTransactionType() != null && existing.getTransactionType() == 2;
+                boolean isDebitSide = existing.getTransactionType() != null && existing.getTransactionType() == TransactionType.DEBIT;
+                boolean isCreditSide = existing.getTransactionType() != null && existing.getTransactionType() == TransactionType.CREDIT;
 
                 // Important: request.getSourceAccountId() falls back to `accountId` when `fromAccountId` is null.
                 Long resolvedFromAccountId = request.fromAccountId();
@@ -537,6 +541,11 @@ public class TransactionController {
                      if (rate == null) {
                          rate = existing.getExchangeRate();
                      }
+                }
+
+                // Validate amount if provided
+                if (request.originalAmount() != null && request.originalAmount() <= 0) {
+                    return Response.badRequest("Original amount must be greater than 0");
                 }
 
                 Transaction[] result = transactionWriteService.updateTransfer(
@@ -581,7 +590,14 @@ public class TransactionController {
             txToUpdate.setOriginalCurrency(newCurrency);
             txToUpdate.setExchangeRate(newRate);
             
-            txToUpdate.setOriginalAmount(request.originalAmount() != null ? request.originalAmount() : existing.getOriginalAmount());
+            if (request.originalAmount() != null) {
+                if (request.originalAmount() <= 0) {
+                    return Response.badRequest("Original amount must be greater than 0");
+                }
+                txToUpdate.setOriginalAmount(request.originalAmount());
+            } else {
+                txToUpdate.setOriginalAmount(existing.getOriginalAmount());
+            }
 
             txToUpdate.setName(request.name() != null ? request.name() : existing.getName());
             txToUpdate.setComments(request.comments() != null ? request.comments() : existing.getComments());

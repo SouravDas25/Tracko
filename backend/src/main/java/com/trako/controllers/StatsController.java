@@ -1,6 +1,7 @@
 package com.trako.controllers;
 
 import com.trako.dtos.StatsResponseDTO;
+import com.trako.entities.TransactionType;
 import com.trako.exceptions.UserNotLoggedInException;
 import com.trako.services.StatsService;
 import com.trako.services.UserService;
@@ -32,7 +33,7 @@ public class StatsController {
     @GetMapping("/summary")
     public ResponseEntity<?> getStats(
             @RequestParam @NotBlank String range,
-            @RequestParam Integer transactionType,
+            @RequestParam TransactionType transactionType,
             @RequestParam(required = false) @Positive(message = "Invalid accountId") Long accountId,
             @RequestParam(required = false)
             @DateTimeFormat(pattern = "yyyy-MM-dd")
@@ -53,10 +54,6 @@ public class StatsController {
                 return Response.badRequest("Invalid range. Use weekly|monthly|yearly|custom");
             }
 
-            if (transactionType == null || (transactionType != 1 && transactionType != 2)) {
-                return Response.badRequest("Invalid transactionType. Use 1 (DEBIT) or 2 (CREDIT)");
-            }
-
             Date anchor = (date == null) ? new Date() : date;
             System.out.println("[StatsController] /api/stats/summary range=" + range
                     + " transactionType=" + transactionType
@@ -73,7 +70,7 @@ public class StatsController {
     @GetMapping("/category-summary")
     public ResponseEntity<?> getCategoryStats(
             @RequestParam @NotBlank String range,
-            @RequestParam Integer transactionType,
+            @RequestParam TransactionType transactionType,
             @RequestParam @Positive(message = "Invalid categoryId") Long categoryId,
             @RequestParam(required = false) @Positive(message = "Invalid accountId") Long accountId,
             @RequestParam(required = false)
@@ -93,10 +90,6 @@ public class StatsController {
                 r = StatsService.Range.valueOf(range.toLowerCase());
             } catch (Exception e) {
                 return Response.badRequest("Invalid range. Use weekly|monthly|yearly|custom");
-            }
-
-            if (transactionType == null || (transactionType != 1 && transactionType != 2)) {
-                return Response.badRequest("Invalid transactionType. Use 1 (DEBIT) or 2 (CREDIT)");
             }
 
             if (categoryId == null || categoryId <= 0) {

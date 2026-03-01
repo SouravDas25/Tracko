@@ -3,6 +3,7 @@ package com.trako.repositories;
 import com.trako.entities.Account;
 import com.trako.entities.Category;
 import com.trako.entities.Transaction;
+import com.trako.entities.TransactionType;
 import com.trako.entities.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -53,7 +54,7 @@ public class TransactionRepositoryTest {
     @Test
     public void testSaveTransaction() {
         Transaction transaction = new Transaction();
-        transaction.setTransactionType(1);
+        transaction.setTransactionType(TransactionType.DEBIT);
         transaction.setName("Lunch");
         transaction.setComments("Pizza");
         transaction.setDate(new Date());
@@ -73,7 +74,7 @@ public class TransactionRepositoryTest {
     @Test
     public void testFindByUserId() {
         Transaction transaction1 = new Transaction();
-        transaction1.setTransactionType(1);
+        transaction1.setTransactionType(TransactionType.DEBIT);
         transaction1.setName("Lunch");
         transaction1.setDate(new Date());
         transaction1.setOriginalAmount(25.50);
@@ -84,7 +85,7 @@ public class TransactionRepositoryTest {
         entityManager.persist(transaction1);
 
         Transaction transaction2 = new Transaction();
-        transaction2.setTransactionType(1);
+        transaction2.setTransactionType(TransactionType.DEBIT);
         transaction2.setName("Dinner");
         transaction2.setDate(new Date());
         transaction2.setOriginalAmount(35.00);
@@ -114,7 +115,7 @@ public class TransactionRepositoryTest {
         Date fifteenDaysAgo = cal.getTime();
 
         Transaction transaction1 = new Transaction();
-        transaction1.setTransactionType(1);
+        transaction1.setTransactionType(TransactionType.DEBIT);
         transaction1.setName("Recent");
         transaction1.setDate(today);
         transaction1.setOriginalAmount(25.50);
@@ -125,7 +126,7 @@ public class TransactionRepositoryTest {
         entityManager.persist(transaction1);
 
         Transaction transaction2 = new Transaction();
-        transaction2.setTransactionType(1);
+        transaction2.setTransactionType(TransactionType.DEBIT);
         transaction2.setName("Old");
         transaction2.setDate(fifteenDaysAgo);
         transaction2.setOriginalAmount(35.00);
@@ -151,7 +152,7 @@ public class TransactionRepositoryTest {
     @Test
     public void testFindByAccountId() {
         Transaction transaction = new Transaction();
-        transaction.setTransactionType(1);
+        transaction.setTransactionType(TransactionType.DEBIT);
         transaction.setName("Test Transaction");
         transaction.setDate(new Date());
         transaction.setOriginalAmount(100.00);
@@ -171,7 +172,7 @@ public class TransactionRepositoryTest {
     @Test
     public void testFindByCategoryId() {
         Transaction transaction = new Transaction();
-        transaction.setTransactionType(1);
+        transaction.setTransactionType(TransactionType.DEBIT);
         transaction.setName("Food Purchase");
         transaction.setDate(new Date());
         transaction.setOriginalAmount(50.00);

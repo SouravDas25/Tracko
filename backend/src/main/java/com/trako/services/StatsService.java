@@ -6,6 +6,7 @@ import com.trako.dtos.StatsPointDTO;
 import com.trako.dtos.StatsResponseDTO;
 import com.trako.entities.Category;
 import com.trako.entities.Transaction;
+import com.trako.entities.TransactionType;
 import com.trako.repositories.CategoryRepository;
 import com.trako.repositories.TransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -173,12 +174,12 @@ public class StatsService {
     // }
 
 
-    private List<StatsPointDTO> buildSeriesFromDb(String userId, Range range, int transactionType, Long accountId, Date anchorDate, Date currentStart, Date currentEnd) {
+    private List<StatsPointDTO> buildSeriesFromDb(String userId, Range range, TransactionType transactionType, Long accountId, Date anchorDate, Date currentStart, Date currentEnd) {
         List<Object[]> aggs = transactionRepository.sumAmountsByDateForUser(userId, transactionType, accountId);
         return buildSeriesFromAggs(range, anchorDate, aggs, currentStart, currentEnd);
     }
     
-    private List<StatsPointDTO> buildSeriesFromDbCategory(String userId, Range range, int transactionType, Long accountId, Long categoryId, Date anchorDate, Date currentStart, Date currentEnd) {
+    private List<StatsPointDTO> buildSeriesFromDbCategory(String userId, Range range, TransactionType transactionType, Long accountId, Long categoryId, Date anchorDate, Date currentStart, Date currentEnd) {
         List<Object[]> aggs = transactionRepository.sumAmountsByDateForCategory(userId, transactionType, accountId, categoryId);
         return buildSeriesFromAggs(range, anchorDate, aggs, currentStart, currentEnd);
     }
@@ -316,7 +317,7 @@ public class StatsService {
      * - current-period total and category breakdown
      * - contiguous historical series by requested granularity
      */
-    public StatsResponseDTO getStats(String userId, Range range, int transactionType, Long accountId, Date anchorDate, Date customStartDate, Date customEndDate) {
+    public StatsResponseDTO getStats(String userId, Range range, TransactionType transactionType, Long accountId, Date anchorDate, Date customStartDate, Date customEndDate) {
         // Current period
         Date now = (anchorDate == null) ? new Date() : anchorDate;
         Date currentStart;
@@ -392,7 +393,7 @@ public class StatsService {
      * - current-period total for category
      * - contiguous historical series for that category by requested granularity
      */
-    public CategoryStatsResponseDTO getCategoryStats(String userId, Range range, int transactionType, Long accountId, Date anchorDate, Long categoryId, Date customStartDate, Date customEndDate) {
+    public CategoryStatsResponseDTO getCategoryStats(String userId, Range range, TransactionType transactionType, Long accountId, Date anchorDate, Long categoryId, Date customStartDate, Date customEndDate) {
         Date now = (anchorDate == null) ? new Date() : anchorDate;
         Date currentStart;
         Date currentEnd;

@@ -1,6 +1,7 @@
 package com.trako.repositories;
 
 import com.trako.entities.Transaction;
+import com.trako.entities.TransactionType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -112,8 +113,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
         Pageable pageable
     );
 
-    @Query("SELECT COALESCE(SUM(CASE WHEN t.transactionType = 2 THEN t.amount " +
-            "         WHEN t.transactionType = 1 THEN -t.amount " +
+    @Query("SELECT COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.CREDIT THEN t.amount " +
+            "         WHEN t.transactionType = com.trako.entities.TransactionType.DEBIT THEN -t.amount " +
             "         ELSE 0 END), 0) " +
             "FROM Transaction t " +
             "WHERE t.accountId = :accountId " +
@@ -127,8 +128,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             @Param("endDate") Date endDate
     );
 
-    @Query("SELECT COALESCE(SUM(CASE WHEN t.transactionType = 2 THEN t.amount " +
-            "         WHEN t.transactionType = 1 THEN -t.amount " +
+    @Query("SELECT COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.CREDIT THEN t.amount " +
+            "         WHEN t.transactionType = com.trako.entities.TransactionType.DEBIT THEN -t.amount " +
             "         ELSE 0 END), 0) " +
             "FROM Transaction t " +
             "WHERE t.accountId = :accountId " +
@@ -140,8 +141,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     );
 
     @Query("SELECT t.accountId AS accountId, " +
-            "COALESCE(SUM(CASE WHEN t.transactionType = 2 THEN t.amount " +
-            "         WHEN t.transactionType = 1 THEN -t.amount " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.CREDIT THEN t.amount " +
+            "         WHEN t.transactionType = com.trako.entities.TransactionType.DEBIT THEN -t.amount " +
             "         ELSE 0 END), 0) AS balance " +
             "FROM Transaction t " +
             "WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId) " +
@@ -152,10 +153,10 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     );
 
     @Query("SELECT " +
-            "COALESCE(SUM(CASE WHEN t.transactionType = 2 THEN t.amount ELSE 0 END), 0), " +
-            "COALESCE(SUM(CASE WHEN t.transactionType = 1 THEN t.amount ELSE 0 END), 0), " +
-            "COALESCE(SUM(CASE WHEN t.transactionType = 2 THEN t.amount " +
-            "         WHEN t.transactionType = 1 THEN -t.amount " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.CREDIT THEN t.amount ELSE 0 END), 0), " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.DEBIT THEN t.amount ELSE 0 END), 0), " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.CREDIT THEN t.amount " +
+            "         WHEN t.transactionType = com.trako.entities.TransactionType.DEBIT THEN -t.amount " +
             "         ELSE 0 END), 0), " +
             "COUNT(t) " +
             "FROM Transaction t " +
@@ -169,10 +170,10 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     );
 
     @Query("SELECT " +
-            "COALESCE(SUM(CASE WHEN t.transactionType = 2 THEN t.amount ELSE 0 END), 0), " +
-            "COALESCE(SUM(CASE WHEN t.transactionType = 1 THEN t.amount ELSE 0 END), 0), " +
-            "COALESCE(SUM(CASE WHEN t.transactionType = 2 THEN t.amount " +
-            "         WHEN t.transactionType = 1 THEN -t.amount " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.CREDIT THEN t.amount ELSE 0 END), 0), " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.DEBIT THEN t.amount ELSE 0 END), 0), " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.CREDIT THEN t.amount " +
+            "         WHEN t.transactionType = com.trako.entities.TransactionType.DEBIT THEN -t.amount " +
             "         ELSE 0 END), 0), " +
             "COUNT(t) " +
             "FROM Transaction t " +
@@ -186,8 +187,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             @Param("endDate") Date endDate
     );
 
-    @Query("SELECT COALESCE(SUM(CASE WHEN t.transactionType = 2 THEN t.amount " +
-            "         WHEN t.transactionType = 1 THEN -t.amount " +
+    @Query("SELECT COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.CREDIT THEN t.amount " +
+            "         WHEN t.transactionType = com.trako.entities.TransactionType.DEBIT THEN -t.amount " +
             "         ELSE 0 END), 0) " +
             "FROM Transaction t " +
             "WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId) " +
@@ -198,8 +199,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             @Param("startDate") Date startDate
     );
 
-    @Query("SELECT COALESCE(SUM(CASE WHEN t.transactionType = 2 THEN t.amount " +
-            "         WHEN t.transactionType = 1 THEN -t.amount " +
+    @Query("SELECT COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.CREDIT THEN t.amount " +
+            "         WHEN t.transactionType = com.trako.entities.TransactionType.DEBIT THEN -t.amount " +
             "         ELSE 0 END), 0) " +
             "FROM Transaction t " +
             "WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId AND a.id IN :accountIds) " +
@@ -221,10 +222,10 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     void deleteByAccountIdIn(List<Long> accountIds);
     
     @Query("SELECT YEAR(t.date) as y, MONTH(t.date) as m, " +
-            "COALESCE(SUM(CASE WHEN t.transactionType = 2 THEN t.amount ELSE 0 END), 0), " +
-            "COALESCE(SUM(CASE WHEN t.transactionType = 1 THEN t.amount ELSE 0 END), 0), " +
-            "COALESCE(SUM(CASE WHEN t.transactionType = 2 THEN t.amount " +
-            "         WHEN t.transactionType = 1 THEN -t.amount " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.CREDIT THEN t.amount ELSE 0 END), 0), " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.DEBIT THEN t.amount ELSE 0 END), 0), " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.CREDIT THEN t.amount " +
+            "         WHEN t.transactionType = com.trako.entities.TransactionType.DEBIT THEN -t.amount " +
             "         ELSE 0 END), 0), " +
             "COUNT(t) " +
             "FROM Transaction t " +
@@ -239,10 +240,10 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     );
 
     @Query("SELECT YEAR(t.date) as y, " +
-            "COALESCE(SUM(CASE WHEN t.transactionType = 2 THEN t.amount ELSE 0 END), 0), " +
-            "COALESCE(SUM(CASE WHEN t.transactionType = 1 THEN t.amount ELSE 0 END), 0), " +
-            "COALESCE(SUM(CASE WHEN t.transactionType = 2 THEN t.amount " +
-            "         WHEN t.transactionType = 1 THEN -t.amount " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.CREDIT THEN t.amount ELSE 0 END), 0), " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.DEBIT THEN t.amount ELSE 0 END), 0), " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.CREDIT THEN t.amount " +
+            "         WHEN t.transactionType = com.trako.entities.TransactionType.DEBIT THEN -t.amount " +
             "         ELSE 0 END), 0), " +
             "COUNT(t) " +
             "FROM Transaction t " +
@@ -255,10 +256,10 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     );
 
     @Query("SELECT YEAR(t.date) as y, MONTH(t.date) as m, " +
-            "COALESCE(SUM(CASE WHEN t.transactionType = 2 THEN t.amount ELSE 0 END), 0), " +
-            "COALESCE(SUM(CASE WHEN t.transactionType = 1 THEN t.amount ELSE 0 END), 0), " +
-            "COALESCE(SUM(CASE WHEN t.transactionType = 2 THEN t.amount " +
-            "         WHEN t.transactionType = 1 THEN -t.amount " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.CREDIT THEN t.amount ELSE 0 END), 0), " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.DEBIT THEN t.amount ELSE 0 END), 0), " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.CREDIT THEN t.amount " +
+            "         WHEN t.transactionType = com.trako.entities.TransactionType.DEBIT THEN -t.amount " +
             "         ELSE 0 END), 0), " +
             "COUNT(t) " +
             "FROM Transaction t " +
@@ -274,10 +275,10 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     );
 
     @Query("SELECT YEAR(t.date) as y, " +
-            "COALESCE(SUM(CASE WHEN t.transactionType = 2 THEN t.amount ELSE 0 END), 0), " +
-            "COALESCE(SUM(CASE WHEN t.transactionType = 1 THEN t.amount ELSE 0 END), 0), " +
-            "COALESCE(SUM(CASE WHEN t.transactionType = 2 THEN t.amount " +
-            "         WHEN t.transactionType = 1 THEN -t.amount " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.CREDIT THEN t.amount ELSE 0 END), 0), " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.DEBIT THEN t.amount ELSE 0 END), 0), " +
+            "COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.CREDIT THEN t.amount " +
+            "         WHEN t.transactionType = com.trako.entities.TransactionType.DEBIT THEN -t.amount " +
             "         ELSE 0 END), 0), " +
             "COUNT(t) " +
             "FROM Transaction t " +
@@ -300,7 +301,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             "ORDER BY t.date ASC")
     List<Object[]> sumAmountsByDateForUser(
             @Param("userId") String userId,
-            @Param("transactionType") int transactionType,
+            @Param("transactionType") TransactionType transactionType,
             @Param("accountId") Long accountId
     );
 
@@ -315,7 +316,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             "ORDER BY t.date ASC")
     List<Object[]> sumAmountsByDateForCategory(
             @Param("userId") String userId,
-            @Param("transactionType") int transactionType,
+            @Param("transactionType") TransactionType transactionType,
             @Param("accountId") Long accountId,
             @Param("categoryId") Long categoryId
     );
@@ -330,7 +331,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             "GROUP BY t.categoryId")
     List<Object[]> sumAmountsByCategoryForUserInRange(
             @Param("userId") String userId,
-            @Param("transactionType") int transactionType,
+            @Param("transactionType") TransactionType transactionType,
             @Param("accountId") Long accountId,
             @Param("startDate") Date startDate,
             @Param("endDate") Date endDate
@@ -346,7 +347,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             "AND t.date >= :startDate AND t.date < :endDate")
     Double sumAmountForCategoryInRange(
             @Param("userId") String userId,
-            @Param("transactionType") int transactionType,
+            @Param("transactionType") TransactionType transactionType,
             @Param("accountId") Long accountId,
             @Param("categoryId") Long categoryId,
             @Param("startDate") Date startDate,

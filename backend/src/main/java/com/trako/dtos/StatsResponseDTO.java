@@ -1,10 +1,11 @@
 package com.trako.dtos;
 
+import com.trako.entities.TransactionType;
 import java.util.List;
 
 public class StatsResponseDTO {
     private String range;
-    private Integer transactionType;
+    private TransactionType transactionType;
     private String periodStart;
     private String periodEnd;
     private Double total;
@@ -14,7 +15,7 @@ public class StatsResponseDTO {
     public StatsResponseDTO() {
     }
 
-    public StatsResponseDTO(String range, Integer transactionType, String periodStart, String periodEnd, Double total,
+    public StatsResponseDTO(String range, TransactionType transactionType, String periodStart, String periodEnd, Double total,
                             List<StatsPointDTO> series, List<CategoryStatDTO> categories) {
         this.range = range;
         this.transactionType = transactionType;
@@ -33,11 +34,11 @@ public class StatsResponseDTO {
         this.range = range;
     }
 
-    public Integer getTransactionType() {
+    public TransactionType getTransactionType() {
         return transactionType;
     }
 
-    public void setTransactionType(Integer transactionType) {
+    public void setTransactionType(TransactionType transactionType) {
         this.transactionType = transactionType;
     }
 

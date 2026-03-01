@@ -7,6 +7,7 @@ import com.trako.entities.Category;
 import com.trako.entities.Frequency;
 import com.trako.entities.RecurringTransaction;
 import com.trako.entities.Transaction;
+import com.trako.entities.TransactionType;
 import com.trako.entities.User;
 import com.trako.repositories.AccountRepository;
 import com.trako.repositories.CategoryRepository;
@@ -120,7 +121,7 @@ public class RecurringTransactionIntegrationTest {
         rt.setExchangeRate(1.0);
         rt.setAccountId(testAccount.getId());
         rt.setCategoryId(testCategory.getId());
-        rt.setTransactionType(1);
+        rt.setTransactionType(TransactionType.DEBIT);
         rt.setFrequency(Frequency.MONTHLY);
         rt.setStartDate(new Date());
         rt.setNextRunDate(new Date());
@@ -145,7 +146,7 @@ public class RecurringTransactionIntegrationTest {
         rt.setExchangeRate(1.0); // Base amount in INR (approx)
         rt.setAccountId(testAccount.getId());
         rt.setCategoryId(testCategory.getId());
-        rt.setTransactionType(1);
+        rt.setTransactionType(TransactionType.DEBIT);
         rt.setFrequency(Frequency.MONTHLY);
         rt.setStartDate(new Date());
         rt.setNextRunDate(new Date());
@@ -188,7 +189,7 @@ public class RecurringTransactionIntegrationTest {
         rt.setExchangeRate(1.0);
         rt.setAccountId(testAccount.getId());
         rt.setCategoryId(testCategory.getId());
-        rt.setTransactionType(1);
+        rt.setTransactionType(TransactionType.DEBIT);
         rt.setFrequency(Frequency.MONTHLY);
         rt.setStartDate(yesterday);
         rt.setNextRunDate(yesterday);
@@ -240,7 +241,7 @@ public class RecurringTransactionIntegrationTest {
         rt.setAccountId(testAccount.getId());
         rt.setToAccountId(targetAccount.getId()); // Transfer
         rt.setCategoryId(testCategory.getId()); // Usually handled by service but field is required
-        rt.setTransactionType(3); // Transfer
+        rt.setTransactionType(TransactionType.TRANSFER); // Transfer
         rt.setFrequency(Frequency.MONTHLY);
         rt.setStartDate(yesterday);
         rt.setNextRunDate(yesterday);
@@ -254,8 +255,8 @@ public class RecurringTransactionIntegrationTest {
         List<Transaction> transactions = transactionRepository.findAll();
         assertEquals(2, transactions.size());
         
-        boolean hasDebit = transactions.stream().anyMatch(t -> t.getAmount() == 1000.0 && t.getTransactionType() == 1);
-        boolean hasCredit = transactions.stream().anyMatch(t -> t.getAmount() == 1000.0 && t.getTransactionType() == 2);
+        boolean hasDebit = transactions.stream().anyMatch(t -> t.getAmount() == 1000.0 && t.getTransactionType() == TransactionType.DEBIT);
+        boolean hasCredit = transactions.stream().anyMatch(t -> t.getAmount() == 1000.0 && t.getTransactionType() == TransactionType.CREDIT);
         
         assertTrue(hasDebit);
         assertTrue(hasCredit);

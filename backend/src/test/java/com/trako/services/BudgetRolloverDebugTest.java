@@ -91,7 +91,7 @@ public class BudgetRolloverDebugTest {
 
         // 1. Add Income for Previous Month
         Transaction prevIncome = new Transaction();
-        prevIncome.setTransactionType(2); // Income
+        prevIncome.setTransactionType(TransactionType.CREDIT); // Income
         prevIncome.setName("Prev Salary");
         prevIncome.setOriginalAmount(1000.0);
         prevIncome.setOriginalCurrency("INR");
@@ -114,7 +114,7 @@ public class BudgetRolloverDebugTest {
 
         // 3. Add Expense in Previous Month
         Transaction expense = new Transaction();
-        expense.setTransactionType(1); // Expense
+        expense.setTransactionType(TransactionType.DEBIT); // Expense
         expense.setName("Prev Expense");
         expense.setOriginalAmount(50.0);
         expense.setOriginalCurrency("INR");

@@ -6,6 +6,7 @@ import com.trako.entities.Category;
 import com.trako.entities.Account;
 import com.trako.entities.Transaction;
 import com.trako.entities.Frequency;
+import com.trako.entities.TransactionType;
 import com.trako.entities.User;
 import com.trako.models.request.CategorySaveRequest;
 import com.trako.repositories.CategoryRepository;
@@ -242,7 +243,7 @@ public class CategoryIntegrationTest {
 
         // Create a transaction under that category
         Transaction t = new Transaction();
-        t.setTransactionType(1);
+        t.setTransactionType(TransactionType.DEBIT);
         t.setName("Tx");
         t.setOriginalAmount(10.0);
         t.setOriginalCurrency("INR");
@@ -288,7 +289,7 @@ public class CategoryIntegrationTest {
         rt.setAccountId(a1.getId());
         rt.setToAccountId(a2.getId());
         rt.setCategoryId(category.getId());
-        rt.setTransactionType(1);
+        rt.setTransactionType(TransactionType.DEBIT);
         rt.setFrequency(Frequency.MONTHLY);
         rt.setStartDate(new java.util.Date());
         rt.setNextRunDate(new java.util.Date());

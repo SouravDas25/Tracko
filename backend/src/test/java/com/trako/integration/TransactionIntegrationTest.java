@@ -7,6 +7,7 @@ import com.trako.entities.Category;
 import com.trako.entities.Contact;
 import com.trako.entities.Split;
 import com.trako.entities.Transaction;
+import com.trako.entities.TransactionType;
 import com.trako.entities.User;
 import com.trako.repositories.AccountRepository;
 import com.trako.repositories.CategoryRepository;
@@ -126,7 +127,7 @@ public class TransactionIntegrationTest {
     @Test
     public void testCreateTransaction() throws Exception {
         Transaction transaction = new Transaction();
-        transaction.setTransactionType(1);
+        transaction.setTransactionType(TransactionType.DEBIT);
         transaction.setName("Lunch");
         transaction.setOriginalAmount(25.50);
         transaction.setOriginalCurrency("INR");
@@ -240,7 +241,7 @@ public class TransactionIntegrationTest {
     @Test
     public void testGetAllTransactions() throws Exception {
         Transaction transaction1 = new Transaction();
-        transaction1.setTransactionType(1);
+        transaction1.setTransactionType(TransactionType.DEBIT);
         transaction1.setName("Lunch");
         transaction1.setOriginalAmount(25.50);
         transaction1.setOriginalCurrency("INR");
@@ -251,7 +252,7 @@ public class TransactionIntegrationTest {
         transactionWriteService.saveForUser(testUser.getId(), transaction1);
 
         Transaction transaction2 = new Transaction();
-        transaction2.setTransactionType(1);
+        transaction2.setTransactionType(TransactionType.DEBIT);
         transaction2.setName("Dinner");
         transaction2.setOriginalAmount(35.00);
         transaction2.setOriginalCurrency("INR");
@@ -277,7 +278,7 @@ public class TransactionIntegrationTest {
     @Test
     public void testGetAllTransactions_expandTrue_returnsDetailsWithSplitsAndContact() throws Exception {
         Transaction transaction = new Transaction();
-        transaction.setTransactionType(1);
+        transaction.setTransactionType(TransactionType.DEBIT);
         transaction.setName("Dinner");
         transaction.setOriginalAmount(100.00);
         transaction.setOriginalCurrency("INR");
@@ -334,7 +335,7 @@ public class TransactionIntegrationTest {
     @Test
     public void testGetAllTransactions_expandTrue_withCategoryId_usesDetailsCategoryPath() throws Exception {
         Transaction transaction = new Transaction();
-        transaction.setTransactionType(1);
+        transaction.setTransactionType(TransactionType.DEBIT);
         transaction.setName("CatDinner");
         transaction.setOriginalAmount(55.00);
         transaction.setOriginalCurrency("INR");
@@ -377,7 +378,7 @@ public class TransactionIntegrationTest {
     @Test
     public void testGetTransactionById() throws Exception {
         Transaction transaction = new Transaction();
-        transaction.setTransactionType(1); // DEBIT = expense
+        transaction.setTransactionType(TransactionType.DEBIT); // DEBIT = expense
         transaction.setName("Coffee");
         transaction.setOriginalAmount(5.00);
         transaction.setOriginalCurrency("INR");
@@ -397,7 +398,7 @@ public class TransactionIntegrationTest {
     @Test
     public void testUpdateTransaction() throws Exception {
         Transaction transaction = new Transaction();
-        transaction.setTransactionType(1);
+        transaction.setTransactionType(TransactionType.DEBIT);
         transaction.setName("Old Name");
         transaction.setOriginalAmount(10.00);
         transaction.setOriginalCurrency("INR");
@@ -424,7 +425,7 @@ public class TransactionIntegrationTest {
     @Test
     public void testDeleteTransaction() throws Exception {
         Transaction transaction = new Transaction();
-        transaction.setTransactionType(1);
+        transaction.setTransactionType(TransactionType.DEBIT);
         transaction.setName("To Delete");
         transaction.setOriginalAmount(1.00);
         transaction.setOriginalCurrency("INR");
@@ -447,7 +448,7 @@ public class TransactionIntegrationTest {
     public void testGetSummary() throws Exception {
         // Create income transaction
         Transaction income = new Transaction();
-        income.setTransactionType(2); // CREDIT = income
+        income.setTransactionType(TransactionType.CREDIT); // CREDIT = income
         income.setName("Salary");
         income.setOriginalAmount(1000.00);
         income.setOriginalCurrency("INR");
@@ -460,7 +461,7 @@ public class TransactionIntegrationTest {
 
         // Create expense transaction
         Transaction expense = new Transaction();
-        expense.setTransactionType(1); // DEBIT = expense
+        expense.setTransactionType(TransactionType.DEBIT); // DEBIT = expense
         expense.setName("Groceries");
         expense.setOriginalAmount(200.00);
         expense.setOriginalCurrency("INR");
@@ -473,7 +474,7 @@ public class TransactionIntegrationTest {
 
         // Create non-countable transaction (should be excluded)
         Transaction nonCountable = new Transaction();
-        nonCountable.setTransactionType(1); // DEBIT = expense
+        nonCountable.setTransactionType(TransactionType.DEBIT); // DEBIT = expense
         nonCountable.setName("Transfer");
         nonCountable.setOriginalAmount(50.00);
         nonCountable.setOriginalCurrency("INR");
@@ -505,7 +506,7 @@ public class TransactionIntegrationTest {
         Date txDate = new GregorianCalendar(2020, Calendar.JANUARY, 15).getTime();
 
         Transaction income = new Transaction();
-        income.setTransactionType(2);
+        income.setTransactionType(TransactionType.CREDIT);
         income.setName("Salary");
         income.setOriginalAmount(1000.00);
         income.setOriginalCurrency("INR");
@@ -517,7 +518,7 @@ public class TransactionIntegrationTest {
         transactionWriteService.saveForUser(testUser.getId(), income);
 
         Transaction expense = new Transaction();
-        expense.setTransactionType(1);
+        expense.setTransactionType(TransactionType.DEBIT);
         expense.setName("Groceries");
         expense.setOriginalAmount(200.00);
         expense.setOriginalCurrency("INR");
@@ -562,7 +563,7 @@ public class TransactionIntegrationTest {
         Date txDate = new GregorianCalendar(2020, Calendar.JANUARY, 15).getTime();
 
         Transaction income = new Transaction();
-        income.setTransactionType(2);
+        income.setTransactionType(TransactionType.CREDIT);
         income.setName("Salary");
         income.setOriginalAmount(1000.00);
         income.setOriginalCurrency("INR");
@@ -574,7 +575,7 @@ public class TransactionIntegrationTest {
         transactionWriteService.saveForUser(testUser.getId(), income);
 
         Transaction expense = new Transaction();
-        expense.setTransactionType(1);
+        expense.setTransactionType(TransactionType.DEBIT);
         expense.setName("Groceries");
         expense.setOriginalAmount(200.00);
         expense.setOriginalCurrency("INR");
@@ -612,7 +613,7 @@ public class TransactionIntegrationTest {
     @Test
     public void testGetTotalIncome() throws Exception {
         Transaction income1 = new Transaction();
-        income1.setTransactionType(2); // CREDIT = income
+        income1.setTransactionType(TransactionType.CREDIT); // CREDIT = income
         income1.setName("Salary");
         income1.setOriginalAmount(1000.00);
         income1.setOriginalCurrency("INR");
@@ -624,7 +625,7 @@ public class TransactionIntegrationTest {
         transactionWriteService.saveForUser(testUser.getId(), income1);
 
         Transaction income2 = new Transaction();
-        income2.setTransactionType(2); // CREDIT = income
+        income2.setTransactionType(TransactionType.CREDIT); // CREDIT = income
         income2.setName("Bonus");
         income2.setOriginalAmount(500.00);
         income2.setOriginalCurrency("INR");
@@ -646,7 +647,7 @@ public class TransactionIntegrationTest {
     @Test
     public void testGetTotalExpense() throws Exception {
         Transaction expense1 = new Transaction();
-        expense1.setTransactionType(1); // DEBIT = expense
+        expense1.setTransactionType(TransactionType.DEBIT); // DEBIT = expense
         expense1.setName("Groceries");
         expense1.setOriginalAmount(200.00);
         expense1.setOriginalCurrency("INR");
@@ -658,7 +659,7 @@ public class TransactionIntegrationTest {
         transactionWriteService.saveForUser(testUser.getId(), expense1);
 
         Transaction expense2 = new Transaction();
-        expense2.setTransactionType(1); // DEBIT = expense
+        expense2.setTransactionType(TransactionType.DEBIT); // DEBIT = expense
         expense2.setName("Utilities");
         expense2.setOriginalAmount(150.00);
         expense2.setOriginalCurrency("INR");
@@ -681,7 +682,7 @@ public class TransactionIntegrationTest {
     public void testGetSummaryExcludesNonCountable() throws Exception {
         // Only non-countable transactions
         Transaction nonCountable1 = new Transaction();
-        nonCountable1.setTransactionType(2); // CREDIT = income
+        nonCountable1.setTransactionType(TransactionType.CREDIT); // CREDIT = income
         nonCountable1.setName("Transfer In");
         nonCountable1.setOriginalAmount(500.00);
         nonCountable1.setOriginalCurrency("INR");
@@ -693,7 +694,7 @@ public class TransactionIntegrationTest {
         transactionWriteService.saveForUser(testUser.getId(), nonCountable1);
 
         Transaction nonCountable2 = new Transaction();
-        nonCountable2.setTransactionType(1); // DEBIT = expense
+        nonCountable2.setTransactionType(TransactionType.DEBIT); // DEBIT = expense
         nonCountable2.setName("Transfer Out");
         nonCountable2.setOriginalAmount(300.00);
         nonCountable2.setOriginalCurrency("INR");
@@ -718,7 +719,7 @@ public class TransactionIntegrationTest {
     @Test
     public void testCreateTransactionWithoutAuth() throws Exception {
         Transaction transaction = new Transaction();
-        transaction.setTransactionType(1);
+        transaction.setTransactionType(TransactionType.DEBIT);
         transaction.setName("No Auth");
         transaction.setOriginalAmount(10.00);
         transaction.setOriginalCurrency("INR");
@@ -777,7 +778,7 @@ public class TransactionIntegrationTest {
         foreignAcc = accountRepository.save(foreignAcc);
 
         Transaction transaction = new Transaction();
-        transaction.setTransactionType(1);
+        transaction.setTransactionType(TransactionType.DEBIT);
         transaction.setName("Foreign Post");
         transaction.setOriginalAmount(5.00);
         transaction.setOriginalCurrency("INR");
@@ -814,7 +815,7 @@ public class TransactionIntegrationTest {
         otherCat = categoryRepository.save(otherCat);
 
         Transaction otherTxn = new Transaction();
-        otherTxn.setTransactionType(1);
+        otherTxn.setTransactionType(TransactionType.DEBIT);
         otherTxn.setName("OtherTxn");
         otherTxn.setOriginalAmount(3.00);
         otherTxn.setOriginalCurrency("INR");
@@ -837,7 +838,7 @@ public class TransactionIntegrationTest {
         secondAcc = accountRepository.save(secondAcc);
 
         Transaction t1 = new Transaction();
-        t1.setTransactionType(1);
+        t1.setTransactionType(TransactionType.DEBIT);
         t1.setName("A1");
         t1.setOriginalAmount(10.00);
         t1.setOriginalCurrency("INR");
@@ -848,7 +849,7 @@ public class TransactionIntegrationTest {
         transactionWriteService.saveForUser(testUser.getId(), t1);
 
         Transaction t2 = new Transaction();
-        t2.setTransactionType(1);
+        t2.setTransactionType(TransactionType.DEBIT);
         t2.setName("A2");
         t2.setOriginalAmount(20.00);
         t2.setOriginalCurrency("INR");
@@ -878,7 +879,7 @@ public class TransactionIntegrationTest {
         Date txDate = new GregorianCalendar(2020, Calendar.JANUARY, 15).getTime();
 
         Transaction a1 = new Transaction();
-        a1.setTransactionType(1);
+        a1.setTransactionType(TransactionType.DEBIT);
         a1.setName("A1");
         a1.setOriginalAmount(10.00);
         a1.setOriginalCurrency("INR");
@@ -890,7 +891,7 @@ public class TransactionIntegrationTest {
         transactionWriteService.saveForUser(testUser.getId(), a1);
 
         Transaction a2 = new Transaction();
-        a2.setTransactionType(1);
+        a2.setTransactionType(TransactionType.DEBIT);
         a2.setName("A2");
         a2.setOriginalAmount(20.00);
         a2.setOriginalCurrency("INR");
@@ -921,7 +922,7 @@ public class TransactionIntegrationTest {
 
         // Create a transfer pair: debit (type 1, non-countable) and credit (type 2, non-countable)
         Transaction debit = new Transaction();
-        debit.setTransactionType(1);
+        debit.setTransactionType(TransactionType.DEBIT);
         debit.setName("Transfer Out");
         debit.setOriginalAmount(40.00);
         debit.setOriginalCurrency("INR");
@@ -933,7 +934,7 @@ public class TransactionIntegrationTest {
         transactionWriteService.saveForUser(testUser.getId(), debit);
 
         Transaction credit = new Transaction();
-        credit.setTransactionType(2);
+        credit.setTransactionType(TransactionType.CREDIT);
         credit.setName("Transfer In");
         credit.setOriginalAmount(40.00);
         credit.setOriginalCurrency("INR");
@@ -962,7 +963,7 @@ public class TransactionIntegrationTest {
     @Test
     public void testGetAllTransactionsPaginatedByMonth() throws Exception {
         Transaction janOlder = new Transaction();
-        janOlder.setTransactionType(1);
+        janOlder.setTransactionType(TransactionType.DEBIT);
         janOlder.setName("Jan Old");
         janOlder.setOriginalAmount(15.00);
         janOlder.setOriginalCurrency("INR");
@@ -973,7 +974,7 @@ public class TransactionIntegrationTest {
         transactionWriteService.saveForUser(testUser.getId(), janOlder);
 
         Transaction janNewer = new Transaction();
-        janNewer.setTransactionType(1);
+        janNewer.setTransactionType(TransactionType.DEBIT);
         janNewer.setName("Jan New");
         janNewer.setOriginalAmount(25.00);
         janNewer.setOriginalCurrency("INR");
@@ -984,7 +985,7 @@ public class TransactionIntegrationTest {
         transactionWriteService.saveForUser(testUser.getId(), janNewer);
 
         Transaction febTransaction = new Transaction();
-        febTransaction.setTransactionType(1);
+        febTransaction.setTransactionType(TransactionType.DEBIT);
         febTransaction.setName("Feb Tx");
         febTransaction.setOriginalAmount(35.00);
         febTransaction.setOriginalCurrency("INR");
@@ -1029,7 +1030,7 @@ public class TransactionIntegrationTest {
     public void testCurrentUserSummaryIncomeExpenseEndpoints() throws Exception {
         // income
         Transaction income = new Transaction();
-        income.setTransactionType(2);
+        income.setTransactionType(TransactionType.CREDIT);
         income.setName("Pay");
         income.setOriginalAmount(120.00);
         income.setOriginalCurrency("INR");
@@ -1042,7 +1043,7 @@ public class TransactionIntegrationTest {
 
         // expense
         Transaction expense = new Transaction();
-        expense.setTransactionType(1);
+        expense.setTransactionType(TransactionType.DEBIT);
         expense.setName("Snacks");
         expense.setOriginalAmount(20.00);
         expense.setOriginalCurrency("INR");
@@ -1088,7 +1089,7 @@ public class TransactionIntegrationTest {
         another = accountRepository.save(another);
 
         Transaction t1 = new Transaction();
-        t1.setTransactionType(1);
+        t1.setTransactionType(TransactionType.DEBIT);
         t1.setName("KeepMe");
         t1.setOriginalAmount(1.00);
         t1.setOriginalCurrency("INR");
@@ -1099,7 +1100,7 @@ public class TransactionIntegrationTest {
         transactionWriteService.saveForUser(testUser.getId(), t1);
 
         Transaction t2 = new Transaction();
-        t2.setTransactionType(1);
+        t2.setTransactionType(TransactionType.DEBIT);
         t2.setName("DropMe");
         t2.setOriginalAmount(2.00);
         t2.setOriginalCurrency("INR");
@@ -1123,7 +1124,7 @@ public class TransactionIntegrationTest {
     @Test
     public void testGetAllByDateRange() throws Exception {
         Transaction t = new Transaction();
-        t.setTransactionType(1);
+        t.setTransactionType(TransactionType.DEBIT);
         t.setName("DateRangeTx");
         t.setOriginalAmount(50.00);
         t.setOriginalCurrency("INR");
@@ -1163,7 +1164,7 @@ public class TransactionIntegrationTest {
         otherCat = categoryRepository.save(otherCat);
 
         Transaction otherTx = new Transaction();
-        otherTx.setTransactionType(1);
+        otherTx.setTransactionType(TransactionType.DEBIT);
         otherTx.setName("Other Tx");
         otherTx.setOriginalAmount(100.00);
         otherTx.setOriginalCurrency("INR");
@@ -1175,7 +1176,7 @@ public class TransactionIntegrationTest {
 
         // Own transaction
         Transaction myTx = new Transaction();
-        myTx.setTransactionType(1);
+        myTx.setTransactionType(TransactionType.DEBIT);
         myTx.setName("My Tx");
         myTx.setOriginalAmount(50.00);
         myTx.setOriginalCurrency("INR");
@@ -1209,7 +1210,7 @@ public class TransactionIntegrationTest {
     @Test
     public void testUpdateNotFound() throws Exception {
         Transaction payload = new Transaction();
-        payload.setTransactionType(1);
+        payload.setTransactionType(TransactionType.DEBIT);
         payload.setName("Missing");
         payload.setOriginalAmount(1.0);
         payload.setOriginalCurrency("INR");
@@ -1248,7 +1249,7 @@ public class TransactionIntegrationTest {
         foreignCat = categoryRepository.save(foreignCat);
 
         Transaction tx = new Transaction();
-        tx.setTransactionType(1);
+        tx.setTransactionType(TransactionType.DEBIT);
         tx.setName("BadCat");
         tx.setOriginalAmount(9.0);
         tx.setOriginalCurrency("INR");
@@ -1268,7 +1269,7 @@ public class TransactionIntegrationTest {
     public void testUpdateUnauthorizedForForeignAccountAndCategory() throws Exception {
         // Existing txn owned by user
         Transaction existing = new Transaction();
-        existing.setTransactionType(1);
+        existing.setTransactionType(TransactionType.DEBIT);
         existing.setName("ToUpdate");
         existing.setOriginalAmount(7.0);
         existing.setOriginalCurrency("INR");
@@ -1298,7 +1299,7 @@ public class TransactionIntegrationTest {
 
         // Try to update moving to foreign account
         Transaction payload = new Transaction();
-        payload.setTransactionType(1);
+        payload.setTransactionType(TransactionType.DEBIT);
         payload.setName("ToUpdate2");
         payload.setOriginalAmount(8.0);
         payload.setOriginalCurrency("INR");
@@ -1345,7 +1346,7 @@ public class TransactionIntegrationTest {
         otherCat = categoryRepository.save(otherCat);
 
         Transaction otherTxn = new Transaction();
-        otherTxn.setTransactionType(1);
+        otherTxn.setTransactionType(TransactionType.DEBIT);
         otherTxn.setName("DelTxn");
         otherTxn.setOriginalAmount(4.0);
         otherTxn.setOriginalCurrency("INR");
@@ -1412,7 +1413,7 @@ public class TransactionIntegrationTest {
     @Test
     public void testGetAllNonExpandWithCategoryIdUsesCategoryBranch() throws Exception {
         Transaction t = new Transaction();
-        t.setTransactionType(1);
+        t.setTransactionType(TransactionType.DEBIT);
         t.setName("CatFiltered");
         t.setOriginalAmount(12.34);
         t.setOriginalCurrency("INR");
@@ -1439,7 +1440,7 @@ public class TransactionIntegrationTest {
     @Test
     public void testSummaryIncludeRolloverFalseBranch() throws Exception {
         Transaction income = new Transaction();
-        income.setTransactionType(2);
+        income.setTransactionType(TransactionType.CREDIT);
         income.setName("IncomeNoRoll");
         income.setOriginalAmount(100.00);
         income.setOriginalCurrency("INR");
@@ -1521,7 +1522,7 @@ public class TransactionIntegrationTest {
 
         // Create a transfer pair in the current month for DTO path
         Transaction debit = new Transaction();
-        debit.setTransactionType(1);
+        debit.setTransactionType(TransactionType.DEBIT);
         debit.setName("DTO Transfer Out");
         debit.setOriginalAmount(40.00);
         debit.setOriginalCurrency("INR");
@@ -1533,7 +1534,7 @@ public class TransactionIntegrationTest {
         transactionWriteService.saveForUser(testUser.getId(), debit);
 
         Transaction credit = new Transaction();
-        credit.setTransactionType(2);
+        credit.setTransactionType(TransactionType.CREDIT);
         credit.setName("DTO Transfer In");
         credit.setOriginalAmount(40.00);
         credit.setOriginalCurrency("INR");
@@ -1563,7 +1564,7 @@ public class TransactionIntegrationTest {
     @Test
     public void testPartialUpdateTransaction_OnlyUpdatesProvidedFields() throws Exception {
         Transaction transaction = new Transaction();
-        transaction.setTransactionType(1);
+        transaction.setTransactionType(TransactionType.DEBIT);
         transaction.setName("Original Name");
         transaction.setOriginalAmount(10.00);
         transaction.setOriginalCurrency("INR");
@@ -1647,7 +1648,7 @@ public class TransactionIntegrationTest {
         newAccount = accountRepository.save(newAccount);
 
         Transaction transaction = new Transaction();
-        transaction.setTransactionType(1);
+        transaction.setTransactionType(TransactionType.DEBIT);
         transaction.setName("Move Me");
         transaction.setOriginalAmount(10.00);
         transaction.setOriginalCurrency("INR");
@@ -1675,7 +1676,7 @@ public class TransactionIntegrationTest {
     public void testUpdateTransaction_RecalculatesAmount_WhenCurrencyFieldsChange() throws Exception {
         // 1. Create a transaction with foreign currency
         Transaction transaction = new Transaction();
-        transaction.setTransactionType(1); // Expense
+        transaction.setTransactionType(TransactionType.DEBIT); // Expense
         transaction.setName("Foreign Txn");
         // amount will be calculated: 10 * 1.5 = 15.0
         transaction.setOriginalAmount(10.00);
@@ -1731,7 +1732,7 @@ public class TransactionIntegrationTest {
 
         // 2. Create a transaction with initial currency (e.g. USD default or implicit)
         Transaction transaction = new Transaction();
-        transaction.setTransactionType(1);
+        transaction.setTransactionType(TransactionType.DEBIT);
         transaction.setName("Trip");
         transaction.setOriginalAmount(100.00);
         transaction.setOriginalCurrency("INR");
@@ -1763,7 +1764,7 @@ public class TransactionIntegrationTest {
     public void testUpdateTransaction_DoesNotRecalculate_WhenExplicitAmountProvided() throws Exception {
         // 1. Create a transaction
         Transaction transaction = new Transaction();
-        transaction.setTransactionType(1);
+        transaction.setTransactionType(TransactionType.DEBIT);
         transaction.setName("Explicit Amount Txn");
         transaction.setOriginalAmount(50.00);
         transaction.setOriginalCurrency("INR");
@@ -1801,7 +1802,7 @@ public class TransactionIntegrationTest {
 
         // 2. Create Base Txn (Implicit Base Currency)
         Transaction transaction = new Transaction();
-        transaction.setTransactionType(1);
+        transaction.setTransactionType(TransactionType.DEBIT);
         transaction.setName("Base Txn");
         transaction.setOriginalAmount(100.00);
         transaction.setOriginalCurrency("INR");
@@ -1838,7 +1839,7 @@ public class TransactionIntegrationTest {
 
         // 2. Create Secondary Txn (GBP)
         Transaction transaction = new Transaction();
-        transaction.setTransactionType(1);
+        transaction.setTransactionType(TransactionType.DEBIT);
         transaction.setName("Secondary Txn");
         transaction.setOriginalCurrency("GBP");
         transaction.setOriginalAmount(100.00);
@@ -1886,7 +1887,7 @@ public class TransactionIntegrationTest {
 
         // 2. Create Transaction in USD
         Transaction transaction = new Transaction();
-        transaction.setTransactionType(1);
+        transaction.setTransactionType(TransactionType.DEBIT);
         transaction.setName("USD Txn");
         transaction.setOriginalCurrency("USD");
         transaction.setOriginalAmount(10.00);
@@ -1940,7 +1941,7 @@ public class TransactionIntegrationTest {
 
         // Create base transaction INR 200 (rate 1.0)
         Transaction tx = new Transaction();
-        tx.setTransactionType(1);
+        tx.setTransactionType(TransactionType.DEBIT);
         tx.setName("Base 200");
         tx.setOriginalAmount(200.00);
         tx.setOriginalCurrency("INR");
@@ -1976,7 +1977,7 @@ public class TransactionIntegrationTest {
 
         // Create USD transaction with originalAmount=10 (amount will compute to 800)
         Transaction tx = new Transaction();
-        tx.setTransactionType(1);
+        tx.setTransactionType(TransactionType.DEBIT);
         tx.setName("USD 10");
         tx.setOriginalCurrency("USD");
         tx.setOriginalAmount(10.00);
@@ -2022,7 +2023,7 @@ public class TransactionIntegrationTest {
 
         // Create USD transaction with originalAmount=1 (amount=80)
         Transaction tx = new Transaction();
-        tx.setTransactionType(1);
+        tx.setTransactionType(TransactionType.DEBIT);
         tx.setName("USD 1");
         tx.setOriginalCurrency("USD");
         tx.setOriginalAmount(1.00);

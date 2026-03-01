@@ -3,6 +3,7 @@ package com.trako.controllers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trako.entities.Account;
 import com.trako.entities.Transaction;
+import com.trako.entities.TransactionType;
 import com.trako.entities.User;
 import com.trako.repositories.AccountRepository;
 import com.trako.repositories.CategoryRepository;
@@ -75,7 +76,7 @@ public class TransactionControllerTest {
     public void setup() throws Exception {
         testTransaction = new Transaction();
         testTransaction.setId(1L);
-        testTransaction.setTransactionType(1);
+        testTransaction.setTransactionType(TransactionType.DEBIT);
         testTransaction.setName("Lunch");
         testTransaction.setOriginalAmount(25.50);
         testTransaction.setOriginalCurrency("INR");

@@ -3,6 +3,7 @@ package com.trako.integration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trako.config.TestJwtSecurityConfig;
 import com.trako.entities.*;
+import com.trako.entities.TransactionType;
 import com.trako.models.request.AccountSaveRequest;
 import com.trako.models.request.UserSaveRequest;
 import com.trako.repositories.*;
@@ -142,7 +143,7 @@ public class CurrencyIntegrationTest {
         // Expected Base Amount = 110.0 USD
 
         Transaction transaction = new Transaction();
-        transaction.setTransactionType(1); // Expense
+        transaction.setTransactionType(TransactionType.DEBIT); // Expense
         transaction.setName("Dinner in Paris");
         transaction.setDate(new Date());
         transaction.setAccountId(testAccount.getId());
@@ -167,7 +168,7 @@ public class CurrencyIntegrationTest {
     @Test
     public void testTransactionMissingAmountAndConversionData() throws Exception {
         Transaction transaction = new Transaction();
-        transaction.setTransactionType(1);
+        transaction.setTransactionType(TransactionType.DEBIT);
         transaction.setName("Bad Transaction");
         transaction.setDate(new Date());
         transaction.setAccountId(testAccount.getId());
@@ -203,7 +204,7 @@ public class CurrencyIntegrationTest {
 
         // Create a transaction with the originalCurrency /Amount but NO exchangeRate
         Transaction transaction = new Transaction();
-        transaction.setTransactionType(1); // Expense
+        transaction.setTransactionType(TransactionType.DEBIT); // Expense
         transaction.setName("Paris Metro Ticket");
         transaction.setDate(new Date());
         transaction.setAccountId(testAccount.getId());
@@ -229,7 +230,7 @@ public class CurrencyIntegrationTest {
         userCurrencyRepository.deleteAll();
 
         Transaction transaction = new Transaction();
-        transaction.setTransactionType(1);
+        transaction.setTransactionType(TransactionType.DEBIT);
         transaction.setName("Unknown Currency");
         transaction.setDate(new Date());
         transaction.setAccountId(testAccount.getId());

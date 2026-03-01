@@ -5,6 +5,7 @@ import com.trako.entities.Account;
 import com.trako.entities.Category;
 import com.trako.entities.Transaction;
 import com.trako.entities.User;
+import com.trako.entities.TransactionType;
 import com.trako.repositories.AccountRepository;
 import com.trako.repositories.CategoryRepository;
 import com.trako.repositories.TransactionRepository;
@@ -84,7 +85,7 @@ public class TransactionRepositoryAmountNullTest {
         t.setCategoryId(category.getId());
         t.setName("Repo Path");
         t.setDate(new Date());
-        t.setTransactionType(1);
+        t.setTransactionType(TransactionType.DEBIT);
         t.setOriginalAmount(10.0);
         t.setOriginalCurrency("INR");
         t.setExchangeRate(1.0);

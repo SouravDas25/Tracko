@@ -3,6 +3,7 @@ package com.trako.services;
 import com.trako.entities.Frequency;
 import com.trako.entities.RecurringTransaction;
 import com.trako.entities.Transaction;
+import com.trako.entities.TransactionType;
 import com.trako.models.request.TransactionRequest;
 import com.trako.repositories.RecurringTransactionRepository;
 import org.slf4j.Logger;
@@ -123,7 +124,7 @@ public class RecurringTransactionService {
         logger.info("Processing recurring transaction: {} (ID: {})", rt.getName(), rt.getId());
 
         // Create the actual transaction/transfer
-        if (rt.getToAccountId() != null && rt.getTransactionType() == 3) { // Transfer
+        if (rt.getToAccountId() != null && rt.getTransactionType() == TransactionType.TRANSFER) { // Transfer
              transactionWriteService.createTransfer(
                     rt.getUserId(),
                     rt.getAccountId(),

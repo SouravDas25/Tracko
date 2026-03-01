@@ -118,7 +118,7 @@ public class BudgetIntegrationTest {
         cal.set(2024, java.util.Calendar.JANUARY, 15);
         
         Transaction income = new Transaction();
-        income.setTransactionType(2); // Credit/Income
+        income.setTransactionType(TransactionType.CREDIT); // Credit/Income
         income.setName("Salary");
         income.setOriginalAmount(1000.0);
         income.setOriginalCurrency("INR");
@@ -149,7 +149,7 @@ public class BudgetIntegrationTest {
     public void testGetAvailableToAssign() throws Exception {
         // 1. Add Income Transaction (Type 2)
         Transaction income = new Transaction();
-        income.setTransactionType(2); // Credit/Income
+        income.setTransactionType(TransactionType.CREDIT); // Credit/Income
         income.setName("Salary");
         income.setOriginalAmount(1000.0);
         income.setOriginalCurrency("INR");
@@ -190,7 +190,7 @@ public class BudgetIntegrationTest {
 
         // Create Previous Month Income
         Transaction prevIncome = new Transaction();
-        prevIncome.setTransactionType(2); // Credit/Income
+        prevIncome.setTransactionType(TransactionType.CREDIT); // Credit/Income
         prevIncome.setName("Prev Salary");
         prevIncome.setOriginalAmount(1000.0);
         prevIncome.setOriginalCurrency("INR");
@@ -233,7 +233,7 @@ public class BudgetIntegrationTest {
 
         // Add Income for Prev Month to ensure we have funds
         Transaction income = new Transaction();
-        income.setTransactionType(2); // Income
+        income.setTransactionType(TransactionType.CREDIT); // Income
         income.setName("Prev Income");
         income.setOriginalAmount(1000.0);
         income.setOriginalCurrency("INR");
@@ -246,7 +246,7 @@ public class BudgetIntegrationTest {
 
         // 2. Add Expense in Prev Month
         Transaction expense = new Transaction();
-        expense.setTransactionType(1); // Expense
+        expense.setTransactionType(TransactionType.DEBIT); // Expense
         expense.setName("Prev Expense");
         expense.setOriginalAmount(50.0);
         expense.setOriginalCurrency("INR");
@@ -279,7 +279,7 @@ public class BudgetIntegrationTest {
 
         // 0. Add Income to allow allocation
         Transaction income = new Transaction();
-        income.setTransactionType(2); // Credit/Income
+        income.setTransactionType(TransactionType.CREDIT); // Credit/Income
         income.setName("Salary");
         income.setOriginalAmount(1000.0);
         income.setOriginalCurrency("INR");
@@ -292,7 +292,7 @@ public class BudgetIntegrationTest {
 
         // 1. Add Expense Transaction (Type 1)
         Transaction expense = new Transaction();
-        expense.setTransactionType(1); // Debit/Expense
+        expense.setTransactionType(TransactionType.DEBIT); // Debit/Expense
         expense.setName("Groceries");
         expense.setOriginalAmount(50.0);
         expense.setOriginalCurrency("INR");
@@ -332,7 +332,7 @@ public class BudgetIntegrationTest {
     public void testOverAllocation() throws Exception {
         // 1. Add Income Transaction (1000.0)
         Transaction income = new Transaction();
-        income.setTransactionType(2); // Credit/Income
+        income.setTransactionType(TransactionType.CREDIT); // Credit/Income
         income.setName("Salary");
         income.setOriginalAmount(1000.0);
         income.setOriginalCurrency("INR");
@@ -389,7 +389,7 @@ public class BudgetIntegrationTest {
 
         // 1. Add Income (1000)
         Transaction income = new Transaction();
-        income.setTransactionType(2); 
+        income.setTransactionType(TransactionType.CREDIT); 
         income.setName("Income");
         income.setOriginalAmount(1000.0);
         income.setOriginalCurrency("INR");
@@ -402,7 +402,7 @@ public class BudgetIntegrationTest {
 
         // 2. Add Expense (100)
         Transaction expense = new Transaction();
-        expense.setTransactionType(1);
+        expense.setTransactionType(TransactionType.DEBIT);
         expense.setName("Expense");
         expense.setOriginalAmount(100.0);
         expense.setOriginalCurrency("INR");

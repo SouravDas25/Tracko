@@ -19,7 +19,8 @@ public class Transaction {
 
     @NotNull
     @Column(name = "transaction_type")
-    private Integer transactionType;
+    @Convert(converter = TransactionTypeConverter.class)
+    private TransactionType transactionType;
 
     @NotNull
     @Column(name = "name", length = 128)
@@ -81,11 +82,11 @@ public class Transaction {
         this.id = id;
     }
 
-    public Integer getTransactionType() {
+    public TransactionType getTransactionType() {
         return transactionType;
     }
 
-    public void setTransactionType(Integer transactionType) {
+    public void setTransactionType(TransactionType transactionType) {
         this.transactionType = transactionType;
     }
 

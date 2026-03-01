@@ -5,6 +5,7 @@ import com.trako.config.TestJwtSecurityConfig;
 import com.trako.entities.Account;
 import com.trako.entities.Category;
 import com.trako.entities.Transaction;
+import com.trako.entities.TransactionType;
 import com.trako.entities.User;
 import com.trako.repositories.AccountRepository;
 import com.trako.repositories.CategoryRepository;
@@ -162,12 +163,12 @@ public class TransferIntegrationTest {
 
         // VERIFY: Find and validate debit transaction (TYPE_DEBIT = 1)
         Transaction debit = transferTransactions.stream()
-                .filter(t -> t.getTransactionType() == 1)  // Find debit (money out)
+                .filter(t -> t.getTransactionType() == TransactionType.DEBIT)  // Find debit (money out)
                 .findFirst()
                 .orElse(null);
         // VERIFY: Find and validate credit transaction (TYPE_CREDIT = 2)
         Transaction credit = transferTransactions.stream()
-                .filter(t -> t.getTransactionType() == 2)  // Find credit (money in)
+                .filter(t -> t.getTransactionType() == TransactionType.CREDIT)  // Find credit (money in)
                 .findFirst()
                 .orElse(null);
 
@@ -284,7 +285,7 @@ public class TransferIntegrationTest {
         
         // Find the debit transaction (money out)
         Transaction debit = transactions.stream()
-                .filter(t -> t.getTransactionType() == 1)  // TYPE_DEBIT
+                .filter(t -> t.getTransactionType() == TransactionType.DEBIT)  // TYPE_DEBIT
                 .findFirst()
                 .orElseThrow();
 
@@ -332,7 +333,7 @@ public class TransferIntegrationTest {
         List<Transaction> transactions = transactionRepository.findAll();
         // Find the credit transaction (money in)
         Transaction credit = transactions.stream()
-                .filter(t -> t.getTransactionType() == 2)  // TYPE_CREDIT
+                .filter(t -> t.getTransactionType() == TransactionType.CREDIT)  // TYPE_CREDIT
                 .findFirst()
                 .orElseThrow();
 
@@ -365,7 +366,7 @@ public class TransferIntegrationTest {
         Transaction regular = new Transaction();
         regular.setAccountId(sourceAccount.getId());
         regular.setCategoryId(testCategory.getId());  // Use created test category
-        regular.setTransactionType(1);  // TYPE_DEBIT
+        regular.setTransactionType(TransactionType.DEBIT);  // TYPE_DEBIT
         regular.setOriginalAmount(100.0);
         regular.setOriginalCurrency("INR");
         regular.setExchangeRate(1.0);
@@ -419,7 +420,7 @@ public class TransferIntegrationTest {
 
         // VERIFY: Each transfer is properly linked
         List<Transaction> debits = all.stream()
-                .filter(t -> t.getTransactionType() == 1)  // Get all debits
+                .filter(t -> t.getTransactionType() == TransactionType.DEBIT)  // Get all debits
                 .toList();
         assertEquals(3, debits.size(), "Should have 3 debit transactions");
 
@@ -495,7 +496,7 @@ public class TransferIntegrationTest {
         // Get the created debit transaction
         List<Transaction> transactions = transactionRepository.findAll();
         Transaction debit = transactions.stream()
-                .filter(t -> t.getTransactionType() == 1)
+                .filter(t -> t.getTransactionType() == TransactionType.DEBIT)
                 .findFirst()
                 .orElseThrow();
 
@@ -606,7 +607,7 @@ public class TransferIntegrationTest {
         assertEquals(2, transactions.size(), "Should have 2 transactions after creation");
 
         Transaction debit = transactions.stream()
-                .filter(t -> t.getTransactionType() == 1)
+                .filter(t -> t.getTransactionType() == TransactionType.DEBIT)
                 .findFirst()
                 .orElseThrow();
 
@@ -654,7 +655,7 @@ public class TransferIntegrationTest {
         // Get the debit transaction (money out side) from database
         List<Transaction> transactions = transactionRepository.findAll();
         Transaction debit = transactions.stream()
-                .filter(t -> t.getTransactionType() == 1)  // TYPE_DEBIT = 1
+                .filter(t -> t.getTransactionType() == TransactionType.DEBIT)  // TYPE_DEBIT = 1
                 .findFirst()
                 .orElseThrow();
         
@@ -715,7 +716,7 @@ public class TransferIntegrationTest {
         // Retrieve the created debit transaction from database
         List<Transaction> transactions = transactionRepository.findAll();
         Transaction debit = transactions.stream()
-                .filter(t -> t.getTransactionType() == 1)  // TYPE_DEBIT = 1
+                .filter(t -> t.getTransactionType() == TransactionType.DEBIT)  // TYPE_DEBIT = 1
                 .findFirst()
                 .orElseThrow();
         
@@ -777,7 +778,7 @@ public class TransferIntegrationTest {
 
         List<Transaction> transactions = transactionRepository.findAll();
         Transaction credit = transactions.stream()
-                .filter(t -> t.getTransactionType() == 2)  // Get credit side
+                .filter(t -> t.getTransactionType() == TransactionType.CREDIT)  // Get credit side
                 .findFirst()
                 .orElseThrow();
         Long debitId = credit.getLinkedTransactionId();
@@ -842,7 +843,7 @@ public class TransferIntegrationTest {
 
         List<Transaction> transactions = transactionRepository.findAll();
         Transaction debit = transactions.stream()
-                .filter(t -> t.getTransactionType() == 1)
+                .filter(t -> t.getTransactionType() == TransactionType.DEBIT)
                 .findFirst()
                 .orElseThrow();
         Long creditId = debit.getLinkedTransactionId();
@@ -899,7 +900,7 @@ public class TransferIntegrationTest {
 
         List<Transaction> transactions = transactionRepository.findAll();
         Transaction debit = transactions.stream()
-                .filter(t -> t.getTransactionType() == 1)
+                .filter(t -> t.getTransactionType() == TransactionType.DEBIT)
                 .findFirst()
                 .orElseThrow();
 
@@ -953,7 +954,7 @@ public class TransferIntegrationTest {
         Transaction regular = new Transaction();
         regular.setAccountId(sourceAccount.getId());
         regular.setCategoryId(testCategory.getId());
-        regular.setTransactionType(1);  // DEBIT
+        regular.setTransactionType(TransactionType.DEBIT);  // DEBIT
         regular.setOriginalAmount(100.0);
         regular.setOriginalCurrency("INR");
         regular.setExchangeRate(1.0);
@@ -1017,7 +1018,7 @@ public class TransferIntegrationTest {
 
         List<Transaction> transactions = transactionRepository.findAll();
         Transaction debit = transactions.stream()
-                .filter(t -> t.getTransactionType() == 1)
+                .filter(t -> t.getTransactionType() == TransactionType.DEBIT)
                 .findFirst()
                 .orElseThrow();
         Long creditId = debit.getLinkedTransactionId();
@@ -1081,7 +1082,7 @@ public class TransferIntegrationTest {
         assertEquals(2, afterCreate.size());
 
         Transaction debit = afterCreate.stream()
-                .filter(t -> t.getTransactionType() == 1)
+                .filter(t -> t.getTransactionType() == TransactionType.DEBIT)
                 .findFirst()
                 .orElseThrow();
 
