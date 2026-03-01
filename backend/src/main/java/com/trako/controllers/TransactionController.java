@@ -148,6 +148,16 @@ public class TransactionController {
      */
     @Operation(summary = "List transactions with optional filters")
     @GetMapping
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+        responseCode = "200",
+        description = "OK",
+        content = @io.swagger.v3.oas.annotations.media.Content(
+            mediaType = "application/json",
+            schema = @io.swagger.v3.oas.annotations.media.Schema(
+                implementation = com.trako.dtos.TransactionsPageDTO.class
+            )
+        )
+    )
     public ResponseEntity<?> getAll(
             @RequestParam(required = false) Integer month,
             @RequestParam(required = false) Integer year,
