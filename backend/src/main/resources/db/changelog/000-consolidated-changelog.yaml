@@ -1,4 +1,22 @@
 databaseChangeLog:
+  - property:
+      name: clob.type
+      value: text
+      dbms: postgresql
+  - property:
+      name: clob.type
+      value: varchar(10000)
+      dbms: h2
+
+  - property:
+      name: double.type
+      value: double
+      dbms: h2
+  - property:
+      name: double.type
+      value: double precision
+      dbms: postgresql
+
   - changeSet:
       id: 001-initial-schema
       author: sd25
@@ -53,7 +71,7 @@ databaseChangeLog:
                     nullable: false
               - column:
                   name: exchange_rate
-                  type: DOUBLE
+                  type: ${double.type}
                   constraints:
                     nullable: false
         - addForeignKeyConstraint:
@@ -209,13 +227,22 @@ databaseChangeLog:
               - column: { name: name, type: varchar(128), constraints: { nullable: false } }
               - column: { name: comments, type: varchar(512) }
               - column: { name: date, type: timestamp, constraints: { nullable: false } }
-              - column: { name: amount, type: "numeric(12,2)", constraints: { nullable: false } }
               - column: { name: account_id, type: bigint, constraints: { nullable: false } }
               - column: { name: category_id, type: bigint, constraints: { nullable: false } }
               - column: { name: is_countable, type: int, defaultValue: "1" }
               - column: { name: original_currency, type: varchar(3) }
-              - column: { name: original_amount, type: double }
-              - column: { name: exchange_rate, type: double }
+              - column:
+                  name: original_amount
+                  type: ${double.type}
+              - column:
+                  name: exchange_rate
+                  type: ${double.type}
+        - sql:
+            dbms: postgresql
+            sql: "ALTER TABLE transactions ADD COLUMN amount DOUBLE PRECISION GENERATED ALWAYS AS (original_amount * exchange_rate) STORED;"
+        - sql:
+            dbms: h2
+            sql: "ALTER TABLE transactions ADD COLUMN amount DOUBLE GENERATED ALWAYS AS (original_amount * exchange_rate);"
         - addForeignKeyConstraint:
             baseTableName: transactions
             baseColumnNames: account_id
@@ -244,7 +271,11 @@ databaseChangeLog:
               - column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
               - column: { name: transaction_id, type: bigint, constraints: { nullable: false } }
               - column: { name: user_id, type: varchar(36), constraints: { nullable: false } }
-              - column: { name: amount, type: "numeric(12,2)", constraints: { nullable: false } }
+              - column:
+                  name: amount
+                  type: ${double.type}
+                  constraints:
+                    nullable: false
               - column: { name: contact_id, type: BIGINT }
               - column: { name: settled_at, type: timestamp }
               - column: { name: is_settled, type: int, defaultValue: "0" }
@@ -288,7 +319,9 @@ databaseChangeLog:
             tableName: json_store
             columns:
               - column: { name: name, type: varchar(64), constraints: { primaryKey: true, nullable: false } }
-              - column: { name: json_value, type: text }
+              - column: 
+                    name: json_value 
+                    type: ${clob.type}
 
   - changeSet:
       id: 006-add-zbb-tables
@@ -301,7 +334,10 @@ databaseChangeLog:
               - column: { name: budget_month, type: int, constraints: { nullable: false } }
               - column: { name: budget_year, type: int, constraints: { nullable: false } }
               - column: { name: user_id, type: varchar(36), constraints: { nullable: false } }
-              - column: { name: total_budget, type: double, defaultValueNumeric: 0.0 }
+              - column:
+                  name: total_budget
+                  type: ${double.type}
+                  defaultValueNumeric: 0.0
               - column: { name: is_closed, type: boolean, defaultValueBoolean: false }
               - column: { name: created_at, type: timestamp, defaultValueComputed: "CURRENT_TIMESTAMP" }
               - column: { name: updated_at, type: timestamp, defaultValueComputed: "CURRENT_TIMESTAMP" }
@@ -324,9 +360,18 @@ databaseChangeLog:
               - column: { name: budget_month_id, type: bigint, constraints: { nullable: false } }
               - column: { name: category_id, type: bigint, constraints: { nullable: false } }
               - column: { name: user_id, type: varchar(36), constraints: { nullable: false } }
-              - column: { name: allocated_amount, type: double, defaultValueNumeric: 0.0 }
-              - column: { name: actual_spent, type: double, defaultValueNumeric: 0.0 }
-              - column: { name: remaining_balance, type: double, defaultValueNumeric: 0.0 }
+              - column:
+                  name: allocated_amount
+                  type: ${double.type}
+                  defaultValueNumeric: 0.0
+              - column:
+                  name: actual_spent
+                  type: ${double.type}
+                  defaultValueNumeric: 0.0
+              - column:
+                  name: remaining_balance
+                  type: ${double.type}
+                  defaultValueNumeric: 0.0
         - addForeignKeyConstraint:
             baseTableName: budget_category_allocations
             baseColumnNames: budget_month_id
@@ -359,7 +404,11 @@ databaseChangeLog:
               - column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
               - column: { name: user_id, type: varchar(36), constraints: { nullable: false } }
               - column: { name: rule_name, type: varchar(255), constraints: { nullable: false } }
-              - column: { name: allocation_percentage, type: double, constraints: { nullable: false } }
+              - column:
+                  name: allocation_percentage
+                  type: ${double.type}
+                  constraints:
+                    nullable: false
               - column: { name: is_active, type: boolean, defaultValueBoolean: true }
               - column: { name: created_at, type: timestamp, defaultValueComputed: "CURRENT_TIMESTAMP" }
               - column: { name: updated_at, type: timestamp, defaultValueComputed: "CURRENT_TIMESTAMP" }
@@ -407,15 +456,15 @@ databaseChangeLog:
                     nullable: false
               - column:
                   name: income_total
-                  type: DOUBLE
+                  type: ${double.type}
                   defaultValueNumeric: 0
               - column:
                   name: expense_total
-                  type: DOUBLE
+                  type: ${double.type}
                   defaultValueNumeric: 0
               - column:
                   name: net_total
-                  type: DOUBLE
+                  type: ${double.type}
                   defaultValueNumeric: 0
               - column:
                   name: count_countable

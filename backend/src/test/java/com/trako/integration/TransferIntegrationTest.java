@@ -134,7 +134,9 @@ public class TransferIntegrationTest {
         Map<String, Object> transferRequest = new HashMap<>();
         transferRequest.put("accountId", sourceAccount.getId());  // REQUIRED @NotNull field
         transferRequest.put("toAccountId", destinationAccount.getId());  // Destination: money comes in (makes it a transfer)
-        transferRequest.put("amount", 500.0);  // Transfer amount
+        // New contract: provide currency fields; base currency assumed to resolve rate=1.0
+        transferRequest.put("originalAmount", 500.0);
+        transferRequest.put("originalCurrency", "INR");
         transferRequest.put("name", "API Test Transfer");  // Optional name
         transferRequest.put("comments", "Integration test via API");  // Optional comments
 
@@ -205,7 +207,8 @@ public class TransferIntegrationTest {
         Map<String, Object> transferRequest = new HashMap<>();
         transferRequest.put("accountId", sourceAccount.getId());  // REQUIRED @NotNull field
         transferRequest.put("toAccountId", sourceAccount.getId());  // Same as source - INVALID!
-        transferRequest.put("amount", 500.0);
+        transferRequest.put("originalAmount", 500.0);
+        transferRequest.put("originalCurrency", "INR");
         transferRequest.put("name", "Invalid Transfer");
 
         // WHEN: Call POST /api/transactions with invalid data
@@ -234,7 +237,8 @@ public class TransferIntegrationTest {
         Map<String, Object> transferRequest = new HashMap<>();
         transferRequest.put("accountId", sourceAccount.getId());  // REQUIRED @NotNull field - Valid source
         transferRequest.put("toAccountId", 99999L);  // Non-existent account - INVALID!
-        transferRequest.put("amount", 500.0);
+        transferRequest.put("originalAmount", 500.0);
+        transferRequest.put("originalCurrency", "INR");
         transferRequest.put("name", "Invalid Transfer");
 
         // WHEN: Call POST /api/transactions with invalid account
@@ -263,7 +267,8 @@ public class TransferIntegrationTest {
         Map<String, Object> transferRequest = new HashMap<>();
         transferRequest.put("accountId", sourceAccount.getId());  // REQUIRED @NotNull field
         transferRequest.put("toAccountId", destinationAccount.getId());
-        transferRequest.put("amount", 750.0);
+        transferRequest.put("originalAmount", 750.0);
+        transferRequest.put("originalCurrency", "INR");
         transferRequest.put("name", "Transfer to Delete");
 
         // Create the transfer
@@ -312,7 +317,9 @@ public class TransferIntegrationTest {
         Map<String, Object> transferRequest = new HashMap<>();
         transferRequest.put("accountId", sourceAccount.getId());  // REQUIRED @NotNull field
         transferRequest.put("toAccountId", destinationAccount.getId());
-        transferRequest.put("amount", 1000.0);
+        transferRequest.put("originalAmount", 1000.0);
+        transferRequest.put("originalCurrency", "USD");
+        transferRequest.put("exchangeRate", 1.0);
         transferRequest.put("name", "Transfer to Delete via Credit");
 
         mockMvc.perform(post("/api/transactions")
@@ -359,7 +366,9 @@ public class TransferIntegrationTest {
         regular.setAccountId(sourceAccount.getId());
         regular.setCategoryId(testCategory.getId());  // Use created test category
         regular.setTransactionType(1);  // TYPE_DEBIT
-        regular.setAmount(100.0);
+        regular.setOriginalAmount(100.0);
+        regular.setOriginalCurrency("INR");
+        regular.setExchangeRate(1.0);
         regular.setDate(new java.util.Date());
         regular.setIsCountable(1);  // Countable (unlike transfers)
         regular.setName("Regular Transaction");
@@ -392,7 +401,8 @@ public class TransferIntegrationTest {
             Map<String, Object> request = new HashMap<>();
             request.put("accountId", sourceAccount.getId());  // REQUIRED @NotNull field
             request.put("toAccountId", destinationAccount.getId());
-            request.put("amount", 100.0 * i);  // $100, $200, $300
+            request.put("originalAmount", 100.0 * i);  // $100, $200, $300
+            request.put("originalCurrency", "INR");
             request.put("name", "Transfer " + i);
 
             // Create each transfer via API
@@ -445,7 +455,8 @@ public class TransferIntegrationTest {
         Map<String, Object> request = new HashMap<>();
         request.put("accountId", sourceAccount.getId());  // REQUIRED @NotNull field
         request.put("toAccountId", destinationAccount.getId());
-        request.put("amount", 300.0);
+        request.put("originalAmount", 300.0);
+        request.put("originalCurrency", "INR");
         request.put("name", "Category Test Transfer");
 
         mockMvc.perform(post("/api/transactions")
@@ -471,7 +482,8 @@ public class TransferIntegrationTest {
         Map<String, Object> transferRequest = new HashMap<>();
         transferRequest.put("accountId", sourceAccount.getId());  // REQUIRED @NotNull field
         transferRequest.put("toAccountId", destinationAccount.getId());
-        transferRequest.put("amount", 500.0);
+        transferRequest.put("originalAmount", 500.0);
+        transferRequest.put("originalCurrency", "INR");
         transferRequest.put("name", "Valid Transfer");
 
         mockMvc.perform(post("/api/transactions")
@@ -491,7 +503,8 @@ public class TransferIntegrationTest {
         Map<String, Object> invalidRequest = new HashMap<>();
         invalidRequest.put("accountId", sourceAccount.getId());
         invalidRequest.put("toAccountId", sourceAccount.getId());  // Same as from - INVALID!
-        invalidRequest.put("amount", 300.0);
+        invalidRequest.put("originalAmount", 300.0);
+        invalidRequest.put("originalCurrency", "INR");
         invalidRequest.put("name", "Invalid Update");
 
         // THEN: Should be rejected
@@ -576,7 +589,8 @@ public class TransferIntegrationTest {
         Map<String, Object> createRequest = new HashMap<>();
         createRequest.put("accountId", sourceAccount.getId());  // REQUIRED @NotNull field
         createRequest.put("toAccountId", destinationAccount.getId());
-        createRequest.put("amount", 1500.0);
+        createRequest.put("originalAmount", 1500.0);
+        createRequest.put("originalCurrency", "INR");
         createRequest.put("name", "Lifecycle Test Transfer");
         createRequest.put("comments", "Full lifecycle test");
 
@@ -626,7 +640,8 @@ public class TransferIntegrationTest {
         Map<String, Object> createRequest = new HashMap<>();
         createRequest.put("accountId", sourceAccount.getId());
         createRequest.put("toAccountId", destinationAccount.getId());
-        createRequest.put("amount", 500.0);  // Initial amount
+        createRequest.put("originalAmount", 500.0);  // Initial amount
+        createRequest.put("originalCurrency", "INR");
         createRequest.put("name", "Original Transfer");
 
         // Call POST endpoint to create the transfer
@@ -649,7 +664,8 @@ public class TransferIntegrationTest {
         // WHEN: Update the transfer amount from $500 to $1000 via PUT endpoint
         Map<String, Object> updateRequest = new HashMap<>();
         updateRequest.put("accountId", debit.getAccountId());  // REQUIRED @NotNull
-        updateRequest.put("amount", 1000.0);  // NEW AMOUNT: Change from 500 to 1000
+        updateRequest.put("originalAmount", 1000.0);  // NEW AMOUNT: Change from 500 to 1000
+        updateRequest.put("originalCurrency", debit.getOriginalCurrency());
         updateRequest.put("name", debit.getName());  // Keep same name
         updateRequest.put("comments", debit.getComments());  // Keep same comments
         updateRequest.put("date", debit.getDate());  // Keep same date
@@ -684,7 +700,8 @@ public class TransferIntegrationTest {
         Map<String, Object> createRequest = new HashMap<>();
         createRequest.put("accountId", sourceAccount.getId());
         createRequest.put("toAccountId", destinationAccount.getId());
-        createRequest.put("amount", 750.0);
+        createRequest.put("originalAmount", 750.0);
+        createRequest.put("originalCurrency", "INR");
         createRequest.put("name", "Old Name");  // Initial name
         createRequest.put("comments", "Old Comment");  // Initial comments
 
@@ -747,7 +764,9 @@ public class TransferIntegrationTest {
         Map<String, Object> createRequest = new HashMap<>();
         createRequest.put("accountId", sourceAccount.getId());
         createRequest.put("toAccountId", destinationAccount.getId());
-        createRequest.put("amount", 300.0);
+        createRequest.put("originalAmount", 300.0);
+        createRequest.put("originalCurrency", "USD");
+        createRequest.put("exchangeRate", 1.0);
         createRequest.put("name", "Credit Side Update Test");
 
         mockMvc.perform(post("/api/transactions")
@@ -766,7 +785,10 @@ public class TransferIntegrationTest {
         // WHEN: Update via CREDIT side (not debit)
         Map<String, Object> updateRequest = new HashMap<>();
         updateRequest.put("accountId", credit.getAccountId());  // REQUIRED @NotNull
-        updateRequest.put("amount", 600.0);  // Change amount
+        // For transfers, controller uses originalAmount/originalCurrency/exchangeRate to compute amount
+        updateRequest.put("originalAmount", 600.0);  // Change amount
+        updateRequest.put("originalCurrency", "USD");
+        updateRequest.put("exchangeRate", 1.0);
         updateRequest.put("name", "Updated via Credit");
         updateRequest.put("date", credit.getDate());  // Keep same date
         updateRequest.put("isCountable", credit.getIsCountable());  // Keep same countable status
@@ -807,7 +829,9 @@ public class TransferIntegrationTest {
         Map<String, Object> createRequest = new HashMap<>();
         createRequest.put("accountId", sourceAccount.getId());
         createRequest.put("toAccountId", destinationAccount.getId());
-        createRequest.put("amount", 400.0);
+        createRequest.put("originalAmount", 400.0);
+        createRequest.put("originalCurrency", "USD");
+        createRequest.put("exchangeRate", 1.0);
         createRequest.put("name", "Account Change Test");
 
         mockMvc.perform(post("/api/transactions")
@@ -862,7 +886,9 @@ public class TransferIntegrationTest {
         Map<String, Object> createRequest = new HashMap<>();
         createRequest.put("accountId", sourceAccount.getId());
         createRequest.put("toAccountId", destinationAccount.getId());
-        createRequest.put("amount", 500.0);
+        createRequest.put("originalAmount", 500.0);
+        createRequest.put("originalCurrency", "USD");
+        createRequest.put("exchangeRate", 1.0);
         createRequest.put("name", "Valid Transfer");
 
         mockMvc.perform(post("/api/transactions")
@@ -891,7 +917,10 @@ public class TransferIntegrationTest {
         // Try updating credit to use same account as debit
         Map<String, Object> creditUpdate = new HashMap<>();
         creditUpdate.put("accountId", sourceAccount.getId());  // Try to make it same as debit - REQUIRED @NotNull
-        creditUpdate.put("amount", credit.getAmount());
+        // Provide original fields though validation should fail on same-account check first
+        creditUpdate.put("originalAmount", credit.getOriginalAmount());
+        creditUpdate.put("originalCurrency", credit.getOriginalCurrency());
+        creditUpdate.put("exchangeRate", credit.getExchangeRate());
         creditUpdate.put("name", credit.getName());
         creditUpdate.put("date", credit.getDate());  // Keep same date
         creditUpdate.put("isCountable", credit.getIsCountable());  // Keep same countable status
@@ -925,18 +954,22 @@ public class TransferIntegrationTest {
         regular.setAccountId(sourceAccount.getId());
         regular.setCategoryId(testCategory.getId());
         regular.setTransactionType(1);  // DEBIT
-        regular.setAmount(100.0);
+        regular.setOriginalAmount(100.0);
+        regular.setOriginalCurrency("INR");
+        regular.setExchangeRate(1.0);
         regular.setDate(new java.util.Date());
         regular.setIsCountable(1);
         regular.setName("Regular Transaction");
         regular = transactionRepository.save(regular);
 
-        // WHEN: Update the regular transaction
+        // WHEN: Update the regular transaction (amount derived from originalAmount * exchangeRate)
         Map<String, Object> updateRequest = new HashMap<>();
         updateRequest.put("accountId", regular.getAccountId());  // REQUIRED @NotNull
         updateRequest.put("categoryId", regular.getCategoryId());  // Required for regular transactions
         updateRequest.put("transactionType", regular.getTransactionType());  // Required for regular transactions
-        updateRequest.put("amount", 200.0);  // Change amount
+        updateRequest.put("originalAmount", 200.0);  // Change amount via source fields
+        updateRequest.put("originalCurrency", "INR");
+        updateRequest.put("exchangeRate", 1.0);
         updateRequest.put("name", "Updated Regular");
         updateRequest.put("date", regular.getDate());  // Keep same date
         updateRequest.put("isCountable", 1);
@@ -971,7 +1004,9 @@ public class TransferIntegrationTest {
         Map<String, Object> createRequest = new HashMap<>();
         createRequest.put("accountId", sourceAccount.getId());
         createRequest.put("toAccountId", destinationAccount.getId());
-        createRequest.put("amount", 100.0);
+        createRequest.put("originalAmount", 100.0);
+        createRequest.put("originalCurrency", "USD");
+        createRequest.put("exchangeRate", 1.0);
         createRequest.put("name", "Version 1");
 
         mockMvc.perform(post("/api/transactions")
@@ -991,7 +1026,9 @@ public class TransferIntegrationTest {
         for (int i = 2; i <= 5; i++) {
             Map<String, Object> updateRequest = new HashMap<>();
             updateRequest.put("accountId", debit.getAccountId());  // REQUIRED @NotNull
-            updateRequest.put("amount", 100.0 * i);  // Increase amount each time
+            updateRequest.put("originalAmount", 100.0 * i);  // Increase amount each time via original fields
+            updateRequest.put("originalCurrency", "USD");
+            updateRequest.put("exchangeRate", 1.0);
             updateRequest.put("name", "Version " + i);
             updateRequest.put("date", debit.getDate());  // Keep same date
             updateRequest.put("isCountable", debit.getIsCountable());  // Keep same countable status
@@ -1028,7 +1065,9 @@ public class TransferIntegrationTest {
         Map<String, Object> createRequest = new HashMap<>();
         createRequest.put("accountId", sourceAccount.getId());  // REQUIRED @NotNull field
         createRequest.put("toAccountId", destinationAccount.getId());
-        createRequest.put("amount", 1000.0);
+        createRequest.put("originalAmount", 100.0);
+        createRequest.put("originalCurrency", "USD");
+        createRequest.put("exchangeRate", 83.5);
         createRequest.put("name", "CRUD Test");
         createRequest.put("comments", "CRUD lifecycle test");
 
@@ -1049,7 +1088,10 @@ public class TransferIntegrationTest {
         // UPDATE
         Map<String, Object> updateRequest = new HashMap<>();
         updateRequest.put("accountId", debit.getAccountId());  // REQUIRED @NotNull
-        updateRequest.put("amount", 2000.0);
+        // For transfers, controller uses originalAmount/originalCurrency/exchangeRate to compute amount
+        updateRequest.put("originalAmount", 2000.0);
+        updateRequest.put("originalCurrency", "USD");
+        updateRequest.put("exchangeRate", 1.0);
         updateRequest.put("name", "CRUD Test Updated");
         updateRequest.put("date", debit.getDate());  // Keep same date
         updateRequest.put("isCountable", debit.getIsCountable());  // Keep same countable status

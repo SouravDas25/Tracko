@@ -44,26 +44,17 @@ public class UserCurrencyController {
     public ResponseEntity<?> save(@Valid @RequestBody UserCurrencyRequest request) {
         try {
             User user = userService.loggedInUser();
-            if (user.getSecondaryCurrencies() == null) {
-                user.setSecondaryCurrencies(new ArrayList<UserCurrency>());
-            }
-            List<UserCurrency> currencies = user.getSecondaryCurrencies();
-
-            Optional<UserCurrency> existingOpt = currencies.stream()
-                    .filter(uc -> uc.getCurrencyCode().equals(request.getCurrencyCode()))
-                    .findFirst();
-
-            if (existingOpt.isPresent()) {
-                existingOpt.get().setExchangeRate(request.getExchangeRate());
+            UserCurrency existing = userCurrencyRepository.findByUserIdAndCurrencyCode(user.getId(), request.getCurrencyCode());
+            if (existing != null) {
+                existing.setExchangeRate(request.getExchangeRate());
+                userCurrencyRepository.save(existing);
             } else {
                 UserCurrency uc = new UserCurrency();
                 uc.setUser(user);
                 uc.setCurrencyCode(request.getCurrencyCode());
                 uc.setExchangeRate(request.getExchangeRate());
-                currencies.add(uc);
+                userCurrencyRepository.save(uc);
             }
-
-            userService.saveUser(user);
             return Response.ok("Saved", "Saved successfully");
         } catch (Exception e) {
             e.printStackTrace();
@@ -75,11 +66,9 @@ public class UserCurrencyController {
     public ResponseEntity<?> delete(@PathVariable String code) {
         try {
             User user = userService.loggedInUser();
-            if (user.getSecondaryCurrencies() != null) {
-                boolean removed = user.getSecondaryCurrencies().removeIf(uc -> uc.getCurrencyCode().equals(code));
-                if (removed) {
-                    userService.saveUser(user);
-                }
+            UserCurrency existing = userCurrencyRepository.findByUserIdAndCurrencyCode(user.getId(), code);
+            if (existing != null) {
+                userCurrencyRepository.delete(existing);
             }
             return Response.ok("Deleted", "Deleted successfully");
         } catch (Exception e) {

@@ -6,12 +6,15 @@ import com.trako.dtos.TransactionSummaryDTO;
 import com.trako.entities.Account;
 import com.trako.entities.Category;
 import com.trako.entities.Transaction;
+import com.trako.entities.User;
+import com.trako.entities.UserCurrency;
 import com.trako.exceptions.AuthorizationException;
 import com.trako.exceptions.NotFoundException;
 import com.trako.exceptions.UserNotLoggedInException;
 import com.trako.models.request.TransactionRequest;
 import com.trako.repositories.AccountRepository;
 import com.trako.repositories.CategoryRepository;
+import com.trako.repositories.UserCurrencyRepository;
 import com.trako.services.TransactionService;
 import com.trako.services.TransactionWriteService;
 import com.trako.services.UserService;
@@ -54,6 +57,23 @@ public class TransactionController {
 
     @Autowired
     private CategoryRepository categoryRepository;
+
+    @Autowired
+    private UserCurrencyRepository userCurrencyRepository;
+
+    private Double resolveExchangeRate(User user, String currency, Double providedRate) {
+        if (providedRate != null) {
+            return providedRate;
+        }
+        if (currency.equals(user.getBaseCurrency())) {
+            return 1.0;
+        }
+        UserCurrency uc = userCurrencyRepository.findByUserIdAndCurrencyCode(user.getId(), currency);
+        if (uc == null) {
+            throw new IllegalArgumentException("Currency not configured: " + currency);
+        }
+        return uc.getExchangeRate();
+    }
 
     private List<Transaction> hideTransferCredits(List<Transaction> transactions, String userId) {
         var transferCats = categoryRepository.findByUserIdAndName(userId, "TRANSFER");
@@ -365,7 +385,8 @@ public class TransactionController {
     @PostMapping
     public ResponseEntity<?> create(@Valid @RequestBody TransactionRequest request) {
         try {
-            String currentUserId = userService.loggedInUser().getId();
+            User user = userService.loggedInUser();
+            String currentUserId = user.getId();
             
             // Check if this is a transfer request (has toAccountId field)
             if (request.isTransfer()) {
@@ -381,17 +402,30 @@ public class TransactionController {
                 if (request.toAccountId() == null) {
                     return Response.badRequest("Transfer requires toAccountId");
                 }
-                if (request.amount() == null || request.amount() <= 0) {
-                    return Response.badRequest("Transfer amount must be greater than 0");
+                // Validate same account before any currency checks to preserve expected error messaging
+                if (fromAccountId.equals(request.toAccountId())) {
+                    return Response.badRequest("fromAccountId and toAccountId cannot be same");
                 }
                 
+                // Validate Currency and Amount
+                if (request.originalCurrency() == null) {
+                    return Response.badRequest("Original currency is required");
+                }
+                if (request.originalAmount() == null || request.originalAmount() <= 0) {
+                     return Response.badRequest("Original amount must be greater than 0");
+                }
+
+                Double exchangeRate = resolveExchangeRate(user, request.originalCurrency(), request.exchangeRate());
+
                 // Delegate to service layer for transfer creation
                 Transaction[] result = transactionWriteService.createTransfer(
                     currentUserId,
                     fromAccountId,
                     request.toAccountId(),
                     request.date(),
-                    request.amount(),
+                    request.originalAmount(),
+                    request.originalCurrency(),
+                    exchangeRate,
                     request.name(),
                     request.comments()
                 );
@@ -401,7 +435,35 @@ public class TransactionController {
                 
             } else {
                 // This is a REGULAR TRANSACTION request
-                Transaction saved = transactionWriteService.createTransaction(currentUserId, request);
+                if (request.originalCurrency() == null) {
+                    return Response.badRequest("Original currency is required");
+                }
+                if (request.originalAmount() == null) {
+                     return Response.badRequest("Original amount is required");
+                }
+                
+                Double exchangeRate = resolveExchangeRate(user, request.originalCurrency(), request.exchangeRate());
+
+                // Create enriched request with resolved exchange rate
+                TransactionRequest enrichedRequest = new TransactionRequest(
+                    request.id(),
+                    request.accountId(),
+                    request.date(),
+                    request.amount(),
+                    request.name(),
+                    request.comments(),
+                    request.categoryId(),
+                    request.transactionType(),
+                    request.isCountable(),
+                    request.originalCurrency(),
+                    request.originalAmount(),
+                    exchangeRate,
+                    request.linkedTransactionId(),
+                    request.toAccountId(),
+                    request.fromAccountId()
+                );
+
+                Transaction saved = transactionWriteService.createTransaction(currentUserId, enrichedRequest);
                 return Response.ok(saved, "Transaction created successfully");
             }
         } catch (UserNotLoggedInException e) {
@@ -425,14 +487,15 @@ public class TransactionController {
      * Updates an existing transaction or transfer by id.
      * Supports partial updates - only non-null fields in the request are updated.
      * 
-     * <p>Delegates all write logic to TransactionWriteService.
+     * <p>Delegates all writing logic to TransactionWriteService.
      * <p>If the transaction is part of a transfer (has linkedTransactionId), both sides are updated atomically.
-     * <p>For regular transactions, verifies that existing/new account plus category are all owned by authenticated user.
+     * <p>For regular transactions, verifies that authenticated user all owns an existing/new account plus category.
      */
     @PutMapping("/{id}")
     public ResponseEntity<?> update(@PathVariable @Positive Long id, @Valid @RequestBody TransactionRequest request) {
         try {
-            String currentUserId = userService.loggedInUser().getId();
+            User user = userService.loggedInUser();
+            String currentUserId = user.getId();
 
             // Load an existing transaction to check its type and support partial updates
             Transaction existing = transactionService.findById(id).orElse(null);
@@ -443,19 +506,12 @@ public class TransactionController {
             // Check if an existing transaction is part of a transfer
             boolean isExistingTransfer = transactionWriteService.isTransfer(id);
             
-            // CASE 1: Updating a TRANSFER (either existing is a transfer, or request is converting to transfer)
-            // Note: Currently we assume if existing is a transfer, we stay transfer.
-            // If a request has transfer fields, we treat it as a transfer update.
+            // CASE 1: Updating a TRANSFER
             if (isExistingTransfer || request.isTransfer()) {
-                // For transfer updates, `accountId` in the request represents the account of the
-                // transaction being updated (debit or credit side). Map it to the correct
-                // transfer side so updates are symmetric when calling PUT on either transaction.
                 boolean isDebitSide = existing.getTransactionType() != null && existing.getTransactionType() == 1;
                 boolean isCreditSide = existing.getTransactionType() != null && existing.getTransactionType() == 2;
 
                 // Important: request.getSourceAccountId() falls back to `accountId` when `fromAccountId` is null.
-                // For credit-side updates, the request will usually only send `accountId` (the credit account),
-                // so treating that as the *source* would invert the transfer and cause validation failures.
                 Long resolvedFromAccountId = request.fromAccountId();
                 Long resolvedToAccountId = request.toAccountId();
 
@@ -466,13 +522,32 @@ public class TransactionController {
                     resolvedToAccountId = request.accountId();
                 }
 
+                // Resolve Currency and Exchange Rate
+                String currency = request.originalCurrency();
+                if (currency == null) {
+                    currency = existing.getOriginalCurrency();
+                }
+                
+                Double rate = request.exchangeRate();
+                if (request.originalCurrency() != null) {
+                     // Currency explicitly provided (even if same), resolve rate if missing
+                     rate = resolveExchangeRate(user, currency, request.exchangeRate());
+                } else {
+                     // Currency not provided, check if rate is provided
+                     if (rate == null) {
+                         rate = existing.getExchangeRate();
+                     }
+                }
+
                 Transaction[] result = transactionWriteService.updateTransfer(
                     currentUserId,
                     id,
                     resolvedFromAccountId, // null means don't change
                     resolvedToAccountId,
                     request.date(),
-                    request.amount(),
+                    request.originalAmount(),
+                    currency,
+                    rate,
                     request.name(),
                     request.comments()
                 );
@@ -482,10 +557,6 @@ public class TransactionController {
             }
 
             // CASE 2: Updating a REGULAR TRANSACTION
-            // Merge non-null fields from the request into a new Transaction object for the service
-            //  (updateTransaction) expects a Transaction entity.
-            // We will populate it with existing values first, then override with request values.
-            
             Transaction txToUpdate = new Transaction();
             txToUpdate.setId(id);
             
@@ -494,42 +565,33 @@ public class TransactionController {
             txToUpdate.setCategoryId(request.categoryId() != null ? request.categoryId() : existing.getCategoryId());
             txToUpdate.setTransactionType(request.transactionType() != null ? request.transactionType() : existing.getTransactionType());
             
-            // Currency fields - if any are provided, we should probably take them.
-            // If not provided, keep existing.
-            txToUpdate.setOriginalCurrency(request.originalCurrency() != null ? request.originalCurrency() : existing.getOriginalCurrency());
-            txToUpdate.setOriginalAmount(request.originalAmount() != null ? request.originalAmount() : existing.getOriginalAmount());
-            txToUpdate.setExchangeRate(request.exchangeRate() != null ? request.exchangeRate() : existing.getExchangeRate());
-
-            // Amount handling:
-            // 1. If request has explicit amount, use it.
-            // 2. If request changes currency fields (originalAmount/Currency/Rate), set amount to NULL to force recalculation in service.
-            // 3. Otherwise, keep existing amount.
-            boolean currencyFieldsChanged = request.originalCurrency() != null || 
-                                          request.originalAmount() != null || 
-                                          request.exchangeRate() != null;
+            // Currency fields
+            String newCurrency = request.originalCurrency();
+            Double newRate = request.exchangeRate();
             
-            if (request.amount() != null) {
-                txToUpdate.setAmount(request.amount());
-            } else if (currencyFieldsChanged) {
-                txToUpdate.setAmount(null); // Forces computeAmountIfMissing in TransactionWriteService
+            if (newCurrency != null) {
+                 newRate = resolveExchangeRate(user, newCurrency, newRate);
             } else {
-                txToUpdate.setAmount(existing.getAmount());
+                newCurrency = existing.getOriginalCurrency();
+                if (newRate == null) {
+                    newRate = existing.getExchangeRate();
+                }
             }
+            
+            txToUpdate.setOriginalCurrency(newCurrency);
+            txToUpdate.setExchangeRate(newRate);
+            
+            txToUpdate.setOriginalAmount(request.originalAmount() != null ? request.originalAmount() : existing.getOriginalAmount());
 
             txToUpdate.setName(request.name() != null ? request.name() : existing.getName());
             txToUpdate.setComments(request.comments() != null ? request.comments() : existing.getComments());
             txToUpdate.setDate(request.date() != null ? request.date() : existing.getDate());
             txToUpdate.setIsCountable(request.isCountable() != null ? request.isCountable() : existing.getIsCountable());
             
-            // linkedTransactionId should not be set manually for regular transactions usually, 
-            // but we preserve it if it was there (though if it was there, isExistingTransfer would be true)
             txToUpdate.setLinkedTransactionId(existing.getLinkedTransactionId());
 
-            // Delegate to write service - it will enforce ownership and will also handle
-            // transfer updates when the existing transaction is part of a transfer.
             Transaction updated = transactionWriteService.updateTransaction(currentUserId, txToUpdate);
-            String message = "Transaction updated successfully";
-            return Response.ok(updated, message);
+            return Response.ok(updated, "Transaction updated successfully");
             
         } catch (UserNotLoggedInException e) {
             log.warn("Transaction update failed: User not logged in");

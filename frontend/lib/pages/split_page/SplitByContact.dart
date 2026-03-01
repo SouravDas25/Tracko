@@ -33,9 +33,9 @@ class _SplitByContactState extends AsyncLoadState<SplitByContact> {
 
   @override
   void initState() {
-    super.initState();
     _splitRepo = sl<SplitRepository>();
     _txRepo = sl<TransactionRepository>();
+    super.initState();
   }
 
   @override

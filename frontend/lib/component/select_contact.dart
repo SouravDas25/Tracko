@@ -39,8 +39,8 @@ class SelectContactList extends AsyncLoadState<SelectContactPage> {
 
   @override
   void initState() {
-    super.initState();
     _repo = sl<ContactRepository>();
+    super.initState();
   }
 
   initContactsData() async {

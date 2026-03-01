@@ -371,21 +371,14 @@ class TransactionRepository {
     if (t.linkedTransactionId != null)
       payload['linkedTransactionId'] = t.linkedTransactionId;
 
-    final hasOriginalCurrency =
-        (t.originalCurrency != null && t.originalCurrency!.isNotEmpty);
-    final hasOriginalAmount = (t.originalAmount != null);
+    // Always send original currency fields as required by backend
+    payload['originalCurrency'] = t.originalCurrency;
+    payload['originalAmount'] = t.originalAmount;
+    payload['exchangeRate'] = t.exchangeRate;
 
-    // Only include amount for base-currency transactions.
-    // IMPORTANT: Transaction.amount is non-nullable in Flutter (defaults to 0.0),
-    // so checking for null is not enough. If original currency info is present,
-    // omit amount to let backend compute base amount and persist it.
-    if (!(hasOriginalCurrency && hasOriginalAmount)) {
-      payload['amount'] = t.amount;
-    }
-    // Only include exchangeRate if explicitly provided; otherwise backend will fetch
-    if (t.exchangeRate != null) {
-      payload['exchangeRate'] = t.exchangeRate;
-    }
+    // Amount is now computed by DB, but we can send it if needed (backend ignores it for persistence)
+    // payload['amount'] = t.amount;
+
     return payload;
   }
 

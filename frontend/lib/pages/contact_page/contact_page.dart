@@ -22,8 +22,8 @@ class _ContactPageState extends AsyncLoadState<ContactPage> {
 
   @override
   void initState() {
-    super.initState();
     _repo = sl<ContactRepository>();
+    super.initState();
   }
 
   @override

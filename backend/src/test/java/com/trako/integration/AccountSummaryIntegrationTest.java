@@ -165,7 +165,9 @@ public class AccountSummaryIntegrationTest {
         t.setAccountId(accountId);
         t.setCategoryId(categoryId);
         t.setTransactionType(type);
-        t.setAmount(amount);
+        t.setOriginalAmount(amount);
+        t.setOriginalCurrency("INR");
+        t.setExchangeRate(1.0);
         t.setIsCountable(1);
         t.setName("Txn");
         t.setDate(new GregorianCalendar(year, month, 15).getTime());

@@ -33,9 +33,9 @@ class _SplitPage extends RefreshableState<SplitPage> {
 
   @override
   void initState() {
-    super.initState();
     _contactRepo = sl<ContactRepository>();
     _splitRepo = sl<SplitRepository>();
+    super.initState();
   }
 
   @override

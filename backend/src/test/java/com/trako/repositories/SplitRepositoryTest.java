@@ -46,7 +46,9 @@ public class SplitRepositoryTest {
         testTransaction.setTransactionType(1);
         testTransaction.setName("Dinner");
         testTransaction.setDate(new Date());
-        testTransaction.setAmount(100.00);
+        testTransaction.setOriginalAmount(100.00);
+        testTransaction.setOriginalCurrency("INR");
+        testTransaction.setExchangeRate(1.0);
         testTransaction.setAccountId(testAccount.getId());
         testTransaction.setCategoryId(testCategory.getId());
         entityManager.persist(testTransaction);

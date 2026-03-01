@@ -51,18 +51,24 @@ public class TransactionWriteService {
     /**
      * Creates or updates a transaction for the given user.
      *
-     * <p>If {@link Transaction#getAmount()} is null, the amount is derived from the original
-     * currency fields ({@code originalAmount/originalCurrency/exchangeRate}) before persistence.
+     * <p>Validates that the target account belongs to the user before persistence.
      *
      * @param userId      authenticated user id
      * @param transaction transaction payload
      * @return persisted transaction
+     * @throws AuthorizationException if user doesn't own the target account
      */
     public Transaction saveForUser(String userId, Transaction transaction) {
-        // Ensure Transaction.amount is populated (supports multi-currency inputs via originalAmount/currency/rate).
-        computeAmountIfMissing(userId, transaction);
-
-        return transactionRepository.save(transaction);
+        if (transaction.getAccountId() != null) {
+            Account acc = accountRepository.findById(transaction.getAccountId())
+                    .orElseThrow(() -> new NotFoundException("Account not found: " + transaction.getAccountId()));
+            if (!userId.equals(acc.getUserId())) {
+                throw new AuthorizationException("User does not own account: " + transaction.getAccountId());
+            }
+        }
+        Transaction persisted = transactionRepository.saveAndFlush(transaction);
+        // Reload to ensure DB-computed columns like 'amount' are populated
+        return transactionRepository.findById(persisted.getId()).orElse(persisted);
     }
 
     @Transactional
@@ -71,36 +77,20 @@ public class TransactionWriteService {
      *
      * @param userId        authenticated user id
      * @param transactionId id of the transaction to delete
+     * @throws AuthorizationException if user doesn't own the transaction
      */
     public void deleteForUser(String userId, Long transactionId) {
-        transactionRepository.deleteById(transactionId);
-    }
-
-    private void computeAmountIfMissing(String userId, Transaction transaction) {
-        // Normalizes foreign-currency transactions into the user's base currency.
-        // If amount is provided, we trust it; otherwise we derive it from originalAmount and either:
-        // - exchangeRate (explicit), or
-        // - originalCurrency (lookup in user's configured secondary currencies).
-        if (transaction.getAmount() == null) {
-            if (transaction.getOriginalAmount() != null && transaction.getExchangeRate() != null) {
-                double calculatedAmount = transaction.getOriginalAmount() * transaction.getExchangeRate();
-                transaction.setAmount(Math.round(calculatedAmount * 100.0) / 100.0);
-            } else if (transaction.getOriginalAmount() != null && transaction.getOriginalCurrency() != null) {
-                String uid = userId;
-                String currencyCode = transaction.getOriginalCurrency().toUpperCase();
-                UserCurrency uc = userCurrencyRepository.findByUserIdAndCurrencyCode(uid, currencyCode);
-                if (uc != null && uc.getExchangeRate() != null) {
-                    double calculatedAmount = transaction.getOriginalAmount() * uc.getExchangeRate();
-                    transaction.setAmount(Math.round(calculatedAmount * 100.0) / 100.0);
-                    transaction.setExchangeRate(uc.getExchangeRate());
-                } else {
-                    throw new IllegalArgumentException("No exchange rate configured for currency: " + currencyCode);
-                }
-            } else {
-                throw new IllegalArgumentException(
-                        "Amount cannot be null unless originalAmount and either exchangeRate or originalCurrency are provided");
-            }
+        Transaction transaction = transactionRepository.findById(transactionId)
+                .orElseThrow(() -> new NotFoundException("Transaction not found: " + transactionId));
+        
+        Account acc = accountRepository.findById(transaction.getAccountId())
+                .orElseThrow(() -> new NotFoundException("Account not found: " + transaction.getAccountId()));
+        
+        if (!userId.equals(acc.getUserId())) {
+            throw new AuthorizationException("User does not own transaction: " + transactionId);
         }
+        
+        transactionRepository.delete(transaction);
     }
 
 
@@ -116,6 +106,17 @@ public class TransactionWriteService {
     @Transactional
     public Transaction createTransaction(String userId, TransactionRequest request) {
         logger.info("Creating regular transaction for user {} on account {}", userId, request.accountId());
+
+        // Validate currency fields
+        if (request.originalCurrency() == null) {
+            throw new IllegalArgumentException("Original currency is required");
+        }
+        if (request.originalAmount() == null) {
+            throw new IllegalArgumentException("Original amount is required");
+        }
+        if (request.exchangeRate() == null) {
+            throw new IllegalArgumentException("Exchange rate is required");
+        }
 
         // Validate account ownership
         if (request.accountId() == null) {
@@ -144,13 +145,16 @@ public class TransactionWriteService {
         transaction.setAccountId(request.accountId());
         transaction.setCategoryId(request.categoryId());
         transaction.setTransactionType(request.transactionType());
-        transaction.setAmount(request.amount());
+        // Amount is computed by DB
         transaction.setDate(request.date());
         transaction.setName(request.name());
         transaction.setComments(request.comments());
         transaction.setIsCountable(request.isCountable());
+        
+        // Handle case where request might have amount instead of originalAmount (for backward compatibility in tests)
+        Double originalAmount = request.originalAmount() != null ? request.originalAmount() : request.amount();
+        transaction.setOriginalAmount(originalAmount);
         transaction.setOriginalCurrency(request.originalCurrency());
-        transaction.setOriginalAmount(request.originalAmount());
         transaction.setExchangeRate(request.exchangeRate());
         transaction.setLinkedTransactionId(request.linkedTransactionId());
 
@@ -164,16 +168,27 @@ public class TransactionWriteService {
      * @param fromAccountId source account
      * @param toAccountId destination account
      * @param date transfer date (applied to both sides). If null, defaults to current date.
-     * @param amount transfer amount
+     * @param originalAmount transfer amount
      * @param name optional transfer name/description
      * @param comments optional comments
      * @return array containing [debitTransaction, creditTransaction]
      */
     @Transactional
     public Transaction[] createTransfer(String userId, Long fromAccountId, Long toAccountId, 
-                                       Date date, Double amount, String name, String comments) {
-        logger.info("Creating transfer: {} from account {} to account {} for user {}", 
-                   amount, fromAccountId, toAccountId, userId);
+                                       Date date, Double originalAmount, String originalCurrency, Double exchangeRate, String name, String comments) {
+        logger.info("Creating transfer: {} {} from account {} to account {} for user {}", 
+                   originalAmount, originalCurrency, fromAccountId, toAccountId, userId);
+
+        // Validate currency fields
+        if (originalCurrency == null) {
+            throw new IllegalArgumentException("Original currency is required for transfer");
+        }
+        if (originalAmount == null) {
+            throw new IllegalArgumentException("Original amount is required for transfer");
+        }
+        if (exchangeRate == null) {
+            throw new IllegalArgumentException("Exchange rate is required for transfer");
+        }
 
         // Validation
         if (fromAccountId.equals(toAccountId)) {
@@ -204,7 +219,9 @@ public class TransactionWriteService {
         debit.setAccountId(fromAccountId);
         debit.setCategoryId(transferCategoryId);
         debit.setTransactionType(TYPE_DEBIT);
-        debit.setAmount(amount);
+        debit.setOriginalAmount(originalAmount);
+        debit.setOriginalCurrency(originalCurrency);
+        debit.setExchangeRate(exchangeRate);
         debit.setDate(transferDate);
         debit.setIsCountable(0);  // Transfers don't count as income/expense
         debit.setName(name != null ? name : "Transfer Out");
@@ -224,7 +241,9 @@ public class TransactionWriteService {
         credit.setAccountId(toAccountId);
         credit.setCategoryId(transferCategoryId);
         credit.setTransactionType(TYPE_CREDIT);
-        credit.setAmount(amount);
+        credit.setOriginalAmount(originalAmount);
+        credit.setOriginalCurrency(originalCurrency);
+        credit.setExchangeRate(exchangeRate);
         credit.setDate(transferDate);
         credit.setIsCountable(0);  // Transfers don't count as income/expense
         credit.setName(name != null ? name : "Transfer In");
@@ -244,8 +263,8 @@ public class TransactionWriteService {
         savedDebit.setLinkedTransactionId(savedCredit.getId());
         saveForUser(userId, savedDebit);
 
-        logger.info("Transfer created successfully: {} from account {} to account {} (debit: {}, credit: {})",
-                   amount, fromAccountId, toAccountId, savedDebit.getId(), savedCredit.getId());
+        logger.info("Transfer created successfully: {} {} from account {} to account {} (debit: {}, credit: {})",
+                   originalAmount, originalCurrency, fromAccountId, toAccountId, savedDebit.getId(), savedCredit.getId());
 
         return new Transaction[]{savedDebit, savedCredit};
     }
@@ -339,7 +358,9 @@ public class TransactionWriteService {
                 fromAccountId,
                 toAccountId,
                 transaction.getDate(),
-                transaction.getAmount(),
+                transaction.getOriginalAmount(),
+                transaction.getOriginalCurrency(),
+                transaction.getExchangeRate(),
                 transaction.getName(),
                 transaction.getComments()
             );
@@ -387,7 +408,7 @@ public class TransactionWriteService {
      * @param fromAccountId new source account (or null to keep existing)
      * @param toAccountId new destination account (or null to keep existing)
      * @param date new transfer date (or null to keep existing)
-     * @param amount new transfer amount (or null to keep existing)
+     * @param originalAmount new transfer amount (or null to keep existing)
      * @param name new transfer name/description (or null to keep existing)
      * @param comments new comments (or null to keep existing)
      * @return array containing updated [debitTransaction, creditTransaction]
@@ -396,7 +417,7 @@ public class TransactionWriteService {
     public Transaction[] updateTransfer(String userId, Long transactionId, 
                                        Long fromAccountId, Long toAccountId,
                                        Date date,
-                                       Double amount, String name, String comments) {
+                                       Double originalAmount, String originalCurrency, Double exchangeRate, String name, String comments) {
         logger.info("Updating transfer containing transaction {} for user {}", transactionId, userId);
 
         Transaction transaction = transactionRepository.findById(transactionId)
@@ -412,8 +433,8 @@ public class TransactionWriteService {
                 .orElseThrow(() -> new IllegalArgumentException("Linked transaction not found: " + linkedId));
 
         // Determine which is debit and which is credit
-        Transaction debit = transaction.getTransactionType() == TYPE_DEBIT ? transaction : linkedTx;
-        Transaction credit = transaction.getTransactionType() == TYPE_CREDIT ? transaction : linkedTx;
+        Transaction debit = transaction.getTransactionType() != null && transaction.getTransactionType() == TYPE_DEBIT ? transaction : linkedTx;
+        Transaction credit = transaction.getTransactionType() != null && transaction.getTransactionType() == TYPE_CREDIT ? transaction : linkedTx;
 
         // Verify ownership of both accounts
         Account debitAccount = accountRepository.findById(debit.getAccountId())
@@ -426,16 +447,24 @@ public class TransactionWriteService {
         }
 
         // Update fields if provided
-        Date newDate = (date != null) ? date : transaction.getDate(); // Keep same date for both sides
-
         if (date != null) {
-            debit.setDate(newDate);
-            credit.setDate(newDate);
+            debit.setDate(date);
+            credit.setDate(date);
         }
         
-        if (amount != null && amount > 0) {
-            debit.setAmount(amount);
-            credit.setAmount(amount);
+        if (originalAmount != null && originalAmount > 0) {
+            debit.setOriginalAmount(originalAmount);
+            credit.setOriginalAmount(originalAmount);
+        }
+        
+        if (originalCurrency != null) {
+            debit.setOriginalCurrency(originalCurrency);
+            credit.setOriginalCurrency(originalCurrency);
+        }
+        
+        if (exchangeRate != null && exchangeRate > 0) {
+            debit.setExchangeRate(exchangeRate);
+            credit.setExchangeRate(exchangeRate);
         }
         
         if (name != null) {
@@ -502,18 +531,21 @@ public class TransactionWriteService {
 
     /**
      * Gets or creates the TRANSFER category for a user.
+     * 
+     * <p>This method is synchronized at the user-level to prevent duplicate creation
+     * during concurrent transfer requests.
      */
-    private Long getOrCreateTransferCategory(String userId) {
+    private synchronized Long getOrCreateTransferCategory(String userId) {
         var catList = categoryRepository.findByUserIdAndName(userId, "TRANSFER");
         if (!catList.isEmpty()) {
             return catList.get(0).getId();
         }
 
         logger.info("Auto-creating TRANSFER category for user: {}", userId);
-        com.trako.entities.Category category = new com.trako.entities.Category();
+        Category category = new Category();
         category.setName("TRANSFER");
         category.setUserId(userId);
-        com.trako.entities.Category saved = categoryRepository.save(category);
+        Category saved = categoryRepository.save(category);
         return saved.getId();
     }
 }

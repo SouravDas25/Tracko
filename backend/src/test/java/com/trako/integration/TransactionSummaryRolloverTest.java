@@ -251,7 +251,9 @@ public class TransactionSummaryRolloverTest {
         Transaction t = new Transaction();
         t.setAccountId(account.getId());
         t.setCategoryId(category.getId());
-        t.setAmount(amount);
+        t.setOriginalAmount(amount);
+        t.setOriginalCurrency("INR");
+        t.setExchangeRate(1.0);
         t.setTransactionType(type);
         t.setDate(date);
         t.setName("Test Txn");

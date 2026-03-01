@@ -57,7 +57,9 @@ public class TransactionRepositoryTest {
         transaction.setName("Lunch");
         transaction.setComments("Pizza");
         transaction.setDate(new Date());
-        transaction.setAmount(25.50);
+        transaction.setOriginalAmount(25.50);
+        transaction.setOriginalCurrency("INR");
+        transaction.setExchangeRate(1.0);
         transaction.setAccountId(testAccount.getId());
         transaction.setCategoryId(testCategory.getId());
 
@@ -74,7 +76,9 @@ public class TransactionRepositoryTest {
         transaction1.setTransactionType(1);
         transaction1.setName("Lunch");
         transaction1.setDate(new Date());
-        transaction1.setAmount(25.50);
+        transaction1.setOriginalAmount(25.50);
+        transaction1.setOriginalCurrency("INR");
+        transaction1.setExchangeRate(1.0);
         transaction1.setAccountId(testAccount.getId());
         transaction1.setCategoryId(testCategory.getId());
         entityManager.persist(transaction1);
@@ -83,7 +87,9 @@ public class TransactionRepositoryTest {
         transaction2.setTransactionType(1);
         transaction2.setName("Dinner");
         transaction2.setDate(new Date());
-        transaction2.setAmount(35.00);
+        transaction2.setOriginalAmount(35.00);
+        transaction2.setOriginalCurrency("INR");
+        transaction2.setExchangeRate(1.0);
         transaction2.setAccountId(testAccount.getId());
         transaction2.setCategoryId(testCategory.getId());
         entityManager.persist(transaction2);
@@ -111,7 +117,9 @@ public class TransactionRepositoryTest {
         transaction1.setTransactionType(1);
         transaction1.setName("Recent");
         transaction1.setDate(today);
-        transaction1.setAmount(25.50);
+        transaction1.setOriginalAmount(25.50);
+        transaction1.setOriginalCurrency("INR");
+        transaction1.setExchangeRate(1.0);
         transaction1.setAccountId(testAccount.getId());
         transaction1.setCategoryId(testCategory.getId());
         entityManager.persist(transaction1);
@@ -120,7 +128,9 @@ public class TransactionRepositoryTest {
         transaction2.setTransactionType(1);
         transaction2.setName("Old");
         transaction2.setDate(fifteenDaysAgo);
-        transaction2.setAmount(35.00);
+        transaction2.setOriginalAmount(35.00);
+        transaction2.setOriginalCurrency("INR");
+        transaction2.setExchangeRate(1.0);
         transaction2.setAccountId(testAccount.getId());
         transaction2.setCategoryId(testCategory.getId());
         entityManager.persist(transaction2);
@@ -144,7 +154,9 @@ public class TransactionRepositoryTest {
         transaction.setTransactionType(1);
         transaction.setName("Test Transaction");
         transaction.setDate(new Date());
-        transaction.setAmount(100.00);
+        transaction.setOriginalAmount(100.00);
+        transaction.setOriginalCurrency("INR");
+        transaction.setExchangeRate(1.0);
         transaction.setAccountId(testAccount.getId());
         transaction.setCategoryId(testCategory.getId());
         entityManager.persist(transaction);
@@ -162,7 +174,9 @@ public class TransactionRepositoryTest {
         transaction.setTransactionType(1);
         transaction.setName("Food Purchase");
         transaction.setDate(new Date());
-        transaction.setAmount(50.00);
+        transaction.setOriginalAmount(50.00);
+        transaction.setOriginalCurrency("INR");
+        transaction.setExchangeRate(1.0);
         transaction.setAccountId(testAccount.getId());
         transaction.setCategoryId(testCategory.getId());
         entityManager.persist(transaction);

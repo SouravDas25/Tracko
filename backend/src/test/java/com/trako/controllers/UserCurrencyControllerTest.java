@@ -85,11 +85,7 @@ public class UserCurrencyControllerTest {
         UserCurrencyRequest request = new UserCurrencyRequest();
         request.setCurrencyCode("EUR");
         request.setExchangeRate(90.0);
-        
-        // Ensure list is initialized
-        testUser.setSecondaryCurrencies(new java.util.ArrayList<>());
-
-        when(userService.saveUser(any(User.class))).thenReturn(testUser);
+        when(userCurrencyRepository.findByUserIdAndCurrencyCode("user123", "EUR")).thenReturn(null);
 
         mockMvc.perform(post("/api/user-currencies")
                 .with(csrf())
@@ -97,8 +93,7 @@ public class UserCurrencyControllerTest {
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result").value("Saved"));
-
-        verify(userService, times(1)).saveUser(any(User.class));
+        verify(userCurrencyRepository, times(1)).save(any(UserCurrency.class));
     }
 
     @Test
@@ -107,11 +102,7 @@ public class UserCurrencyControllerTest {
         UserCurrencyRequest request = new UserCurrencyRequest();
         request.setCurrencyCode("USD");
         request.setExchangeRate(84.0);
-        
-        // Setup user with existing currency
-        testUser.setSecondaryCurrencies(new java.util.ArrayList<>(Arrays.asList(testUserCurrency)));
-
-        when(userService.saveUser(any(User.class))).thenReturn(testUser);
+        when(userCurrencyRepository.findByUserIdAndCurrencyCode("user123", "USD")).thenReturn(testUserCurrency);
 
         mockMvc.perform(post("/api/user-currencies")
                 .with(csrf())
@@ -119,24 +110,19 @@ public class UserCurrencyControllerTest {
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result").value("Saved"));
-
-        verify(userService, times(1)).saveUser(any(User.class));
+        verify(userCurrencyRepository, times(1)).save(any(UserCurrency.class));
     }
 
     @Test
     @WithMockUser
     public void testDeleteCurrency() throws Exception {
-        // Setup user with existing currency
-        testUser.setSecondaryCurrencies(new java.util.ArrayList<>(Arrays.asList(testUserCurrency)));
-        
-        when(userService.saveUser(any(User.class))).thenReturn(testUser);
+        when(userCurrencyRepository.findByUserIdAndCurrencyCode("user123", "USD")).thenReturn(testUserCurrency);
 
         mockMvc.perform(delete("/api/user-currencies/USD")
                 .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result").value("Deleted"));
-
-        verify(userService, times(1)).saveUser(any(User.class));
+        verify(userCurrencyRepository, times(1)).delete(any(UserCurrency.class));
     }
 
     @Test

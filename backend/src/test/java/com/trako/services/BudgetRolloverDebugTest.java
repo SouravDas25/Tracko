@@ -93,7 +93,9 @@ public class BudgetRolloverDebugTest {
         Transaction prevIncome = new Transaction();
         prevIncome.setTransactionType(2); // Income
         prevIncome.setName("Prev Salary");
-        prevIncome.setAmount(1000.0);
+        prevIncome.setOriginalAmount(1000.0);
+        prevIncome.setOriginalCurrency("INR");
+        prevIncome.setExchangeRate(1.0);
         prevIncome.setDate(java.sql.Date.valueOf(prev.withDayOfMonth(15)));
         prevIncome.setAccountId(testAccount.getId());
         prevIncome.setCategoryId(testCategory.getId());
@@ -114,7 +116,9 @@ public class BudgetRolloverDebugTest {
         Transaction expense = new Transaction();
         expense.setTransactionType(1); // Expense
         expense.setName("Prev Expense");
-        expense.setAmount(50.0);
+        expense.setOriginalAmount(50.0);
+        expense.setOriginalCurrency("INR");
+        expense.setExchangeRate(1.0);
         expense.setDate(java.sql.Date.valueOf(prev.withDayOfMonth(20)));
         expense.setAccountId(testAccount.getId());
         expense.setCategoryId(testCategory.getId());

@@ -129,7 +129,9 @@ public class RecurringTransactionService {
                     rt.getAccountId(),
                     rt.getToAccountId(),
                     rt.getNextRunDate(),
-                    rt.getAmount(),
+                    rt.getOriginalAmount(),
+                    rt.getOriginalCurrency(),
+                    rt.getExchangeRate(),
                     rt.getName(),
                     "Recurring Transfer: " + rt.getFrequency()
             );

@@ -329,16 +329,19 @@ class SmartAddItemController extends ChangeNotifier {
     // Clone or use existing (be careful with mutation if save fails)
     // Here we mutate as per original logic but controller isolates it a bit
 
+    // Always set original fields, even for base currency
+    transaction.originalCurrency = selectedCurrency;
+    transaction.originalAmount = inputAmount;
+
     if (selectedCurrency != baseCurrency) {
-      transaction.originalCurrency = selectedCurrency;
-      transaction.originalAmount = inputAmount;
-      transaction.exchangeRate = null;
+      transaction.exchangeRate =
+          double.tryParse(exchangeRateController.text) ?? 1.0;
     } else {
-      transaction.amount = inputAmount;
-      transaction.originalCurrency = null;
-      transaction.originalAmount = null;
-      transaction.exchangeRate = null;
+      transaction.exchangeRate = 1.0;
     }
+
+    // Legacy amount field (still used for display in UI until refreshed)
+    transaction.amount = (inputAmount * (transaction.exchangeRate ?? 1.0));
 
     transaction.date = date;
     transaction.name = nameController.text.trim();

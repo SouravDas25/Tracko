@@ -35,7 +35,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
+// IMPORTANT: Keep Liquibase ENABLED in tests. Do NOT disable it to work around checksum or missing table issues.
+// For isolated test runs, drop schema first and clear checksums so migrations apply cleanly each time.
+@SpringBootTest()
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Import(TestJwtSecurityConfig.class)
@@ -113,7 +115,9 @@ public class RecurringTransactionIntegrationTest {
     public void testCreateRecurringTransaction() throws Exception {
         RecurringTransaction rt = new RecurringTransaction();
         rt.setName("Netflix Subscription");
-        rt.setAmount(199.0);
+        rt.setOriginalAmount(199.0);
+        rt.setOriginalCurrency("INR");
+        rt.setExchangeRate(1.0);
         rt.setAccountId(testAccount.getId());
         rt.setCategoryId(testCategory.getId());
         rt.setTransactionType(1);
@@ -136,7 +140,9 @@ public class RecurringTransactionIntegrationTest {
     public void testCreateRecurringTransactionWithCurrency() throws Exception {
         RecurringTransaction rt = new RecurringTransaction();
         rt.setName("Netflix Subscription USD");
-        rt.setAmount(1200.0); // Base amount in INR (approx)
+        rt.setOriginalAmount(1200.0);
+        rt.setOriginalCurrency("INR");
+        rt.setExchangeRate(1.0); // Base amount in INR (approx)
         rt.setAccountId(testAccount.getId());
         rt.setCategoryId(testCategory.getId());
         rt.setTransactionType(1);
@@ -177,7 +183,9 @@ public class RecurringTransactionIntegrationTest {
         RecurringTransaction rt = new RecurringTransaction();
         rt.setUserId(testUser.getId());
         rt.setName("Due Transaction");
-        rt.setAmount(500.0);
+        rt.setOriginalAmount(500.0);
+        rt.setOriginalCurrency("INR");
+        rt.setExchangeRate(1.0);
         rt.setAccountId(testAccount.getId());
         rt.setCategoryId(testCategory.getId());
         rt.setTransactionType(1);
@@ -226,7 +234,9 @@ public class RecurringTransactionIntegrationTest {
         RecurringTransaction rt = new RecurringTransaction();
         rt.setUserId(testUser.getId());
         rt.setName("Monthly Savings");
-        rt.setAmount(1000.0);
+        rt.setOriginalAmount(1000.0);
+        rt.setOriginalCurrency("INR");
+        rt.setExchangeRate(1.0);
         rt.setAccountId(testAccount.getId());
         rt.setToAccountId(targetAccount.getId()); // Transfer
         rt.setCategoryId(testCategory.getId()); // Usually handled by service but field is required

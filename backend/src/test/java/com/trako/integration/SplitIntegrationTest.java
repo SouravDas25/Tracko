@@ -123,7 +123,9 @@ public class SplitIntegrationTest {
         testTransaction = new Transaction();
         testTransaction.setTransactionType(1);
         testTransaction.setName("Dinner");
-        testTransaction.setAmount(100.00);
+        testTransaction.setOriginalAmount(100.00);
+        testTransaction.setOriginalCurrency("INR");
+        testTransaction.setExchangeRate(1.0);
         testTransaction.setDate(new Date());
         testTransaction.setAccountId(testAccount.getId());
         testTransaction.setCategoryId(testCategory.getId());
@@ -432,7 +434,9 @@ public class SplitIntegrationTest {
         Transaction settlementTransaction = new Transaction();
         settlementTransaction.setTransactionType(2); // Credit/Income
         settlementTransaction.setName("Settlement from " + testContact.getName());
-        settlementTransaction.setAmount(savedSplit.getAmount());
+        settlementTransaction.setOriginalAmount(savedSplit.getAmount());
+        settlementTransaction.setOriginalCurrency("INR");
+        settlementTransaction.setExchangeRate(1.0);
         settlementTransaction.setDate(new Date());
         settlementTransaction.setAccountId(testTransaction.getAccountId());
         settlementTransaction.setCategoryId(testTransaction.getCategoryId());

@@ -53,6 +53,8 @@ public class UserCreationIntegrationTest {
     private User regularUser;
     private String adminToken;
     private String regularToken;
+    private String adminPhone;
+    private String regularPhone;
 
     @BeforeEach
     public void setup() {
@@ -61,7 +63,8 @@ public class UserCreationIntegrationTest {
         // Create Admin User
         adminUser = new User();
         adminUser.setName("Admin User");
-        adminUser.setPhoneNo("9999999999");
+        adminPhone = generateUniquePhone();
+        adminUser.setPhoneNo(adminPhone);
         adminUser.setPassword("admin_pass");
         adminUser.setIsAdmin(1);
         adminUser = usersRepository.save(adminUser);
@@ -70,11 +73,18 @@ public class UserCreationIntegrationTest {
         // Create Regular User
         regularUser = new User();
         regularUser.setName("Regular User");
-        regularUser.setPhoneNo("8888888888");
+        regularPhone = generateUniquePhone();
+        regularUser.setPhoneNo(regularPhone);
         regularUser.setPassword("user_pass");
         regularUser.setIsAdmin(0);
         regularUser = usersRepository.save(regularUser);
         regularToken = "Bearer " + jwtTokenUtil.generateToken(new org.springframework.security.core.userdetails.User(regularUser.getPhoneNo(), regularUser.getPassword(), Collections.emptyList()));
+    }
+
+    private String generateUniquePhone() {
+        long base = Math.abs(System.nanoTime());
+        long tenDigits = (base % 1_000_000_0000L) + 1_000_000_000L; // ensure 10 digits, not starting with 0
+        return String.valueOf(tenDigits);
     }
 
     @Test
@@ -116,6 +126,6 @@ public class UserCreationIntegrationTest {
         User updatedUser = usersRepository.findById(regularUser.getId()).orElse(null);
         assertNotNull(updatedUser);
         assertEquals("Regular User", updatedUser.getName());
-        assertEquals("8888888888", updatedUser.getPhoneNo());
+        assertEquals(regularPhone, updatedUser.getPhoneNo());
     }
 }

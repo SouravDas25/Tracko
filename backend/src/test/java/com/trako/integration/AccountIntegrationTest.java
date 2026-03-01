@@ -128,7 +128,9 @@ public class AccountIntegrationTest {
         Transaction income = new Transaction();
         income.setTransactionType(2);
         income.setName("Income");
-        income.setAmount(1000.0);
+        income.setOriginalAmount(1000.0);
+        income.setOriginalCurrency("INR");
+        income.setExchangeRate(1.0);
         income.setDate(jan10);
         income.setAccountId(a1.getId());
         income.setCategoryId(salary.getId());
@@ -138,7 +140,9 @@ public class AccountIntegrationTest {
         Transaction expense = new Transaction();
         expense.setTransactionType(1);
         expense.setName("Expense");
-        expense.setAmount(200.0);
+        expense.setOriginalAmount(200.0);
+        expense.setOriginalCurrency("INR");
+        expense.setExchangeRate(1.0);
         expense.setDate(feb05);
         expense.setAccountId(a1.getId());
         expense.setCategoryId(food.getId());
@@ -152,6 +156,8 @@ public class AccountIntegrationTest {
                 a2.getId(),
                 feb05,
                 50.0,
+                "INR",
+                1.0,
                 "T1",
                 ""
         );
@@ -162,6 +168,8 @@ public class AccountIntegrationTest {
                 a1.getId(),
                 feb05,
                 30.0,
+                "INR",
+                1.0,
                 "T2",
                 ""
         );
@@ -334,7 +342,9 @@ public class AccountIntegrationTest {
         Transaction txn = new Transaction();
         txn.setTransactionType(1);
         txn.setName("Tx");
-        txn.setAmount(10.0);
+        txn.setOriginalAmount(10.0);
+        txn.setOriginalCurrency("INR");
+        txn.setExchangeRate(1.0);
         txn.setDate(new Date());
         txn.setAccountId(a.getId());
         txn.setCategoryId(cat.getId());
@@ -370,7 +380,9 @@ public class AccountIntegrationTest {
         com.trako.entities.RecurringTransaction rt = new com.trako.entities.RecurringTransaction();
         rt.setUserId(testUser.getId());
         rt.setName("R1");
-        rt.setAmount(100.0);
+        rt.setOriginalAmount(100.0);
+        rt.setOriginalCurrency("INR");
+        rt.setExchangeRate(1.0);
         rt.setAccountId(a1.getId());
         rt.setToAccountId(a2.getId());
         rt.setCategoryId(cat.getId());

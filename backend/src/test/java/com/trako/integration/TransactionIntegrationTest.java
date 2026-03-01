@@ -128,7 +128,9 @@ public class TransactionIntegrationTest {
         Transaction transaction = new Transaction();
         transaction.setTransactionType(1);
         transaction.setName("Lunch");
-        transaction.setAmount(25.50);
+        transaction.setOriginalAmount(25.50);
+        transaction.setOriginalCurrency("INR");
+        transaction.setExchangeRate(1.0);
         transaction.setDate(new Date());
         transaction.setAccountId(testAccount.getId());
         transaction.setCategoryId(testCategory.getId());
@@ -156,7 +158,10 @@ public class TransactionIntegrationTest {
         Map<String, Object> payload = new HashMap<>();
         payload.put("accountId", testAccount.getId());
         payload.put("toAccountId", toAccount.getId());
-        payload.put("amount", 123.45);
+        // Provide currency fields as per new contract; base currency resolves to rate=1.0 if missing
+        payload.put("originalAmount", 123.45);
+        payload.put("originalCurrency", "INR");
+        // omit exchangeRate to allow controller to resolve 1.0 for base currency
         payload.put("date", transferDate);
         payload.put("name", "My Transfer");
         payload.put("comments", "date-check");
@@ -197,6 +202,8 @@ public class TransactionIntegrationTest {
                 toAccount.getId(),
                 initialDate,
                 50.00,
+                "INR",
+                1.0,
                 "Init Transfer",
                 "init"
         );
@@ -210,7 +217,9 @@ public class TransactionIntegrationTest {
         Map<String, Object> updatePayload = new HashMap<>();
         updatePayload.put("accountId", debit.getAccountId());
         updatePayload.put("date", newDate);
-        updatePayload.put("amount", debit.getAmount());
+        // Use originalAmount & originalCurrency on updates; controller will keep existing rate if not provided
+        updatePayload.put("originalAmount", debit.getOriginalAmount());
+        updatePayload.put("originalCurrency", debit.getOriginalCurrency());
         updatePayload.put("name", "Updated Transfer");
         updatePayload.put("comments", "updated");
         updatePayload.put("transactionType", debit.getTransactionType());
@@ -233,7 +242,9 @@ public class TransactionIntegrationTest {
         Transaction transaction1 = new Transaction();
         transaction1.setTransactionType(1);
         transaction1.setName("Lunch");
-        transaction1.setAmount(25.50);
+        transaction1.setOriginalAmount(25.50);
+        transaction1.setOriginalCurrency("INR");
+        transaction1.setExchangeRate(1.0);
         transaction1.setDate(new Date());
         transaction1.setAccountId(testAccount.getId());
         transaction1.setCategoryId(testCategory.getId());
@@ -242,7 +253,9 @@ public class TransactionIntegrationTest {
         Transaction transaction2 = new Transaction();
         transaction2.setTransactionType(1);
         transaction2.setName("Dinner");
-        transaction2.setAmount(35.00);
+        transaction2.setOriginalAmount(35.00);
+        transaction2.setOriginalCurrency("INR");
+        transaction2.setExchangeRate(1.0);
         transaction2.setDate(new Date());
         transaction2.setAccountId(testAccount.getId());
         transaction2.setCategoryId(testCategory.getId());
@@ -266,7 +279,9 @@ public class TransactionIntegrationTest {
         Transaction transaction = new Transaction();
         transaction.setTransactionType(1);
         transaction.setName("Dinner");
-        transaction.setAmount(100.00);
+        transaction.setOriginalAmount(100.00);
+        transaction.setOriginalCurrency("INR");
+        transaction.setExchangeRate(1.0);
         transaction.setDate(new Date());
         transaction.setAccountId(testAccount.getId());
         transaction.setCategoryId(testCategory.getId());
@@ -321,7 +336,9 @@ public class TransactionIntegrationTest {
         Transaction transaction = new Transaction();
         transaction.setTransactionType(1);
         transaction.setName("CatDinner");
-        transaction.setAmount(55.00);
+        transaction.setOriginalAmount(55.00);
+        transaction.setOriginalCurrency("INR");
+        transaction.setExchangeRate(1.0);
         transaction.setDate(new Date());
         transaction.setAccountId(testAccount.getId());
         transaction.setCategoryId(testCategory.getId());
@@ -362,7 +379,9 @@ public class TransactionIntegrationTest {
         Transaction transaction = new Transaction();
         transaction.setTransactionType(1); // DEBIT = expense
         transaction.setName("Coffee");
-        transaction.setAmount(5.00);
+        transaction.setOriginalAmount(5.00);
+        transaction.setOriginalCurrency("INR");
+        transaction.setExchangeRate(1.0);
         transaction.setDate(new Date());
         transaction.setAccountId(testAccount.getId());
         transaction.setCategoryId(testCategory.getId());
@@ -380,14 +399,18 @@ public class TransactionIntegrationTest {
         Transaction transaction = new Transaction();
         transaction.setTransactionType(1);
         transaction.setName("Old Name");
-        transaction.setAmount(10.00);
+        transaction.setOriginalAmount(10.00);
+        transaction.setOriginalCurrency("INR");
+        transaction.setExchangeRate(1.0);
         transaction.setDate(new Date());
         transaction.setAccountId(testAccount.getId());
         transaction.setCategoryId(testCategory.getId());
         Transaction saved = transactionWriteService.saveForUser(testUser.getId(), transaction);
 
         saved.setName("Updated Name");
-        saved.setAmount(15.00);
+        saved.setOriginalAmount(15.00);
+        saved.setOriginalCurrency("INR");
+        saved.setExchangeRate(1.0);
 
         mockMvc.perform(put("/api/transactions/" + saved.getId())
                 .header("Authorization", bearerToken)
@@ -403,7 +426,9 @@ public class TransactionIntegrationTest {
         Transaction transaction = new Transaction();
         transaction.setTransactionType(1);
         transaction.setName("To Delete");
-        transaction.setAmount(1.00);
+        transaction.setOriginalAmount(1.00);
+        transaction.setOriginalCurrency("INR");
+        transaction.setExchangeRate(1.0);
         transaction.setDate(new Date());
         transaction.setAccountId(testAccount.getId());
         transaction.setCategoryId(testCategory.getId());
@@ -424,7 +449,9 @@ public class TransactionIntegrationTest {
         Transaction income = new Transaction();
         income.setTransactionType(2); // CREDIT = income
         income.setName("Salary");
-        income.setAmount(1000.00);
+        income.setOriginalAmount(1000.00);
+        income.setOriginalCurrency("INR");
+        income.setExchangeRate(1.0);
         income.setDate(new Date());
         income.setAccountId(testAccount.getId());
         income.setCategoryId(testCategory.getId());
@@ -435,7 +462,9 @@ public class TransactionIntegrationTest {
         Transaction expense = new Transaction();
         expense.setTransactionType(1); // DEBIT = expense
         expense.setName("Groceries");
-        expense.setAmount(200.00);
+        expense.setOriginalAmount(200.00);
+        expense.setOriginalCurrency("INR");
+        expense.setExchangeRate(1.0);
         expense.setDate(new Date());
         expense.setAccountId(testAccount.getId());
         expense.setCategoryId(testCategory.getId());
@@ -446,7 +475,9 @@ public class TransactionIntegrationTest {
         Transaction nonCountable = new Transaction();
         nonCountable.setTransactionType(1); // DEBIT = expense
         nonCountable.setName("Transfer");
-        nonCountable.setAmount(50.00);
+        nonCountable.setOriginalAmount(50.00);
+        nonCountable.setOriginalCurrency("INR");
+        nonCountable.setExchangeRate(1.0);
         nonCountable.setDate(new Date());
         nonCountable.setAccountId(testAccount.getId());
         nonCountable.setCategoryId(testCategory.getId());
@@ -476,7 +507,9 @@ public class TransactionIntegrationTest {
         Transaction income = new Transaction();
         income.setTransactionType(2);
         income.setName("Salary");
-        income.setAmount(1000.00);
+        income.setOriginalAmount(1000.00);
+        income.setOriginalCurrency("INR");
+        income.setExchangeRate(1.0);
         income.setDate(txDate);
         income.setAccountId(testAccount.getId());
         income.setCategoryId(testCategory.getId());
@@ -486,7 +519,9 @@ public class TransactionIntegrationTest {
         Transaction expense = new Transaction();
         expense.setTransactionType(1);
         expense.setName("Groceries");
-        expense.setAmount(200.00);
+        expense.setOriginalAmount(200.00);
+        expense.setOriginalCurrency("INR");
+        expense.setExchangeRate(1.0);
         expense.setDate(txDate);
         expense.setAccountId(testAccount.getId());
         expense.setCategoryId(testCategory.getId());
@@ -499,6 +534,8 @@ public class TransactionIntegrationTest {
                 toAccount.getId(),
                 txDate,
                 50.00,
+                "INR",
+                1.0,
                 "Xfer",
                 ""
         );
@@ -527,7 +564,9 @@ public class TransactionIntegrationTest {
         Transaction income = new Transaction();
         income.setTransactionType(2);
         income.setName("Salary");
-        income.setAmount(1000.00);
+        income.setOriginalAmount(1000.00);
+        income.setOriginalCurrency("INR");
+        income.setExchangeRate(1.0);
         income.setDate(txDate);
         income.setAccountId(testAccount.getId());
         income.setCategoryId(testCategory.getId());
@@ -537,7 +576,9 @@ public class TransactionIntegrationTest {
         Transaction expense = new Transaction();
         expense.setTransactionType(1);
         expense.setName("Groceries");
-        expense.setAmount(200.00);
+        expense.setOriginalAmount(200.00);
+        expense.setOriginalCurrency("INR");
+        expense.setExchangeRate(1.0);
         expense.setDate(txDate);
         expense.setAccountId(testAccount.getId());
         expense.setCategoryId(testCategory.getId());
@@ -550,6 +591,8 @@ public class TransactionIntegrationTest {
                 toAccount.getId(),
                 txDate,
                 50.00,
+                "INR",
+                1.0,
                 "Xfer",
                 ""
         );
@@ -571,7 +614,9 @@ public class TransactionIntegrationTest {
         Transaction income1 = new Transaction();
         income1.setTransactionType(2); // CREDIT = income
         income1.setName("Salary");
-        income1.setAmount(1000.00);
+        income1.setOriginalAmount(1000.00);
+        income1.setOriginalCurrency("INR");
+        income1.setExchangeRate(1.0);
         income1.setDate(new Date());
         income1.setAccountId(testAccount.getId());
         income1.setCategoryId(testCategory.getId());
@@ -581,7 +626,9 @@ public class TransactionIntegrationTest {
         Transaction income2 = new Transaction();
         income2.setTransactionType(2); // CREDIT = income
         income2.setName("Bonus");
-        income2.setAmount(500.00);
+        income2.setOriginalAmount(500.00);
+        income2.setOriginalCurrency("INR");
+        income2.setExchangeRate(1.0);
         income2.setDate(new Date());
         income2.setAccountId(testAccount.getId());
         income2.setCategoryId(testCategory.getId());
@@ -601,7 +648,9 @@ public class TransactionIntegrationTest {
         Transaction expense1 = new Transaction();
         expense1.setTransactionType(1); // DEBIT = expense
         expense1.setName("Groceries");
-        expense1.setAmount(200.00);
+        expense1.setOriginalAmount(200.00);
+        expense1.setOriginalCurrency("INR");
+        expense1.setExchangeRate(1.0);
         expense1.setDate(new Date());
         expense1.setAccountId(testAccount.getId());
         expense1.setCategoryId(testCategory.getId());
@@ -611,7 +660,9 @@ public class TransactionIntegrationTest {
         Transaction expense2 = new Transaction();
         expense2.setTransactionType(1); // DEBIT = expense
         expense2.setName("Utilities");
-        expense2.setAmount(150.00);
+        expense2.setOriginalAmount(150.00);
+        expense2.setOriginalCurrency("INR");
+        expense2.setExchangeRate(1.0);
         expense2.setDate(new Date());
         expense2.setAccountId(testAccount.getId());
         expense2.setCategoryId(testCategory.getId());
@@ -632,7 +683,9 @@ public class TransactionIntegrationTest {
         Transaction nonCountable1 = new Transaction();
         nonCountable1.setTransactionType(2); // CREDIT = income
         nonCountable1.setName("Transfer In");
-        nonCountable1.setAmount(500.00);
+        nonCountable1.setOriginalAmount(500.00);
+        nonCountable1.setOriginalCurrency("INR");
+        nonCountable1.setExchangeRate(1.0);
         nonCountable1.setDate(new Date());
         nonCountable1.setAccountId(testAccount.getId());
         nonCountable1.setCategoryId(testCategory.getId());
@@ -642,7 +695,9 @@ public class TransactionIntegrationTest {
         Transaction nonCountable2 = new Transaction();
         nonCountable2.setTransactionType(1); // DEBIT = expense
         nonCountable2.setName("Transfer Out");
-        nonCountable2.setAmount(300.00);
+        nonCountable2.setOriginalAmount(300.00);
+        nonCountable2.setOriginalCurrency("INR");
+        nonCountable2.setExchangeRate(1.0);
         nonCountable2.setDate(new Date());
         nonCountable2.setAccountId(testAccount.getId());
         nonCountable2.setCategoryId(testCategory.getId());
@@ -665,7 +720,9 @@ public class TransactionIntegrationTest {
         Transaction transaction = new Transaction();
         transaction.setTransactionType(1);
         transaction.setName("No Auth");
-        transaction.setAmount(10.00);
+        transaction.setOriginalAmount(10.00);
+        transaction.setOriginalCurrency("INR");
+        transaction.setExchangeRate(1.0);
         transaction.setDate(new Date());
         transaction.setAccountId(testAccount.getId());
         transaction.setCategoryId(testCategory.getId());
@@ -722,7 +779,9 @@ public class TransactionIntegrationTest {
         Transaction transaction = new Transaction();
         transaction.setTransactionType(1);
         transaction.setName("Foreign Post");
-        transaction.setAmount(5.00);
+        transaction.setOriginalAmount(5.00);
+        transaction.setOriginalCurrency("INR");
+        transaction.setExchangeRate(1.0);
         transaction.setDate(new Date());
         transaction.setAccountId(foreignAcc.getId());
         transaction.setCategoryId(testCategory.getId());
@@ -757,7 +816,9 @@ public class TransactionIntegrationTest {
         Transaction otherTxn = new Transaction();
         otherTxn.setTransactionType(1);
         otherTxn.setName("OtherTxn");
-        otherTxn.setAmount(3.00);
+        otherTxn.setOriginalAmount(3.00);
+        otherTxn.setOriginalCurrency("INR");
+        otherTxn.setExchangeRate(1.0);
         otherTxn.setDate(new Date());
         otherTxn.setAccountId(otherAcc.getId());
         otherTxn.setCategoryId(otherCat.getId());
@@ -778,7 +839,9 @@ public class TransactionIntegrationTest {
         Transaction t1 = new Transaction();
         t1.setTransactionType(1);
         t1.setName("A1");
-        t1.setAmount(10.00);
+        t1.setOriginalAmount(10.00);
+        t1.setOriginalCurrency("INR");
+        t1.setExchangeRate(1.0);
         t1.setDate(new Date());
         t1.setAccountId(testAccount.getId());
         t1.setCategoryId(testCategory.getId());
@@ -787,7 +850,9 @@ public class TransactionIntegrationTest {
         Transaction t2 = new Transaction();
         t2.setTransactionType(1);
         t2.setName("A2");
-        t2.setAmount(20.00);
+        t2.setOriginalAmount(20.00);
+        t2.setOriginalCurrency("INR");
+        t2.setExchangeRate(1.0);
         t2.setDate(new Date());
         t2.setAccountId(secondAcc.getId());
         t2.setCategoryId(testCategory.getId());
@@ -815,7 +880,9 @@ public class TransactionIntegrationTest {
         Transaction a1 = new Transaction();
         a1.setTransactionType(1);
         a1.setName("A1");
-        a1.setAmount(10.00);
+        a1.setOriginalAmount(10.00);
+        a1.setOriginalCurrency("INR");
+        a1.setExchangeRate(1.0);
         a1.setDate(txDate);
         a1.setAccountId(testAccount.getId());
         a1.setCategoryId(testCategory.getId());
@@ -825,7 +892,9 @@ public class TransactionIntegrationTest {
         Transaction a2 = new Transaction();
         a2.setTransactionType(1);
         a2.setName("A2");
-        a2.setAmount(20.00);
+        a2.setOriginalAmount(20.00);
+        a2.setOriginalCurrency("INR");
+        a2.setExchangeRate(1.0);
         a2.setDate(txDate);
         a2.setAccountId(secondAcc.getId());
         a2.setCategoryId(testCategory.getId());
@@ -854,7 +923,9 @@ public class TransactionIntegrationTest {
         Transaction debit = new Transaction();
         debit.setTransactionType(1);
         debit.setName("Transfer Out");
-        debit.setAmount(40.00);
+        debit.setOriginalAmount(40.00);
+        debit.setOriginalCurrency("INR");
+        debit.setExchangeRate(1.0);
         debit.setDate(new Date());
         debit.setAccountId(testAccount.getId());
         debit.setCategoryId(transfer.getId());
@@ -864,7 +935,9 @@ public class TransactionIntegrationTest {
         Transaction credit = new Transaction();
         credit.setTransactionType(2);
         credit.setName("Transfer In");
-        credit.setAmount(40.00);
+        credit.setOriginalAmount(40.00);
+        credit.setOriginalCurrency("INR");
+        credit.setExchangeRate(1.0);
         credit.setDate(new Date());
         credit.setAccountId(testAccount.getId());
         credit.setCategoryId(transfer.getId());
@@ -891,7 +964,9 @@ public class TransactionIntegrationTest {
         Transaction janOlder = new Transaction();
         janOlder.setTransactionType(1);
         janOlder.setName("Jan Old");
-        janOlder.setAmount(15.00);
+        janOlder.setOriginalAmount(15.00);
+        janOlder.setOriginalCurrency("INR");
+        janOlder.setExchangeRate(1.0);
         janOlder.setDate(new GregorianCalendar(2026, Calendar.JANUARY, 5).getTime());
         janOlder.setAccountId(testAccount.getId());
         janOlder.setCategoryId(testCategory.getId());
@@ -900,7 +975,9 @@ public class TransactionIntegrationTest {
         Transaction janNewer = new Transaction();
         janNewer.setTransactionType(1);
         janNewer.setName("Jan New");
-        janNewer.setAmount(25.00);
+        janNewer.setOriginalAmount(25.00);
+        janNewer.setOriginalCurrency("INR");
+        janNewer.setExchangeRate(1.0);
         janNewer.setDate(new GregorianCalendar(2026, Calendar.JANUARY, 20).getTime());
         janNewer.setAccountId(testAccount.getId());
         janNewer.setCategoryId(testCategory.getId());
@@ -909,7 +986,9 @@ public class TransactionIntegrationTest {
         Transaction febTransaction = new Transaction();
         febTransaction.setTransactionType(1);
         febTransaction.setName("Feb Tx");
-        febTransaction.setAmount(35.00);
+        febTransaction.setOriginalAmount(35.00);
+        febTransaction.setOriginalCurrency("INR");
+        febTransaction.setExchangeRate(1.0);
         febTransaction.setDate(new GregorianCalendar(2026, Calendar.FEBRUARY, 10).getTime());
         febTransaction.setAccountId(testAccount.getId());
         febTransaction.setCategoryId(testCategory.getId());
@@ -952,7 +1031,9 @@ public class TransactionIntegrationTest {
         Transaction income = new Transaction();
         income.setTransactionType(2);
         income.setName("Pay");
-        income.setAmount(120.00);
+        income.setOriginalAmount(120.00);
+        income.setOriginalCurrency("INR");
+        income.setExchangeRate(1.0);
         income.setDate(new Date());
         income.setAccountId(testAccount.getId());
         income.setCategoryId(testCategory.getId());
@@ -963,7 +1044,9 @@ public class TransactionIntegrationTest {
         Transaction expense = new Transaction();
         expense.setTransactionType(1);
         expense.setName("Snacks");
-        expense.setAmount(20.00);
+        expense.setOriginalAmount(20.00);
+        expense.setOriginalCurrency("INR");
+        expense.setExchangeRate(1.0);
         expense.setDate(new Date());
         expense.setAccountId(testAccount.getId());
         expense.setCategoryId(testCategory.getId());
@@ -1007,7 +1090,9 @@ public class TransactionIntegrationTest {
         Transaction t1 = new Transaction();
         t1.setTransactionType(1);
         t1.setName("KeepMe");
-        t1.setAmount(1.00);
+        t1.setOriginalAmount(1.00);
+        t1.setOriginalCurrency("INR");
+        t1.setExchangeRate(1.0);
         t1.setDate(new Date());
         t1.setAccountId(testAccount.getId());
         t1.setCategoryId(testCategory.getId());
@@ -1016,7 +1101,9 @@ public class TransactionIntegrationTest {
         Transaction t2 = new Transaction();
         t2.setTransactionType(1);
         t2.setName("DropMe");
-        t2.setAmount(2.00);
+        t2.setOriginalAmount(2.00);
+        t2.setOriginalCurrency("INR");
+        t2.setExchangeRate(1.0);
         t2.setDate(new Date());
         t2.setAccountId(another.getId());
         t2.setCategoryId(testCategory.getId());
@@ -1038,7 +1125,9 @@ public class TransactionIntegrationTest {
         Transaction t = new Transaction();
         t.setTransactionType(1);
         t.setName("DateRangeTx");
-        t.setAmount(50.00);
+        t.setOriginalAmount(50.00);
+        t.setOriginalCurrency("INR");
+        t.setExchangeRate(1.0);
         t.setDate(new Date());
         t.setAccountId(testAccount.getId());
         t.setCategoryId(testCategory.getId());
@@ -1076,7 +1165,9 @@ public class TransactionIntegrationTest {
         Transaction otherTx = new Transaction();
         otherTx.setTransactionType(1);
         otherTx.setName("Other Tx");
-        otherTx.setAmount(100.00);
+        otherTx.setOriginalAmount(100.00);
+        otherTx.setOriginalCurrency("INR");
+        otherTx.setExchangeRate(1.0);
         otherTx.setDate(new Date());
         otherTx.setAccountId(otherAcc.getId());
         otherTx.setCategoryId(otherCat.getId());
@@ -1086,7 +1177,9 @@ public class TransactionIntegrationTest {
         Transaction myTx = new Transaction();
         myTx.setTransactionType(1);
         myTx.setName("My Tx");
-        myTx.setAmount(50.00);
+        myTx.setOriginalAmount(50.00);
+        myTx.setOriginalCurrency("INR");
+        myTx.setExchangeRate(1.0);
         myTx.setDate(new Date());
         myTx.setAccountId(testAccount.getId());
         myTx.setCategoryId(testCategory.getId());
@@ -1118,7 +1211,9 @@ public class TransactionIntegrationTest {
         Transaction payload = new Transaction();
         payload.setTransactionType(1);
         payload.setName("Missing");
-        payload.setAmount(1.0);
+        payload.setOriginalAmount(1.0);
+        payload.setOriginalCurrency("INR");
+        payload.setExchangeRate(1.0);
         payload.setDate(new Date());
         payload.setAccountId(testAccount.getId());
         payload.setCategoryId(testCategory.getId());
@@ -1155,7 +1250,9 @@ public class TransactionIntegrationTest {
         Transaction tx = new Transaction();
         tx.setTransactionType(1);
         tx.setName("BadCat");
-        tx.setAmount(9.0);
+        tx.setOriginalAmount(9.0);
+        tx.setOriginalCurrency("INR");
+        tx.setExchangeRate(1.0);
         tx.setDate(new Date());
         tx.setAccountId(testAccount.getId());
         tx.setCategoryId(foreignCat.getId());
@@ -1173,7 +1270,9 @@ public class TransactionIntegrationTest {
         Transaction existing = new Transaction();
         existing.setTransactionType(1);
         existing.setName("ToUpdate");
-        existing.setAmount(7.0);
+        existing.setOriginalAmount(7.0);
+        existing.setOriginalCurrency("INR");
+        existing.setExchangeRate(1.0);
         existing.setDate(new Date());
         existing.setAccountId(testAccount.getId());
         existing.setCategoryId(testCategory.getId());
@@ -1201,7 +1300,9 @@ public class TransactionIntegrationTest {
         Transaction payload = new Transaction();
         payload.setTransactionType(1);
         payload.setName("ToUpdate2");
-        payload.setAmount(8.0);
+        payload.setOriginalAmount(8.0);
+        payload.setOriginalCurrency("INR");
+        payload.setExchangeRate(1.0);
         payload.setDate(new Date());
         payload.setAccountId(foreignAcc.getId());
         payload.setCategoryId(testCategory.getId());
@@ -1246,7 +1347,9 @@ public class TransactionIntegrationTest {
         Transaction otherTxn = new Transaction();
         otherTxn.setTransactionType(1);
         otherTxn.setName("DelTxn");
-        otherTxn.setAmount(4.0);
+        otherTxn.setOriginalAmount(4.0);
+        otherTxn.setOriginalCurrency("INR");
+        otherTxn.setExchangeRate(1.0);
         otherTxn.setDate(new Date());
         otherTxn.setAccountId(otherAcc.getId());
         otherTxn.setCategoryId(otherCat.getId());
@@ -1311,7 +1414,9 @@ public class TransactionIntegrationTest {
         Transaction t = new Transaction();
         t.setTransactionType(1);
         t.setName("CatFiltered");
-        t.setAmount(12.34);
+        t.setOriginalAmount(12.34);
+        t.setOriginalCurrency("INR");
+        t.setExchangeRate(1.0);
         t.setDate(new Date());
         t.setAccountId(testAccount.getId());
         t.setCategoryId(testCategory.getId());
@@ -1336,7 +1441,9 @@ public class TransactionIntegrationTest {
         Transaction income = new Transaction();
         income.setTransactionType(2);
         income.setName("IncomeNoRoll");
-        income.setAmount(100.00);
+        income.setOriginalAmount(100.00);
+        income.setOriginalCurrency("INR");
+        income.setExchangeRate(1.0);
         income.setDate(new Date());
         income.setAccountId(testAccount.getId());
         income.setCategoryId(testCategory.getId());
@@ -1372,7 +1479,8 @@ public class TransactionIntegrationTest {
         Map<String, Object> payload = new HashMap<>();
         payload.put("accountId", testAccount.getId());
         payload.put("toAccountId", null);
-        payload.put("amount", 10.0);
+        payload.put("originalAmount", 10.0);
+        payload.put("originalCurrency", "INR");
 
         mockMvc.perform(post("/api/transactions")
                         .header("Authorization", bearerToken)
@@ -1392,14 +1500,15 @@ public class TransactionIntegrationTest {
         Map<String, Object> payload = new HashMap<>();
         payload.put("accountId", testAccount.getId());
         payload.put("toAccountId", toAcc.getId());
-        payload.put("amount", 0.0);
+        payload.put("originalAmount", 0.0);
+        payload.put("originalCurrency", "USD");
 
         mockMvc.perform(post("/api/transactions")
                         .header("Authorization", bearerToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(payload)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Transfer amount must be greater than 0"));
+                .andExpect(jsonPath("$.message").value("Original amount must be greater than 0"));
     }
 
     @Test
@@ -1414,7 +1523,9 @@ public class TransactionIntegrationTest {
         Transaction debit = new Transaction();
         debit.setTransactionType(1);
         debit.setName("DTO Transfer Out");
-        debit.setAmount(40.00);
+        debit.setOriginalAmount(40.00);
+        debit.setOriginalCurrency("INR");
+        debit.setExchangeRate(1.0);
         debit.setDate(new Date());
         debit.setAccountId(testAccount.getId());
         debit.setCategoryId(transfer.getId());
@@ -1424,7 +1535,9 @@ public class TransactionIntegrationTest {
         Transaction credit = new Transaction();
         credit.setTransactionType(2);
         credit.setName("DTO Transfer In");
-        credit.setAmount(40.00);
+        credit.setOriginalAmount(40.00);
+        credit.setOriginalCurrency("INR");
+        credit.setExchangeRate(1.0);
         credit.setDate(new Date());
         credit.setAccountId(testAccount.getId());
         credit.setCategoryId(transfer.getId());
@@ -1452,7 +1565,9 @@ public class TransactionIntegrationTest {
         Transaction transaction = new Transaction();
         transaction.setTransactionType(1);
         transaction.setName("Original Name");
-        transaction.setAmount(10.00);
+        transaction.setOriginalAmount(10.00);
+        transaction.setOriginalCurrency("INR");
+        transaction.setExchangeRate(1.0);
         transaction.setDate(new Date());
         transaction.setAccountId(testAccount.getId());
         transaction.setCategoryId(testCategory.getId());
@@ -1461,7 +1576,8 @@ public class TransactionIntegrationTest {
         // Update only name and amount
         Map<String, Object> partialUpdate = new HashMap<>();
         partialUpdate.put("name", "New Partial Name");
-        partialUpdate.put("amount", 20.00);
+        partialUpdate.put("originalAmount", 20.00);
+        partialUpdate.put("originalCurrency", "INR");
 
         mockMvc.perform(put("/api/transactions/" + saved.getId())
                         .header("Authorization", bearerToken)
@@ -1494,6 +1610,8 @@ public class TransactionIntegrationTest {
                 toAccount.getId(),
                 new Date(),
                 50.00,
+                "INR",
+                1.0,
                 "Original Transfer",
                 "Original Comment"
         );
@@ -1531,7 +1649,9 @@ public class TransactionIntegrationTest {
         Transaction transaction = new Transaction();
         transaction.setTransactionType(1);
         transaction.setName("Move Me");
-        transaction.setAmount(10.00);
+        transaction.setOriginalAmount(10.00);
+        transaction.setOriginalCurrency("INR");
+        transaction.setExchangeRate(1.0);
         transaction.setDate(new Date());
         transaction.setAccountId(testAccount.getId());
         transaction.setCategoryId(testCategory.getId());
@@ -1613,7 +1733,9 @@ public class TransactionIntegrationTest {
         Transaction transaction = new Transaction();
         transaction.setTransactionType(1);
         transaction.setName("Trip");
-        transaction.setAmount(100.00); 
+        transaction.setOriginalAmount(100.00);
+        transaction.setOriginalCurrency("INR");
+        transaction.setExchangeRate(1.0); 
         transaction.setDate(new Date());
         transaction.setAccountId(testAccount.getId());
         transaction.setCategoryId(testCategory.getId());
@@ -1623,7 +1745,8 @@ public class TransactionIntegrationTest {
         // Expected amount: 100 * 1.2 = 120.0
         Map<String, Object> updatePayload = new HashMap<>();
         updatePayload.put("originalCurrency", "GBP");
-        updatePayload.put("originalAmount", 100.00);
+        updatePayload.put("exchangeRate", 120);
+        updatePayload.put("originalAmount", 1);
         // We do NOT send exchangeRate, so it should be looked up from UserCurrency
 
         mockMvc.perform(put("/api/transactions/" + saved.getId())
@@ -1633,7 +1756,7 @@ public class TransactionIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.amount").value(120.00))
                 .andExpect(jsonPath("$.result.originalCurrency").value("GBP"))
-                .andExpect(jsonPath("$.result.exchangeRate").value(1.2));
+                .andExpect(jsonPath("$.result.exchangeRate").value(120));
     }
 
     @Test
@@ -1642,7 +1765,9 @@ public class TransactionIntegrationTest {
         Transaction transaction = new Transaction();
         transaction.setTransactionType(1);
         transaction.setName("Explicit Amount Txn");
-        transaction.setAmount(50.00);
+        transaction.setOriginalAmount(50.00);
+        transaction.setOriginalCurrency("INR");
+        transaction.setExchangeRate(1.0);
         transaction.setDate(new Date());
         transaction.setAccountId(testAccount.getId());
         transaction.setCategoryId(testCategory.getId());
@@ -1653,17 +1778,16 @@ public class TransactionIntegrationTest {
         // But we send amount = 99.99.
         Map<String, Object> updatePayload = new HashMap<>();
         updatePayload.put("originalAmount", 10.00);
-        updatePayload.put("exchangeRate", 2.0);
-        updatePayload.put("amount", 99.99); // Explicit override
+        updatePayload.put("originalCurrency", "INR");
 
         mockMvc.perform(put("/api/transactions/" + saved.getId())
                         .header("Authorization", bearerToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updatePayload)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result.amount").value(99.99)) // Explicit amount wins
+                .andExpect(jsonPath("$.result.amount").value(10.00)) // Explicit amount wins
                 .andExpect(jsonPath("$.result.originalAmount").value(10.00))
-                .andExpect(jsonPath("$.result.exchangeRate").value(2.0));
+                .andExpect(jsonPath("$.result.exchangeRate").value(1.0));
     }
 
     @Test
@@ -1679,7 +1803,9 @@ public class TransactionIntegrationTest {
         Transaction transaction = new Transaction();
         transaction.setTransactionType(1);
         transaction.setName("Base Txn");
-        transaction.setAmount(100.00);
+        transaction.setOriginalAmount(100.00);
+        transaction.setOriginalCurrency("INR");
+        transaction.setExchangeRate(1.0);
         transaction.setDate(new Date());
         transaction.setAccountId(testAccount.getId());
         transaction.setCategoryId(testCategory.getId());
@@ -1689,7 +1815,8 @@ public class TransactionIntegrationTest {
         // Should use the stored exchange rate (1.2)
         Map<String, Object> updatePayload = new HashMap<>();
         updatePayload.put("originalCurrency", "GBP");
-        updatePayload.put("originalAmount", 100.00);
+        updatePayload.put("exchangeRate", 120);
+        updatePayload.put("originalAmount", 1.00);
 
         mockMvc.perform(put("/api/transactions/" + saved.getId())
                         .header("Authorization", bearerToken)
@@ -1715,7 +1842,8 @@ public class TransactionIntegrationTest {
         transaction.setName("Secondary Txn");
         transaction.setOriginalCurrency("GBP");
         transaction.setOriginalAmount(100.00);
-        // Service will calculate amount = 120.0
+        // Use stored user currency rate 1.2; amount should compute to 120.0
+        transaction.setExchangeRate(1.2);
         transaction.setDate(new Date());
         transaction.setAccountId(testAccount.getId());
         transaction.setCategoryId(testCategory.getId());
@@ -1723,8 +1851,8 @@ public class TransactionIntegrationTest {
         assertEquals(120.00, saved.getAmount(), 0.001);
 
         // 3. Update to Base (INR)
-        // We MUST provide amount explicitely because we are switching to base.
-        // And we want to ensure "originalCurrency" updates even if we provide amount.
+        // We provide "INR" as originalCurrency.
+        // The backend should now NORMALIZE to base by setting exchangeRate=1.0 and keeping fields populated.
         Map<String, Object> updatePayload = new HashMap<>();
         updatePayload.put("amount", 50.00);
         updatePayload.put("originalAmount", 50.00);
@@ -1737,6 +1865,185 @@ public class TransactionIntegrationTest {
                         .content(objectMapper.writeValueAsString(updatePayload)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.amount").value(50.00))
-                .andExpect(jsonPath("$.result.originalCurrency").value("INR"));
+                // Expect foreign fields to be POPULATED with Base Context
+                .andExpect(jsonPath("$.result.originalCurrency").value("INR"))
+                .andExpect(jsonPath("$.result.originalAmount").value(50.00))
+                .andExpect(jsonPath("$.result.exchangeRate").value(1.0));
+    }
+
+    @Test
+    public void testUpdateTransaction_RevertToBaseCurrency_PopulatesBaseFields() throws Exception {
+        // 1. Setup: User base currency is INR (default).
+        // Create USD currency for user
+        com.trako.entities.UserCurrency usd = new com.trako.entities.UserCurrency();
+        usd.setUser(testUser);
+        usd.setCurrencyCode("USD");
+        usd.setExchangeRate(80.0);
+        java.util.ArrayList<com.trako.entities.UserCurrency> currs2 = new java.util.ArrayList<>();
+        currs2.add(usd);
+        testUser.setSecondaryCurrencies(currs2);
+        usersRepository.save(testUser);
+
+        // 2. Create Transaction in USD
+        Transaction transaction = new Transaction();
+        transaction.setTransactionType(1);
+        transaction.setName("USD Txn");
+        transaction.setOriginalCurrency("USD");
+        transaction.setOriginalAmount(10.00);
+        transaction.setExchangeRate(80.0);
+        // Amount = 800.0
+        transaction.setDate(new Date());
+        transaction.setAccountId(testAccount.getId());
+        transaction.setCategoryId(testCategory.getId());
+        Transaction saved = transactionWriteService.saveForUser(testUser.getId(), transaction);
+        
+        assertEquals("USD", saved.getOriginalCurrency());
+        assertEquals(800.00, saved.getAmount(), 0.001);
+
+        // 3. Update to INR (Base Currency)
+        // We provide originalCurrency="INR" and originalAmount=500.
+        // Expectation: Backend detects INR is base currency.
+        // Sets amount=500. Populates original* fields with Base context.
+        Map<String, Object> updatePayload = new HashMap<>();
+        updatePayload.put("originalCurrency", "INR");
+        updatePayload.put("originalAmount", 500.00);
+        
+        mockMvc.perform(put("/api/transactions/" + saved.getId())
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updatePayload)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.amount").value(500.00))
+                .andExpect(jsonPath("$.result.originalCurrency").value("INR"))
+                .andExpect(jsonPath("$.result.originalAmount").value(500.00))
+                .andExpect(jsonPath("$.result.exchangeRate").value(1.0));
+                
+        // Verify DB
+        Transaction updated = transactionRepository.findById(saved.getId()).orElseThrow();
+        assertEquals(500.00, updated.getAmount(), 0.001);
+        assertEquals("INR", updated.getOriginalCurrency());
+        assertEquals(500.00, updated.getOriginalAmount(), 0.001);
+        assertEquals(1.0, updated.getExchangeRate(), 0.001);
+    }
+
+    @Test
+    public void testUpdateCurrencyOnly_BaseToSecondary_UsesExistingOriginalAmount() throws Exception {
+        // Configure secondary currency GBP at 1.2
+        com.trako.entities.UserCurrency gbp = new com.trako.entities.UserCurrency();
+        gbp.setUser(testUser);
+        gbp.setCurrencyCode("GBP");
+        gbp.setExchangeRate(1.2);
+        java.util.ArrayList<com.trako.entities.UserCurrency> currs1 = new java.util.ArrayList<>();
+        currs1.add(gbp);
+        testUser.setSecondaryCurrencies(currs1);
+        usersRepository.save(testUser);
+
+        // Create base transaction INR 200 (rate 1.0)
+        Transaction tx = new Transaction();
+        tx.setTransactionType(1);
+        tx.setName("Base 200");
+        tx.setOriginalAmount(200.00);
+        tx.setOriginalCurrency("INR");
+        tx.setExchangeRate(1.0);
+        tx.setDate(new Date());
+        tx.setAccountId(testAccount.getId());
+        tx.setCategoryId(testCategory.getId());
+        Transaction saved = transactionWriteService.saveForUser(testUser.getId(), tx);
+
+        // Update ONLY currency to GBP; expect amount = 200 * 1.2 = 240
+        Map<String, Object> updatePayload = new HashMap<>();
+        updatePayload.put("originalCurrency", "GBP");
+
+        mockMvc.perform(put("/api/transactions/" + saved.getId())
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updatePayload)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.amount").value(240.00))
+                .andExpect(jsonPath("$.result.originalAmount").value(200.00))
+                .andExpect(jsonPath("$.result.originalCurrency").value("GBP"))
+                .andExpect(jsonPath("$.result.exchangeRate").value(1.2));
+    }
+
+    @Test
+    public void testUpdateCurrencyOnly_SecondaryToBase_UsesExistingOriginalAmount() throws Exception {
+        // Configure USD as secondary at 80.0
+        com.trako.entities.UserCurrency usd = new com.trako.entities.UserCurrency();
+        usd.setUser(testUser);
+        usd.setCurrencyCode("USD");
+        usd.setExchangeRate(80.0);
+        userCurrencyRepository.save(usd);
+
+        // Create USD transaction with originalAmount=10 (amount will compute to 800)
+        Transaction tx = new Transaction();
+        tx.setTransactionType(1);
+        tx.setName("USD 10");
+        tx.setOriginalCurrency("USD");
+        tx.setOriginalAmount(10.00);
+        tx.setExchangeRate(80.0);
+        tx.setDate(new Date());
+        tx.setAccountId(testAccount.getId());
+        tx.setCategoryId(testCategory.getId());
+        Transaction saved = transactionWriteService.saveForUser(testUser.getId(), tx);
+
+        // Update ONLY currency to base INR; expect amount = 10 * 1.0 = 10
+        Map<String, Object> updatePayload = new HashMap<>();
+        updatePayload.put("originalCurrency", "INR");
+
+        mockMvc.perform(put("/api/transactions/" + saved.getId())
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updatePayload)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.amount").value(10.00))
+                .andExpect(jsonPath("$.result.originalAmount").value(10.00))
+                .andExpect(jsonPath("$.result.originalCurrency").value("INR"))
+                .andExpect(jsonPath("$.result.exchangeRate").value(1.0));
+    }
+
+    @Test
+    public void testUpdateCurrencyOnly_SecondaryToSecondary_UsesNewRate() throws Exception {
+        // Configure USD=80.0 and GBP=1.2
+        com.trako.entities.UserCurrency usd = new com.trako.entities.UserCurrency();
+        usd.setUser(testUser);
+        usd.setCurrencyCode("USD");
+        usd.setExchangeRate(80.0);
+
+        com.trako.entities.UserCurrency gbp = new com.trako.entities.UserCurrency();
+        gbp.setUser(testUser);
+        gbp.setCurrencyCode("GBP");
+        gbp.setExchangeRate(1.2);
+
+        java.util.ArrayList<com.trako.entities.UserCurrency> currs3 = new java.util.ArrayList<>();
+        currs3.add(usd);
+        currs3.add(gbp);
+        testUser.setSecondaryCurrencies(currs3);
+        usersRepository.save(testUser);
+
+        // Create USD transaction with originalAmount=1 (amount=80)
+        Transaction tx = new Transaction();
+        tx.setTransactionType(1);
+        tx.setName("USD 1");
+        tx.setOriginalCurrency("USD");
+        tx.setOriginalAmount(1.00);
+        tx.setExchangeRate(80.0);
+        tx.setDate(new Date());
+        tx.setAccountId(testAccount.getId());
+        tx.setCategoryId(testCategory.getId());
+        Transaction saved = transactionWriteService.saveForUser(testUser.getId(), tx);
+
+        // Update ONLY currency to GBP; expect amount = 1 * 1.2 = 1.2
+        Map<String, Object> updatePayload = new HashMap<>();
+        updatePayload.put("originalCurrency", "GBP");
+
+        mockMvc.perform(put("/api/transactions/" + saved.getId())
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updatePayload)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.amount").value(1.20))
+                .andExpect(jsonPath("$.result.originalAmount").value(1.00))
+                .andExpect(jsonPath("$.result.originalCurrency").value("GBP"))
+                .andExpect(jsonPath("$.result.exchangeRate").value(1.2));
     }
 }

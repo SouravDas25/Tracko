@@ -3,6 +3,8 @@ package com.trako.entities;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import org.hibernate.annotations.Generated;
+import org.hibernate.annotations.GenerationTime;
 
 import java.util.Date;
 
@@ -31,15 +33,19 @@ public class Transaction {
     @Column(name = "date")
     private Date date;
 
-    @Column(name = "amount")
+    @Generated(GenerationTime.ALWAYS)
+    @Column(name = "amount", insertable = false, updatable = false)
     private Double amount;
 
+    @NotNull
     @Column(name = "original_currency", length = 3)
     private String originalCurrency;
 
+    @NotNull
     @Column(name = "original_amount")
     private Double originalAmount;
 
+    @NotNull
     @Column(name = "exchange_rate")
     private Double exchangeRate;
 

@@ -239,18 +239,18 @@ class _RecurringTransactionFormPageState
       rt.name = _nameController.text;
 
       double inputAmount = _castAmountText2Double(_amountController.text);
+      // Always set original fields, even for base currency
+      rt.originalCurrency = _selectedCurrency;
+      rt.originalAmount = inputAmount;
+
       if (_selectedCurrency != _baseCurrency) {
-        rt.originalCurrency = _selectedCurrency;
-        rt.originalAmount = inputAmount;
-        rt.exchangeRate = double.tryParse(_exchangeRateController.text);
-        rt.amount = inputAmount * (rt.exchangeRate ?? 1.0);
+        rt.exchangeRate = double.tryParse(_exchangeRateController.text) ?? 1.0;
       } else {
-        rt.amount = inputAmount;
-        rt.originalCurrency =
-            ""; // Send empty to signal clearing of foreign currency fields
-        rt.originalAmount = null;
-        rt.exchangeRate = null;
+        rt.exchangeRate = 1.0;
       }
+
+      // Legacy amount field (still used for display in UI until refreshed)
+      rt.amount = inputAmount * (rt.exchangeRate ?? 1.0);
 
       rt.transactionType = _transactionType;
       rt.frequency = _frequency;

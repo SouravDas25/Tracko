@@ -72,7 +72,7 @@ public class CategoryIntegrationTest {
 
         testUser = new User();
         testUser.setName("Test User");
-        testUser.setPhoneNo("1234567890");
+        testUser.setPhoneNo(generateUniquePhone());
         testUser.setEmail("test@example.com");
         testUser.setPassword("password");
         testUser = usersRepository.save(testUser);
@@ -83,6 +83,12 @@ public class CategoryIntegrationTest {
                 Collections.emptyList()
         );
         bearerToken = "Bearer " + jwtTokenUtil.generateToken(principal);
+    }
+
+    private String generateUniquePhone() {
+        long base = Math.abs(System.nanoTime());
+        long tenDigits = (base % 9_000_000_000L) + 1_000_000_000L; // ensure exactly 10 digits [1,000,000,000 - 9,999,999,999]
+        return String.valueOf(tenDigits);
     }
 
     @Test
@@ -129,7 +135,7 @@ public class CategoryIntegrationTest {
     public void testGetAllCategories_doesNotReturnOtherUsersCategories() throws Exception {
         User other = new User();
         other.setName("OtherU");
-        other.setPhoneNo("7777777777");
+        other.setPhoneNo(generateUniquePhone());
         other.setEmail("otheru@example.com");
         other.setPassword("other_pass");
         other = usersRepository.save(other);
@@ -155,7 +161,7 @@ public class CategoryIntegrationTest {
     public void testGetCategoryByIdUnauthorizedForForeignUser() throws Exception {
         User other = new User();
         other.setName("OtherCat");
-        other.setPhoneNo("8888888888");
+        other.setPhoneNo(generateUniquePhone());
         other.setEmail("othercat@example.com");
         other.setPassword("othercat_pass");
         other = usersRepository.save(other);
@@ -174,7 +180,7 @@ public class CategoryIntegrationTest {
     public void testUpdateCategoryUnauthorizedForForeignUser() throws Exception {
         User other = new User();
         other.setName("UpdOtherCat");
-        other.setPhoneNo("9999999999");
+        other.setPhoneNo(generateUniquePhone());
         other.setEmail("updothercat@example.com");
         other.setPassword("updothercat_pass");
         other = usersRepository.save(other);
@@ -198,7 +204,7 @@ public class CategoryIntegrationTest {
     public void testDeleteCategoryUnauthorizedForForeignUser() throws Exception {
         User other = new User();
         other.setName("DelOtherCat");
-        other.setPhoneNo("6666666666");
+        other.setPhoneNo(generateUniquePhone());
         other.setEmail("delothercat@example.com");
         other.setPassword("delothercat_pass");
         other = usersRepository.save(other);
@@ -238,7 +244,9 @@ public class CategoryIntegrationTest {
         Transaction t = new Transaction();
         t.setTransactionType(1);
         t.setName("Tx");
-        t.setAmount(10.0);
+        t.setOriginalAmount(10.0);
+        t.setOriginalCurrency("INR");
+        t.setExchangeRate(1.0);
         t.setDate(new java.util.Date());
         t.setAccountId(account.getId());
         t.setCategoryId(category.getId());
@@ -274,7 +282,9 @@ public class CategoryIntegrationTest {
         com.trako.entities.RecurringTransaction rt = new com.trako.entities.RecurringTransaction();
         rt.setUserId(testUser.getId());
         rt.setName("R1");
-        rt.setAmount(50.0);
+        rt.setOriginalAmount(50.0);
+        rt.setOriginalCurrency("INR");
+        rt.setExchangeRate(1.0);
         rt.setAccountId(a1.getId());
         rt.setToAccountId(a2.getId());
         rt.setCategoryId(category.getId());

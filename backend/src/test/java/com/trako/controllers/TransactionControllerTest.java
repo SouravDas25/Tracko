@@ -6,6 +6,7 @@ import com.trako.entities.Transaction;
 import com.trako.entities.User;
 import com.trako.repositories.AccountRepository;
 import com.trako.repositories.CategoryRepository;
+import com.trako.repositories.UserCurrencyRepository;
 import com.trako.services.JwtUserDetailsService;
 import com.trako.services.TransactionService;
 import com.trako.services.TransactionWriteService;
@@ -59,6 +60,9 @@ public class TransactionControllerTest {
     private CategoryRepository categoryRepository;
 
     @MockBean
+    private UserCurrencyRepository userCurrencyRepository;
+
+    @MockBean
     private JwtTokenUtil jwtTokenUtil;
 
     @MockBean
@@ -73,7 +77,9 @@ public class TransactionControllerTest {
         testTransaction.setId(1L);
         testTransaction.setTransactionType(1);
         testTransaction.setName("Lunch");
-        testTransaction.setAmount(25.50);
+        testTransaction.setOriginalAmount(25.50);
+        testTransaction.setOriginalCurrency("INR");
+        testTransaction.setExchangeRate(1.0);
         testTransaction.setDate(new Date());
         testTransaction.setAccountId(1L);
         testTransaction.setCategoryId(1L);

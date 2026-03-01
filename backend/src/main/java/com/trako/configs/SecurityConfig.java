@@ -45,7 +45,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    @Profile("dev")
+    @Profile({"dev", "test"})
     public SecurityFilterChain devSecurityFilterChain(HttpSecurity http,
                                                       JwtRequestFilter jwtRequestFilter,
                                                       JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,

@@ -321,10 +321,14 @@ public class StatsServiceIntegrationTest {
         if (amount == null) {
             // Keep TransactionWriteService happy while ensuring this row doesn't impact stats totals.
             t.setIsCountable(0);
-            t.setAmount(0.0);
+            t.setOriginalAmount(0.0);
+            t.setOriginalCurrency("INR");
+            t.setExchangeRate(1.0);
         } else {
             t.setIsCountable(isCountable);
-            t.setAmount(amount);
+            t.setOriginalAmount(amount);
+            t.setOriginalCurrency("INR");
+            t.setExchangeRate(1.0);
         }
         t.setDate(d);
         return t;

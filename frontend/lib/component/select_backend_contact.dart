@@ -34,8 +34,8 @@ class _SelectBackendContactList
 
   @override
   void initState() {
-    super.initState();
     _repo = sl<ContactRepository>();
+    super.initState();
   }
 
   @override
