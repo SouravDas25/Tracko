@@ -3,9 +3,14 @@ package com.trako.integration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trako.config.TestJwtSecurityConfig;
 import com.trako.entities.Category;
+import com.trako.entities.Account;
+import com.trako.entities.Transaction;
+import com.trako.entities.Frequency;
 import com.trako.entities.User;
 import com.trako.models.request.CategorySaveRequest;
 import com.trako.repositories.CategoryRepository;
+import com.trako.repositories.AccountRepository;
+import com.trako.repositories.RecurringTransactionRepository;
 import com.trako.repositories.UsersRepository;
 import com.trako.util.JwtTokenUtil;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,10 +48,19 @@ public class CategoryIntegrationTest {
     private CategoryRepository categoryRepository;
 
     @Autowired
+    private AccountRepository accountRepository;
+
+    @Autowired
     private UsersRepository usersRepository;
 
     @Autowired
     private JwtTokenUtil jwtTokenUtil;
+
+    @Autowired
+    private com.trako.services.TransactionWriteService transactionWriteService;
+
+    @Autowired
+    private RecurringTransactionRepository recurringTransactionRepository;
 
     private User testUser;
     private String bearerToken;
@@ -204,6 +218,77 @@ public class CategoryIntegrationTest {
         mockMvc.perform(get("/api/categories/999999")
                         .header("Authorization", bearerToken))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void testDeleteCategory_Fails_WhenTransactionsExist() throws Exception {
+        // Create category
+        Category category = new Category();
+        category.setName("To Keep");
+        category.setUserId(testUser.getId());
+        category = categoryRepository.save(category);
+
+        // Create account
+        Account account = new Account();
+        account.setName("A1");
+        account.setUserId(testUser.getId());
+        account = accountRepository.save(account);
+
+        // Create a transaction under that category
+        Transaction t = new Transaction();
+        t.setTransactionType(1);
+        t.setName("Tx");
+        t.setAmount(10.0);
+        t.setDate(new java.util.Date());
+        t.setAccountId(account.getId());
+        t.setCategoryId(category.getId());
+        t.setIsCountable(1);
+        transactionWriteService.saveForUser(testUser.getId(), t);
+
+        mockMvc.perform(delete("/api/categories/" + category.getId())
+                        .header("Authorization", bearerToken))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("Cannot delete category")));
+    }
+
+    @Test
+    public void testDeleteCategory_Fails_WhenRecurringReferencesExist() throws Exception {
+        // Create category
+        Category category = new Category();
+        category.setName("RecurringRef");
+        category.setUserId(testUser.getId());
+        category = categoryRepository.save(category);
+
+        // Create two accounts
+        Account a1 = new Account();
+        a1.setName("A1");
+        a1.setUserId(testUser.getId());
+        a1 = accountRepository.save(a1);
+
+        Account a2 = new Account();
+        a2.setName("A2");
+        a2.setUserId(testUser.getId());
+        a2 = accountRepository.save(a2);
+
+        // Create a recurring transaction referencing the category
+        com.trako.entities.RecurringTransaction rt = new com.trako.entities.RecurringTransaction();
+        rt.setUserId(testUser.getId());
+        rt.setName("R1");
+        rt.setAmount(50.0);
+        rt.setAccountId(a1.getId());
+        rt.setToAccountId(a2.getId());
+        rt.setCategoryId(category.getId());
+        rt.setTransactionType(1);
+        rt.setFrequency(Frequency.MONTHLY);
+        rt.setStartDate(new java.util.Date());
+        rt.setNextRunDate(new java.util.Date());
+        rt.setIsActive(true);
+        recurringTransactionRepository.save(rt);
+
+        mockMvc.perform(delete("/api/categories/" + category.getId())
+                        .header("Authorization", bearerToken))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("Recurring transactions reference this category")));
     }
 
     @Test

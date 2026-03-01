@@ -2,6 +2,9 @@ package com.trako.services;
 
 import com.trako.entities.Category;
 import com.trako.repositories.CategoryRepository;
+import com.trako.repositories.TransactionRepository;
+import com.trako.repositories.BudgetCategoryAllocationRepository;
+import com.trako.repositories.RecurringTransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +16,15 @@ public class CategoryService {
 
     @Autowired
     private CategoryRepository categoryRepository;
+
+    @Autowired
+    private TransactionRepository transactionRepository;
+
+    @Autowired
+    private BudgetCategoryAllocationRepository budgetCategoryAllocationRepository;
+
+    @Autowired
+    private RecurringTransactionRepository recurringTransactionRepository;
 
     public List<Category> findAll() {
         return categoryRepository.findAll();
@@ -50,6 +62,16 @@ public class CategoryService {
     }
 
     public void delete(Long id) {
+        // Prevent deletion if transactions or budget allocations exist for this category
+        if (transactionRepository.existsByCategoryId(id)) {
+            throw new IllegalArgumentException("Cannot delete category: Transactions exist. Reassign or delete those transactions first.");
+        }
+        if (budgetCategoryAllocationRepository.existsByCategoryId(id)) {
+            throw new IllegalArgumentException("Cannot delete category: Budget allocations exist. Remove allocations first.");
+        }
+        if (recurringTransactionRepository.existsByCategoryId(id)) {
+            throw new IllegalArgumentException("Cannot delete category: Recurring transactions reference this category. Update or delete them first.");
+        }
         categoryRepository.deleteById(id);
     }
 }

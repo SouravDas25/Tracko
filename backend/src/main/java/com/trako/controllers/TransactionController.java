@@ -517,6 +517,9 @@ public class TransactionController {
             }
 
             txToUpdate.setName(request.name() != null ? request.name() : existing.getName());
+            txToUpdate.setComments(request.comments() != null ? request.comments() : existing.getComments());
+            txToUpdate.setDate(request.date() != null ? request.date() : existing.getDate());
+            txToUpdate.setIsCountable(request.isCountable() != null ? request.isCountable() : existing.getIsCountable());
             
             // linkedTransactionId should not be set manually for regular transactions usually, 
             // but we preserve it if it was there (though if it was there, isExistingTransfer would be true)

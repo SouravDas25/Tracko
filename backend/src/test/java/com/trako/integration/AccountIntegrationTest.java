@@ -5,11 +5,13 @@ import com.trako.config.TestJwtSecurityConfig;
 import com.trako.entities.Account;
 import com.trako.entities.Category;
 import com.trako.entities.Transaction;
+import com.trako.entities.Frequency;
 import com.trako.entities.User;
 import com.trako.models.request.AccountSaveRequest;
 import com.trako.repositories.AccountRepository;
 import com.trako.repositories.CategoryRepository;
 import com.trako.repositories.TransactionRepository;
+import com.trako.repositories.RecurringTransactionRepository;
 import com.trako.repositories.UsersRepository;
 import com.trako.services.TransactionWriteService;
 import com.trako.util.JwtTokenUtil;
@@ -65,6 +67,9 @@ public class AccountIntegrationTest {
 
     @Autowired
     private JwtTokenUtil jwtTokenUtil;
+
+    @Autowired
+    private RecurringTransactionRepository recurringTransactionRepository;
 
     private User testUser;
     private String bearerToken;
@@ -311,6 +316,75 @@ public class AccountIntegrationTest {
         mockMvc.perform(get("/api/accounts/999999")
                         .header("Authorization", bearerToken))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void testDeleteAccount_Fails_WhenTransactionsExist() throws Exception {
+        // Create a category and a transaction under the account
+        Account a = new Account();
+        a.setName("A");
+        a.setUserId(testUser.getId());
+        a = accountRepository.save(a);
+
+        Category cat = new Category();
+        cat.setName("TestCat");
+        cat.setUserId(testUser.getId());
+        cat = categoryRepository.save(cat);
+
+        Transaction txn = new Transaction();
+        txn.setTransactionType(1);
+        txn.setName("Tx");
+        txn.setAmount(10.0);
+        txn.setDate(new Date());
+        txn.setAccountId(a.getId());
+        txn.setCategoryId(cat.getId());
+        txn.setIsCountable(1);
+        transactionWriteService.saveForUser(testUser.getId(), txn);
+
+        mockMvc.perform(delete("/api/accounts/" + a.getId())
+                        .header("Authorization", bearerToken))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("Cannot delete account")));
+    }
+
+    @Test
+    public void testDeleteAccount_Fails_WhenRecurringReferencesExist() throws Exception {
+        // Create accounts
+        Account a1 = new Account();
+        a1.setName("A1");
+        a1.setUserId(testUser.getId());
+        a1 = accountRepository.save(a1);
+
+        Account a2 = new Account();
+        a2.setName("A2");
+        a2.setUserId(testUser.getId());
+        a2 = accountRepository.save(a2);
+
+        // Minimal category
+        Category cat = new Category();
+        cat.setName("RecurringCat");
+        cat.setUserId(testUser.getId());
+        cat = categoryRepository.save(cat);
+
+        // Create a recurring transaction referencing the account to be deleted
+        com.trako.entities.RecurringTransaction rt = new com.trako.entities.RecurringTransaction();
+        rt.setUserId(testUser.getId());
+        rt.setName("R1");
+        rt.setAmount(100.0);
+        rt.setAccountId(a1.getId());
+        rt.setToAccountId(a2.getId());
+        rt.setCategoryId(cat.getId());
+        rt.setTransactionType(2);
+        rt.setFrequency(Frequency.MONTHLY);
+        rt.setStartDate(new Date());
+        rt.setNextRunDate(new Date());
+        rt.setIsActive(true);
+        recurringTransactionRepository.save(rt);
+
+        mockMvc.perform(delete("/api/accounts/" + a1.getId())
+                        .header("Authorization", bearerToken))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("Recurring transactions reference this account")));
     }
 
     @Test

@@ -215,6 +215,9 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     List<Transaction> findByAccountIdIn(List<Long> accountIds);
     List<Transaction> findByCategoryId(Long categoryId);
 
+    boolean existsByAccountId(Long accountId);
+    boolean existsByCategoryId(Long categoryId);
+
     void deleteByAccountIdIn(List<Long> accountIds);
     
     @Query("SELECT YEAR(t.date) as y, MONTH(t.date) as m, " +

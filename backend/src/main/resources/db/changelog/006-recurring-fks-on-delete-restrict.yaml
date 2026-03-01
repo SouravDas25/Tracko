@@ -1,0 +1,34 @@
+databaseChangeLog:
+  - changeSet:
+      id: 006-recurring-fks-on-delete-restrict
+      author: cascade
+      preConditions:
+        - tableExists:
+            tableName: recurring_transactions
+      changes:
+        # Add or replace FK for recurring_transactions.account_id -> accounts.id (RESTRICT)
+        - addForeignKeyConstraint:
+            baseTableName: recurring_transactions
+            baseColumnNames: account_id
+            referencedTableName: accounts
+            referencedColumnNames: id
+            constraintName: fk_recurring_account
+            onDelete: RESTRICT
+
+        # Add or replace FK for recurring_transactions.to_account_id -> accounts.id (RESTRICT)
+        - addForeignKeyConstraint:
+            baseTableName: recurring_transactions
+            baseColumnNames: to_account_id
+            referencedTableName: accounts
+            referencedColumnNames: id
+            constraintName: fk_recurring_to_account
+            onDelete: RESTRICT
+
+        # Add or replace FK for recurring_transactions.category_id -> categories.id (RESTRICT)
+        - addForeignKeyConstraint:
+            baseTableName: recurring_transactions
+            baseColumnNames: category_id
+            referencedTableName: categories
+            referencedColumnNames: id
+            constraintName: fk_recurring_category
+            onDelete: RESTRICT

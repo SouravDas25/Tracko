@@ -2,6 +2,8 @@ package com.trako.services;
 
 import com.trako.entities.Account;
 import com.trako.repositories.AccountRepository;
+import com.trako.repositories.TransactionRepository;
+import com.trako.repositories.RecurringTransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +15,12 @@ public class AccountService {
 
     @Autowired
     private AccountRepository accountRepository;
+
+    @Autowired
+    private TransactionRepository transactionRepository;
+
+    @Autowired
+    private RecurringTransactionRepository recurringTransactionRepository;
 
     public List<Account> findAll() {
         return accountRepository.findAll();
@@ -50,6 +58,14 @@ public class AccountService {
     }
 
     public void delete(Long id) {
+        // Prevent deletion if transactions exist for this account
+        if (transactionRepository.existsByAccountId(id)) {
+            throw new IllegalArgumentException("Cannot delete account: Transactions exist. Delete or move transactions first.");
+        }
+        // Prevent deletion if recurring transactions reference this account
+        if (recurringTransactionRepository.existsByAccountId(id) || recurringTransactionRepository.existsByToAccountId(id)) {
+            throw new IllegalArgumentException("Cannot delete account: Recurring transactions reference this account. Update or delete them first.");
+        }
         accountRepository.deleteById(id);
     }
 }

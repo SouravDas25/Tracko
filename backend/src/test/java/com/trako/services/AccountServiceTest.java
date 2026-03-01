@@ -2,6 +2,8 @@ package com.trako.services;
 
 import com.trako.entities.Account;
 import com.trako.repositories.AccountRepository;
+import com.trako.repositories.TransactionRepository;
+import com.trako.repositories.RecurringTransactionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,6 +24,12 @@ public class AccountServiceTest {
 
     @Mock
     private AccountRepository accountRepository;
+
+    @Mock
+    private TransactionRepository transactionRepository;
+
+    @Mock
+    private RecurringTransactionRepository recurringTransactionRepository;
 
     @InjectMocks
     private AccountService accountService;
@@ -82,6 +90,9 @@ public class AccountServiceTest {
 
     @Test
     public void testDelete() {
+        when(transactionRepository.existsByAccountId(1L)).thenReturn(false);
+        when(recurringTransactionRepository.existsByAccountId(1L)).thenReturn(false);
+        when(recurringTransactionRepository.existsByToAccountId(1L)).thenReturn(false);
         doNothing().when(accountRepository).deleteById(1L);
 
         accountService.delete(1L);

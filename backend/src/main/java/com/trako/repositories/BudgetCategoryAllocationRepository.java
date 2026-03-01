@@ -20,6 +20,8 @@ public interface BudgetCategoryAllocationRepository extends JpaRepository<Budget
 
     void deleteByUserId(String userId);
 
+    boolean existsByCategoryId(Long categoryId);
+
     @Modifying
     @Query("UPDATE BudgetCategoryAllocation b SET b.actualSpent = 0.0, b.remainingBalance = b.allocatedAmount WHERE b.userId = :userId")
     void resetActualSpentByUserId(@Param("userId") String userId);
