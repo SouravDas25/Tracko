@@ -77,3 +77,4 @@ yarn-error.log*
 money-manager-converter
 
 backend/**.db
+frontend/.flutter-plugins-dependencies

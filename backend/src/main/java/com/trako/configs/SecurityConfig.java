@@ -31,7 +31,11 @@ public class SecurityConfig {
             "/api/oauth/token",
             "/api/login",
             "/api/health",
-            "/h2-console/**"
+            "/h2-console/**",
+            // OpenAPI / Swagger UI
+            "/v3/api-docs/**",
+            "/swagger-ui.html",
+            "/swagger-ui/**"
     };
 
     @Bean

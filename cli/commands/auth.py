@@ -39,11 +39,12 @@ def cmd_login(args: argparse.Namespace) -> int:
         new_token = result["json"].get("token")
 
     if result["ok"] and new_token:
-        cfg = load_config()
-        cfg["base_url"] = base_url
-        cfg["token"] = new_token
-        save_config(cfg)
-        print("Saved token to", config_path())
+        from ..core.config import get_active_profile_name, update_profile
+        
+        active_profile = get_active_profile_name()
+        update_profile(active_profile, {"base_url": base_url, "token": new_token})
+        
+        print(f"Saved token to profile '{active_profile}' in", config_path())
         return 0
 
     return 1
@@ -61,20 +62,23 @@ def cmd_oauth_token(args: argparse.Namespace) -> int:
         new_token = result["json"].get("token")
 
     if result["ok"] and new_token:
-        cfg = load_config()
-        cfg["base_url"] = base_url
-        cfg["token"] = new_token
-        save_config(cfg)
-        print("Saved token to", config_path())
+        from ..core.config import get_active_profile_name, update_profile
+        
+        active_profile = get_active_profile_name()
+        update_profile(active_profile, {"base_url": base_url, "token": new_token})
+        
+        print(f"Saved token to profile '{active_profile}' in", config_path())
         return 0
 
     return 1
 
 
 def cmd_logout(args: argparse.Namespace) -> int:
-    cfg = load_config()
-    if "token" in cfg:
-        cfg.pop("token", None)
-        save_config(cfg)
-    print("Logged out (token removed)")
+    from ..core.config import get_active_profile_name, update_profile
+    
+    active_profile = get_active_profile_name()
+    # We update with token=None to remove it
+    update_profile(active_profile, {"token": None})
+    
+    print(f"Logged out from profile '{active_profile}' (token removed)")
     return 0

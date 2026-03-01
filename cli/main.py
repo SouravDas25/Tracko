@@ -3,6 +3,7 @@ from .commands import (
     auth,
     budget,
     categories,
+    config,
     contacts,
     currencies,
     health,
@@ -133,6 +134,7 @@ def build_parser() -> argparse.ArgumentParser:
     # Register module parsers
     health.setup_parser(sub)
     auth.setup_parser(sub)
+    config.setup_parser(sub)
     users.setup_parser(sub)
     accounts.setup_parser(sub)
     categories.setup_parser(sub)

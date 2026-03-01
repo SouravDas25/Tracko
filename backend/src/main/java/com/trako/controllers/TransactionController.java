@@ -37,6 +37,11 @@ import org.springframework.validation.annotation.Validated;
 import java.util.*;
 import java.util.stream.Collectors;
 
+// OpenAPI annotations
+import io.swagger.v3.oas.annotations.Operation;
+import com.trako.models.responses.ApiResponse;
+import com.trako.dtos.TransactionsPageDTO;
+
 @RestController
 @RequestMapping("/api/transactions")
 @Validated
@@ -141,6 +146,7 @@ public class TransactionController {
      * Returns paginated transactions for the authenticated user for a specific month/year.
      * Transfer credit-side entries are hidden, and transfer transactions are labeled as type=TRANSFER in response.
      */
+    @Operation(summary = "List transactions with optional filters")
     @GetMapping
     public ResponseEntity<?> getAll(
             @RequestParam(required = false) Integer month,
@@ -204,16 +210,16 @@ public class TransactionController {
                 dtos = hideTransferCreditsForDTO(dtos, currentUserId);
                 dtos = markTransferTypeAsTransferForDTO(dtos, currentUserId);
                 
-                Map<String, Object> payload = new HashMap<>();
-                payload.put("month", month);
-                payload.put("year", resolvedYear);
-                payload.put("page", dtoPage.getNumber());
-                payload.put("size", dtoPage.getSize());
-                payload.put("totalElements", dtoPage.getTotalElements());
-                payload.put("totalPages", dtoPage.getTotalPages());
-                payload.put("hasNext", dtoPage.hasNext());
-                payload.put("hasPrevious", dtoPage.hasPrevious());
-                payload.put("transactions", dtos);
+                TransactionsPageDTO payload = new TransactionsPageDTO();
+                payload.setMonth(month);
+                payload.setYear(resolvedYear);
+                payload.setPage(dtoPage.getNumber());
+                payload.setSize(dtoPage.getSize());
+                payload.setTotalElements(dtoPage.getTotalElements());
+                payload.setTotalPages(dtoPage.getTotalPages());
+                payload.setHasNext(dtoPage.hasNext());
+                payload.setHasPrevious(dtoPage.hasPrevious());
+                payload.setTransactions(dtos);
                 
                 return Response.ok(payload);
             }
@@ -248,16 +254,16 @@ public class TransactionController {
             transactions = hideTransferCredits(transactions, currentUserId);
             transactions = markTransferTypeAsTransfer(transactions, currentUserId);
 
-            Map<String, Object> payload = new HashMap<>();
-            payload.put("month", month);
-            payload.put("year", resolvedYear);
-            payload.put("page", transactionPage.getNumber());
-            payload.put("size", transactionPage.getSize());
-            payload.put("totalElements", transactionPage.getTotalElements());
-            payload.put("totalPages", transactionPage.getTotalPages());
-            payload.put("hasNext", transactionPage.hasNext());
-            payload.put("hasPrevious", transactionPage.hasPrevious());
-            payload.put("transactions", transactions);
+            TransactionsPageDTO payload = new TransactionsPageDTO();
+            payload.setMonth(month);
+            payload.setYear(resolvedYear);
+            payload.setPage(transactionPage.getNumber());
+            payload.setSize(transactionPage.getSize());
+            payload.setTotalElements(transactionPage.getTotalElements());
+            payload.setTotalPages(transactionPage.getTotalPages());
+            payload.setHasNext(transactionPage.hasNext());
+            payload.setHasPrevious(transactionPage.hasPrevious());
+            payload.setTransactions(transactions);
 
             return Response.ok(payload);
         } catch (UserNotLoggedInException e) {
@@ -294,6 +300,7 @@ public class TransactionController {
      * GET /api/transactions/total-income
      * Returns total income for the currently authenticated user within the provided date range (inclusive).
      */
+    @Operation(summary = "Get total income in a date range")
     @GetMapping("/total-income")
     public ResponseEntity<?> getMyTotalIncome(
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
@@ -311,6 +318,7 @@ public class TransactionController {
      * GET /api/transactions/total-expense
      * Returns total expense for the currently authenticated user within the provided date range (inclusive).
      */
+    @Operation(summary = "Get total expense in a date range")
     @GetMapping("/total-expense")
     public ResponseEntity<?> getMyTotalExpense(
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
@@ -329,6 +337,7 @@ public class TransactionController {
      * Returns income/expense/balance summary for the authenticated user in the date range.
      * If accountIds are provided (comma-separated), the summary is limited to those accounts.
      */
+    @Operation(summary = "Get income/expense summary in a date range")
     @GetMapping("/summary")
     public ResponseEntity<?> getMySummary(
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
@@ -355,6 +364,7 @@ public class TransactionController {
      * Returns a single transaction by id only if it belongs to the authenticated user
      * (ownership verified through the transaction's account).
      */
+    @Operation(summary = "Get a transaction by ID")
     @GetMapping("/{id}")
     public ResponseEntity<?> getById(@PathVariable @Positive Long id) {
         try {
@@ -383,6 +393,7 @@ public class TransactionController {
      * 
      * <p>Validates that accounts and categories exist and are owned by the current user before saving.
      */
+    @Operation(summary = "Create a transaction or transfer")
     @PostMapping
     public ResponseEntity<?> create(@Valid @RequestBody TransactionRequest request) {
         try {
@@ -494,6 +505,7 @@ public class TransactionController {
      * <p>If the transaction is part of a transfer (has linkedTransactionId), both sides are updated atomically.
      * <p>For regular transactions, verifies that authenticated user all owns an existing/new account plus category.
      */
+    @Operation(summary = "Update a transaction or transfer")
     @PutMapping("/{id}")
     public ResponseEntity<?> update(@PathVariable @Positive Long id, @Valid @RequestBody TransactionRequest request) {
         try {
@@ -629,6 +641,7 @@ public class TransactionController {
      * Deletes a transaction only if it exists and belongs to the authenticated user.
      * If the transaction is part of a transfer (has linkedTransactionId), both sides are deleted atomically.
      */
+    @Operation(summary = "Delete a transaction or transfer")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable @Positive Long id) {
         try {
@@ -670,6 +683,7 @@ public class TransactionController {
      * GET /api/transactions/summary/monthly
      * Returns a list of summaries grouped by month for a specific year.
      */
+    @Operation(summary = "Monthly summaries for a year")
     @GetMapping("/summary/monthly")
     public ResponseEntity<?> getMonthlySummaries(
             @RequestParam(required = false) Integer year,
@@ -692,6 +706,7 @@ public class TransactionController {
      * GET /api/transactions/summary/yearly
      * Returns a list of summaries grouped by year.
      */
+    @Operation(summary = "Yearly summaries")
     @GetMapping("/summary/yearly")
     public ResponseEntity<?> getYearlySummaries(
             @RequestParam(required = false) String accountIds) {

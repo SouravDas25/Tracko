@@ -308,6 +308,17 @@ python -m cli --base-url http://localhost:8080 --token <TOKEN> budget view
 
 For detailed documentation, see `cli/README_SEEDING.md`.
 
+### CSV Import Tool
+
+For migrating data from other sources (like Money Manager), a CSV import tool is available.
+
+```bash
+cd money-manager-converter
+python import_csv_to_tracko.py "data.csv" --user "Name"
+```
+
+See `money-manager-converter/README.md` for full documentation.
+
 ## Documentation
 
 - **[Startup Guide](README-STARTUP.md)** - Detailed startup instructions and troubleshooting
@@ -328,8 +339,9 @@ The CLI provides direct access to all Tracko backend APIs for testing, debugging
 The CLI is located in the `cli/` directory:
 
 ```bash
-cd cli
 python -m cli --help
+
+alias tk="python -m cli"
 ```
 
 #### Authentication

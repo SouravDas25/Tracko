@@ -12,8 +12,10 @@ import uuid
 from datetime import datetime, timedelta
 try:
     from tracko_cli.core import http as tracko_http
+    from tracko_cli.core import config as tracko_config
 except Exception:
     from core import http as tracko_http
+    from core import config as tracko_config
 
 
 def log(message):
@@ -682,9 +684,18 @@ def create_sample_splits(base_url: str, token: str, account_ids: list, category_
 
 def main():
     """Main seeding function"""
-    base_url = "http://localhost:8080"
-    
+    # Determine base_url from active CLI profile (current working directory)
+    try:
+        active_profile = tracko_config.get_active_profile_name()
+        profile_cfg = tracko_config.get_active_profile_config()
+        base_url = profile_cfg.get("base_url") or tracko_http.DEFAULT_BASE_URL
+    except Exception:
+        # Fallback to default if config module is unavailable
+        active_profile = "default"
+        base_url = tracko_http.DEFAULT_BASE_URL
+
     log("Starting Tracko database seeding...")
+    log(f"Active profile: {active_profile}")
     log(f"Target API: {base_url}")
     
     # Wait for API to be available
