@@ -42,6 +42,9 @@ public class TransactionWriteService {
     @Autowired
     private CurrencyService currencyService;
 
+    @Autowired
+    private TransferService transferService;
+
     private void validateAccountOwnership(String userId, Long accountId) {
         if (accountId == null) return;
         Account account = accountRepository.findById(accountId)
@@ -77,13 +80,13 @@ public class TransactionWriteService {
         
         // CASE 1: Convert Regular Transaction -> Transfer
         if (!isExistingTransfer && request.toAccountId() != null) {
-            return convertRegularToTransfer(userId, id, request)[0];
+            return transferService.convertRegularToTransfer(userId, id, request)[0];
         }
 
         // CASE 2: Convert Transfer -> Regular Transaction
         // If it's a transfer and we are changing the category, we assume conversion to regular.
         if (isExistingTransfer && request.categoryId() != null) {
-            return convertTransferToRegular(userId, id, request);
+            return transferService.convertTransferToRegular(userId, id, request);
         }
 
         // CASE 3: Updating a TRANSFER (that stays a transfer)
@@ -124,7 +127,7 @@ public class TransactionWriteService {
             throw new IllegalArgumentException("Original amount must be greater than 0");
         }
 
-        Transaction[] result = updateTransfer(
+        Transaction[] result = transferService.updateTransfer(
             userId,
             existing.getId(),
             resolvedFromAccountId,
@@ -255,7 +258,7 @@ public class TransactionWriteService {
             Double exchangeRate = currencyService.resolveExchangeRate(userId, request.originalCurrency(), request.exchangeRate());
 
             // Delegate to internal transfer creation
-            Transaction[] result = createTransfer(
+            Transaction[] result = transferService.createTransfer(
                 userId,
                 fromAccountId,
                 request.toAccountId(),
@@ -361,105 +364,6 @@ public class TransactionWriteService {
     }
 
     /**
-     * Creates a transfer between two accounts atomically.
-     * 
-     * @param userId authenticated user id
-     * @param fromAccountId source account
-     * @param toAccountId destination account
-     * @param date transfer date (applied to both sides). If null, defaults to current date.
-     * @param originalAmount transfer amount
-     * @param name optional transfer name/description
-     * @param comments optional comments
-     * @return array containing [debitTransaction, creditTransaction]
-     */
-    @Transactional
-    public Transaction[] createTransfer(String userId, Long fromAccountId, Long toAccountId, 
-                                       Date date, Double originalAmount, String originalCurrency, Double exchangeRate, String name, String comments) {
-        logger.info("Creating transfer: {} {} from account {} to account {} for user {}", 
-                   originalAmount, originalCurrency, fromAccountId, toAccountId, userId);
-
-        // Validate currency fields
-        if (originalCurrency == null) {
-            throw new IllegalArgumentException("Original currency is required for transfer");
-        }
-        if (originalAmount == null) {
-            throw new IllegalArgumentException("Original amount is required for transfer");
-        }
-        if (exchangeRate == null) {
-            throw new IllegalArgumentException("Exchange rate is required for transfer");
-        }
-
-        // Validation
-        if (fromAccountId.equals(toAccountId)) {
-            throw new IllegalArgumentException("fromAccountId and toAccountId cannot be same");
-        }
-
-        // Validate accounts ownership
-        validateAccountOwnership(userId, fromAccountId);
-        validateAccountOwnership(userId, toAccountId);
-
-        // Find or create TRANSFER category
-        Long transferCategoryId = getOrCreateTransferCategory(userId);
-
-        // Use same date for both transactions (ensures consistency)
-        Date transferDate = (date != null) ? date : new Date();
-
-        // Create DEBIT transaction (money out from source account)
-        Transaction debit = new Transaction();
-        debit.setAccountId(fromAccountId);
-        debit.setCategoryId(transferCategoryId);
-        debit.setTransactionType(TransactionType.DEBIT);
-        debit.setOriginalAmount(originalAmount);
-        debit.setOriginalCurrency(originalCurrency);
-        debit.setExchangeRate(exchangeRate);
-        debit.setDate(transferDate);
-        debit.setIsCountable(0);  // Transfers don't count as income/expense
-        debit.setName(name != null ? name : "Transfer Out");
-        debit.setComments(comments);
-
-        Transaction savedDebit = saveForUser(userId, debit);
-
-        // Validation: ensure debit was saved
-        if (savedDebit == null || savedDebit.getId() == null) {
-            logger.error("Failed to save debit transaction for transfer from account {} to {}", 
-                        fromAccountId, toAccountId);
-            throw new RuntimeException("Failed to create debit transaction");
-        }
-
-        // Create CREDIT transaction (money in to destination account)
-        Transaction credit = new Transaction();
-        credit.setAccountId(toAccountId);
-        credit.setCategoryId(transferCategoryId);
-        credit.setTransactionType(TransactionType.CREDIT);
-        credit.setOriginalAmount(originalAmount);
-        credit.setOriginalCurrency(originalCurrency);
-        credit.setExchangeRate(exchangeRate);
-        credit.setDate(transferDate);
-        credit.setIsCountable(0);  // Transfers don't count as income/expense
-        credit.setName(name != null ? name : "Transfer In");
-        credit.setComments(comments);
-        credit.setLinkedTransactionId(savedDebit.getId());  // Link to debit transaction
-
-        Transaction savedCredit = saveForUser(userId, credit);
-
-        // Validation: ensure credit was saved
-        if (savedCredit == null || savedCredit.getId() == null) {
-            logger.error("Failed to save credit transaction for transfer from account {} to {}", 
-                        fromAccountId, toAccountId);
-            throw new RuntimeException("Failed to create credit transaction");
-        }
-
-        // Update debit to link back to credit (bidirectional link)
-        savedDebit.setLinkedTransactionId(savedCredit.getId());
-        saveForUser(userId, savedDebit);
-
-        logger.info("Transfer created successfully: {} {} from account {} to account {} (debit: {}, credit: {})",
-                   originalAmount, originalCurrency, fromAccountId, toAccountId, savedDebit.getId(), savedCredit.getId());
-
-        return new Transaction[]{savedDebit, savedCredit};
-    }
-
-    /**
      * Unified entry point for deleting a transaction or transfer.
      * Handles checking if it's a transfer and delegating accordingly.
      */
@@ -471,44 +375,10 @@ public class TransactionWriteService {
         // We delegate to specific methods which will re-fetch and verify ownership/locking.
         // This is slightly inefficient (double fetch) but safe and consistent with existing granular methods.
         if (tx.getLinkedTransactionId() != null) {
-             deleteTransfer(userId, id);
+             transferService.deleteTransfer(userId, id);
         } else {
              deleteForUser(userId, id);
         }
-    }
-
-    /**
-     * Deletes a transfer (both linked transactions) atomically.
-     * 
-     * @param userId authenticated user id
-     * @param transactionId either the debit or credit transaction id
-     */
-    @Transactional
-    public void deleteTransfer(String userId, Long transactionId) {
-        logger.info("Deleting transfer containing transaction {} for user {}", transactionId, userId);
-
-        Transaction transaction = transactionRepository.findById(transactionId)
-                .orElseThrow(() -> new NotFoundException("Transaction not found: " + transactionId));
-
-        // Verify this is actually a transfer
-        if (transaction.getLinkedTransactionId() == null) {
-            throw new IllegalArgumentException("Transaction " + transactionId + " is not part of a transfer");
-        }
-
-        Long linkedId = transaction.getLinkedTransactionId();
-        Transaction linkedTx = transactionRepository.findById(linkedId)
-                .orElseThrow(() -> new NotFoundException("Linked transaction not found: " + linkedId));
-
-        // Verify ownership of both transactions
-        validateAccountOwnership(userId, transaction.getAccountId());
-        validateAccountOwnership(userId, linkedTx.getAccountId());
-
-        // Delete both transactions atomically
-        logger.info("Deleting transfer: transaction {} and linked transaction {}", transactionId, linkedId);
-        deleteForUser(userId, transactionId);
-        deleteForUser(userId, linkedId);
-
-        logger.info("Transfer deleted successfully: transactions {} and {}", transactionId, linkedId);
     }
 
     /**
@@ -542,267 +412,5 @@ public class TransactionWriteService {
 
         // Save the transaction
         return saveForUser(userId, transaction);
-    }
-
-    /**
-     * Updates a transfer between two accounts atomically.
-     * This updates both the debit and credit sides of the transfer.
-     * 
-     * @param userId authenticated user id
-     * @param transactionId id of either the debit or credit transaction
-     * @param fromAccountId new source account (or null to keep existing)
-     * @param toAccountId new destination account (or null to keep existing)
-     * @param date new transfer date (or null to keep existing)
-     * @param originalAmount new transfer amount (or null to keep existing)
-     * @param name new transfer name/description (or null to keep existing)
-     * @param comments new comments (or null to keep existing)
-     * @return array containing updated [debitTransaction, creditTransaction]
-     */
-    @Transactional
-    public Transaction[] updateTransfer(String userId, Long transactionId, 
-                                       Long fromAccountId, Long toAccountId,
-                                       Date date,
-                                       Double originalAmount, String originalCurrency, Double exchangeRate, String name, String comments) {
-        logger.info("Updating transfer containing transaction {} for user {}", transactionId, userId);
-
-        Transaction transaction = transactionRepository.findById(transactionId)
-                .orElseThrow(() -> new IllegalArgumentException("Transaction not found: " + transactionId));
-
-        // Verify this is actually a transfer
-        if (transaction.getLinkedTransactionId() == null) {
-            throw new IllegalArgumentException("Transaction " + transactionId + " is not part of a transfer");
-        }
-
-        Long linkedId = transaction.getLinkedTransactionId();
-        Transaction linkedTx = transactionRepository.findById(linkedId)
-                .orElseThrow(() -> new IllegalArgumentException("Linked transaction not found: " + linkedId));
-
-        // Determine which is debit and which is credit
-        Transaction debit = transaction.getTransactionType() != null && transaction.getTransactionType() == TransactionType.DEBIT ? transaction : linkedTx;
-        Transaction credit = transaction.getTransactionType() != null && transaction.getTransactionType() == TransactionType.CREDIT ? transaction : linkedTx;
-
-        // Verify ownership of both accounts
-        validateAccountOwnership(userId, debit.getAccountId());
-        validateAccountOwnership(userId, credit.getAccountId());
-
-        // Update fields if provided
-        if (date != null) {
-            debit.setDate(date);
-            credit.setDate(date);
-        }
-        
-        if (originalAmount != null && originalAmount > 0) {
-            debit.setOriginalAmount(originalAmount);
-            credit.setOriginalAmount(originalAmount);
-        }
-        
-        if (originalCurrency != null) {
-            debit.setOriginalCurrency(originalCurrency);
-            credit.setOriginalCurrency(originalCurrency);
-        }
-        
-        if (exchangeRate != null && exchangeRate > 0) {
-            debit.setExchangeRate(exchangeRate);
-            credit.setExchangeRate(exchangeRate);
-        }
-        
-        if (name != null) {
-            debit.setName(name);
-            credit.setName(name);
-        }
-        
-        if (comments != null) {
-            debit.setComments(comments);
-            credit.setComments(comments);
-        }
-
-        // Handle account changes if provided
-        Long newDebitAccountId = debit.getAccountId();
-        if (fromAccountId != null && !fromAccountId.equals(debit.getAccountId())) {
-            validateAccountOwnership(userId, fromAccountId);
-            newDebitAccountId = fromAccountId;
-        }
-        
-        Long newCreditAccountId = credit.getAccountId();
-        if (toAccountId != null && !toAccountId.equals(credit.getAccountId())) {
-            validateAccountOwnership(userId, toAccountId);
-            newCreditAccountId = toAccountId;
-        }
-
-        // Validate accounts are different
-        if (newDebitAccountId.equals(newCreditAccountId)) {
-            throw new IllegalArgumentException("Transfer source and destination accounts cannot be the same");
-        }
-
-        // Apply account changes
-        if (fromAccountId != null && !fromAccountId.equals(debit.getAccountId())) {
-            debit.setAccountId(fromAccountId);
-        }
-        if (toAccountId != null && !toAccountId.equals(credit.getAccountId())) {
-            credit.setAccountId(toAccountId);
-        }
-
-        // Save both transactions
-        Transaction updatedDebit = saveForUser(userId, debit);
-        Transaction updatedCredit = saveForUser(userId, credit);
-
-        logger.info("Transfer updated successfully: transactions {} and {}", updatedDebit.getId(), updatedCredit.getId());
-
-        return new Transaction[]{updatedDebit, updatedCredit};
-    }
-
-    /**
-     * Converts a regular transaction into a transfer.
-     * 
-     * @param userId authenticated user id
-     * @param transactionId id of the regular transaction
-     * @param request the update request containing toAccountId and other field updates
-     * @return array containing [debit, credit]
-     */
-    @Transactional
-    public Transaction[] convertRegularToTransfer(String userId, Long transactionId, TransactionRequest request) {
-        Long toAccountId = request.toAccountId();
-        logger.info("Converting regular transaction {} to transfer (to account {}) for user {}", transactionId, toAccountId, userId);
-
-        Transaction existing = transactionRepository.findById(transactionId)
-                .orElseThrow(() -> new NotFoundException("Transaction not found: " + transactionId));
-
-        if (existing.getLinkedTransactionId() != null) {
-            throw new IllegalArgumentException("Transaction is already a transfer");
-        }
-
-        // Validate account ownership
-        validateAccountOwnership(userId, existing.getAccountId());
-        validateAccountOwnership(userId, toAccountId);
-        
-        if (existing.getAccountId().equals(toAccountId)) {
-            throw new IllegalArgumentException("Source and destination accounts cannot be the same");
-        }
-
-        // Apply updates from request to the "existing" transaction (which becomes DEBIT/Source side)
-        if (request.date() != null) existing.setDate(request.date());
-        if (request.name() != null) existing.setName(request.name());
-        if (request.comments() != null) existing.setComments(request.comments());
-        if (request.originalAmount() != null) existing.setOriginalAmount(request.originalAmount());
-        if (request.originalCurrency() != null) existing.setOriginalCurrency(request.originalCurrency());
-        if (request.exchangeRate() != null) existing.setExchangeRate(request.exchangeRate());
-
-        // Determine Transfer Category
-        Long transferCategoryId = getOrCreateTransferCategory(userId);
-
-        // Update the existing transaction to be the DEBIT side of the transfer
-        existing.setCategoryId(transferCategoryId);
-        existing.setTransactionType(TransactionType.DEBIT);
-        existing.setIsCountable(0); // Transfers are not countable
-
-        // Create mate (CREDIT side)
-        Transaction credit = new Transaction();
-        credit.setAccountId(toAccountId);
-        credit.setCategoryId(transferCategoryId);
-        credit.setTransactionType(TransactionType.CREDIT);
-        // Copy fields from updated existing
-        credit.setOriginalAmount(existing.getOriginalAmount());
-        credit.setOriginalCurrency(existing.getOriginalCurrency());
-        credit.setExchangeRate(existing.getExchangeRate());
-        credit.setDate(existing.getDate());
-        credit.setIsCountable(0);
-        credit.setName(existing.getName());
-        credit.setComments(existing.getComments());
-        
-        Transaction savedCredit = saveForUser(userId, credit); // Save first to get ID
-        
-        // Link them
-        existing.setLinkedTransactionId(savedCredit.getId());
-        Transaction savedDebit = saveForUser(userId, existing);
-        
-        savedCredit.setLinkedTransactionId(savedDebit.getId());
-        saveForUser(userId, savedCredit);
-
-        return new Transaction[]{savedDebit, savedCredit};
-    }
-
-    /**
-     * Converts a transfer transaction into a regular transaction.
-     * The linked transaction (mate) is deleted.
-     * 
-     * @param userId authenticated user id
-     * @param transactionId id of the transaction to keep (converted to regular)
-     * @param request updates to apply during conversion (category, type, etc.)
-     * @return updated regular transaction
-     */
-    @Transactional
-    public Transaction convertTransferToRegular(String userId, Long transactionId, TransactionRequest request) {
-        logger.info("Converting transfer transaction {} to regular for user {}", transactionId, userId);
-
-        Transaction existing = transactionRepository.findById(transactionId)
-                .orElseThrow(() -> new NotFoundException("Transaction not found: " + transactionId));
-
-        if (existing.getLinkedTransactionId() == null) {
-            throw new IllegalArgumentException("Transaction is not a transfer");
-        }
-
-        Long linkedId = existing.getLinkedTransactionId();
-        Transaction linkedTx = transactionRepository.findById(linkedId)
-                .orElseThrow(() -> new NotFoundException("Linked transaction not found: " + linkedId));
-
-        // Verify ownership
-        validateAccountOwnership(userId, existing.getAccountId());
-
-        // Unlink existing
-        existing.setLinkedTransactionId(null);
-        
-        // Apply updates from request
-        if (request.categoryId() != null) {
-            existing.setCategoryId(request.categoryId());
-        }
-        if (request.transactionType() != null) {
-            existing.setTransactionType(request.transactionType());
-        }
-        if (request.name() != null) {
-            existing.setName(request.name());
-        }
-        if (request.isCountable() != null) {
-            existing.setIsCountable(request.isCountable());
-        } else {
-            // Default to countable if not specified when converting to regular?
-            existing.setIsCountable(1); 
-        }
-        
-        // Save the one we keep
-        Transaction saved = saveForUser(userId, existing);
-
-        // Delete the mate
-        deleteForUser(userId, linkedId);
-
-        return saved;
-    }
-
-    /**
-     * Checks if a transaction is part of a transfer.
-     */
-    public boolean isTransfer(Long transactionId) {
-        return transactionRepository.findById(transactionId)
-                .map(tx -> tx.getLinkedTransactionId() != null)
-                .orElse(false);
-    }
-
-    /**
-     * Gets or creates the TRANSFER category for a user.
-     * 
-     * <p>This method is synchronized at the user-level to prevent duplicate creation
-     * during concurrent transfer requests.
-     */
-    private synchronized Long getOrCreateTransferCategory(String userId) {
-        var catList = categoryRepository.findByUserIdAndName(userId, "TRANSFER");
-        if (!catList.isEmpty()) {
-            return catList.get(0).getId();
-        }
-
-        logger.info("Auto-creating TRANSFER category for user: {}", userId);
-        Category category = new Category();
-        category.setName("TRANSFER");
-        category.setUserId(userId);
-        Category saved = categoryRepository.save(category);
-        return saved.getId();
     }
 }

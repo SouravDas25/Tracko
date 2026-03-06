@@ -5,6 +5,7 @@ import com.trako.config.TestJwtSecurityConfig;
 import com.trako.entities.*;
 import com.trako.repositories.*;
 import com.trako.services.TransactionWriteService;
+import com.trako.services.TransferService;
 import com.trako.util.JwtTokenUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,6 +42,7 @@ public class TransactionTypeUpdateTest {
     @Autowired private CategoryRepository categoryRepository;
     @Autowired private TransactionRepository transactionRepository;
     @Autowired private TransactionWriteService transactionWriteService;
+    @Autowired private TransferService transferService;
     @Autowired private JwtTokenUtil jwtTokenUtil;
 
     private User testUser;
@@ -194,7 +196,7 @@ public class TransactionTypeUpdateTest {
     @Test
     public void testUpdateTransferToExpense() throws Exception {
         // Create Transfer (Account 1 -> Account 2)
-        Transaction[] transfer = transactionWriteService.createTransfer(
+        Transaction[] transferPair = transferService.createTransfer(
                 testUser.getId(),
                 account1.getId(),
                 account2.getId(),
@@ -205,7 +207,7 @@ public class TransactionTypeUpdateTest {
                 "Transfer",
                 "Comments"
         );
-        Transaction debitSide = transfer[0];
+        Transaction debitSide = transferPair[0];
         
         // Update to Regular Expense (DEBIT)
         // We signal conversion to regular by ... ? 
@@ -238,7 +240,7 @@ public class TransactionTypeUpdateTest {
         // Verify the OTHER side is deleted or handled?
         // Ideally, if we convert Transfer -> Expense, the other side (Credit) should be deleted.
         // Let's check if the credit side still exists.
-        boolean creditExists = transactionRepository.existsById(transfer[1].getId());
+        boolean creditExists = transactionRepository.existsById(transferPair[1].getId());
         assertThat(creditExists).isFalse();
     }
 }

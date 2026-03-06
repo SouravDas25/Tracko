@@ -58,8 +58,8 @@ public class RecurringTransaction {
 
     @NotNull
     @Column(name = "transaction_type")
-    @Convert(converter = TransactionTypeConverter.class)
-    private TransactionType transactionType;
+    @Convert(converter = RecurringTransactionTypeConverter.class)
+    private RecurringTransactionType transactionType;
 
     @NotNull
     @Enumerated(EnumType.STRING)
@@ -174,11 +174,11 @@ public class RecurringTransaction {
         this.toAccountId = toAccountId;
     }
 
-    public TransactionType getTransactionType() {
+    public RecurringTransactionType getTransactionType() {
         return transactionType;
     }
 
-    public void setTransactionType(TransactionType transactionType) {
+    public void setTransactionType(RecurringTransactionType transactionType) {
         this.transactionType = transactionType;
     }
 

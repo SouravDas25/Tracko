@@ -119,7 +119,7 @@ public class RecurringTransactionIntegrationNewTest {
         rt.setName("R");
         rt.setAccountId(accA1.getId());
         rt.setCategoryId(catA1.getId());
-        rt.setTransactionType(TransactionType.DEBIT);
+        rt.setTransactionType(com.trako.entities.RecurringTransactionType.DEBIT);
         rt.setFrequency(Frequency.MONTHLY);
         Date now = new Date();
         rt.setStartDate(now);
@@ -143,7 +143,7 @@ public class RecurringTransactionIntegrationNewTest {
         rt.setName("R");
         rt.setAccountId(accA1.getId());
         rt.setCategoryId(catA1.getId());
-        rt.setTransactionType(TransactionType.DEBIT);
+        rt.setTransactionType(com.trako.entities.RecurringTransactionType.DEBIT);
         rt.setFrequency(Frequency.MONTHLY);
         Date now = new Date();
         rt.setStartDate(now);

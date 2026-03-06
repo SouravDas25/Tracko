@@ -17,6 +17,7 @@ import com.trako.repositories.TransactionRepository;
 import com.trako.repositories.UserCurrencyRepository;
 import com.trako.repositories.UsersRepository;
 import com.trako.services.TransactionWriteService;
+import com.trako.services.TransferService;
 import com.trako.util.JwtTokenUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -63,6 +64,9 @@ public class TransactionIntegrationTest {
 
     @Autowired
     private TransactionWriteService transactionWriteService;
+
+    @Autowired
+    private TransferService transferService;
 
     @Autowired
     private AccountRepository accountRepository;
@@ -197,7 +201,7 @@ public class TransactionIntegrationTest {
         toAccount = accountRepository.save(toAccount);
 
         Date initialDate = new GregorianCalendar(2020, Calendar.FEBRUARY, 1).getTime();
-        Transaction[] created = transactionWriteService.createTransfer(
+        Transaction[] created = transferService.createTransfer(
                 testUser.getId(),
                 testAccount.getId(),
                 toAccount.getId(),
@@ -529,7 +533,7 @@ public class TransactionIntegrationTest {
         expense.setIsCountable(1);
         transactionWriteService.saveForUser(testUser.getId(), expense);
 
-        transactionWriteService.createTransfer(
+        transferService.createTransfer(
                 testUser.getId(),
                 testAccount.getId(),
                 toAccount.getId(),
@@ -586,7 +590,7 @@ public class TransactionIntegrationTest {
         expense.setIsCountable(1);
         transactionWriteService.saveForUser(testUser.getId(), expense);
 
-        transactionWriteService.createTransfer(
+        transferService.createTransfer(
                 testUser.getId(),
                 testAccount.getId(),
                 toAccount.getId(),
@@ -1605,7 +1609,7 @@ public class TransactionIntegrationTest {
         toAccount.setUserId(testUser.getId());
         toAccount = accountRepository.save(toAccount);
 
-        Transaction[] transfer = transactionWriteService.createTransfer(
+        Transaction[] transferPair = transferService.createTransfer(
                 testUser.getId(),
                 testAccount.getId(),
                 toAccount.getId(),
@@ -1616,7 +1620,7 @@ public class TransactionIntegrationTest {
                 "Original Transfer",
                 "Original Comment"
         );
-        Transaction debit = transfer[0];
+        Transaction debit = transferPair[0];
 
         // Update name via partial PUT on the debit transaction
         Map<String, Object> partialUpdate = new HashMap<>();

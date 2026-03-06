@@ -15,6 +15,7 @@ import com.trako.repositories.TransactionRepository;
 import com.trako.repositories.RecurringTransactionRepository;
 import com.trako.repositories.UsersRepository;
 import com.trako.services.TransactionWriteService;
+import com.trako.services.TransferService;
 import com.trako.util.JwtTokenUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -62,6 +63,9 @@ public class AccountIntegrationTest {
 
     @Autowired
     private TransactionWriteService transactionWriteService;
+
+    @Autowired
+    private TransferService transferService;
 
     @Autowired
     private UsersRepository usersRepository;
@@ -151,7 +155,7 @@ public class AccountIntegrationTest {
         transactionWriteService.saveForUser(testUser.getId(), expense);
 
         // Transfers (isCountable=0) should NOT affect summary, but MUST affect balance via linkedTransactionId
-        transactionWriteService.createTransfer(
+        transferService.createTransfer(
                 testUser.getId(),
                 a1.getId(),
                 a2.getId(),
@@ -163,7 +167,7 @@ public class AccountIntegrationTest {
                 ""
         );
 
-        transactionWriteService.createTransfer(
+        transferService.createTransfer(
                 testUser.getId(),
                 a2.getId(),
                 a1.getId(),
@@ -387,8 +391,8 @@ public class AccountIntegrationTest {
         rt.setAccountId(a1.getId());
         rt.setToAccountId(a2.getId());
         rt.setCategoryId(cat.getId());
-        rt.setTransactionType(TransactionType.CREDIT);
-        rt.setFrequency(Frequency.MONTHLY);
+        rt.setTransactionType(com.trako.entities.RecurringTransactionType.DEBIT);
+        rt.setFrequency(com.trako.entities.Frequency.MONTHLY);
         rt.setStartDate(new Date());
         rt.setNextRunDate(new Date());
         rt.setIsActive(true);

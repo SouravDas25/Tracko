@@ -2,6 +2,7 @@ package com.trako.services;
 
 import com.trako.entities.Frequency;
 import com.trako.entities.RecurringTransaction;
+import com.trako.entities.RecurringTransactionType;
 import com.trako.entities.Transaction;
 import com.trako.entities.TransactionType;
 import com.trako.models.request.TransactionRequest;
@@ -27,6 +28,12 @@ public class RecurringTransactionService {
 
     @Autowired
     private TransactionWriteService transactionWriteService;
+
+    @Autowired
+    private TransferService transferService;
+
+    @Autowired
+    private CurrencyService currencyService;
 
     public List<RecurringTransaction> getAll(String userId) {
         return recurringTransactionRepository.findByUserId(userId);
@@ -123,9 +130,13 @@ public class RecurringTransactionService {
 
         logger.info("Processing recurring transaction: {} (ID: {})", rt.getName(), rt.getId());
 
+        boolean isTransferType = rt.getTransactionType() == RecurringTransactionType.TRANSFER;
+        boolean hasDistinctToAccount = rt.getToAccountId() != null
+                && !rt.getToAccountId().equals(rt.getAccountId());
+
         // Create the actual transaction/transfer
-        if (rt.getToAccountId() != null && rt.getTransactionType() == TransactionType.TRANSFER) { // Transfer
-             transactionWriteService.createTransfer(
+        if (isTransferType && hasDistinctToAccount) { // Transfer between two different accounts
+            transferService.createTransfer(
                     rt.getUserId(),
                     rt.getAccountId(),
                     rt.getToAccountId(),
@@ -136,7 +147,17 @@ public class RecurringTransactionService {
                     rt.getName(),
                     "Recurring Transfer: " + rt.getFrequency()
             );
-        } else { // Regular Transaction
+        } else { // Regular Transaction (including same-account "transfer" cases)
+            TransactionType txType;
+            if (rt.getTransactionType() == RecurringTransactionType.DEBIT) {
+                txType = TransactionType.DEBIT;
+            } else if (rt.getTransactionType() == RecurringTransactionType.CREDIT) {
+                txType = TransactionType.CREDIT;
+            } else {
+                // For TRANSFER recurring type without a distinct toAccount, default to DEBIT
+                txType = TransactionType.DEBIT;
+            }
+
             TransactionRequest request = new TransactionRequest(
                     null, // id
                     rt.getAccountId(), // accountId
@@ -144,7 +165,7 @@ public class RecurringTransactionService {
                     rt.getName(), // name
                     "Recurring Transaction: " + rt.getFrequency(), // comments
                     rt.getCategoryId(), // categoryId
-                    rt.getTransactionType(), // transactionType
+                    txType, // transactionType
                     1, // isCountable
                     rt.getOriginalCurrency(), // originalCurrency
                     rt.getOriginalAmount(), // originalAmount

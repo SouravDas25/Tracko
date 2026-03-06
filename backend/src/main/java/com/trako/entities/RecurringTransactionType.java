@@ -5,15 +5,14 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 import java.util.Arrays;
 
-public enum TransactionType {
+public enum RecurringTransactionType {
     DEBIT(1),
-    CREDIT(2);
-
-    public static final int TRANSFER_RENDERING_VALUE = 3; // Virtual type for frontend rendering
+    CREDIT(2),
+    TRANSFER(3);
 
     private final int value;
 
-    TransactionType(int value) {
+    RecurringTransactionType(int value) {
         this.value = value;
     }
 
@@ -23,10 +22,10 @@ public enum TransactionType {
     }
 
     @JsonCreator
-    public static TransactionType fromValue(int value) {
-        return Arrays.stream(TransactionType.values())
+    public static RecurringTransactionType fromValue(int value) {
+        return Arrays.stream(RecurringTransactionType.values())
                 .filter(t -> t.value == value)
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Unknown TransactionType value: " + value));
+                .orElseThrow(() -> new IllegalArgumentException("Unknown RecurringTransactionType value: " + value));
     }
 }

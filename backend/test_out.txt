@@ -1,0 +1,315 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -------------------< com.github.souravdas25:tracko >--------------------
+[INFO] Building Tracko 0.0.1
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- jacoco:0.8.11:prepare-agent (default) @ tracko ---
+[INFO] argLine set to -javaagent:C:\\Users\\soura\\.m2\\repository\\org\\jacoco\\org.jacoco.agent\\0.8.11\\org.jacoco.agent-0.8.11-runtime.jar=destfile=C:\\Users\\soura\\Documents\\Personal\\Tracko\\backend\\target\\jacoco.exec
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ tracko ---
+[INFO] Copying 6 resources from src\main\resources to target\classes
+[INFO] Copying 3 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.11.0:compile (default-compile) @ tracko ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ tracko ---
+[INFO] Copying 1 resource from src\test\resources to target\test-classes
+[INFO] 
+[INFO] --- compiler:3.11.0:testCompile (default-testCompile) @ tracko ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] --- surefire:3.1.2:test (default-test) @ tracko ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running com.trako.integration.RecurringTransactionIntegrationTest
+22:31:04.989 [main] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.trako.integration.RecurringTransactionIntegrationTest]: RecurringTransactionIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+22:31:05.835 [main] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.trako.Application for test class com.trako.integration.RecurringTransactionIntegrationTest
+22:31:06.519 [main] INFO org.springframework.boot.devtools.restart.RestartApplicationListener -- Restart disabled due to context in which it is running
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.2.2)
+
+2026-03-06T22:31:07.399Z  INFO 25004 --- [           main] .t.i.RecurringTransactionIntegrationTest : Starting RecurringTransactionIntegrationTest using Java 17.0.14 with PID 25004 (started by Sourav in C:\Users\soura\Documents\Personal\Tracko\backend)
+2026-03-06T22:31:07.401Z  INFO 25004 --- [           main] .t.i.RecurringTransactionIntegrationTest : The following 1 profile is active: "test"
+2026-03-06T22:31:10.110Z  INFO 25004 --- [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-03-06T22:31:10.414Z  INFO 25004 --- [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 262 ms. Found 12 JPA repository interfaces.
+2026-03-06T22:31:12.179Z  INFO 25004 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-03-06T22:31:12.687Z  INFO 25004 --- [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection conn0: url=jdbc:h2:mem:testdb user=SA
+2026-03-06T22:31:12.690Z  INFO 25004 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-03-06T22:31:12.819Z  INFO 25004 --- [           main] liquibase.database                       : Set default schema name to PUBLIC
+2026-03-06T22:31:14.201Z  INFO 25004 --- [           main] liquibase.changelog                      : Creating database history table with name: PUBLIC.DATABASECHANGELOG
+2026-03-06T22:31:14.555Z  INFO 25004 --- [           main] liquibase.changelog                      : Reading from PUBLIC.DATABASECHANGELOG
+2026-03-06T22:31:14.979Z  INFO 25004 --- [           main] liquibase.lockservice                    : Successfully acquired change log lock
+2026-03-06T22:31:14.983Z  INFO 25004 --- [           main] liquibase.command                        : Using deploymentId: 2836274983
+2026-03-06T22:31:14.991Z  INFO 25004 --- [           main] liquibase.changelog                      : Reading from PUBLIC.DATABASECHANGELOG
+Running Changeset: db/changelog/000-consolidated-changelog.yaml::001-initial-schema::sd25
+2026-03-06T22:31:15.242Z  INFO 25004 --- [           main] liquibase.changelog                      : Table users created
+2026-03-06T22:31:15.255Z  INFO 25004 --- [           main] liquibase.changelog                      : Unique constraint added to users(phone_no)
+2026-03-06T22:31:15.257Z  INFO 25004 --- [           main] liquibase.changelog                      : Unique constraint added to users(global_id)
+2026-03-06T22:31:15.257Z  INFO 25004 --- [           main] liquibase.changelog                      : ChangeSet db/changelog/000-consolidated-changelog.yaml::001-initial-schema::sd25 ran successfully in 43ms
+Running Changeset: db/changelog/000-consolidated-changelog.yaml::002-user-currencies-table::sd25
+2026-03-06T22:31:15.314Z  INFO 25004 --- [           main] liquibase.changelog                      : Table user_currencies created
+2026-03-06T22:31:15.336Z  INFO 25004 --- [           main] liquibase.changelog                      : Foreign key constraint added to user_currencies (user_id)
+2026-03-06T22:31:15.339Z  INFO 25004 --- [           main] liquibase.changelog                      : Unique constraint added to user_currencies(user_id, currency_code)
+2026-03-06T22:31:15.339Z  INFO 25004 --- [           main] liquibase.changelog                      : ChangeSet db/changelog/000-consolidated-changelog.yaml::002-user-currencies-table::sd25 ran successfully in 52ms
+Running Changeset: db/changelog/000-consolidated-changelog.yaml::004-contacts-create-table::sd25
+2026-03-06T22:31:15.346Z  INFO 25004 --- [           main] liquibase.changelog                      : Table contacts created
+2026-03-06T22:31:15.346Z  INFO 25004 --- [           main] liquibase.changelog                      : ChangeSet db/changelog/000-consolidated-changelog.yaml::004-contacts-create-table::sd25 ran successfully in 4ms
+Running Changeset: db/changelog/000-consolidated-changelog.yaml::004-contacts-fk-user::sd25
+2026-03-06T22:31:15.357Z  INFO 25004 --- [           main] liquibase.changelog                      : Foreign key constraint added to contacts (user_id)
+2026-03-06T22:31:15.357Z  INFO 25004 --- [           main] liquibase.changelog                      : ChangeSet db/changelog/000-consolidated-changelog.yaml::004-contacts-fk-user::sd25 ran successfully in 3ms
+Running Changeset: db/changelog/000-consolidated-changelog.yaml::004-contacts-index-user::sd25
+2026-03-06T22:31:15.365Z  INFO 25004 --- [           main] liquibase.changelog                      : Index idx_contacts_user created
+2026-03-06T22:31:15.366Z  INFO 25004 --- [           main] liquibase.changelog                      : ChangeSet db/changelog/000-consolidated-changelog.yaml::004-contacts-index-user::sd25 ran successfully in 5ms
+Running Changeset: db/changelog/000-consolidated-changelog.yaml::003-add-missing-tables::sd25
+2026-03-06T22:31:15.392Z  INFO 25004 --- [           main] liquibase.changelog                      : Table accounts created
+2026-03-06T22:31:15.398Z  INFO 25004 --- [           main] liquibase.changelog                      : Foreign key constraint added to accounts (user_id)
+2026-03-06T22:31:15.401Z  INFO 25004 --- [           main] liquibase.changelog                      : Index idx_accounts_user created
+2026-03-06T22:31:15.409Z  INFO 25004 --- [           main] liquibase.changelog                      : Table categories created
+2026-03-06T22:31:15.413Z  INFO 25004 --- [           main] liquibase.changelog                      : Foreign key constraint added to categories (user_id)
+2026-03-06T22:31:15.416Z  INFO 25004 --- [           main] liquibase.changelog                      : Foreign key constraint added to categories (parent_category_id)
+2026-03-06T22:31:15.419Z  INFO 25004 --- [           main] liquibase.changelog                      : Index idx_categories_user created
+2026-03-06T22:31:15.419Z  INFO 25004 --- [           main] liquibase.changelog                      : ChangeSet db/changelog/000-consolidated-changelog.yaml::003-add-missing-tables::sd25 ran successfully in 31ms
+Running Changeset: db/changelog/000-consolidated-changelog.yaml::014-unique-accounts-user-name::sd25
+2026-03-06T22:31:15.575Z  INFO 25004 --- [           main] liquibase.changelog                      : Unique constraint added to accounts(user_id, name)
+2026-03-06T22:31:15.577Z  INFO 25004 --- [           main] liquibase.changelog                      : ChangeSet db/changelog/000-consolidated-changelog.yaml::014-unique-accounts-user-name::sd25 ran successfully in 154ms
+Running Changeset: db/changelog/000-consolidated-changelog.yaml::015-unique-categories-user-name::sd25
+2026-03-06T22:31:15.624Z  INFO 25004 --- [           main] liquibase.changelog                      : Unique constraint added to categories(user_id, category_type, name)
+2026-03-06T22:31:15.628Z  INFO 25004 --- [           main] liquibase.changelog                      : Table transactions created
+2026-03-06T22:31:15.691Z  INFO 25004 --- [           main] liquibase.changelog                      : Custom SQL executed
+2026-03-06T22:31:15.697Z  INFO 25004 --- [           main] liquibase.changelog                      : Foreign key constraint added to transactions (account_id)
+2026-03-06T22:31:15.702Z  INFO 25004 --- [           main] liquibase.changelog                      : Foreign key constraint added to transactions (category_id)
+2026-03-06T22:31:15.706Z  INFO 25004 --- [           main] liquibase.changelog                      : Index idx_transactions_date created
+2026-03-06T22:31:15.708Z  INFO 25004 --- [           main] liquibase.changelog                      : Index idx_transactions_account created
+2026-03-06T22:31:15.714Z  INFO 25004 --- [           main] liquibase.changelog                      : Table splits created
+2026-03-06T22:31:15.716Z  INFO 25004 --- [           main] liquibase.changelog                      : Foreign key constraint added to splits (transaction_id)
+2026-03-06T22:31:15.721Z  INFO 25004 --- [           main] liquibase.changelog                      : Foreign key constraint added to splits (user_id)
+2026-03-06T22:31:15.727Z  INFO 25004 --- [           main] liquibase.changelog                      : Foreign key constraint added to splits (contact_id)
+2026-03-06T22:31:15.728Z  INFO 25004 --- [           main] liquibase.changelog                      : Index idx_splits_transaction created
+2026-03-06T22:31:15.729Z  INFO 25004 --- [           main] liquibase.changelog                      : Index idx_splits_user created
+2026-03-06T22:31:15.729Z  INFO 25004 --- [           main] liquibase.changelog                      : Index idx_splits_contact created
+2026-03-06T22:31:15.733Z  INFO 25004 --- [           main] liquibase.changelog                      : Table json_store created
+2026-03-06T22:31:15.733Z  INFO 25004 --- [           main] liquibase.changelog                      : ChangeSet db/changelog/000-consolidated-changelog.yaml::015-unique-categories-user-name::sd25 ran successfully in 130ms
+Running Changeset: db/changelog/000-consolidated-changelog.yaml::006-add-zbb-tables::sd25
+2026-03-06T22:31:15.753Z  INFO 25004 --- [           main] liquibase.changelog                      : Table budget_months created
+2026-03-06T22:31:15.757Z  INFO 25004 --- [           main] liquibase.changelog                      : Foreign key constraint added to budget_months (user_id)
+2026-03-06T22:31:15.759Z  INFO 25004 --- [           main] liquibase.changelog                      : Unique constraint added to budget_months(user_id, budget_month, budget_year)
+2026-03-06T22:31:15.761Z  INFO 25004 --- [           main] liquibase.changelog                      : Table budget_category_allocations created
+2026-03-06T22:31:15.768Z  INFO 25004 --- [           main] liquibase.changelog                      : Foreign key constraint added to budget_category_allocations (budget_month_id)
+2026-03-06T22:31:15.771Z  INFO 25004 --- [           main] liquibase.changelog                      : Foreign key constraint added to budget_category_allocations (category_id)
+2026-03-06T22:31:15.774Z  INFO 25004 --- [           main] liquibase.changelog                      : Foreign key constraint added to budget_category_allocations (user_id)
+2026-03-06T22:31:15.775Z  INFO 25004 --- [           main] liquibase.changelog                      : Unique constraint added to budget_category_allocations(budget_month_id, category_id)
+2026-03-06T22:31:15.777Z  INFO 25004 --- [           main] liquibase.changelog                      : Table allocation_rules created
+2026-03-06T22:31:15.782Z  INFO 25004 --- [           main] liquibase.changelog                      : Foreign key constraint added to allocation_rules (user_id)
+2026-03-06T22:31:15.783Z  INFO 25004 --- [           main] liquibase.changelog                      : ChangeSet db/changelog/000-consolidated-changelog.yaml::006-add-zbb-tables::sd25 ran successfully in 31ms
+Running Changeset: db/changelog/000-consolidated-changelog.yaml::012a-add-linked-transaction-id-column::sd25
+2026-03-06T22:31:15.801Z  INFO 25004 --- [           main] liquibase.changelog                      : Columns linked_transaction_id(BIGINT) added to transactions
+2026-03-06T22:31:15.802Z  INFO 25004 --- [           main] liquibase.changelog                      : ChangeSet db/changelog/000-consolidated-changelog.yaml::012a-add-linked-transaction-id-column::sd25 ran successfully in 15ms
+Running Changeset: db/changelog/000-consolidated-changelog.yaml::012b-create-index-linked-transaction-id::sd25
+2026-03-06T22:31:15.853Z  INFO 25004 --- [           main] liquibase.changelog                      : Index idx_transactions_linked created
+2026-03-06T22:31:15.854Z  INFO 25004 --- [           main] liquibase.changelog                      : ChangeSet db/changelog/000-consolidated-changelog.yaml::012b-create-index-linked-transaction-id::sd25 ran successfully in 48ms
+Running Changeset: db/changelog/001-add-recurring-transactions.yaml::001-add-recurring-transactions::Sourav
+2026-03-06T22:31:15.877Z  INFO 25004 --- [           main] liquibase.changelog                      : Table recurring_transactions created
+2026-03-06T22:31:15.881Z  INFO 25004 --- [           main] liquibase.changelog                      : Foreign key constraint added to recurring_transactions (account_id)
+2026-03-06T22:31:15.885Z  INFO 25004 --- [           main] liquibase.changelog                      : Foreign key constraint added to recurring_transactions (to_account_id)
+2026-03-06T22:31:15.887Z  INFO 25004 --- [           main] liquibase.changelog                      : Foreign key constraint added to recurring_transactions (category_id)
+2026-03-06T22:31:15.891Z  INFO 25004 --- [           main] liquibase.changelog                      : Foreign key constraint added to recurring_transactions (user_id)
+2026-03-06T22:31:15.892Z  INFO 25004 --- [           main] liquibase.changelog                      : Index idx_recurring_user created
+2026-03-06T22:31:15.894Z  INFO 25004 --- [           main] liquibase.changelog                      : Index idx_recurring_next_run created
+2026-03-06T22:31:15.895Z  INFO 25004 --- [           main] liquibase.changelog                      : Index idx_recurring_active_next_run created
+2026-03-06T22:31:15.896Z  INFO 25004 --- [           main] liquibase.changelog                      : ChangeSet db/changelog/001-add-recurring-transactions.yaml::001-add-recurring-transactions::Sourav ran successfully in 25ms
+2026-03-06T22:31:15.923Z  INFO 25004 --- [           main] liquibase.util                           : UPDATE SUMMARY
+2026-03-06T22:31:15.923Z  INFO 25004 --- [           main] liquibase.util                           : Run:                         12
+2026-03-06T22:31:15.924Z  INFO 25004 --- [           main] liquibase.util                           : Previously run:               0
+2026-03-06T22:31:15.924Z  INFO 25004 --- [           main] liquibase.util                           : Filtered out:                 0
+2026-03-06T22:31:15.924Z  INFO 25004 --- [           main] liquibase.util                           : -------------------------------
+2026-03-06T22:31:15.924Z  INFO 25004 --- [           main] liquibase.util                           : Total change sets:           12
+2026-03-06T22:31:15.924Z  INFO 25004 --- [           main] liquibase.util                           : Update summary generated
+2026-03-06T22:31:15.933Z  INFO 25004 --- [           main] liquibase.command                        : Update command completed successfully.
+Liquibase: Update has been successful. Rows affected: 12
+2026-03-06T22:31:15.940Z  INFO 25004 --- [           main] liquibase.lockservice                    : Successfully released change log lock
+2026-03-06T22:31:15.941Z  INFO 25004 --- [           main] liquibase.command                        : Command execution complete
+2026-03-06T22:31:16.348Z  INFO 25004 --- [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-03-06T22:31:16.647Z  INFO 25004 --- [           main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.4.1.Final
+2026-03-06T22:31:16.888Z  INFO 25004 --- [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-03-06T22:31:17.576Z  INFO 25004 --- [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-03-06T22:31:17.669Z  WARN 25004 --- [           main] org.hibernate.orm.deprecation            : HHH90000025: H2Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-03-06T22:31:20.210Z  INFO 25004 --- [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-03-06T22:31:20.269Z  INFO 25004 --- [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-03-06T22:31:21.495Z  INFO 25004 --- [           main] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-03-06T22:31:25.672Z  WARN 25004 --- [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-03-06T22:31:28.045Z  WARN 25004 --- [           main] ion$DefaultTemplateResolverConfiguration : Cannot find template location: classpath:/templates/ (please add some templates, check your Thymeleaf configuration, or set spring.thymeleaf.check-template-location=false)
+2026-03-06T22:31:28.383Z  INFO 25004 --- [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-03-06T22:31:28.384Z  INFO 25004 --- [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-03-06T22:31:28.387Z  INFO 25004 --- [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 3 ms
+2026-03-06T22:31:28.427Z  INFO 25004 --- [           main] .t.i.RecurringTransactionIntegrationTest : Started RecurringTransactionIntegrationTest in 21.931 seconds (process running for 26.959)
+2026-03-06T22:31:28.432Z  INFO 25004 --- [           main] com.trako.config.GlobalStartupSeeder     : GlobalStartupSeeder: starting
+2026-03-06T22:31:28.432Z  INFO 25004 --- [           main] com.trako.config.GlobalStartupSeeder     : GlobalStartupSeeder: activeProfiles=[test]
+2026-03-06T22:31:28.432Z  INFO 25004 --- [           main] com.trako.config.GlobalStartupSeeder     : GlobalStartupSeeder: defaultProfiles=[dev]
+2026-03-06T22:31:28.862Z  INFO 25004 --- [           main] com.trako.config.GlobalStartupSeeder     : Seeded sample user: Default User (9999999999)
+2026-03-06T22:31:28.954Z  INFO 25004 --- [           main] com.trako.config.GlobalStartupSeeder     : Seeded sample user: Admin User (0000000000)
+2026-03-06T22:31:28.987Z  INFO 25004 --- [           main] com.trako.config.GlobalStartupSeeder     : GlobalStartupSeeder: dev profile NOT detected, skipping accounts/categories
+2026-03-06T22:31:28.988Z  INFO 25004 --- [           main] com.trako.config.GlobalStartupSeeder     : GlobalStartupSeeder: finished
+OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+2026-03-06T22:31:30.482Z  INFO 25004 --- [           main] c.t.s.RecurringTransactionService        : Found 1 recurring transactions due for processing
+2026-03-06T22:31:30.483Z  INFO 25004 --- [           main] c.t.s.RecurringTransactionService        : Processing recurring transaction: Due Transaction (ID: 1)
+2026-03-06T22:31:30.484Z  INFO 25004 --- [           main] com.trako.services.TransferService       : Creating transfer: 500.0 INR from account 1 to account 1 for user 0faed02d-4109-4bbb-8a21-38d7ccc511f8
+2026-03-06T22:31:30.485Z ERROR 25004 --- [           main] c.t.s.RecurringTransactionService        : Failed to process recurring transaction ID: 1
+
+java.lang.IllegalArgumentException: fromAccountId and toAccountId cannot be same
+	at com.trako.services.TransferService.createTransfer(TransferService.java:103)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:351)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:196)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:163)
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:765)
+	at org.springframework.transaction.interceptor.TransactionInterceptor$1.proceedWithInvocation(TransactionInterceptor.java:123)
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:385)
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:119)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:765)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:717)
+	at com.trako.services.TransferService$$SpringCGLIB$$0.createTransfer(<generated>)
+	at com.trako.services.RecurringTransactionService.processSingleTransaction(RecurringTransactionService.java:135)
+	at com.trako.services.RecurringTransactionService.processDueTransactions(RecurringTransactionService.java:116)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:351)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:196)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:163)
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:765)
+	at org.springframework.transaction.interceptor.TransactionInterceptor$1.proceedWithInvocation(TransactionInterceptor.java:123)
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:385)
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:119)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:765)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:717)
+	at com.trako.services.RecurringTransactionService$$SpringCGLIB$$0.processDueTransactions(<generated>)
+	at com.trako.integration.RecurringTransactionIntegrationTest.testProcessDueTransactions(RecurringTransactionIntegrationTest.java:202)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:728)
+	at org.junit.jupiter.engine.execution.MethodInvocation.proceed(MethodInvocation.java:60)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$ValidatingInvocation.proceed(InvocationInterceptorChain.java:131)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.intercept(TimeoutExtension.java:156)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestableMethod(TimeoutExtension.java:147)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestMethod(TimeoutExtension.java:86)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker$ReflectiveInterceptorCall.lambda$ofVoidMethod$0(InterceptingExecutableInvoker.java:103)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.lambda$invoke$0(InterceptingExecutableInvoker.java:93)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$InterceptedInvocation.proceed(InvocationInterceptorChain.java:106)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.proceed(InvocationInterceptorChain.java:64)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.chainAndInvoke(InvocationInterceptorChain.java:45)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.invoke(InvocationInterceptorChain.java:37)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:92)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:86)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$invokeTestMethod$7(TestMethodTestDescriptor.java:218)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.invokeTestMethod(TestMethodTestDescriptor.java:214)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:139)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:69)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:151)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:141)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:139)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:138)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:95)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:155)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:141)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:139)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:138)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:95)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:155)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:141)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:139)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:138)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:95)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:35)
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:57)
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:54)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:198)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:169)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:93)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.lambda$execute$0(EngineExecutionOrchestrator.java:58)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.withInterceptedStreams(EngineExecutionOrchestrator.java:141)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:57)
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:103)
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:85)
+	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:47)
+	at org.apache.maven.surefire.junitplatform.LazyLauncher.execute(LazyLauncher.java:56)
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.execute(JUnitPlatformProvider.java:184)
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invokeAllTests(JUnitPlatformProvider.java:148)
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invoke(JUnitPlatformProvider.java:122)
+	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:385)
+	at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:162)
+	at org.apache.maven.surefire.booter.ForkedBooter.run(ForkedBooter.java:507)
+	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:495)
+
+[ERROR] Tests run: 1, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 26.62 s <<< FAILURE! -- in com.trako.integration.RecurringTransactionIntegrationTest
+[ERROR] com.trako.integration.RecurringTransactionIntegrationTest.testProcessDueTransactions -- Time elapsed: 1.536 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <1> but was: <0>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:150)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:145)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:531)
+	at com.trako.integration.RecurringTransactionIntegrationTest.testProcessDueTransactions(RecurringTransactionIntegrationTest.java:206)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Failures: 
+[ERROR]   RecurringTransactionIntegrationTest.testProcessDueTransactions:206 expected: <1> but was: <0>
+[INFO] 
+[ERROR] Tests run: 1, Failures: 1, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  33.680 s
+[INFO] Finished at: 2026-03-06T22:31:31Z
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.1.2:test (default-test) on project tracko: There are test failures.
+[ERROR] 
+[ERROR] Please refer to C:\Users\soura\Documents\Personal\Tracko\backend\target\surefire-reports for the individual test results.
+[ERROR] Please refer to dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

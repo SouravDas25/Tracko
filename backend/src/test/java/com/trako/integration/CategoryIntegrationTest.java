@@ -289,7 +289,7 @@ public class CategoryIntegrationTest {
         rt.setAccountId(a1.getId());
         rt.setToAccountId(a2.getId());
         rt.setCategoryId(category.getId());
-        rt.setTransactionType(TransactionType.DEBIT);
+        rt.setTransactionType(com.trako.entities.RecurringTransactionType.DEBIT);
         rt.setFrequency(Frequency.MONTHLY);
         rt.setStartDate(new java.util.Date());
         rt.setNextRunDate(new java.util.Date());

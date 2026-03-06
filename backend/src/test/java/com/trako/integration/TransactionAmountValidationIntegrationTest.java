@@ -5,6 +5,7 @@ import com.trako.config.TestJwtSecurityConfig;
 import com.trako.entities.*;
 import com.trako.repositories.*;
 import com.trako.services.TransactionWriteService;
+import com.trako.services.TransferService;
 import com.trako.util.JwtTokenUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -53,6 +54,9 @@ public class TransactionAmountValidationIntegrationTest {
 
     @Autowired
     private TransactionWriteService transactionWriteService;
+
+    @Autowired
+    private TransferService transferService;
 
     @Autowired
     private JwtTokenUtil jwtTokenUtil;
@@ -164,7 +168,7 @@ public class TransactionAmountValidationIntegrationTest {
     @Test
     public void updateTransfer_setNegativeAmount_returnsBadRequest() throws Exception {
         // create valid transfer via service for setup
-        Transaction[] pair = transactionWriteService.createTransfer(
+        Transaction[] pair = transferService.createTransfer(
                 testUser.getId(),
                 testAccount.getId(),
                 secondAccount.getId(),

@@ -6,6 +6,7 @@ import com.trako.entities.Account;
 import com.trako.entities.Category;
 import com.trako.entities.Frequency;
 import com.trako.entities.RecurringTransaction;
+import com.trako.entities.RecurringTransactionType;
 import com.trako.entities.Transaction;
 import com.trako.entities.TransactionType;
 import com.trako.entities.User;
@@ -121,7 +122,7 @@ public class RecurringTransactionIntegrationTest {
         rt.setExchangeRate(1.0);
         rt.setAccountId(testAccount.getId());
         rt.setCategoryId(testCategory.getId());
-        rt.setTransactionType(TransactionType.DEBIT);
+        rt.setTransactionType(RecurringTransactionType.DEBIT);
         rt.setFrequency(Frequency.MONTHLY);
         rt.setStartDate(new Date());
         rt.setNextRunDate(new Date());
@@ -146,7 +147,7 @@ public class RecurringTransactionIntegrationTest {
         rt.setExchangeRate(1.0); // Base amount in INR (approx)
         rt.setAccountId(testAccount.getId());
         rt.setCategoryId(testCategory.getId());
-        rt.setTransactionType(TransactionType.DEBIT);
+        rt.setTransactionType(RecurringTransactionType.DEBIT);
         rt.setFrequency(Frequency.MONTHLY);
         rt.setStartDate(new Date());
         rt.setNextRunDate(new Date());
@@ -188,8 +189,9 @@ public class RecurringTransactionIntegrationTest {
         rt.setOriginalCurrency("INR");
         rt.setExchangeRate(1.0);
         rt.setAccountId(testAccount.getId());
+        rt.setToAccountId(testAccount.getId());
         rt.setCategoryId(testCategory.getId());
-        rt.setTransactionType(TransactionType.DEBIT);
+        rt.setTransactionType(RecurringTransactionType.TRANSFER);
         rt.setFrequency(Frequency.MONTHLY);
         rt.setStartDate(yesterday);
         rt.setNextRunDate(yesterday);
@@ -241,7 +243,7 @@ public class RecurringTransactionIntegrationTest {
         rt.setAccountId(testAccount.getId());
         rt.setToAccountId(targetAccount.getId()); // Transfer
         rt.setCategoryId(testCategory.getId()); // Usually handled by service but field is required
-        rt.setTransactionType(TransactionType.TRANSFER); // Transfer
+        rt.setTransactionType(RecurringTransactionType.TRANSFER); // Transfer
         rt.setFrequency(Frequency.MONTHLY);
         rt.setStartDate(yesterday);
         rt.setNextRunDate(yesterday);

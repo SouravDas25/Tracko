@@ -4,13 +4,12 @@ import com.trako.entities.Account;
 import com.trako.entities.Category;
 import com.trako.entities.Transaction;
 
-import com.trako.entities.TransactionType;
 import java.util.Date;
 import java.util.List;
 
 public class TransactionDetailDTO {
     private Long id;
-    private TransactionType transactionType;
+    private Integer transactionType; // 1=DEBIT, 2=CREDIT, 3=TRANSFER (rendering value)
     private String name;
     private String comments;
     private Date date;
@@ -28,7 +27,7 @@ public class TransactionDetailDTO {
 
     public TransactionDetailDTO(Transaction transaction, Category category, Account account, List<SplitDetailDTO> splits) {
         this.id = transaction.getId();
-        this.transactionType = transaction.getTransactionType();
+        this.transactionType = transaction.getRenderedTransactionType();
         this.name = transaction.getName();
         this.comments = transaction.getComments();
         this.date = transaction.getDate();
@@ -52,11 +51,11 @@ public class TransactionDetailDTO {
         this.id = id;
     }
 
-    public TransactionType getTransactionType() {
+    public Integer getTransactionType() {
         return transactionType;
     }
 
-    public void setTransactionType(TransactionType transactionType) {
+    public void setTransactionType(Integer transactionType) {
         this.transactionType = transactionType;
     }
 

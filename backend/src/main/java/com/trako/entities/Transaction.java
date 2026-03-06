@@ -1,6 +1,7 @@
 package com.trako.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import org.hibernate.annotations.Generated;
@@ -74,6 +75,9 @@ public class Transaction {
     @JoinColumn(name = "category_id", insertable = false, updatable = false)
     private Category category;
 
+    @Transient
+    private Integer renderedTransactionType;
+
     public Long getId() {
         return id;
     }
@@ -82,12 +86,22 @@ public class Transaction {
         this.id = id;
     }
 
+    @JsonIgnore
     public TransactionType getTransactionType() {
         return transactionType;
     }
 
     public void setTransactionType(TransactionType transactionType) {
         this.transactionType = transactionType;
+    }
+
+    @JsonProperty("transactionType")
+    public Integer getRenderedTransactionType() {
+        return renderedTransactionType != null ? renderedTransactionType : (transactionType != null ? transactionType.getValue() : null);
+    }
+
+    public void setRenderedTransactionType(Integer renderedTransactionType) {
+        this.renderedTransactionType = renderedTransactionType;
     }
 
     public String getName() {

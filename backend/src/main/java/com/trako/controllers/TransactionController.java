@@ -4,7 +4,6 @@ import com.trako.dtos.TransactionDetailDTO;
 import com.trako.dtos.TransactionPeriodSummaryDTO;
 import com.trako.dtos.TransactionSummaryDTO;
 import com.trako.entities.Account;
-import com.trako.entities.Category;
 import com.trako.entities.Transaction;
 import com.trako.entities.TransactionType;
 import com.trako.entities.User;
@@ -37,7 +36,6 @@ import java.util.stream.Collectors;
 
 // OpenAPI annotations
 import io.swagger.v3.oas.annotations.Operation;
-import com.trako.models.responses.ApiResponse;
 import com.trako.dtos.TransactionsPageDTO;
 
 @RestController
@@ -85,7 +83,7 @@ public class TransactionController {
         for (var t : transactions) {
             if (t.getCategoryId() != null && t.getCategoryId().equals(transferCategoryId)
                     && t.getIsCountable() != null && t.getIsCountable() == 0) {
-                t.setTransactionType(TransactionType.TRANSFER); // mark as TRANSFER for response rendering
+                t.setRenderedTransactionType(TransactionType.TRANSFER_RENDERING_VALUE); // mark as TRANSFER for response rendering
             }
         }
         return transactions;
@@ -102,7 +100,7 @@ public class TransactionController {
                     return !(dto.getCategoryId() != null
                             && dto.getCategoryId().equals(transferCategoryId)
                             && dto.getIsCountable() != null && dto.getIsCountable() == 0
-                            && dto.getTransactionType() != null && dto.getTransactionType() == TransactionType.CREDIT);
+                            && dto.getTransactionType() != null && dto.getTransactionType() == TransactionType.CREDIT.getValue());
                 })
                 .collect(Collectors.toList());
     }
@@ -116,7 +114,7 @@ public class TransactionController {
         for (var dto : dtos) {
             if (dto.getCategoryId() != null && dto.getCategoryId().equals(transferCategoryId)
                     && dto.getIsCountable() != null && dto.getIsCountable() == 0) {
-                dto.setTransactionType(TransactionType.TRANSFER); // mark as TRANSFER for response rendering
+                dto.setTransactionType(TransactionType.TRANSFER_RENDERING_VALUE); // mark as TRANSFER for response rendering
             }
         }
         return dtos;
