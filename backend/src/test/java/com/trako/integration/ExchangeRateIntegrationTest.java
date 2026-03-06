@@ -1,6 +1,8 @@
 package com.trako.integration;
 
 import com.trako.config.TestJwtSecurityConfig;
+import com.trako.exceptions.NotFoundException;
+import com.trako.models.external.ExchangeRateApiResponse;
 import com.trako.repositories.UsersRepository;
 import com.trako.services.ExchangeRateService;
 import com.trako.util.JwtTokenUtil;
@@ -61,12 +63,10 @@ public class ExchangeRateIntegrationTest {
 
     @Test
     public void getRatesSuccess() throws Exception {
-        Map<String, Object> payload = new HashMap<>();
         Map<String, Double> rates = new HashMap<>();
         rates.put("EUR", 0.9);
         rates.put("INR", 83.0);
-        payload.put("base_code", "USD");
-        payload.put("rates", rates);
+        ExchangeRateApiResponse payload = new ExchangeRateApiResponse("USD", rates);
 
         when(exchangeRateService.getRates("USD")).thenReturn(payload);
 
@@ -74,18 +74,17 @@ public class ExchangeRateIntegrationTest {
                         .header("Authorization", bearerToken)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result.base_code").value("USD"))
+                .andExpect(jsonPath("$.result.baseCode").value("USD"))
                 .andExpect(jsonPath("$.result.rates.EUR").value(0.9))
                 .andExpect(jsonPath("$.result.rates.INR").value(83.0));
     }
 
     @Test
-    public void getRatesNotFoundWhenServiceReturnsNull() throws Exception {
-        when(exchangeRateService.getRates("ZZZ")).thenReturn(null);
+    public void getRatesNotFoundWhenServiceThrowsException() throws Exception {
+        when(exchangeRateService.getRates("ZZZ")).thenThrow(new NotFoundException("Could not fetch exchange rates"));
 
         mockMvc.perform(get("/api/exchange-rates/ZZZ")
                         .header("Authorization", bearerToken))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Could not fetch exchange rates"));
+                .andExpect(status().isNotFound());
     }
 }

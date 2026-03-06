@@ -212,66 +212,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             @Param("startDate") Date startDate
     );
 
-    @Query("SELECT " +
-            "COALESCE(SUM(CASE WHEN t.transactionType = 2 THEN t.amount ELSE 0 END), 0), " +
-            "COALESCE(SUM(CASE WHEN t.transactionType = 1 THEN t.amount ELSE 0 END), 0), " +
-            "COALESCE(SUM(CASE WHEN t.transactionType = 2 THEN t.amount " +
-            "         WHEN t.transactionType = 1 THEN -t.amount " +
-            "         ELSE 0 END), 0), " +
-            "COUNT(t) " +
-            "FROM Transaction t " +
-            "WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId) " +
-            "AND t.isCountable = 1 " +
-            "AND t.date >= :startDate AND t.date < :endDate")
-    Object[] sumCountableTotalsForUserInRange(
-            @Param("userId") String userId,
-            @Param("startDate") Date startDate,
-            @Param("endDate") Date endDate
-    );
-
-    @Query("SELECT " +
-            "COALESCE(SUM(CASE WHEN t.transactionType = 2 THEN t.amount ELSE 0 END), 0), " +
-            "COALESCE(SUM(CASE WHEN t.transactionType = 1 THEN t.amount ELSE 0 END), 0), " +
-            "COALESCE(SUM(CASE WHEN t.transactionType = 2 THEN t.amount " +
-            "         WHEN t.transactionType = 1 THEN -t.amount " +
-            "         ELSE 0 END), 0), " +
-            "COUNT(t) " +
-            "FROM Transaction t " +
-            "WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId AND a.id IN :accountIds) " +
-            "AND t.isCountable = 1 " +
-            "AND t.date >= :startDate AND t.date < :endDate")
-    Object[] sumCountableTotalsForUserInRangeAndAccounts(
-            @Param("userId") String userId,
-            @Param("accountIds") List<Long> accountIds,
-            @Param("startDate") Date startDate,
-            @Param("endDate") Date endDate
-    );
-
-    @Query("SELECT COALESCE(SUM(CASE WHEN t.transactionType = 2 THEN t.amount " +
-            "         WHEN t.transactionType = 1 THEN -t.amount " +
-            "         ELSE 0 END), 0) " +
-            "FROM Transaction t " +
-            "WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId) " +
-            "AND t.isCountable = 1 " +
-            "AND t.date < :startDate")
-    Double sumNetBeforeDateForUser(
-            @Param("userId") String userId,
-            @Param("startDate") Date startDate
-    );
-
-    @Query("SELECT COALESCE(SUM(CASE WHEN t.transactionType = 2 THEN t.amount " +
-            "         WHEN t.transactionType = 1 THEN -t.amount " +
-            "         ELSE 0 END), 0) " +
-            "FROM Transaction t " +
-            "WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId AND a.id IN :accountIds) " +
-            "AND t.isCountable = 1 " +
-            "AND t.date < :startDate")
-    Double sumNetBeforeDateForUserAndAccounts(
-            @Param("userId") String userId,
-            @Param("accountIds") List<Long> accountIds,
-            @Param("startDate") Date startDate
-    );
-    
     List<Transaction> findByAccountId(Long accountId);
     List<Transaction> findByAccountIdIn(List<Long> accountIds);
     List<Transaction> findByCategoryId(Long categoryId);

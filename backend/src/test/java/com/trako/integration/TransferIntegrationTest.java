@@ -297,7 +297,7 @@ public class TransferIntegrationTest {
                         .header("Authorization", bearerToken))
                 // THEN: Should return success
                 .andExpect(status().isOk())  // 200 OK
-                .andExpect(jsonPath("$.message", containsString("Transfer deleted successfully")));
+                .andExpect(jsonPath("$.message", containsString("Transaction deleted successfully")));
 
         // VERIFY: BOTH transactions should be deleted from database
         assertFalse(transactionRepository.findById(debitId).isPresent(), 
@@ -345,7 +345,7 @@ public class TransferIntegrationTest {
                         .header("Authorization", bearerToken))
                 // THEN: Should still delete both transactions
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message", containsString("Transfer deleted successfully")));
+                .andExpect(jsonPath("$.message", containsString("Transaction deleted successfully")));
 
         // VERIFY: Both transactions deleted (symmetric behavior)
         assertFalse(transactionRepository.findById(debitId).isPresent(), 
@@ -620,7 +620,7 @@ public class TransferIntegrationTest {
         mockMvc.perform(delete("/api/transactions/" + debit.getId())
                         .header("Authorization", bearerToken))
                 .andExpect(status().isOk())  // Should succeed
-                .andExpect(jsonPath("$.message", containsString("Transfer deleted")));
+                .andExpect(jsonPath("$.message", containsString("Transaction deleted successfully")));
 
         // STEP 4: Verify complete cleanup - no transactions left
         List<Transaction> afterDelete = transactionRepository.findAll();
@@ -678,7 +678,7 @@ public class TransferIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message", containsString("Transfer updated successfully")));
+                .andExpect(jsonPath("$.message", containsString("Transaction updated successfully")));
 
         // THEN: Verify both debit AND credit sides are updated with new amount
         Transaction updatedDebit = transactionRepository.findById(debit.getId()).orElseThrow();
@@ -726,10 +726,10 @@ public class TransferIntegrationTest {
         // WHEN: Update name and comments (keeping amount and account same)
         Map<String, Object> updateRequest = new HashMap<>();
         updateRequest.put("accountId", debit.getAccountId());  // REQUIRED @NotNull - Keep same account
-        updateRequest.put("amount", debit.getAmount());  // Keep same amount
+        updateRequest.put("amount", debit.getAmount());  // Keep the same amount
         updateRequest.put("name", "Updated Name");  // NEW NAME: Change from "Old Name"
         updateRequest.put("comments", "Updated Comment");  // NEW COMMENTS: Change from "Old Comment"
-        updateRequest.put("date", debit.getDate());  // Keep same date
+        updateRequest.put("date", debit.getDate());  // Keep the same date
         updateRequest.put("isCountable", debit.getIsCountable());  // Keep same countable status
 
         // Call PUT endpoint to update the transfer
@@ -738,7 +738,7 @@ public class TransferIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message", containsString("Transfer updated successfully")));
+                .andExpect(jsonPath("$.message", containsString("Transaction updated successfully")));
 
         // THEN: Verify BOTH debit and credit have the updated name and comments
         Transaction updatedDebit = transactionRepository.findById(debit.getId()).orElseThrow();
@@ -799,7 +799,7 @@ public class TransferIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message", containsString("Transfer updated successfully")));
+                .andExpect(jsonPath("$.message", containsString("Transaction updated successfully")));
 
         // THEN: Both sides should be updated
         Transaction updatedCredit = transactionRepository.findById(credit.getId()).orElseThrow();

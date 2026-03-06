@@ -134,7 +134,8 @@ public class TransactionControllerTest {
     @Test
     @WithMockUser
     public void testCreate() throws Exception {
-        when(transactionWriteService.createTransaction(anyString(), any(com.trako.models.request.TransactionRequest.class))).thenReturn(testTransaction);
+        when(transactionWriteService.createUnifiedTransaction(anyString(), any(com.trako.models.request.TransactionRequest.class)))
+                .thenReturn(testTransaction);
 
         mockMvc.perform(post("/api/transactions")
                 .with(csrf())
@@ -143,19 +144,19 @@ public class TransactionControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.name").value("Lunch"));
 
-        verify(transactionWriteService, times(1)).createTransaction(anyString(), any(com.trako.models.request.TransactionRequest.class));
+        verify(transactionWriteService, times(1))
+                .createUnifiedTransaction(anyString(), any(com.trako.models.request.TransactionRequest.class));
     }
 
     @Test
     @WithMockUser
     public void testDelete() throws Exception {
-        when(transactionService.findById(1L)).thenReturn(Optional.of(testTransaction));
-        doNothing().when(transactionWriteService).deleteForUser(anyString(), eq(1L));
+        doNothing().when(transactionWriteService).deleteUnifiedTransaction(anyString(), eq(1L));
 
         mockMvc.perform(delete("/api/transactions/1")
                 .with(csrf()))
                 .andExpect(status().isOk());
 
-        verify(transactionWriteService, times(1)).deleteForUser(anyString(), eq(1L));
+        verify(transactionWriteService, times(1)).deleteUnifiedTransaction(anyString(), eq(1L));
     }
 }

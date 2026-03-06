@@ -44,7 +44,7 @@ public class UserService {
     ContactRepository contactRepository;
 
     @Autowired
-    UserCurrencyRepository userCurrencyRepository;
+    CurrencyService currencyService;
 
     @Autowired
     BudgetMonthRepository budgetMonthRepository;
@@ -191,7 +191,7 @@ public class UserService {
         contactRepository.deleteByUserId(userId);
 
         // 10. Delete User Currencies
-        userCurrencyRepository.deleteByUserId(userId);
+        currencyService.deleteAllForUser(userId);
 
         // 11. Delete Accounts
         accountRepository.deleteByUserId(userId);

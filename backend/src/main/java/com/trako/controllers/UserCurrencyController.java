@@ -3,77 +3,60 @@ package com.trako.controllers;
 import com.trako.entities.User;
 import com.trako.entities.UserCurrency;
 import com.trako.models.request.UserCurrencyRequest;
-import com.trako.repositories.UserCurrencyRepository;
+import com.trako.services.CurrencyService;
 import com.trako.services.UserService;
 import com.trako.util.Response;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Pattern;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/user-currencies")
+@Validated
 public class UserCurrencyController {
 
     @Autowired
     UserService userService;
 
     @Autowired
-    UserCurrencyRepository userCurrencyRepository;
+    CurrencyService currencyService;
 
     @GetMapping
     public ResponseEntity<?> getAll() {
-        try {
-            User user = userService.loggedInUser();
-            // Since we changed to EAGER fetch in User, we can just return the list from user
-            // But to maintain backward compatibility/safety, we can still use repository or user.getSecondaryCurrencies()
-            // Using repository ensures we get what's in DB
-            List<UserCurrency> currencies = userCurrencyRepository.findByUserId(user.getId());
-            return Response.ok(currencies);
-        } catch (Exception e) {
-            return Response.unauthorized();
-        }
+        User user = userService.loggedInUser();
+        List<UserCurrency> currencies = currencyService.getAll(user.getId());
+        return Response.ok(currencies);
     }
 
     @PostMapping
     public ResponseEntity<?> save(@Valid @RequestBody UserCurrencyRequest request) {
-        try {
-            User user = userService.loggedInUser();
-            UserCurrency existing = userCurrencyRepository.findByUserIdAndCurrencyCode(user.getId(), request.getCurrencyCode());
-            if (existing != null) {
-                existing.setExchangeRate(request.getExchangeRate());
-                userCurrencyRepository.save(existing);
-            } else {
-                UserCurrency uc = new UserCurrency();
-                uc.setUser(user);
-                uc.setCurrencyCode(request.getCurrencyCode());
-                uc.setExchangeRate(request.getExchangeRate());
-                userCurrencyRepository.save(uc);
-            }
-            return Response.ok("Saved", "Saved successfully");
-        } catch (Exception e) {
-            e.printStackTrace();
-            return Response.unauthorized();
-        }
+        User user = userService.loggedInUser();
+        currencyService.save(user, request.getCurrencyCode(), request.getExchangeRate());
+        return Response.ok("Saved", "Saved successfully");
+    }
+
+    /**
+     * Saves a currency for the logged-in user using an automatically
+     * fetched exchange rate against the user's base currency.
+     */
+    @PostMapping("/auto")
+    public ResponseEntity<?> saveAuto(@RequestParam @Pattern(regexp = "^[A-Z]{3}$", message = "must be a 3-letter currency code") String currencyCode) {
+        User user = userService.loggedInUser();
+        currencyService.saveWithAutoRate(user, currencyCode);
+        return Response.ok("Saved", "Saved successfully");
     }
 
     @DeleteMapping("/{code}")
     public ResponseEntity<?> delete(@PathVariable String code) {
-        try {
-            User user = userService.loggedInUser();
-            UserCurrency existing = userCurrencyRepository.findByUserIdAndCurrencyCode(user.getId(), code);
-            if (existing != null) {
-                userCurrencyRepository.delete(existing);
-            }
-            return Response.ok("Deleted", "Deleted successfully");
-        } catch (Exception e) {
-            return Response.unauthorized();
-        }
+        User user = userService.loggedInUser();
+        currencyService.delete(user.getId(), code);
+        return Response.ok("Deleted", "Deleted successfully");
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

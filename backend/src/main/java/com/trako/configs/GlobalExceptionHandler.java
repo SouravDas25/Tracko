@@ -20,12 +20,19 @@ import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.security.access.AccessDeniedException;
 import com.trako.exceptions.AuthorizationException;
+import com.trako.exceptions.BadRequestException;
 import jakarta.validation.ConstraintViolationException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<?> handleBadRequestException(BadRequestException ex) {
+        log.debug("Bad request: {}", ex.getMessage());
+        return Response.badRequest(ex.getMessage());
+    }
 
     @ExceptionHandler(UserNotLoggedInException.class)
     public ResponseEntity<?> handleUserNotLoggedIn(UserNotLoggedInException ex) {

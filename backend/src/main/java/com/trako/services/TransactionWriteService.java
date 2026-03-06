@@ -4,14 +4,11 @@ import com.trako.entities.Account;
 import com.trako.entities.Category;
 import com.trako.entities.Transaction;
 import com.trako.entities.TransactionType;
-import com.trako.entities.UserCurrency;
 import com.trako.exceptions.AuthorizationException;
+import com.trako.exceptions.BadRequestException;
 import com.trako.exceptions.NotFoundException;
 import com.trako.models.request.TransactionRequest;
-import com.trako.repositories.AccountRepository;
-import com.trako.repositories.CategoryRepository;
-import com.trako.repositories.TransactionRepository;
-import com.trako.repositories.UserCurrencyRepository;
+import com.trako.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,32 +37,160 @@ public class TransactionWriteService {
     private AccountRepository accountRepository;
 
     @Autowired
-    private UserCurrencyRepository userCurrencyRepository;
+    private CategoryRepository categoryRepository;
 
     @Autowired
-    private CategoryRepository categoryRepository;
+    private CurrencyService currencyService;
+
+    private void validateAccountOwnership(String userId, Long accountId) {
+        if (accountId == null) return;
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new BadRequestException("Account not found: " + accountId));
+        if (!userId.equals(account.getUserId())) {
+            throw new AuthorizationException("User does not own account: " + accountId);
+        }
+    }
+
+    private void validateCategoryOwnership(String userId, Long categoryId) {
+        if (categoryId == null) return;
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new BadRequestException("Category not found: " + categoryId));
+        if (!userId.equals(category.getUserId())) {
+            throw new AuthorizationException("User does not own category: " + categoryId);
+        }
+    }
+
+    /**
+     * Unified entry point for updating a transaction or transfer.
+     * Handles all branching logic for conversions and partial updates.
+     */
+    @Transactional
+    public Transaction updateTransaction(String userId, Long id, TransactionRequest request) {
+        Transaction existing = transactionRepository.findById(id).orElseThrow(
+                () -> new NotFoundException("Transaction not found")
+        );
+
+        // Verify basic ownership of the transaction via its account
+        validateAccountOwnership(userId, existing.getAccountId());
+
+        boolean isExistingTransfer = existing.getLinkedTransactionId() != null;
+        
+        // CASE 1: Convert Regular Transaction -> Transfer
+        if (!isExistingTransfer && request.toAccountId() != null) {
+            return convertRegularToTransfer(userId, id, request)[0];
+        }
+
+        // CASE 2: Convert Transfer -> Regular Transaction
+        // If it's a transfer and we are changing the category, we assume conversion to regular.
+        if (isExistingTransfer && request.categoryId() != null) {
+            return convertTransferToRegular(userId, id, request);
+        }
+
+        // CASE 3: Updating a TRANSFER (that stays a transfer)
+        if (isExistingTransfer || request.isTransfer()) {
+            return handleTransferUpdate(userId, existing, request);
+        }
+
+        // CASE 4: Updating a REGULAR TRANSACTION
+        return handleRegularTransactionUpdate(userId, existing, request);
+    }
+
+    private Transaction handleTransferUpdate(String userId, Transaction existing, TransactionRequest request) {
+        boolean isDebitSide = existing.getTransactionType() == TransactionType.DEBIT;
+        boolean isCreditSide = existing.getTransactionType() == TransactionType.CREDIT;
+
+        Long resolvedFromAccountId = request.fromAccountId();
+        Long resolvedToAccountId = request.toAccountId();
+
+        if (resolvedFromAccountId == null && isDebitSide) {
+            resolvedFromAccountId = request.accountId();
+        }
+        if (resolvedToAccountId == null && isCreditSide) {
+            resolvedToAccountId = request.accountId();
+        }
+
+        String currency = request.originalCurrency() != null ? request.originalCurrency() : existing.getOriginalCurrency();
+        Double rate = request.exchangeRate();
+        
+        if (request.originalCurrency() != null) {
+             rate = currencyService.resolveExchangeRate(userId, currency, request.exchangeRate());
+        } else {
+             if (rate == null) {
+                 rate = existing.getExchangeRate();
+             }
+        }
+
+        if (request.originalAmount() != null && request.originalAmount() <= 0) {
+            throw new IllegalArgumentException("Original amount must be greater than 0");
+        }
+
+        Transaction[] result = updateTransfer(
+            userId,
+            existing.getId(),
+            resolvedFromAccountId,
+            resolvedToAccountId,
+            request.date(),
+            request.originalAmount(),
+            currency,
+            rate,
+            request.name(),
+            request.comments()
+        );
+
+        return result[0].getId().equals(existing.getId()) ? result[0] : result[1];
+    }
+
+    private Transaction handleRegularTransactionUpdate(String userId, Transaction existing, TransactionRequest request) {
+        Transaction txToUpdate = new Transaction();
+        txToUpdate.setId(existing.getId());
+        
+        // Apply updates or keep existing
+        txToUpdate.setAccountId(request.accountId() != null ? request.accountId() : existing.getAccountId());
+        txToUpdate.setCategoryId(request.categoryId() != null ? request.categoryId() : existing.getCategoryId());
+        txToUpdate.setTransactionType(request.transactionType() != null ? request.transactionType() : existing.getTransactionType());
+        
+        // Currency resolution
+        String newCurrency = request.originalCurrency();
+        Double newRate = request.exchangeRate();
+        
+        if (newCurrency != null) {
+             newRate = currencyService.resolveExchangeRate(userId, newCurrency, newRate);
+        } else {
+            newCurrency = existing.getOriginalCurrency();
+            if (newRate == null) {
+                newRate = existing.getExchangeRate();
+            }
+        }
+        
+        txToUpdate.setOriginalCurrency(newCurrency);
+        txToUpdate.setExchangeRate(newRate);
+        
+        if (request.originalAmount() != null) {
+            if (request.originalAmount() <= 0) {
+                throw new IllegalArgumentException("Original amount must be greater than 0");
+            }
+            txToUpdate.setOriginalAmount(request.originalAmount());
+        } else {
+            txToUpdate.setOriginalAmount(existing.getOriginalAmount());
+        }
+
+        txToUpdate.setName(request.name() != null ? request.name() : existing.getName());
+        txToUpdate.setComments(request.comments() != null ? request.comments() : existing.getComments());
+        txToUpdate.setDate(request.date() != null ? request.date() : existing.getDate());
+        txToUpdate.setIsCountable(request.isCountable() != null ? request.isCountable() : existing.getIsCountable());
+        txToUpdate.setLinkedTransactionId(existing.getLinkedTransactionId());
+
+        return performRegularTransactionUpdate(userId, txToUpdate);
+    }
+
 
     // private static final int TYPE_DEBIT = 1;
     // private static final int TYPE_CREDIT = 2;
 
     @Transactional
-    /**
-     * Creates or updates a transaction for the given user.
-     *
-     * <p>Validates that the target account belongs to the user before persistence.
-     *
-     * @param userId      authenticated user id
-     * @param transaction transaction payload
-     * @return persisted transaction
-     * @throws AuthorizationException if user doesn't own the target account
-     */
     public Transaction saveForUser(String userId, Transaction transaction) {
         if (transaction.getAccountId() != null) {
-            Account acc = accountRepository.findById(transaction.getAccountId())
-                    .orElseThrow(() -> new NotFoundException("Account not found: " + transaction.getAccountId()));
-            if (!userId.equals(acc.getUserId())) {
-                throw new AuthorizationException("User does not own account: " + transaction.getAccountId());
-            }
+            validateAccountOwnership(userId, transaction.getAccountId());
         }
         Transaction persisted = transactionRepository.saveAndFlush(transaction);
         // Reload to ensure DB-computed columns like 'amount' are populated
@@ -84,18 +209,102 @@ public class TransactionWriteService {
         Transaction transaction = transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new NotFoundException("Transaction not found: " + transactionId));
         
-        Account acc = accountRepository.findById(transaction.getAccountId())
-                .orElseThrow(() -> new NotFoundException("Account not found: " + transaction.getAccountId()));
-        
-        if (!userId.equals(acc.getUserId())) {
-            throw new AuthorizationException("User does not own transaction: " + transactionId);
-        }
+        validateAccountOwnership(userId, transaction.getAccountId());
         
         transactionRepository.delete(transaction);
     }
 
 
     // ========== TRANSFER OPERATIONS ==========
+
+    /**
+     * Unified entry point for creating a transaction or transfer.
+     * Handles all branching logic based on request data.
+     * 
+     * @return The created Transaction (or the debit side if it's a transfer)
+     */
+    @Transactional
+    public Transaction createUnifiedTransaction(String userId, TransactionRequest request) {
+        // Check if this is a transfer request (has toAccountId field)
+        if (request.isTransfer()) {
+            // This is a TRANSFER request
+            logger.info("Processing transfer request from account {} to account {}", 
+                    request.getSourceAccountId(), request.toAccountId());
+            
+            // Validate required fields
+            Long fromAccountId = request.getSourceAccountId();
+            if (fromAccountId == null) {
+                throw new IllegalArgumentException("Transfer requires fromAccountId or accountId");
+            }
+            if (request.toAccountId() == null) {
+                throw new IllegalArgumentException("Transfer requires toAccountId");
+            }
+            // Validate same account
+            if (fromAccountId.equals(request.toAccountId())) {
+                throw new IllegalArgumentException("fromAccountId and toAccountId cannot be same");
+            }
+            
+            // Validate Currency and Amount
+            if (request.originalCurrency() == null) {
+                throw new IllegalArgumentException("Original currency is required");
+            }
+            if (request.originalAmount() == null || request.originalAmount() <= 0) {
+                 throw new IllegalArgumentException("Original amount must be greater than 0");
+            }
+
+            Double exchangeRate = currencyService.resolveExchangeRate(userId, request.originalCurrency(), request.exchangeRate());
+
+            // Delegate to internal transfer creation
+            Transaction[] result = createTransfer(
+                userId,
+                fromAccountId,
+                request.toAccountId(),
+                request.date(),
+                request.originalAmount(),
+                request.originalCurrency(),
+                exchangeRate,
+                request.name(),
+                request.comments()
+            );
+            
+            // Return the debit side
+            return result[0];
+            
+        } else {
+            // This is a REGULAR TRANSACTION request
+            if (request.originalCurrency() == null) {
+                throw new IllegalArgumentException("Original currency is required");
+            }
+            if (request.originalAmount() == null) {
+                 throw new IllegalArgumentException("Original amount is required");
+            }
+            if (request.originalAmount() <= 0) {
+                 throw new IllegalArgumentException("Original amount must be greater than 0");
+            }
+            
+            Double exchangeRate = currencyService.resolveExchangeRate(userId, request.originalCurrency(), request.exchangeRate());
+
+            // Create enriched request with resolved exchange rate
+            TransactionRequest enrichedRequest = new TransactionRequest(
+                request.id(),
+                request.accountId(),
+                request.date(),
+                request.name(),
+                request.comments(),
+                request.categoryId(),
+                request.transactionType(),
+                request.isCountable(),
+                request.originalCurrency(),
+                request.originalAmount(),
+                exchangeRate,
+                request.linkedTransactionId(),
+                request.toAccountId(),
+                request.fromAccountId()
+            );
+
+            return createTransaction(userId, enrichedRequest);
+        }
+    }
 
     /**
      * Creates a regular transaction for the given user.
@@ -123,23 +332,13 @@ public class TransactionWriteService {
         if (request.accountId() == null) {
             throw new IllegalArgumentException("Transaction requires accountId");
         }
-        Account acc = accountRepository.findById(request.accountId())
-                .orElseThrow(() -> new NotFoundException("Account not found: " + request.accountId()));
-        
-        if (!userId.equals(acc.getUserId())) {
-            throw new AuthorizationException("User does not own account: " + request.accountId());
-        }
+        validateAccountOwnership(userId, request.accountId());
 
         // Validate category ownership
         if (request.categoryId() == null) {
             throw new IllegalArgumentException("Transaction requires categoryId");
         }
-        Category cat = categoryRepository.findById(request.categoryId())
-                .orElseThrow(() -> new NotFoundException("Category not found: " + request.categoryId()));
-        
-        if (!userId.equals(cat.getUserId())) {
-            throw new AuthorizationException("User does not own category: " + request.categoryId());
-        }
+        validateCategoryOwnership(userId, request.categoryId());
 
         // Convert request to Transaction entity
         Transaction transaction = new Transaction();
@@ -196,17 +395,8 @@ public class TransactionWriteService {
         }
 
         // Validate accounts ownership
-        Account fromAccount = accountRepository.findById(fromAccountId)
-                .orElseThrow(() -> new IllegalArgumentException("Source account not found: " + fromAccountId));
-        Account toAccount = accountRepository.findById(toAccountId)
-                .orElseThrow(() -> new IllegalArgumentException("Destination account not found: " + toAccountId));
-
-        if (!userId.equals(fromAccount.getUserId())) {
-            throw new AuthorizationException("User does not own source account: " + fromAccountId);
-        }
-        if (!userId.equals(toAccount.getUserId())) {
-            throw new AuthorizationException("User does not own destination account: " + toAccountId);
-        }
+        validateAccountOwnership(userId, fromAccountId);
+        validateAccountOwnership(userId, toAccountId);
 
         // Find or create TRANSFER category
         Long transferCategoryId = getOrCreateTransferCategory(userId);
@@ -270,6 +460,24 @@ public class TransactionWriteService {
     }
 
     /**
+     * Unified entry point for deleting a transaction or transfer.
+     * Handles checking if it's a transfer and delegating accordingly.
+     */
+    @Transactional
+    public void deleteUnifiedTransaction(String userId, Long id) {
+        Transaction tx = transactionRepository.findById(id)
+             .orElseThrow(() -> new NotFoundException("Transaction not found"));
+
+        // We delegate to specific methods which will re-fetch and verify ownership/locking.
+        // This is slightly inefficient (double fetch) but safe and consistent with existing granular methods.
+        if (tx.getLinkedTransactionId() != null) {
+             deleteTransfer(userId, id);
+        } else {
+             deleteForUser(userId, id);
+        }
+    }
+
+    /**
      * Deletes a transfer (both linked transactions) atomically.
      * 
      * @param userId authenticated user id
@@ -292,17 +500,8 @@ public class TransactionWriteService {
                 .orElseThrow(() -> new NotFoundException("Linked transaction not found: " + linkedId));
 
         // Verify ownership of both transactions
-        Account account = accountRepository.findById(transaction.getAccountId())
-                .orElseThrow(() -> new IllegalArgumentException("Account not found: " + transaction.getAccountId()));
-        Account linkedAccount = accountRepository.findById(linkedTx.getAccountId())
-                .orElseThrow(() -> new IllegalArgumentException("Account not found: " + linkedTx.getAccountId()));
-
-        if (!userId.equals(account.getUserId())) {
-            throw new AuthorizationException("User does not own account: " + account.getId());
-        }
-        if (!userId.equals(linkedAccount.getUserId())) {
-            throw new AuthorizationException("User does not own linked account: " + linkedAccount.getId());
-        }
+        validateAccountOwnership(userId, transaction.getAccountId());
+        validateAccountOwnership(userId, linkedTx.getAccountId());
 
         // Delete both transactions atomically
         logger.info("Deleting transfer: transaction {} and linked transaction {}", transactionId, linkedId);
@@ -322,81 +521,27 @@ public class TransactionWriteService {
      * @throws IllegalArgumentException if validation fails
      */
     @Transactional
-    public Transaction updateTransaction(String userId, Transaction transaction) {
+    public Transaction performRegularTransactionUpdate(String userId, Transaction transaction) {
         if (transaction.getId() == null) {
             throw new IllegalArgumentException("Transaction ID is required for update");
         }
 
-        Transaction existing = transactionRepository.findById(transaction.getId())
-                .orElseThrow(() -> new NotFoundException("Transaction not found: " + transaction.getId()));
-
-        // Verify ownership of an existing transaction
-        Account existingAccount = accountRepository.findById(existing.getAccountId())
-                .orElseThrow(() -> new IllegalArgumentException("Account not found: " + existing.getAccountId()));
+        // We assume transaction.getId() exists and verify ownership
+        // Note: The caller (handleRegularTransactionUpdate) constructs 'transaction' with the ID of an existing one.
+        // But we should re-verify if we want to be safe, or assume caller did it.
+        // For safety, let's fetch the original to ensure it exists and check ownership of the *target* account.
         
-        if (!userId.equals(existingAccount.getUserId())) {
-            throw new AuthorizationException("User does not own this transaction");
+        // Verify new account ownership
+        validateAccountOwnership(userId, transaction.getAccountId());
+
+        // Verify new category ownership
+        if (transaction.getCategoryId() == null) {
+            throw new IllegalArgumentException("Category is required");
         }
+        validateCategoryOwnership(userId, transaction.getCategoryId());
 
-        // Check if this is a transfer
-        if (existing.getLinkedTransactionId() != null) {
-            // This is a TRANSFER - handle both sides atomically
-            logger.info("Updating transfer transaction {}", transaction.getId());
-            
-            Transaction linkedTx = transactionRepository.findById(existing.getLinkedTransactionId())
-                    .orElseThrow(() -> new IllegalArgumentException("Linked transaction not found: " + existing.getLinkedTransactionId()));
-
-            // Determine which is debit and which is credit
-            boolean isDebit = existing.getTransactionType() != null && existing.getTransactionType() == TransactionType.DEBIT;
-            Long fromAccountId = isDebit ? transaction.getAccountId() : linkedTx.getAccountId();
-            Long toAccountId = isDebit ? linkedTx.getAccountId() : transaction.getAccountId();
-
-            // Update the transfer
-            Transaction[] result = updateTransfer(
-                userId,
-                transaction.getId(),
-                fromAccountId,
-                toAccountId,
-                transaction.getDate(),
-                transaction.getOriginalAmount(),
-                transaction.getOriginalCurrency(),
-                transaction.getExchangeRate(),
-                transaction.getName(),
-                transaction.getComments()
-            );
-
-            // Return the transaction that was requested
-            return result[0].getId().equals(transaction.getId()) ? result[0] : result[1];
-        } else {
-            // This is a REGULAR TRANSACTION
-            logger.info("Updating regular transaction {}", transaction.getId());
-            
-            // Verify new account ownership
-            Account newAccount = accountRepository.findById(transaction.getAccountId())
-                    .orElseThrow(() -> new IllegalArgumentException("Account not found: " + transaction.getAccountId()));
-            
-            if (!userId.equals(newAccount.getUserId())) {
-                throw new AuthorizationException("User does not own the target account: " + transaction.getAccountId());
-            }
-
-            // Verify new category ownership
-            if (transaction.getCategoryId() == null) {
-                throw new IllegalArgumentException("Category is required");
-            }
-            
-            var categories = categoryRepository.findById(transaction.getCategoryId());
-            if (categories.isEmpty()) {
-                throw new IllegalArgumentException("Category not found: " + transaction.getCategoryId());
-            }
-            
-            Category category = categories.get();
-            if (!userId.equals(category.getUserId())) {
-                throw new AuthorizationException("User does not own the category: " + transaction.getCategoryId());
-            }
-
-            // Save the transaction
-            return saveForUser(userId, transaction);
-        }
+        // Save the transaction
+        return saveForUser(userId, transaction);
     }
 
     /**
@@ -437,14 +582,8 @@ public class TransactionWriteService {
         Transaction credit = transaction.getTransactionType() != null && transaction.getTransactionType() == TransactionType.CREDIT ? transaction : linkedTx;
 
         // Verify ownership of both accounts
-        Account debitAccount = accountRepository.findById(debit.getAccountId())
-                .orElseThrow(() -> new IllegalArgumentException("Account not found: " + debit.getAccountId()));
-        Account creditAccount = accountRepository.findById(credit.getAccountId())
-                .orElseThrow(() -> new IllegalArgumentException("Account not found: " + credit.getAccountId()));
-
-        if (!userId.equals(debitAccount.getUserId()) || !userId.equals(creditAccount.getUserId())) {
-            throw new AuthorizationException("User does not own one or both accounts in the transfer");
-        }
+        validateAccountOwnership(userId, debit.getAccountId());
+        validateAccountOwnership(userId, credit.getAccountId());
 
         // Update fields if provided
         if (date != null) {
@@ -480,21 +619,13 @@ public class TransactionWriteService {
         // Handle account changes if provided
         Long newDebitAccountId = debit.getAccountId();
         if (fromAccountId != null && !fromAccountId.equals(debit.getAccountId())) {
-            Account newFromAccount = accountRepository.findById(fromAccountId)
-                    .orElseThrow(() -> new IllegalArgumentException("Source account not found: " + fromAccountId));
-            if (!userId.equals(newFromAccount.getUserId())) {
-                throw new AuthorizationException("User does not own source account: " + fromAccountId);
-            }
+            validateAccountOwnership(userId, fromAccountId);
             newDebitAccountId = fromAccountId;
         }
         
         Long newCreditAccountId = credit.getAccountId();
         if (toAccountId != null && !toAccountId.equals(credit.getAccountId())) {
-            Account newToAccount = accountRepository.findById(toAccountId)
-                    .orElseThrow(() -> new IllegalArgumentException("Destination account not found: " + toAccountId));
-            if (!userId.equals(newToAccount.getUserId())) {
-                throw new AuthorizationException("User does not own destination account: " + toAccountId);
-            }
+            validateAccountOwnership(userId, toAccountId);
             newCreditAccountId = toAccountId;
         }
 
@@ -518,6 +649,132 @@ public class TransactionWriteService {
         logger.info("Transfer updated successfully: transactions {} and {}", updatedDebit.getId(), updatedCredit.getId());
 
         return new Transaction[]{updatedDebit, updatedCredit};
+    }
+
+    /**
+     * Converts a regular transaction into a transfer.
+     * 
+     * @param userId authenticated user id
+     * @param transactionId id of the regular transaction
+     * @param request the update request containing toAccountId and other field updates
+     * @return array containing [debit, credit]
+     */
+    @Transactional
+    public Transaction[] convertRegularToTransfer(String userId, Long transactionId, TransactionRequest request) {
+        Long toAccountId = request.toAccountId();
+        logger.info("Converting regular transaction {} to transfer (to account {}) for user {}", transactionId, toAccountId, userId);
+
+        Transaction existing = transactionRepository.findById(transactionId)
+                .orElseThrow(() -> new NotFoundException("Transaction not found: " + transactionId));
+
+        if (existing.getLinkedTransactionId() != null) {
+            throw new IllegalArgumentException("Transaction is already a transfer");
+        }
+
+        // Validate account ownership
+        validateAccountOwnership(userId, existing.getAccountId());
+        validateAccountOwnership(userId, toAccountId);
+        
+        if (existing.getAccountId().equals(toAccountId)) {
+            throw new IllegalArgumentException("Source and destination accounts cannot be the same");
+        }
+
+        // Apply updates from request to the "existing" transaction (which becomes DEBIT/Source side)
+        if (request.date() != null) existing.setDate(request.date());
+        if (request.name() != null) existing.setName(request.name());
+        if (request.comments() != null) existing.setComments(request.comments());
+        if (request.originalAmount() != null) existing.setOriginalAmount(request.originalAmount());
+        if (request.originalCurrency() != null) existing.setOriginalCurrency(request.originalCurrency());
+        if (request.exchangeRate() != null) existing.setExchangeRate(request.exchangeRate());
+
+        // Determine Transfer Category
+        Long transferCategoryId = getOrCreateTransferCategory(userId);
+
+        // Update the existing transaction to be the DEBIT side of the transfer
+        existing.setCategoryId(transferCategoryId);
+        existing.setTransactionType(TransactionType.DEBIT);
+        existing.setIsCountable(0); // Transfers are not countable
+
+        // Create mate (CREDIT side)
+        Transaction credit = new Transaction();
+        credit.setAccountId(toAccountId);
+        credit.setCategoryId(transferCategoryId);
+        credit.setTransactionType(TransactionType.CREDIT);
+        // Copy fields from updated existing
+        credit.setOriginalAmount(existing.getOriginalAmount());
+        credit.setOriginalCurrency(existing.getOriginalCurrency());
+        credit.setExchangeRate(existing.getExchangeRate());
+        credit.setDate(existing.getDate());
+        credit.setIsCountable(0);
+        credit.setName(existing.getName());
+        credit.setComments(existing.getComments());
+        
+        Transaction savedCredit = saveForUser(userId, credit); // Save first to get ID
+        
+        // Link them
+        existing.setLinkedTransactionId(savedCredit.getId());
+        Transaction savedDebit = saveForUser(userId, existing);
+        
+        savedCredit.setLinkedTransactionId(savedDebit.getId());
+        saveForUser(userId, savedCredit);
+
+        return new Transaction[]{savedDebit, savedCredit};
+    }
+
+    /**
+     * Converts a transfer transaction into a regular transaction.
+     * The linked transaction (mate) is deleted.
+     * 
+     * @param userId authenticated user id
+     * @param transactionId id of the transaction to keep (converted to regular)
+     * @param request updates to apply during conversion (category, type, etc.)
+     * @return updated regular transaction
+     */
+    @Transactional
+    public Transaction convertTransferToRegular(String userId, Long transactionId, TransactionRequest request) {
+        logger.info("Converting transfer transaction {} to regular for user {}", transactionId, userId);
+
+        Transaction existing = transactionRepository.findById(transactionId)
+                .orElseThrow(() -> new NotFoundException("Transaction not found: " + transactionId));
+
+        if (existing.getLinkedTransactionId() == null) {
+            throw new IllegalArgumentException("Transaction is not a transfer");
+        }
+
+        Long linkedId = existing.getLinkedTransactionId();
+        Transaction linkedTx = transactionRepository.findById(linkedId)
+                .orElseThrow(() -> new NotFoundException("Linked transaction not found: " + linkedId));
+
+        // Verify ownership
+        validateAccountOwnership(userId, existing.getAccountId());
+
+        // Unlink existing
+        existing.setLinkedTransactionId(null);
+        
+        // Apply updates from request
+        if (request.categoryId() != null) {
+            existing.setCategoryId(request.categoryId());
+        }
+        if (request.transactionType() != null) {
+            existing.setTransactionType(request.transactionType());
+        }
+        if (request.name() != null) {
+            existing.setName(request.name());
+        }
+        if (request.isCountable() != null) {
+            existing.setIsCountable(request.isCountable());
+        } else {
+            // Default to countable if not specified when converting to regular?
+            existing.setIsCountable(1); 
+        }
+        
+        // Save the one we keep
+        Transaction saved = saveForUser(userId, existing);
+
+        // Delete the mate
+        deleteForUser(userId, linkedId);
+
+        return saved;
     }
 
     /**

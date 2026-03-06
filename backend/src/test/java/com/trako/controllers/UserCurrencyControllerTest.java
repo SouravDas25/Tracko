@@ -4,8 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trako.entities.User;
 import com.trako.entities.UserCurrency;
 import com.trako.models.request.UserCurrencyRequest;
-import com.trako.repositories.UserCurrencyRepository;
+import com.trako.services.CurrencyService;
 import com.trako.services.JwtUserDetailsService;
+import com.trako.exceptions.UserNotLoggedInException;
 import com.trako.services.UserService;
 import com.trako.util.JwtTokenUtil;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,7 +40,7 @@ public class UserCurrencyControllerTest {
     private UserService userService;
 
     @MockBean
-    private UserCurrencyRepository userCurrencyRepository;
+    private CurrencyService currencyService;
 
     @MockBean
     private JwtTokenUtil jwtTokenUtil;
@@ -69,14 +70,14 @@ public class UserCurrencyControllerTest {
     @Test
     @WithMockUser
     public void testGetAll() throws Exception {
-        when(userCurrencyRepository.findByUserId("user123")).thenReturn(Arrays.asList(testUserCurrency));
+        when(currencyService.getAll("user123")).thenReturn(Arrays.asList(testUserCurrency));
 
         mockMvc.perform(get("/api/user-currencies"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result[0].currencyCode").value("USD"))
                 .andExpect(jsonPath("$.result[0].exchangeRate").value(83.5));
 
-        verify(userCurrencyRepository, times(1)).findByUserId("user123");
+        verify(currencyService, times(1)).getAll("user123");
     }
 
     @Test
@@ -85,7 +86,7 @@ public class UserCurrencyControllerTest {
         UserCurrencyRequest request = new UserCurrencyRequest();
         request.setCurrencyCode("EUR");
         request.setExchangeRate(90.0);
-        when(userCurrencyRepository.findByUserIdAndCurrencyCode("user123", "EUR")).thenReturn(null);
+        when(currencyService.save(any(User.class), eq("EUR"), eq(90.0))).thenReturn(new UserCurrency());
 
         mockMvc.perform(post("/api/user-currencies")
                 .with(csrf())
@@ -93,7 +94,7 @@ public class UserCurrencyControllerTest {
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result").value("Saved"));
-        verify(userCurrencyRepository, times(1)).save(any(UserCurrency.class));
+        verify(currencyService, times(1)).save(any(User.class), eq("EUR"), eq(90.0));
     }
 
     @Test
@@ -102,7 +103,7 @@ public class UserCurrencyControllerTest {
         UserCurrencyRequest request = new UserCurrencyRequest();
         request.setCurrencyCode("USD");
         request.setExchangeRate(84.0);
-        when(userCurrencyRepository.findByUserIdAndCurrencyCode("user123", "USD")).thenReturn(testUserCurrency);
+        when(currencyService.save(any(User.class), eq("USD"), eq(84.0))).thenReturn(testUserCurrency);
 
         mockMvc.perform(post("/api/user-currencies")
                 .with(csrf())
@@ -110,25 +111,31 @@ public class UserCurrencyControllerTest {
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result").value("Saved"));
-        verify(userCurrencyRepository, times(1)).save(any(UserCurrency.class));
+        verify(currencyService, times(1)).save(any(User.class), eq("USD"), eq(84.0));
     }
 
     @Test
     @WithMockUser
     public void testDeleteCurrency() throws Exception {
-        when(userCurrencyRepository.findByUserIdAndCurrencyCode("user123", "USD")).thenReturn(testUserCurrency);
+        doNothing().when(currencyService).delete("user123", "USD"); // delete still uses ID in controller? Let's check controller.
 
         mockMvc.perform(delete("/api/user-currencies/USD")
                 .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result").value("Deleted"));
-        verify(userCurrencyRepository, times(1)).delete(any(UserCurrency.class));
+        // The controller was updated to: currencyService.delete(user.getId(), code);
+        // Wait, did I update delete to use User object in Controller?
+        // Let's check previous turn.
+        // Yes: currencyService.delete(user.getId(), code); in controller patch.
+        // And CurrencyService has: delete(String userId, String currencyCode).
+        // So delete(String, String) is correct.
+        verify(currencyService, times(1)).delete("user123", "USD");
     }
 
     @Test
     @WithMockUser
     public void testGetAllUnauthorized() throws Exception {
-        when(userService.loggedInUser()).thenThrow(new RuntimeException("User not logged in"));
+        when(userService.loggedInUser()).thenThrow(new UserNotLoggedInException());
 
         mockMvc.perform(get("/api/user-currencies"))
                 .andExpect(status().isUnauthorized());
