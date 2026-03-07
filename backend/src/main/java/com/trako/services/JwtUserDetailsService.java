@@ -36,14 +36,14 @@ public class JwtUserDetailsService implements UserDetailsService {
         if (u.isAdmin()) {
             authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
         }
-        
+
         String username = u.getPhoneNo();
         if (username == null || username.isEmpty()) {
             username = u.getEmail();
         }
         if (username == null || username.isEmpty()) {
             // Should not happen ideally if DB is consistent, but prevent crash
-            username = "UNKNOWN"; 
+            username = "UNKNOWN";
         }
 
         String password = u.getPassword();

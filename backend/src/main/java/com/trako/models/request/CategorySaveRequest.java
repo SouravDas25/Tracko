@@ -1,6 +1,6 @@
 package com.trako.models.request;
 
-import com.trako.entities.CategoryType;
+import com.trako.enums.CategoryType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 

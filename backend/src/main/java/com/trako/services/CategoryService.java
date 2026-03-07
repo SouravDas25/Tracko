@@ -1,10 +1,10 @@
 package com.trako.services;
 
 import com.trako.entities.Category;
-import com.trako.repositories.CategoryRepository;
-import com.trako.repositories.TransactionRepository;
 import com.trako.repositories.BudgetCategoryAllocationRepository;
+import com.trako.repositories.CategoryRepository;
 import com.trako.repositories.RecurringTransactionRepository;
+import com.trako.repositories.TransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

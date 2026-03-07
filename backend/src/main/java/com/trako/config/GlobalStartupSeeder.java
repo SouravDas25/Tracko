@@ -1,6 +1,7 @@
 package com.trako.config;
 
 import com.trako.entities.*;
+import com.trako.enums.CategoryType;
 import com.trako.repositories.AccountRepository;
 import com.trako.repositories.CategoryRepository;
 import com.trako.repositories.UsersRepository;
@@ -120,7 +121,7 @@ public class GlobalStartupSeeder implements ApplicationRunner {
                     existing.setIsShadow(isShadow);
                     changed = true;
                 }
-                
+
                 if (existing.getPassword() == null || !passwordEncoder.matches(password, existing.getPassword())) {
                     existing.setPassword(passwordEncoder.encode(password));
                     changed = true;

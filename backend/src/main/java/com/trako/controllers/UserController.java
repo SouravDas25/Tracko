@@ -1,21 +1,22 @@
 package com.trako.controllers;
 
 import com.trako.entities.User;
+import com.trako.exceptions.UserNotLoggedInException;
 import com.trako.models.request.UserProfileUpdateRequest;
 import com.trako.models.request.UserSaveRequest;
 import com.trako.models.responses.ApiResponse;
 import com.trako.services.UserService;
 import com.trako.util.Response;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
 import java.util.List;
@@ -77,21 +78,25 @@ public class UserController {
 
     @PostMapping(value = "/create")
     ResponseEntity<?> create(@Valid @RequestBody UserSaveRequest userSaveRequest) {
-        User current = userService.loggedInUser();
+        try {
+            User current = userService.loggedInUser();
 
-        // Only admins can create users
-        if (!current.isAdmin()) {
-            log.warn("Non-admin user {} attempted to create a user", current.getId());
+            // Only admins can create users
+            if (!current.isAdmin()) {
+                log.warn("Non-admin user {} attempted to create a user", current.getId());
+                return Response.unauthorized();
+            }
+
+            String id = userService.save(userSaveRequest);
+            if (id == null) {
+                return Response.badRequest("Invalid user request");
+            }
+
+            log.info("Admin {} created user: {}", current.getId(), id);
+            return Response.ok(id, "User Created Successfully.");
+        } catch (UserNotLoggedInException e) {
             return Response.unauthorized();
         }
-
-        String id = userService.save(userSaveRequest);
-        if (id == null) {
-            return Response.badRequest("Invalid user request");
-        }
-        
-        log.info("Admin {} created user: {}", current.getId(), id);
-        return Response.ok(id, "User Created Successfully.");
     }
 
     @PostMapping(value = "/me")

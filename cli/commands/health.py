@@ -1,7 +1,10 @@
 import argparse
+import json
+
 from ..core.config import get_token_from_args_or_config
-from ..core.client import TrackoClient
-from ..utils.formatting import print_result
+from ..core.api import make_api_client, sdk_call
+
+import tracko_sdk
 
 
 def setup_parser(subparsers):
@@ -10,8 +13,14 @@ def setup_parser(subparsers):
 
 
 def cmd_health(args: argparse.Namespace) -> int:
-    token, base_url = get_token_from_args_or_config(args)
-    client = TrackoClient(base_url)
-    result = client.get("/api/health")
-    print_result(result, raw=args.raw)
-    return 0 if result["ok"] else 1
+    _, base_url = get_token_from_args_or_config(args)
+    with make_api_client(base_url) as api_client:
+        api = tracko_sdk.HealthControllerApi(api_client)
+        result = sdk_call(lambda: api.health())
+    if result is None:
+        return 1
+    if hasattr(result, "to_dict"):
+        print(json.dumps(result.to_dict(), indent=2, default=str))
+    else:
+        print(json.dumps(result, indent=2, default=str))
+    return 0

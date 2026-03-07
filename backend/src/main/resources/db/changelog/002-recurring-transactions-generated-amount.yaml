@@ -1,0 +1,15 @@
+databaseChangeLog:
+    -   changeSet:
+            id: 002-recurring-transactions-generated-amount
+            author: Sourav
+            comment: "Replace the manually-set amount column with a generated column (original_amount * exchange_rate) to match the transactions table pattern."
+            changes:
+                -   dropColumn:
+                        tableName: recurring_transactions
+                        columnName: amount
+                -   sql:
+                        dbms: postgresql
+                        sql: "ALTER TABLE recurring_transactions ADD COLUMN amount DOUBLE PRECISION GENERATED ALWAYS AS (original_amount * exchange_rate) STORED;"
+                -   sql:
+                        dbms: h2
+                        sql: "ALTER TABLE recurring_transactions ADD COLUMN amount DOUBLE GENERATED ALWAYS AS (original_amount * exchange_rate);"

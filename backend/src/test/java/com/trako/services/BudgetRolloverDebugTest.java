@@ -3,7 +3,9 @@ package com.trako.services;
 import com.trako.dtos.BudgetAllocationRequestDTO;
 import com.trako.dtos.BudgetCategoryDTO;
 import com.trako.entities.*;
+import com.trako.enums.TransactionDbType;
 import com.trako.repositories.*;
+import com.trako.services.transactions.TransactionWriteService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,8 +14,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.Calendar;
-import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -91,7 +91,7 @@ public class BudgetRolloverDebugTest {
 
         // 1. Add Income for Previous Month
         Transaction prevIncome = new Transaction();
-        prevIncome.setTransactionType(TransactionType.CREDIT); // Income
+        prevIncome.setTransactionType(TransactionDbType.CREDIT); // Income
         prevIncome.setName("Prev Salary");
         prevIncome.setOriginalAmount(1000.0);
         prevIncome.setOriginalCurrency("INR");
@@ -114,7 +114,7 @@ public class BudgetRolloverDebugTest {
 
         // 3. Add Expense in Previous Month
         Transaction expense = new Transaction();
-        expense.setTransactionType(TransactionType.DEBIT); // Expense
+        expense.setTransactionType(TransactionDbType.DEBIT); // Expense
         expense.setName("Prev Expense");
         expense.setOriginalAmount(50.0);
         expense.setOriginalCurrency("INR");

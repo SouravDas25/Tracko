@@ -5,11 +5,13 @@ import com.trako.dtos.BudgetCategoryDTO;
 import com.trako.dtos.BudgetResponseDTO;
 import com.trako.dtos.TransactionSummaryDTO;
 import com.trako.entities.*;
-import com.trako.entities.TransactionType;
+import com.trako.enums.CategoryType;
+import com.trako.enums.TransactionDbType;
 import com.trako.repositories.BudgetCategoryAllocationRepository;
 import com.trako.repositories.BudgetMonthRepository;
 import com.trako.repositories.CategoryRepository;
 import com.trako.repositories.TransactionRepository;
+import com.trako.services.transactions.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,28 +41,27 @@ public class BudgetCalculationService {
 
     private boolean isBudgetableExpenseCategory(Category category) {
         if (category == null) return false;
-        if (!CATEGORY_TYPE_EXPENSE.equals(category.getCategoryType())) return false;
-        return true;
+        return CATEGORY_TYPE_EXPENSE.equals(category.getCategoryType());
     }
 
     @Transactional
     public BudgetResponseDTO getBudgetDetails(String userId, Integer month, Integer year,
                                               boolean includeActual, Long categoryId) {
-        
+
         // 1. Get or Create BudgetMonth
         BudgetMonth budgetMonth = getOrCreateBudgetMonth(userId, month, year);
 
         // 2. Calculate Income and Opening Balance (Rollover Net)
         Date startDate = getStartDate(month, year);
         Date endDate = getEndDate(month, year);
-        
+
         // We use getSummaryWithRollover to get the Opening Balance (rolloverNet) which is the account balance before this month.
         // Net Total before this month = (Total Income < Month) - (Total Expense < Month)
         TransactionSummaryDTO summary = transactionService.getSummaryWithRollover(userId, startDate, endDate, null);
-        
+
         Double totalIncome = summary.getTotalIncome(); // Income in this month
         Double openingBalance = summary.getRolloverNet(); // Balance at start of month
-        
+
         // 3. Rollover for UI = Previous month's ending balance = Opening balance of current month
         Double rolloverAmount = openingBalance;
 
@@ -70,7 +71,7 @@ public class BudgetCalculationService {
 
         // Ensure budget month totals reflect EXPENSE-only allocations
         updateMonthTotalBudget(budgetMonth);
-        
+
         // Map to DTOs and calculate actuals if needed
         List<BudgetCategoryDTO> categoryDTOs = new ArrayList<>();
         Double totalAllocated = 0.0;
@@ -102,24 +103,24 @@ public class BudgetCalculationService {
             BudgetCategoryDTO dto = new BudgetCategoryDTO();
             dto.setCategoryId(category.getId());
             dto.setCategoryName(category.getName());
-            
+
             Double allocated = allocation != null ? allocation.getAllocatedAmount() : 0.0;
             dto.setAllocatedAmount(allocated);
             totalAllocated += allocated; // Note: If filtered, this total reflects only filtered categories.
-                                         // If we want total budget for the MONTH regardless of filter, we should use budgetMonth.getTotalBudget()
+            // If we want total budget for the MONTH regardless of filter, we should use budgetMonth.getTotalBudget()
 
             Double actual = 0.0;
             if (includeActual) {
                 // Calculate actual spending for this category in this month
                 List<Transaction> transactions = transactionRepository.findByUserIdAndCategoryIdAndDateBetween(
                         userId, category.getId(), startDate, endDate);
-                
+
                 // Filter for expense transactions (type 1)
                 actual = transactions.stream()
-                        .filter(t -> t.getIsCountable() == 1 && t.getTransactionType() == TransactionType.DEBIT)
+                        .filter(t -> t.getIsCountable() == 1 && t.getTransactionType() == TransactionDbType.DEBIT)
                         .mapToDouble(Transaction::getAmount)
                         .sum();
-                
+
                 // Update the allocation entity with actuals if it exists
                 if (allocation != null) {
                     allocation.setActualSpent(actual);
@@ -128,17 +129,17 @@ public class BudgetCalculationService {
             } else if (allocation != null) {
                 actual = allocation.getActualSpent();
             }
-            
+
             dto.setActualSpent(actual);
             dto.setRemainingBalance(allocated - actual);
             totalSpent += actual;
-            
+
             categoryDTOs.add(dto);
         }
 
         // 5. Update BudgetMonth totals - ONLY if not filtering, otherwise we might overwrite with partial data
         // Or better: We should calculate totals from DB allocations separately if we want accurate month totals while filtering categories
-        
+
         // If we are filtering, we probably shouldn't update the BudgetMonth total based on the filtered list.
         // But the previous implementation updated it.
         // Let's rely on the separate method updateMonthTotalBudget for consistency, or only update if categoryId is null.
@@ -164,7 +165,7 @@ public class BudgetCalculationService {
         // But if I request a category, I might just care about that category.
         // Let's stick to: totals in the root object are for the MONTH.
         if (categoryId != null) {
-            // We need to fetch total spent for the whole month if we want to report it correctly
+            // We need to fetch total spent for the whole month if we want to report it correctly,
             // Or we just report what we summed up (which is partial).
             // Given the DTO structure, users might expect totals to match the list.
             // Let's set the totals to match the filtered list for now to avoid confusion, 
@@ -175,13 +176,13 @@ public class BudgetCalculationService {
             response.setTotalSpent(totalSpent);
             response.setTotalBudget(totalAllocated);
         }
-        
+
         response.setRolloverAmount(rolloverAmount);
-        
+
         // Available to Assign = (Opening Balance + Income) - Total Allocated
         Double realTotalAllocated = budgetMonth.getTotalBudget();
         response.setAvailableToAssign((openingBalance + totalIncome) - realTotalAllocated);
-        
+
         response.setIsClosed(budgetMonth.getIsClosed());
         response.setCategories(categoryDTOs);
 
@@ -208,7 +209,7 @@ public class BudgetCalculationService {
 
         // Simplification: Removed Over-Allocation Validation
         // User is allowed to allocate more than available funds.
-        
+
         if (allocation.getId() == null) {
             allocation.setBudgetMonthId(budgetMonth.getId());
             allocation.setCategoryId(request.getCategoryId());
@@ -217,7 +218,7 @@ public class BudgetCalculationService {
         }
 
         allocation.setAllocatedAmount(request.getAmount());
-        
+
         // Recalculate remaining based on actuals if we have them, strictly speaking we should probably re-fetch actuals here 
         // but for performance we rely on the last known state or 0. In a real real-time system we might want to fetch.
         // Let's fetch actuals to be safe and accurate.
@@ -226,12 +227,12 @@ public class BudgetCalculationService {
         List<Transaction> transactions = transactionRepository.findByUserIdAndCategoryIdAndDateBetween(
                 userId, category.getId(), startDate, endDate);
         Double actual = transactions.stream()
-                .filter(t -> t.getIsCountable() == 1 && t.getTransactionType() == TransactionType.DEBIT)
+                .filter(t -> t.getIsCountable() == 1 && t.getTransactionType() == TransactionDbType.DEBIT)
                 .mapToDouble(Transaction::getAmount)
                 .sum();
-        
+
         allocation.setActualSpent(actual);
-        
+
         BudgetCategoryAllocation saved = budgetCategoryAllocationRepository.save(allocation);
 
         // Update total budget in month
@@ -243,22 +244,22 @@ public class BudgetCalculationService {
         dto.setAllocatedAmount(saved.getAllocatedAmount());
         dto.setActualSpent(saved.getActualSpent());
         dto.setRemainingBalance(saved.getRemainingBalance());
-        
+
         return dto;
     }
 
     public Double calculateAvailableToAssign(String userId, Integer month, Integer year) {
         Date startDate = getStartDate(month, year);
         Date endDate = getEndDate(month, year);
-        
+
         TransactionSummaryDTO summary = transactionService.getSummaryWithRollover(userId, startDate, endDate, null);
-        
+
         Double totalIncome = summary.getTotalIncome();
         Double openingBalance = summary.getRolloverNet();
-        
+
         BudgetMonth budgetMonth = getOrCreateBudgetMonth(userId, month, year);
         Double totalAllocated = budgetMonth.getTotalBudget();
-        
+
         return (openingBalance + totalIncome) - totalAllocated;
     }
 

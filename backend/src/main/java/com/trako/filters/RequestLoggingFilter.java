@@ -18,6 +18,30 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
 
     private static final Logger log = LoggerFactory.getLogger(RequestLoggingFilter.class);
 
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return "OPTIONS".equalsIgnoreCase(request.getMethod());
+    }
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request,
+                                    @NonNull HttpServletResponse response,
+                                    @NonNull FilterChain filterChain) throws ServletException, IOException {
+        long start = System.currentTimeMillis();
+        StatusCaptureResponseWrapper wrapped = new StatusCaptureResponseWrapper(response);
+        try {
+            filterChain.doFilter(request, wrapped);
+        } finally {
+            long tookMs = System.currentTimeMillis() - start;
+            String uri = request.getRequestURI();
+            String qs = request.getQueryString();
+            if (qs != null && !qs.isBlank()) {
+                uri = uri + "?" + qs;
+            }
+            log.info("{} {} -> {} ({}ms)", request.getMethod(), uri, wrapped.getStatusCode(), tookMs);
+        }
+    }
+
     private static class StatusCaptureResponseWrapper extends HttpServletResponseWrapper {
         private int status = HttpServletResponse.SC_OK;
 
@@ -51,30 +75,6 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
 
         int getStatusCode() {
             return status;
-        }
-    }
-
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
-        return "OPTIONS".equalsIgnoreCase(request.getMethod());
-    }
-
-    @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    @NonNull HttpServletResponse response,
-                                    @NonNull FilterChain filterChain) throws ServletException, IOException {
-        long start = System.currentTimeMillis();
-        StatusCaptureResponseWrapper wrapped = new StatusCaptureResponseWrapper(response);
-        try {
-            filterChain.doFilter(request, wrapped);
-        } finally {
-            long tookMs = System.currentTimeMillis() - start;
-            String uri = request.getRequestURI();
-            String qs = request.getQueryString();
-            if (qs != null && !qs.isBlank()) {
-                uri = uri + "?" + qs;
-            }
-            log.info("{} {} -> {} ({}ms)", request.getMethod(), uri, wrapped.getStatusCode(), tookMs);
         }
     }
 }

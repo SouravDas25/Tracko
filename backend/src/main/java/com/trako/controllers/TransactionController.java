@@ -3,23 +3,22 @@ package com.trako.controllers;
 import com.trako.dtos.TransactionDetailDTO;
 import com.trako.dtos.TransactionPeriodSummaryDTO;
 import com.trako.dtos.TransactionSummaryDTO;
+import com.trako.dtos.TransactionsPageDTO;
 import com.trako.entities.Account;
-import com.trako.entities.Category;
 import com.trako.entities.Transaction;
-import com.trako.entities.TransactionType;
+import com.trako.enums.TransactionDbType;
 import com.trako.entities.User;
-import com.trako.entities.UserCurrency;
 import com.trako.exceptions.AuthorizationException;
 import com.trako.exceptions.NotFoundException;
 import com.trako.exceptions.UserNotLoggedInException;
 import com.trako.models.request.TransactionRequest;
 import com.trako.repositories.AccountRepository;
 import com.trako.repositories.CategoryRepository;
-import com.trako.repositories.UserCurrencyRepository;
-import com.trako.services.TransactionService;
-import com.trako.services.TransactionWriteService;
 import com.trako.services.UserService;
+import com.trako.services.transactions.TransactionService;
+import com.trako.services.transactions.TransactionWriteService;
 import com.trako.util.Response;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import org.slf4j.Logger;
@@ -31,16 +30,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
 import java.util.stream.Collectors;
-
-// OpenAPI annotations
-import io.swagger.v3.oas.annotations.Operation;
-import com.trako.models.responses.ApiResponse;
-import com.trako.dtos.TransactionsPageDTO;
 
 @RestController
 @RequestMapping("/api/transactions")
@@ -64,23 +61,6 @@ public class TransactionController {
     @Autowired
     private CategoryRepository categoryRepository;
 
-    @Autowired
-    private UserCurrencyRepository userCurrencyRepository;
-
-    private Double resolveExchangeRate(User user, String currency, Double providedRate) {
-        if (providedRate != null) {
-            return providedRate;
-        }
-        if (currency.equals(user.getBaseCurrency())) {
-            return 1.0;
-        }
-        UserCurrency uc = userCurrencyRepository.findByUserIdAndCurrencyCode(user.getId(), currency);
-        if (uc == null) {
-            throw new IllegalArgumentException("Currency not configured: " + currency);
-        }
-        return uc.getExchangeRate();
-    }
-
     private List<Transaction> hideTransferCredits(List<Transaction> transactions, String userId) {
         var transferCats = categoryRepository.findByUserIdAndName(userId, "TRANSFER");
         if (transferCats == null || transferCats.isEmpty()) {
@@ -91,7 +71,7 @@ public class TransactionController {
                 .filter(t -> !(t.getCategoryId() != null
                         && t.getCategoryId().equals(transferCategoryId)
                         && t.getIsCountable() != null && t.getIsCountable() == 0
-                        && t.getTransactionType() != null && t.getTransactionType() == TransactionType.CREDIT)) // hide CREDIT side
+                        && t.getTransactionType() != null && t.getTransactionType() == TransactionDbType.CREDIT)) // hide CREDIT side
                 .collect(Collectors.toList());
     }
 
@@ -104,7 +84,7 @@ public class TransactionController {
         for (var t : transactions) {
             if (t.getCategoryId() != null && t.getCategoryId().equals(transferCategoryId)
                     && t.getIsCountable() != null && t.getIsCountable() == 0) {
-                t.setTransactionType(TransactionType.TRANSFER); // mark as TRANSFER for response rendering
+                t.setRenderedTransactionType(TransactionDbType.TRANSFER_RENDERING_VALUE); // mark as TRANSFER for response rendering
             }
         }
         return transactions;
@@ -121,7 +101,7 @@ public class TransactionController {
                     return !(dto.getCategoryId() != null
                             && dto.getCategoryId().equals(transferCategoryId)
                             && dto.getIsCountable() != null && dto.getIsCountable() == 0
-                            && dto.getTransactionType() != null && dto.getTransactionType() == TransactionType.CREDIT);
+                            && dto.getTransactionType() != null && dto.getTransactionType() == TransactionDbType.CREDIT.getValue());
                 })
                 .collect(Collectors.toList());
     }
@@ -135,7 +115,7 @@ public class TransactionController {
         for (var dto : dtos) {
             if (dto.getCategoryId() != null && dto.getCategoryId().equals(transferCategoryId)
                     && dto.getIsCountable() != null && dto.getIsCountable() == 0) {
-                dto.setTransactionType(TransactionType.TRANSFER); // mark as TRANSFER for response rendering
+                dto.setTransactionType(TransactionDbType.TRANSFER_RENDERING_VALUE); // mark as TRANSFER for response rendering
             }
         }
         return dtos;
@@ -149,14 +129,14 @@ public class TransactionController {
     @Operation(summary = "List transactions with optional filters")
     @GetMapping
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
-        responseCode = "200",
-        description = "OK",
-        content = @io.swagger.v3.oas.annotations.media.Content(
-            mediaType = "application/json",
-            schema = @io.swagger.v3.oas.annotations.media.Schema(
-                implementation = com.trako.dtos.TransactionsPageDTO.class
+            responseCode = "200",
+            description = "OK",
+            content = @io.swagger.v3.oas.annotations.media.Content(
+                    mediaType = "application/json",
+                    schema = @io.swagger.v3.oas.annotations.media.Schema(
+                            implementation = com.trako.dtos.TransactionsPageDTO.class
+                    )
             )
-        )
     )
     public ResponseEntity<?> getAll(
             @RequestParam(required = false) Integer month,
@@ -195,7 +175,7 @@ public class TransactionController {
             String currentUserId = userService.loggedInUser().getId();
             List<Long> ids = com.trako.util.CommonUtil.parseAccountIds(accountIds);
             Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "date").and(Sort.by(Sort.Direction.DESC, "id")));
-            
+
             if (expand) {
                 Page<TransactionDetailDTO> dtoPage;
                 if (categoryId != null && categoryId > 0) {
@@ -215,11 +195,11 @@ public class TransactionController {
                             pageable
                     );
                 }
-                
+
                 List<TransactionDetailDTO> dtos = new ArrayList<>(dtoPage.getContent());
                 dtos = hideTransferCreditsForDTO(dtos, currentUserId);
                 dtos = markTransferTypeAsTransferForDTO(dtos, currentUserId);
-                
+
                 TransactionsPageDTO payload = new TransactionsPageDTO();
                 payload.setMonth(month);
                 payload.setYear(resolvedYear);
@@ -230,7 +210,7 @@ public class TransactionController {
                 payload.setHasNext(dtoPage.hasNext());
                 payload.setHasPrevious(dtoPage.hasPrevious());
                 payload.setTransactions(dtos);
-                
+
                 return Response.ok(payload);
             }
 
@@ -396,11 +376,11 @@ public class TransactionController {
     /**
      * POST /api/transactions
      * Creates a new transaction OR transfer for the authenticated user.
-     * 
+     *
      * <p>For regular transactions: Include accountId, categoryId, transactionType, amount, etc.
      * <p>For transfers: Include accountId (or fromAccountId), toAccountId, and amount.
      * The presence of toAccountId indicates this is a transfer request.
-     * 
+     *
      * <p>Validates that accounts and categories exist and are owned by the current user before saving.
      */
     @Operation(summary = "Create a transaction or transfer")
@@ -409,87 +389,15 @@ public class TransactionController {
         try {
             User user = userService.loggedInUser();
             String currentUserId = user.getId();
-            
-            // Check if this is a transfer request (has toAccountId field)
+
+            Transaction saved = transactionWriteService.createUnifiedTransaction(currentUserId, request);
+
             if (request.isTransfer()) {
-                // This is a TRANSFER request
-                log.info("Processing transfer request from account {} to account {}", 
-                        request.getSourceAccountId(), request.toAccountId());
-                
-                // Validate required fields
-                Long fromAccountId = request.getSourceAccountId();
-                if (fromAccountId == null) {
-                    return Response.badRequest("Transfer requires fromAccountId or accountId");
-                }
-                if (request.toAccountId() == null) {
-                    return Response.badRequest("Transfer requires toAccountId");
-                }
-                // Validate same account before any currency checks to preserve expected error messaging
-                if (fromAccountId.equals(request.toAccountId())) {
-                    return Response.badRequest("fromAccountId and toAccountId cannot be same");
-                }
-                
-                // Validate Currency and Amount
-                if (request.originalCurrency() == null) {
-                    return Response.badRequest("Original currency is required");
-                }
-                if (request.originalAmount() == null || request.originalAmount() <= 0) {
-                     return Response.badRequest("Original amount must be greater than 0");
-                }
-
-                Double exchangeRate = resolveExchangeRate(user, request.originalCurrency(), request.exchangeRate());
-
-                // Delegate to service layer for transfer creation
-                Transaction[] result = transactionWriteService.createTransfer(
-                    currentUserId,
-                    fromAccountId,
-                    request.toAccountId(),
-                    request.date(),
-                    request.originalAmount(),
-                    request.originalCurrency(),
-                    exchangeRate,
-                    request.name(),
-                    request.comments()
-                );
-                
-                // Return the debit side (represents the transfer in UI)
-                return Response.ok(result[0], "Transfer created successfully");
-                
+                return Response.ok(saved, "Transfer created successfully");
             } else {
-                // This is a REGULAR TRANSACTION request
-                if (request.originalCurrency() == null) {
-                    return Response.badRequest("Original currency is required");
-                }
-                if (request.originalAmount() == null) {
-                     return Response.badRequest("Original amount is required");
-                }
-                if (request.originalAmount() <= 0) {
-                     return Response.badRequest("Original amount must be greater than 0");
-                }
-                
-                Double exchangeRate = resolveExchangeRate(user, request.originalCurrency(), request.exchangeRate());
-
-                // Create enriched request with resolved exchange rate
-                TransactionRequest enrichedRequest = new TransactionRequest(
-                    request.id(),
-                    request.accountId(),
-                    request.date(),
-                    request.name(),
-                    request.comments(),
-                    request.categoryId(),
-                    request.transactionType(),
-                    request.isCountable(),
-                    request.originalCurrency(),
-                    request.originalAmount(),
-                    exchangeRate,
-                    request.linkedTransactionId(),
-                    request.toAccountId(),
-                    request.fromAccountId()
-                );
-
-                Transaction saved = transactionWriteService.createTransaction(currentUserId, enrichedRequest);
                 return Response.ok(saved, "Transaction created successfully");
             }
+
         } catch (UserNotLoggedInException e) {
             log.warn("Transaction/Transfer create failed: User not logged in");
             return Response.unauthorized();
@@ -510,10 +418,8 @@ public class TransactionController {
      * PUT /api/transactions/{id}
      * Updates an existing transaction or transfer by id.
      * Supports partial updates - only non-null fields in the request are updated.
-     * 
+     *
      * <p>Delegates all writing logic to TransactionWriteService.
-     * <p>If the transaction is part of a transfer (has linkedTransactionId), both sides are updated atomically.
-     * <p>For regular transactions, verifies that authenticated user all owns an existing/new account plus category.
      */
     @Operation(summary = "Update a transaction or transfer")
     @PutMapping("/{id}")
@@ -522,114 +428,9 @@ public class TransactionController {
             User user = userService.loggedInUser();
             String currentUserId = user.getId();
 
-            // Load an existing transaction to check its type and support partial updates
-            Transaction existing = transactionService.findById(id).orElse(null);
-            if (existing == null) {
-                return Response.notFound("Transaction not found");
-            }
-
-            // Check if an existing transaction is part of a transfer
-            boolean isExistingTransfer = transactionWriteService.isTransfer(id);
-            
-            // CASE 1: Updating a TRANSFER
-            if (isExistingTransfer || request.isTransfer()) {
-                boolean isDebitSide = existing.getTransactionType() != null && existing.getTransactionType() == TransactionType.DEBIT;
-                boolean isCreditSide = existing.getTransactionType() != null && existing.getTransactionType() == TransactionType.CREDIT;
-
-                // Important: request.getSourceAccountId() falls back to `accountId` when `fromAccountId` is null.
-                Long resolvedFromAccountId = request.fromAccountId();
-                Long resolvedToAccountId = request.toAccountId();
-
-                if (resolvedFromAccountId == null && isDebitSide) {
-                    resolvedFromAccountId = request.accountId();
-                }
-                if (resolvedToAccountId == null && isCreditSide) {
-                    resolvedToAccountId = request.accountId();
-                }
-
-                // Resolve Currency and Exchange Rate
-                String currency = request.originalCurrency();
-                if (currency == null) {
-                    currency = existing.getOriginalCurrency();
-                }
-                
-                Double rate = request.exchangeRate();
-                if (request.originalCurrency() != null) {
-                     // Currency explicitly provided (even if same), resolve rate if missing
-                     rate = resolveExchangeRate(user, currency, request.exchangeRate());
-                } else {
-                     // Currency not provided, check if rate is provided
-                     if (rate == null) {
-                         rate = existing.getExchangeRate();
-                     }
-                }
-
-                // Validate amount if provided
-                if (request.originalAmount() != null && request.originalAmount() <= 0) {
-                    return Response.badRequest("Original amount must be greater than 0");
-                }
-
-                Transaction[] result = transactionWriteService.updateTransfer(
-                    currentUserId,
-                    id,
-                    resolvedFromAccountId, // null means don't change
-                    resolvedToAccountId,
-                    request.date(),
-                    request.originalAmount(),
-                    currency,
-                    rate,
-                    request.name(),
-                    request.comments()
-                );
-
-                Transaction updated = result[0].getId().equals(id) ? result[0] : result[1];
-                return Response.ok(updated, "Transfer updated successfully");
-            }
-
-            // CASE 2: Updating a REGULAR TRANSACTION
-            Transaction txToUpdate = new Transaction();
-            txToUpdate.setId(id);
-            
-            // Apply updates or keep existing
-            txToUpdate.setAccountId(request.accountId() != null ? request.accountId() : existing.getAccountId());
-            txToUpdate.setCategoryId(request.categoryId() != null ? request.categoryId() : existing.getCategoryId());
-            txToUpdate.setTransactionType(request.transactionType() != null ? request.transactionType() : existing.getTransactionType());
-            
-            // Currency fields
-            String newCurrency = request.originalCurrency();
-            Double newRate = request.exchangeRate();
-            
-            if (newCurrency != null) {
-                 newRate = resolveExchangeRate(user, newCurrency, newRate);
-            } else {
-                newCurrency = existing.getOriginalCurrency();
-                if (newRate == null) {
-                    newRate = existing.getExchangeRate();
-                }
-            }
-            
-            txToUpdate.setOriginalCurrency(newCurrency);
-            txToUpdate.setExchangeRate(newRate);
-            
-            if (request.originalAmount() != null) {
-                if (request.originalAmount() <= 0) {
-                    return Response.badRequest("Original amount must be greater than 0");
-                }
-                txToUpdate.setOriginalAmount(request.originalAmount());
-            } else {
-                txToUpdate.setOriginalAmount(existing.getOriginalAmount());
-            }
-
-            txToUpdate.setName(request.name() != null ? request.name() : existing.getName());
-            txToUpdate.setComments(request.comments() != null ? request.comments() : existing.getComments());
-            txToUpdate.setDate(request.date() != null ? request.date() : existing.getDate());
-            txToUpdate.setIsCountable(request.isCountable() != null ? request.isCountable() : existing.getIsCountable());
-            
-            txToUpdate.setLinkedTransactionId(existing.getLinkedTransactionId());
-
-            Transaction updated = transactionWriteService.updateTransaction(currentUserId, txToUpdate);
+            Transaction updated = transactionWriteService.updateTransaction(currentUserId, id, request);
             return Response.ok(updated, "Transaction updated successfully");
-            
+
         } catch (UserNotLoggedInException e) {
             log.warn("Transaction update failed: User not logged in");
             return Response.unauthorized();
@@ -656,23 +457,9 @@ public class TransactionController {
     public ResponseEntity<?> delete(@PathVariable @Positive Long id) {
         try {
             String currentUserId = userService.loggedInUser().getId();
-            Transaction existing = transactionService.findById(id).orElse(null);
-            if (existing == null) {
-                return Response.notFound("Transaction not found");
-            }
-            Account acc = accountRepository.findById(existing.getAccountId()).orElse(null);
-            if (acc == null || !currentUserId.equals(acc.getUserId())) {
-                return Response.unauthorized();
-            }
-            
-            // Check if this is part of a transfer - delegate to service
-            if (transactionWriteService.isTransfer(id)) {
-                transactionWriteService.deleteTransfer(currentUserId, id);
-                return Response.ok("Transfer deleted successfully");
-            }
-            
-            // Regular transaction (not a transfer)
-            transactionWriteService.deleteForUser(currentUserId, id);
+
+            transactionWriteService.deleteUnifiedTransaction(currentUserId, id);
+
             return Response.ok("Transaction deleted successfully");
         } catch (UserNotLoggedInException e) {
             return Response.unauthorized();
@@ -701,10 +488,10 @@ public class TransactionController {
         try {
             String currentUserId = userService.loggedInUser().getId();
             List<Long> ids = com.trako.util.CommonUtil.parseAccountIds(accountIds);
-            
+
             // Default to current year if not provided
             int resolvedYear = (year == null) ? Calendar.getInstance().get(Calendar.YEAR) : year;
-            
+
             List<TransactionPeriodSummaryDTO> summaries = transactionService.getMonthlySummaries(currentUserId, resolvedYear, ids);
             return Response.ok(summaries);
         } catch (UserNotLoggedInException e) {
@@ -723,7 +510,7 @@ public class TransactionController {
         try {
             String currentUserId = userService.loggedInUser().getId();
             List<Long> ids = com.trako.util.CommonUtil.parseAccountIds(accountIds);
-            
+
             List<TransactionPeriodSummaryDTO> summaries = transactionService.getYearlySummaries(currentUserId, ids);
             return Response.ok(summaries);
         } catch (UserNotLoggedInException e) {

@@ -1,10 +1,14 @@
 package com.trako.entities;
 
+import com.trako.enums.Frequency;
+import com.trako.enums.TransactionType;
+import com.trako.enums.TransactionTypeConverter;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Pattern;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -27,15 +31,18 @@ public class RecurringTransaction {
     @Column(name = "name", length = 128)
     private String name;
 
-    @Positive
-    @Column(name = "amount")
+    @Column(name = "amount", insertable = false, updatable = false)
     private Double amount;
 
-    @Column(name = "original_currency", length = 3)
+    @NotBlank
+    @Size(min = 3, max = 3)
+    @Pattern(regexp = "[A-Z]{3}", message = "originalCurrency must be a 3-letter uppercase currency code")
+    @Column(name = "original_currency", length = 3, nullable = false)
     private String originalCurrency;
 
-    @Column(name = "original_amount")
+    @NotNull
     @Positive
+    @Column(name = "original_amount", nullable = false)
     private Double originalAmount;
 
     @Column(name = "exchange_rate")
@@ -118,6 +125,7 @@ public class RecurringTransaction {
     public void setName(String name) {
         this.name = name;
     }
+
     public String getOriginalCurrency() {
         return originalCurrency;
     }

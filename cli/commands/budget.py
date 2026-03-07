@@ -1,89 +1,107 @@
 import argparse
-import urllib.parse
+import datetime
+import json
+
 from ..core.config import get_token_from_args_or_config
-from ..core.client import TrackoClient
-from ..utils.formatting import print_result
+from ..core.api import make_api_client, sdk_call
+
+import tracko_sdk
+from tracko_sdk.models.budget_allocation_request_dto import BudgetAllocationRequestDTO
+
+
+def _print_raw(data) -> None:
+    if data is None:
+        print("null")
+        return
+    if hasattr(data, "to_dict"):
+        print(json.dumps(data.to_dict(), indent=2, default=str))
+    else:
+        print(json.dumps(data, indent=2, default=str))
 
 
 def setup_parser(subparsers):
     sp = subparsers.add_parser("budget")
-    sub_budget = sp.add_subparsers(dest="budget_cmd", required=True)
+    sub = sp.add_subparsers(dest="budget_cmd", required=True)
 
-    sp2 = sub_budget.add_parser("view")
-    sp2.add_argument("--month", type=int, help="Month (1-12)")
-    sp2.add_argument("--year", type=int, help="Year (YYYY)")
+    sp2 = sub.add_parser("view")
+    sp2.add_argument("--month", type=int)
+    sp2.add_argument("--year", type=int)
     sp2.set_defaults(func=cmd_budget_view)
 
-    sp2 = sub_budget.add_parser("allocate")
+    sp2 = sub.add_parser("allocate")
     sp2.add_argument("--category-id", required=True, type=int)
     sp2.add_argument("--amount", required=True, type=float)
-    sp2.add_argument("--month", type=int, help="Month (1-12)")
-    sp2.add_argument("--year", type=int, help="Year (YYYY)")
+    sp2.add_argument("--month", type=int)
+    sp2.add_argument("--year", type=int)
     sp2.set_defaults(func=cmd_budget_allocate)
 
-    sp2 = sub_budget.add_parser("available")
-    sp2.add_argument("--month", type=int, help="Month (1-12)")
-    sp2.add_argument("--year", type=int, help="Year (YYYY)")
+    sp2 = sub.add_parser("available")
+    sp2.add_argument("--month", type=int)
+    sp2.add_argument("--year", type=int)
     sp2.set_defaults(func=cmd_budget_available)
 
-    sp2 = sub_budget.add_parser("current")
-    sp2.set_defaults(func=cmd_budget_current)
+    sub.add_parser("current").set_defaults(func=cmd_budget_current)
+
+
+def _now_month_year():
+    now = datetime.datetime.now()
+    return now.month, now.year
+
+
+def cmd_budget_view(args: argparse.Namespace) -> int:
+    token, base_url = get_token_from_args_or_config(args)
+    month, year = _now_month_year()
+    month = args.month if args.month is not None else month
+    year = args.year if args.year is not None else year
+    with make_api_client(base_url, token) as api_client:
+        api = tracko_sdk.BudgetControllerApi(api_client)
+        result = sdk_call(lambda: api.get_budget(month=month, year=year))
+    if result is None:
+        return 1
+    _print_raw(result)
+    return 0
+
+
+def cmd_budget_allocate(args: argparse.Namespace) -> int:
+    token, base_url = get_token_from_args_or_config(args)
+    month, year = _now_month_year()
+    month = args.month if args.month is not None else month
+    year = args.year if args.year is not None else year
+    req = BudgetAllocationRequestDTO(
+        category_id=int(args.category_id),
+        amount=float(args.amount),
+        month=month,
+        year=year,
+    )
+    with make_api_client(base_url, token) as api_client:
+        api = tracko_sdk.BudgetControllerApi(api_client)
+        result = sdk_call(lambda: api.allocate_funds(req))
+    if result is None:
+        return 1
+    _print_raw(result)
+    return 0
+
+
+def cmd_budget_available(args: argparse.Namespace) -> int:
+    token, base_url = get_token_from_args_or_config(args)
+    month, year = _now_month_year()
+    month = args.month if args.month is not None else month
+    year = args.year if args.year is not None else year
+    with make_api_client(base_url, token) as api_client:
+        api = tracko_sdk.BudgetControllerApi(api_client)
+        result = sdk_call(lambda: api.get_available_to_assign(month=month, year=year))
+    if result is None:
+        return 1
+    _print_raw(result)
+    return 0
 
 
 def cmd_budget_current(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
-    client = TrackoClient(base_url, token)
-    client = TrackoClient(base_url, token)
-    result = client.get("/api/budget/current")
-    print_result(result, raw=args.raw)
-    return 0 if result.get("ok") else 1
-
-
-def cmd_budget_view(args: argparse.Namespace) -> int:
-    import datetime
-    token, base_url = get_token_from_args_or_config(args)
-    client = TrackoClient(base_url, token)
-    now = datetime.datetime.now()
-    month = args.month if args.month is not None else now.month
-    year = args.year if args.year is not None else now.year
-
-    query = urllib.parse.urlencode({"month": month, "year": year})
-    result = client.get("/api/budget" + "?" + query)
-    print_result(result, raw=args.raw)
-    return 0 if result["ok"] else 1
-
-
-def cmd_budget_allocate(args: argparse.Namespace) -> int:
-    import datetime
-
-    token, base_url = get_token_from_args_or_config(args)
-    client = TrackoClient(base_url, token)
-    now = datetime.datetime.now()
-    month = args.month if args.month is not None else now.month
-    year = args.year if args.year is not None else now.year
-
-    body = {
-        "categoryId": int(args.category_id),
-        "amount": float(args.amount),
-        "month": month,
-        "year": year,
-    }
-
-    result = client.post("/api/budget/allocate", json_body=body)
-    print_result(result, raw=args.raw)
-    return 0 if result["ok"] else 1
-
-
-def cmd_budget_available(args: argparse.Namespace) -> int:
-    import datetime
-    token, base_url = get_token_from_args_or_config(args)
-    client = TrackoClient(base_url, token)
-    now = datetime.datetime.now()
-    month = args.month if args.month is not None else now.month
-    year = args.year if args.year is not None else now.year
-
-    params = {"month": month, "year": year}
-    query = urllib.parse.urlencode(params)
-    result = client.get("/api/budget/available" + "?" + query)
-    print_result(result, raw=args.raw)
-    return 0 if result["ok"] else 1
+    with make_api_client(base_url, token) as api_client:
+        api = tracko_sdk.BudgetControllerApi(api_client)
+        result = sdk_call(lambda: api.get_current_budget())
+    if result is None:
+        return 1
+    _print_raw(result)
+    return 0

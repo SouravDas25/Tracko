@@ -1,6 +1,7 @@
 package com.trako.dtos;
 
-import com.trako.entities.TransactionType;
+import com.trako.enums.TransactionType;
+
 import java.util.List;
 
 public class CategoryStatsResponseDTO {
@@ -16,12 +17,12 @@ public class CategoryStatsResponseDTO {
     }
 
     public CategoryStatsResponseDTO(String range,
-                                   TransactionType transactionType,
-                                   Long categoryId,
-                                   String periodStart,
-                                   String periodEnd,
-                                   Double total,
-                                   List<StatsPointDTO> series) {
+                                    TransactionType transactionType,
+                                    Long categoryId,
+                                    String periodStart,
+                                    String periodEnd,
+                                    Double total,
+                                    List<StatsPointDTO> series) {
         this.range = range;
         this.transactionType = transactionType;
         this.categoryId = categoryId;

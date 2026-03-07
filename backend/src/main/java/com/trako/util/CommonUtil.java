@@ -12,6 +12,14 @@ public class CommonUtil {
 
     // ObjectMapper for parsing JSON arrays of accountIds
     private static final com.fasterxml.jackson.databind.ObjectMapper ACCOUNT_ID_MAPPER = new com.fasterxml.jackson.databind.ObjectMapper();
+    private static final ModelMapper modelMapper;
+
+    static {
+        modelMapper = new ModelMapper();
+        modelMapper.getConfiguration()
+                .setPropertyCondition(Conditions.isNotNull())
+                .setMatchingStrategy(MatchingStrategies.STRICT);
+    }
 
     /**
      * Parses a string that may contain account IDs as a JSON array (e.g. "[1, 2, 3]")
@@ -24,9 +32,9 @@ public class CommonUtil {
         if (accountIdsStr == null || accountIdsStr.trim().isEmpty()) {
             return out;
         }
-        
+
         String trimmed = accountIdsStr.trim();
-        
+
         // First, try to parse as a JSON array
         if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
             try {
@@ -50,7 +58,7 @@ public class CommonUtil {
             } catch (Exception ignored) {
             }
         }
-        
+
         // If JSON parse failed, try to parse as comma-separated values
         String[] parts = trimmed.split(",");
         for (String part : parts) {
@@ -62,17 +70,8 @@ public class CommonUtil {
             } catch (Exception ignored) {
             }
         }
-        
+
         return out;
-    }
-
-    private static final ModelMapper modelMapper;
-
-    static {
-        modelMapper = new ModelMapper();
-        modelMapper.getConfiguration()
-                .setPropertyCondition(Conditions.isNotNull())
-                .setMatchingStrategy(MatchingStrategies.STRICT);
     }
 
     public static <D, T> D mapModel(final T subject, Class<D> tClass) {

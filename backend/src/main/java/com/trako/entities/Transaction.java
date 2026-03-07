@@ -1,6 +1,9 @@
 package com.trako.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.trako.enums.TransactionDbType;
+import com.trako.enums.TransactionEntryTypeConverter;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import org.hibernate.annotations.Generated;
@@ -19,8 +22,8 @@ public class Transaction {
 
     @NotNull
     @Column(name = "transaction_type")
-    @Convert(converter = TransactionTypeConverter.class)
-    private TransactionType transactionType;
+    @Convert(converter = TransactionEntryTypeConverter.class)
+    private TransactionDbType transactionType;
 
     @NotNull
     @Column(name = "name", length = 128)
@@ -74,6 +77,9 @@ public class Transaction {
     @JoinColumn(name = "category_id", insertable = false, updatable = false)
     private Category category;
 
+    @Transient
+    private Integer renderedTransactionType;
+
     public Long getId() {
         return id;
     }
@@ -82,12 +88,22 @@ public class Transaction {
         this.id = id;
     }
 
-    public TransactionType getTransactionType() {
+    @JsonIgnore
+    public TransactionDbType getTransactionType() {
         return transactionType;
     }
 
-    public void setTransactionType(TransactionType transactionType) {
+    public void setTransactionType(TransactionDbType transactionType) {
         this.transactionType = transactionType;
+    }
+
+    @JsonProperty("transactionType")
+    public Integer getRenderedTransactionType() {
+        return renderedTransactionType != null ? renderedTransactionType : (transactionType != null ? transactionType.getValue() : null);
+    }
+
+    public void setRenderedTransactionType(Integer renderedTransactionType) {
+        this.renderedTransactionType = renderedTransactionType;
     }
 
     public String getName() {

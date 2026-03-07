@@ -3,10 +3,7 @@ import os
 import sys
 from typing import Dict, Any, Tuple, Optional
 
-# Standard import for DEFAULT_BASE_URL
-# We need to make sure we don't have circular imports if http imports config,
-# but currently http.py does not import config.py.
-from .http import DEFAULT_BASE_URL
+DEFAULT_BASE_URL = "http://localhost:8080"
 
 ENV_VAR_PROFILE = "TRACKO_PROFILE"
 DEFAULT_PROFILE_NAME = "default"

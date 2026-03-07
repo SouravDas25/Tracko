@@ -6,13 +6,13 @@ import jakarta.validation.constraints.Positive;
 public class BudgetAllocationRequestDTO {
     @NotNull
     private Integer month;
-    
+
     @NotNull
     private Integer year;
-    
+
     @NotNull
     private Long categoryId;
-    
+
     @NotNull
     @Positive
     private Double amount;

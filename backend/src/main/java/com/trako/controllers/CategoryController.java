@@ -1,7 +1,7 @@
 package com.trako.controllers;
 
 import com.trako.entities.Category;
-import com.trako.entities.CategoryType;
+import com.trako.enums.CategoryType;
 import com.trako.models.request.CategorySaveRequest;
 import com.trako.services.CategoryService;
 import com.trako.services.UserService;
@@ -10,8 +10,8 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 

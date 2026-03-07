@@ -34,10 +34,10 @@ public class BudgetController {
             @RequestParam(defaultValue = "true") boolean includeActual,
             @RequestParam(required = false) String sortBy,
             @RequestParam(defaultValue = "asc") String sortOrder) {
-        
+
         try {
             String userId = userService.loggedInUser().getId();
-            
+
             // Default to current date if not provided
             if (month == null || year == null) {
                 LocalDate now = LocalDate.now();
@@ -85,7 +85,7 @@ public class BudgetController {
             @RequestParam(required = false) Integer year) {
         try {
             String userId = userService.loggedInUser().getId();
-            
+
             if (month == null || year == null) {
                 LocalDate now = LocalDate.now();
                 if (month == null) month = now.getMonthValue();
@@ -103,7 +103,7 @@ public class BudgetController {
 
     private void sortCategories(List<BudgetCategoryDTO> categories, String sortBy, String sortOrder) {
         Comparator<BudgetCategoryDTO> comparator = null;
-        
+
         switch (sortBy.toLowerCase()) {
             case "name":
             case "category":

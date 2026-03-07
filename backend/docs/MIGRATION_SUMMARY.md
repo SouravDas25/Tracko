@@ -7,7 +7,8 @@
 
 ## Overview
 
-Successfully migrated all business logic and data persistence from Flutter UI's SQLite database to Spring Boot 3.2.2 backend with comprehensive REST APIs, full test coverage, and Flutter integration guide.
+Successfully migrated all business logic and data persistence from Flutter UI's SQLite database to Spring Boot 3.2.2
+backend with comprehensive REST APIs, full test coverage, and Flutter integration guide.
 
 ---
 
@@ -16,16 +17,19 @@ Successfully migrated all business logic and data persistence from Flutter UI's 
 ### 1. Backend Schema Migration ✅
 
 **New Tables Added:**
+
 - `accounts` - User financial accounts
 - `categories` - Transaction categories
 - `transactions` - Financial transactions with full details
 - `json_store` - Key-value settings storage (replaces SharedPreferences)
 
 **Updated Tables:**
+
 - `users` - Added `global_id`, renamed `firebase_uuid` → `fire_base_id`
 - `splits` - Restructured to transaction-based model (from user-to-user debt model)
 
 **Database Management:**
+
 - Liquibase changesets for production migrations
 - Hibernate DDL auto-update for development
 - H2 in-memory database for tests
@@ -35,9 +39,11 @@ Successfully migrated all business logic and data persistence from Flutter UI's 
 **Created 50+ REST Endpoints:**
 
 #### Authentication
+
 - `POST /api/oauth/token` - Login
 
 #### Accounts
+
 - `GET /api/accounts` - List all
 - `GET /api/accounts/{id}` - Get by ID
 - `GET /api/accounts/user/{userId}` - List by user
@@ -46,6 +52,7 @@ Successfully migrated all business logic and data persistence from Flutter UI's 
 - `DELETE /api/accounts/{id}` - Delete
 
 #### Categories
+
 - `GET /api/categories` - List all
 - `GET /api/categories/{id}` - Get by ID
 - `GET /api/categories/user/{userId}` - List by user
@@ -54,6 +61,7 @@ Successfully migrated all business logic and data persistence from Flutter UI's 
 - `DELETE /api/categories/{id}` - Delete
 
 #### Transactions
+
 - `GET /api/transactions` - List all (supports pagination, date range, filters)
 - `GET /api/transactions/{id}` - Get by ID
 - `GET /api/transactions/account/{accountId}` - List by account
@@ -63,6 +71,7 @@ Successfully migrated all business logic and data persistence from Flutter UI's 
 - `DELETE /api/transactions/{id}` - Delete
 
 #### Splits
+
 - `GET /api/splits` - List all
 - `GET /api/splits/{id}` - Get by ID
 - `GET /api/splits/transaction/{transactionId}` - List by transaction
@@ -73,6 +82,7 @@ Successfully migrated all business logic and data persistence from Flutter UI's 
 - `DELETE /api/splits/{id}` - Delete
 
 #### JsonStore (Settings)
+
 - `GET /api/json-store` - List all settings
 - `GET /api/json-store/{name}` - Get setting by name
 - `POST /api/json-store` - Create setting
@@ -80,22 +90,26 @@ Successfully migrated all business logic and data persistence from Flutter UI's 
 - `DELETE /api/json-store/{name}` - Delete setting
 
 #### Other
+
 - `POST /api/dialog` - NLP proxy to Python backend
 - Chat groups and messages endpoints
 
 ### 3. JPA Entities ✅
 
 **Created:**
+
 - `Account.java`
 - `Category.java`
 - `Transaction.java`
 - `JsonStore.java`
 
 **Updated:**
+
 - `User.java` - Added `globalId`, renamed field to `fireBaseId`
 - `Split.java` - Complete restructure for transaction-based splits
 
 **Features:**
+
 - Proper entity relationships (@ManyToOne, @OneToMany)
 - Timestamp auditing (@CreationTimestamp, @UpdateTimestamp)
 - JSON serialization configuration
@@ -104,16 +118,19 @@ Successfully migrated all business logic and data persistence from Flutter UI's 
 ### 4. Service Layer ✅
 
 **Created:**
+
 - `AccountService.java`
 - `CategoryService.java`
 - `TransactionService.java`
 - `JsonStoreService.java`
 
 **Updated:**
+
 - `SplitService.java` - New transaction-based logic
 - `UserService.java` - Updated for field rename
 
 **Features:**
+
 - Business logic encapsulation
 - Transaction management
 - Repository abstraction
@@ -121,16 +138,19 @@ Successfully migrated all business logic and data persistence from Flutter UI's 
 ### 5. REST Controllers ✅
 
 **Created:**
+
 - `AccountController.java`
 - `CategoryController.java`
 - `TransactionController.java`
 - `JsonStoreController.java`
 
 **Updated:**
+
 - `SplitController.java` - New endpoints
 - `SessionController.java` - Updated for field rename
 
 **Features:**
+
 - RESTful design
 - Consistent response format (`ApiResponse` wrapper)
 - Proper HTTP status codes
@@ -139,18 +159,21 @@ Successfully migrated all business logic and data persistence from Flutter UI's 
 ### 6. Security Configuration ✅
 
 **NoAuth Profile:**
+
 - Created `NoAuthSecurityConfig.java` with `@Profile("noauth")`
 - Permits all requests when active
 - Provides required beans (AuthenticationManager, PasswordEncoder)
 - Perfect for development and testing
 
 **JWT Auth Profile:**
+
 - Existing `WebSecurityConfig.java` with `@Profile("!noauth")`
 - JWT token-based authentication
 - Stateless session management
 - Protected endpoints
 
 **Usage:**
+
 ```bash
 # Development (no auth)
 $env:SPRING_PROFILES_ACTIVE='dev,noauth'
@@ -166,35 +189,37 @@ mvn spring-boot:run
 **36 Integration Tests - 100% Passing:**
 
 - `AccountIntegrationTest` (6 tests)
-  - Create, read, update, delete
-  - List all, list by user
-  
+    - Create, read, update, delete
+    - List all, list by user
+
 - `CategoryIntegrationTest` (6 tests)
-  - Create, read, update, delete
-  - List all, list by user
-  
+    - Create, read, update, delete
+    - List all, list by user
+
 - `TransactionIntegrationTest` (8 tests)
-  - Create, read, update, delete
-  - List by user, account, category
-  - Date range filtering
-  
+    - Create, read, update, delete
+    - List by user, account, category
+    - Date range filtering
+
 - `SplitIntegrationTest` (8 tests)
-  - Create, read, delete
-  - List by transaction, user
-  - Settle split, list unsettled
-  
+    - Create, read, delete
+    - List by transaction, user
+    - Settle split, list unsettled
+
 - `JsonStoreIntegrationTest` (8 tests) ✨ NEW
-  - Create, read, update, delete
-  - Complex JSON storage
-  - Not found handling
+    - Create, read, update, delete
+    - Complex JSON storage
+    - Not found handling
 
 **Test Infrastructure:**
+
 - `TestSecurityConfig.java` - Disables security for tests
 - `application-test.properties` - H2 in-memory DB configuration
 - Full stack testing with MockMvc
 - Transactional rollback for isolation
 
 **Test Results:**
+
 ```
 Tests run: 36, Failures: 0, Errors: 0, Skipped: 0 ✅
 ```
@@ -206,43 +231,43 @@ Tests run: 36, Failures: 0, Errors: 0, Skipped: 0 ✅
 **Complete Dart Code Provided:**
 
 1. **API Client Service** (`lib/services/api_client.dart`)
-   - Dio-based HTTP client
-   - JWT token injection
-   - Response unwrapping
-   - Error handling
-   - Request/response interceptors
+    - Dio-based HTTP client
+    - JWT token injection
+    - Response unwrapping
+    - Error handling
+    - Request/response interceptors
 
 2. **Model Classes** (with JSON serialization)
-   - `Account` model
-   - `Category` model
-   - `Transaction` model
-   - `Split` model
-   - `JsonStore` model
+    - `Account` model
+    - `Category` model
+    - `Transaction` model
+    - `Split` model
+    - `JsonStore` model
 
 3. **Authentication Service** (`lib/services/auth_service.dart`)
-   - Sign up with JWT token storage
-   - Sign in with token management
-   - Logout functionality
-   - Token retrieval
+    - Sign up with JWT token storage
+    - Sign in with token management
+    - Logout functionality
+    - Token retrieval
 
 4. **Repository Pattern**
-   - `AccountRepository` - Full CRUD + queries
-   - `CategoryRepository` - Full CRUD + queries
-   - `TransactionRepository` - CRUD + date range, account, category filters
-   - `SplitRepository` - CRUD + settle, unsettled queries
-   - `JsonStoreRepository` - Settings management
+    - `AccountRepository` - Full CRUD + queries
+    - `CategoryRepository` - Full CRUD + queries
+    - `TransactionRepository` - CRUD + date range, account, category filters
+    - `SplitRepository` - CRUD + settle, unsettled queries
+    - `JsonStoreRepository` - Settings management
 
 5. **Migration Examples**
-   - Before/after code comparisons
-   - SQLite → API migration patterns
-   - Error handling utilities
-   - Complete screen implementation examples
+    - Before/after code comparisons
+    - SQLite → API migration patterns
+    - Error handling utilities
+    - Complete screen implementation examples
 
 6. **Configuration**
-   - Environment setup (dev/prod)
-   - Base URL configuration
-   - Dependencies list
-   - Code generation commands
+    - Environment setup (dev/prod)
+    - Base URL configuration
+    - Dependencies list
+    - Code generation commands
 
 ---
 
@@ -309,6 +334,7 @@ backend/
 ## Technology Stack
 
 **Backend:**
+
 - Spring Boot 3.2.2
 - Spring Data JPA
 - Spring Security (JWT)
@@ -319,12 +345,14 @@ backend/
 - Maven
 
 **Testing:**
+
 - JUnit 5
 - Spring Boot Test
 - MockMvc
 - AssertJ
 
 **Flutter (Client):**
+
 - Dio (HTTP client)
 - flutter_secure_storage (token storage)
 - json_annotation (serialization)
@@ -337,6 +365,7 @@ backend/
 ### Backend Server
 
 **Development (no auth):**
+
 ```bash
 cd backend
 $env:SPRING_PROFILES_ACTIVE='dev,noauth'
@@ -344,12 +373,14 @@ mvn spring-boot:run
 ```
 
 **Production (with JWT):**
+
 ```bash
 $env:SPRING_PROFILES_ACTIVE='prod'
 mvn spring-boot:run
 ```
 
 **Run Tests:**
+
 ```bash
 mvn test
 mvn test -Dtest=*IntegrationTest
@@ -358,6 +389,7 @@ mvn test -Dtest=*IntegrationTest
 ### Flutter App
 
 1. **Update dependencies:**
+
 ```bash
 cd frontend
 flutter pub add dio flutter_secure_storage json_annotation
@@ -365,12 +397,13 @@ flutter pub add --dev build_runner json_serializable
 ```
 
 2. **Copy integration code from guide:**
-   - API client service
-   - Model classes
-   - Repositories
-   - Auth service
+    - API client service
+    - Model classes
+    - Repositories
+    - Auth service
 
 3. **Generate model code:**
+
 ```bash
 flutter pub run build_runner build --delete-conflicting-outputs
 ```
@@ -378,6 +411,7 @@ flutter pub run build_runner build --delete-conflicting-outputs
 4. **Update screens to use repositories instead of DatabaseUtil**
 
 5. **Run app:**
+
 ```bash
 flutter run
 ```
@@ -396,6 +430,7 @@ All endpoints return consistent format:
 ```
 
 **Success Response:**
+
 ```json
 {
   "result": {
@@ -408,6 +443,7 @@ All endpoints return consistent format:
 ```
 
 **Error Response:**
+
 ```json
 {
   "result": null,
@@ -440,7 +476,8 @@ All endpoints return consistent format:
 
 ## Known Issues & Notes
 
-1. **Liquibase YAML Parsing**: Dev profile uses Hibernate DDL instead of Liquibase to avoid YAML parsing issues. Production should use Liquibase with proper XML format if needed.
+1. **Liquibase YAML Parsing**: Dev profile uses Hibernate DDL instead of Liquibase to avoid YAML parsing issues.
+   Production should use Liquibase with proper XML format if needed.
 
 2. **H2 Reserved Keywords**: JsonStore uses `json_value` column name instead of `value` to avoid H2 conflicts.
 
@@ -448,7 +485,8 @@ All endpoints return consistent format:
 
 4. **JWT Token Storage**: Flutter uses flutter_secure_storage for secure token persistence.
 
-5. **No Auth Profile**: Development mode disables authentication for easier testing. Remove `noauth` profile for production.
+5. **No Auth Profile**: Development mode disables authentication for easier testing. Remove `noauth` profile for
+   production.
 
 ---
 
@@ -498,6 +536,7 @@ All endpoints return consistent format:
 ## Success Metrics
 
 ✅ **Backend:**
+
 - 5 new tables migrated
 - 50+ REST endpoints created
 - 36 integration tests passing (100%)
@@ -505,6 +544,7 @@ All endpoints return consistent format:
 - No-auth profile for development
 
 ✅ **Flutter:**
+
 - Complete API client service
 - All model classes with JSON serialization
 - Repository pattern for all entities
@@ -513,6 +553,7 @@ All endpoints return consistent format:
 - Error handling utilities
 
 ✅ **Documentation:**
+
 - Comprehensive Flutter integration guide
 - Before/after code examples
 - Complete migration checklist
@@ -530,6 +571,7 @@ The migration from Flutter UI's SQLite database to Spring Boot backend is **100%
 - Production-ready Flutter integration code
 - Complete documentation and examples
 
-The Flutter app can now be migrated incrementally using the provided guide, with all backend infrastructure ready and tested. Both mobile, web, and desktop Flutter apps can use the same backend API.
+The Flutter app can now be migrated incrementally using the provided guide, with all backend infrastructure ready and
+tested. Both mobile, web, and desktop Flutter apps can use the same backend API.
 
 **Status: READY FOR FLUTTER MIGRATION** 🚀

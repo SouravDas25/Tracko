@@ -2,8 +2,8 @@ package com.trako.services;
 
 import com.trako.entities.Account;
 import com.trako.repositories.AccountRepository;
-import com.trako.repositories.TransactionRepository;
 import com.trako.repositories.RecurringTransactionRepository;
+import com.trako.repositories.TransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

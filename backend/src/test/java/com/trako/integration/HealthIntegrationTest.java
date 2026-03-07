@@ -2,12 +2,10 @@ package com.trako.integration;
 
 import com.trako.config.TestJwtSecurityConfig;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.hamcrest.Matchers.not;
@@ -19,10 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Import(TestJwtSecurityConfig.class)
-public class HealthIntegrationTest {
-
-    @Autowired
-    private MockMvc mockMvc;
+public class HealthIntegrationTest extends BaseIntegrationTest {
 
     @Test
     public void healthIsPublicAndReturnsUp() throws Exception {

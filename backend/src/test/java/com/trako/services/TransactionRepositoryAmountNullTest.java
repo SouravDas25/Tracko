@@ -1,11 +1,8 @@
 package com.trako.services;
 
 import com.trako.config.TestJwtSecurityConfig;
-import com.trako.entities.Account;
-import com.trako.entities.Category;
-import com.trako.entities.Transaction;
-import com.trako.entities.User;
-import com.trako.entities.TransactionType;
+import com.trako.entities.*;
+import com.trako.enums.TransactionDbType;
 import com.trako.repositories.AccountRepository;
 import com.trako.repositories.CategoryRepository;
 import com.trako.repositories.TransactionRepository;
@@ -22,7 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -30,28 +28,22 @@ import static org.junit.jupiter.api.Assertions.*;
 @Transactional
 public class TransactionRepositoryAmountNullTest {
 
+    private static final boolean schemaPatched = false;
     @Autowired
     private UsersRepository usersRepository;
-
     @Autowired
     private AccountRepository accountRepository;
-
     @Autowired
     private CategoryRepository categoryRepository;
-
     @Autowired
     private TransactionRepository transactionRepository;
-
     @Autowired
     private EntityManager entityManager;
-
     @Autowired
     private JdbcTemplate jdbcTemplate;
-
     private User user;
     private Account account;
     private Category category;
-    private static boolean schemaPatched = false;
 
     @BeforeEach
     public void setup() {
@@ -85,13 +77,13 @@ public class TransactionRepositoryAmountNullTest {
         t.setCategoryId(category.getId());
         t.setName("Repo Path");
         t.setDate(new Date());
-        t.setTransactionType(TransactionType.DEBIT);
+        t.setTransactionType(TransactionDbType.DEBIT);
         t.setOriginalAmount(10.0);
         t.setOriginalCurrency("INR");
         t.setExchangeRate(1.0);
         t.setIsCountable(1);
 
-        
+
         Transaction persisted = transactionRepository.saveAndFlush(t);
         assertNotNull(persisted.getId());
 

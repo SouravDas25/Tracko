@@ -3,6 +3,7 @@
 ## Backend Server
 
 ### Start Server (No Auth - Development)
+
 ```bash
 cd backend
 $env:SPRING_PROFILES_ACTIVE='dev,noauth'
@@ -12,6 +13,7 @@ mvn spring-boot:run
 Server runs on: **http://localhost:8080**
 
 ### Test Server
+
 ```bash
 curl http://localhost:8080/api/accounts
 # Should return: {"result":[],"message":"Resource retrieved successfully"}
@@ -22,6 +24,7 @@ curl http://localhost:8080/api/accounts
 ## Flutter Integration - 3 Steps
 
 ### Step 1: Add Dependencies
+
 ```yaml
 # pubspec.yaml
 dependencies:
@@ -35,6 +38,7 @@ dev_dependencies:
 ```
 
 ### Step 2: Copy Code Files
+
 From `docs/FLUTTER_INTEGRATION_GUIDE.md`, copy to your Flutter project:
 
 ```
@@ -59,6 +63,7 @@ lib/
 ```
 
 ### Step 3: Generate Code & Run
+
 ```bash
 flutter pub get
 flutter pub run build_runner build --delete-conflicting-outputs
@@ -70,11 +75,13 @@ flutter run
 ## API Endpoints Quick Reference
 
 ### Authentication
+
 ```dart
 POST /api/oauth/token   // Login
 ```
 
 ### Accounts
+
 ```dart
 GET    /api/accounts                    // List all
 GET    /api/accounts/{id}               // Get by ID
@@ -85,6 +92,7 @@ DELETE /api/accounts/{id}               // Delete
 ```
 
 ### Categories
+
 ```dart
 GET    /api/categories                  // List all
 GET    /api/categories/{id}             // Get by ID
@@ -95,6 +103,7 @@ DELETE /api/categories/{id}             // Delete
 ```
 
 ### Transactions
+
 ```dart
 GET    /api/transactions                              // List all (supports pagination, date range, filters)
 GET    /api/transactions/{id}                         // Get by ID
@@ -106,6 +115,7 @@ DELETE /api/transactions/{id}                         // Delete
 ```
 
 ### Splits
+
 ```dart
 GET    /api/splits                              // List all
 GET    /api/splits/{id}                         // Get by ID
@@ -118,6 +128,7 @@ DELETE /api/splits/{id}                         // Delete
 ```
 
 ### Settings (JsonStore)
+
 ```dart
 GET    /api/json-store           // List all
 GET    /api/json-store/{name}    // Get by name
@@ -131,6 +142,7 @@ DELETE /api/json-store/{name}    // Delete
 ## Flutter Usage Examples
 
 ### Initialize API Client
+
 ```dart
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -140,6 +152,7 @@ void main() async {
 ```
 
 ### Authentication
+
 ```dart
 final authService = AuthService();
 
@@ -158,6 +171,7 @@ await authService.signIn(
 ```
 
 ### Fetch Accounts
+
 ```dart
 final accountRepo = AccountRepository();
 
@@ -170,6 +184,7 @@ await accountRepo.createAccount(account);
 ```
 
 ### Fetch Transactions
+
 ```dart
 final transactionRepo = TransactionRepository();
 
@@ -193,6 +208,7 @@ await transactionRepo.createTransaction(transaction);
 ```
 
 ### Settings Storage
+
 ```dart
 final jsonStoreRepo = JsonStoreRepository();
 
@@ -209,6 +225,7 @@ print(theme?['mode']); // 'dark'
 ## Response Format
 
 All endpoints return:
+
 ```json
 {
   "result": <data>,
@@ -223,6 +240,7 @@ The API client automatically extracts `result` for you.
 ## Testing
 
 ### Run Backend Tests
+
 ```bash
 mvn test                           # All tests
 mvn test -Dtest=*IntegrationTest   # Integration tests only
@@ -231,6 +249,7 @@ mvn test -Dtest=*IntegrationTest   # Integration tests only
 **Result:** 36 tests passing ✅
 
 ### Test Individual Endpoint
+
 ```bash
 # Create account
 curl -X POST http://localhost:8080/api/accounts \
@@ -246,6 +265,7 @@ curl http://localhost:8080/api/accounts/user/user123
 ## Troubleshooting
 
 ### Server won't start
+
 ```bash
 # Check if port 8080 is in use
 netstat -ano | findstr :8080
@@ -255,6 +275,7 @@ taskkill /PID <process_id> /F
 ```
 
 ### Flutter build_runner fails
+
 ```bash
 flutter clean
 flutter pub get
@@ -262,11 +283,13 @@ flutter pub run build_runner build --delete-conflicting-outputs
 ```
 
 ### 401 Unauthorized errors
+
 - Check JWT token is stored: `await authService.getToken()`
 - Re-login if token expired
 - For dev testing, use `noauth` profile on backend
 
 ### Connection refused
+
 - Verify backend is running: `curl http://localhost:8080/api/accounts`
 - Check `api_config.dart` has correct base URL
 - For Android emulator, use `http://10.0.2.2:8080`
@@ -277,12 +300,14 @@ flutter pub run build_runner build --delete-conflicting-outputs
 ## Production Deployment
 
 ### Backend
+
 1. Update `application-prod.properties` with production database
 2. Set `IS_PRODUCTION = true` in environment
 3. Remove `noauth` profile
 4. Deploy to cloud (AWS, Heroku, etc.)
 
 ### Flutter
+
 1. Update `api_config.dart`:
    ```dart
    static const bool IS_PRODUCTION = true;
@@ -306,6 +331,6 @@ flutter pub run build_runner build --delete-conflicting-outputs
 **Backend running:** ✅ http://localhost:8080  
 **Tests passing:** ✅ 36/36  
 **Flutter code:** ✅ Ready to copy  
-**Documentation:** ✅ Complete  
+**Documentation:** ✅ Complete
 
 **Status: READY FOR PRODUCTION** 🚀

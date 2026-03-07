@@ -1,7 +1,5 @@
 package com.trako.services;
 
-import com.trako.entities.Account;
-import com.trako.entities.Transaction;
 import com.trako.entities.User;
 import com.trako.exceptions.UserNotLoggedInException;
 import com.trako.models.request.UserSaveRequest;
@@ -18,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 public class UserService {
@@ -44,7 +41,7 @@ public class UserService {
     ContactRepository contactRepository;
 
     @Autowired
-    UserCurrencyRepository userCurrencyRepository;
+    CurrencyService currencyService;
 
     @Autowired
     BudgetMonthRepository budgetMonthRepository;
@@ -54,6 +51,9 @@ public class UserService {
 
     @Autowired
     AllocationRuleRepository allocationRuleRepository;
+
+    @Autowired
+    RecurringTransactionRepository recurringTransactionRepository;
 
     @Autowired
     PasswordEncoder passwordEncoder;
@@ -144,7 +144,7 @@ public class UserService {
         } else if (user.getBaseCurrency() == null) {
             user.setBaseCurrency("INR");
         }
-        
+
         user = usersRepository.save(user);
         return user.getId();
     }
@@ -157,46 +157,37 @@ public class UserService {
     public void resetUserData(String userId) {
         log.info("Resetting data for user: {}", userId);
 
-        // 1. Get all accounts for the user
-        List<Account> userAccounts = accountRepository.findByUserId(userId);
-        List<Long> accountIds = userAccounts.stream().map(Account::getId).collect(Collectors.toList());
+        // 1. Delete Splits associated with user's transactions
+        splitRepository.deleteByTransactionUserId(userId);
 
-        // 2. Get all transactions for these accounts
-        if (!accountIds.isEmpty()) {
-            List<Transaction> userTransactions = transactionRepository.findByAccountIdIn(accountIds);
-            List<Long> transactionIds = userTransactions.stream().map(Transaction::getId).collect(Collectors.toList());
-
-            // 3. Delete Splits associated with these transactions
-            if (!transactionIds.isEmpty()) {
-                splitRepository.deleteByTransactionIdIn(transactionIds);
-            }
-            
-            // 4. Delete Transactions
-            transactionRepository.deleteByAccountIdIn(accountIds);
-        }
-
-        // 5. Delete Splits by userId (cleanup)
+        // 2. Delete Splits by userId (cleanup)
         splitRepository.deleteByUserId(userId);
 
-        // 6. Delete Budget Allocations
+        // 3. Delete Transactions
+        transactionRepository.deleteByUserId(userId);
+
+        // 4. Delete Budget Allocations
         budgetCategoryAllocationRepository.deleteByUserId(userId);
 
-        // 7. Delete Budget Months
+        // 5. Delete Budget Months
         budgetMonthRepository.deleteByUserId(userId);
 
-        // 8. Delete Allocation Rules
+        // 6. Delete Allocation Rules
         allocationRuleRepository.deleteByUserId(userId);
 
-        // 9. Delete Contacts
+        // 7. Delete Contacts
         contactRepository.deleteByUserId(userId);
 
-        // 10. Delete User Currencies
-        userCurrencyRepository.deleteByUserId(userId);
+        // 8. Delete User Currencies
+        currencyService.deleteAllForUser(userId);
 
-        // 11. Delete Accounts
+        // 9. Delete Recurring Transactions
+        recurringTransactionRepository.deleteByUserId(userId);
+
+        // 10. Delete Accounts
         accountRepository.deleteByUserId(userId);
 
-        // 12. Delete Categories
+        // 11. Delete Categories
         categoryRepository.deleteByUserId(userId);
 
         log.info("Data reset completed for user: {}", userId);
@@ -206,25 +197,13 @@ public class UserService {
     public void resetUserTransactions(String userId) {
         log.info("Resetting transactions for user: {}", userId);
 
-        // 1. Get all accounts for the user
-        List<Account> userAccounts = accountRepository.findByUserId(userId);
-        List<Long> accountIds = userAccounts.stream().map(Account::getId).collect(Collectors.toList());
+        // 1. Delete Splits associated with user's transactions
+        splitRepository.deleteByTransactionUserId(userId);
 
-        // 2. Get all transactions for these accounts
-        if (!accountIds.isEmpty()) {
-            List<Transaction> userTransactions = transactionRepository.findByAccountIdIn(accountIds);
-            List<Long> transactionIds = userTransactions.stream().map(Transaction::getId).collect(Collectors.toList());
+        // 2. Delete Transactions
+        transactionRepository.deleteByUserId(userId);
 
-            // 3. Delete Splits associated with these transactions
-            if (!transactionIds.isEmpty()) {
-                splitRepository.deleteByTransactionIdIn(transactionIds);
-            }
-
-            // 4. Delete Transactions
-            transactionRepository.deleteByAccountIdIn(accountIds);
-        }
-
-        // 5. Reset Budget Allocations (Actual Spent = 0, Remaining = Allocated)
+        // 3. Reset Budget Allocations (Actual Spent = 0, Remaining = Allocated)
         budgetCategoryAllocationRepository.resetActualSpentByUserId(userId);
 
         log.info("Transactions reset completed for user: {}", userId);

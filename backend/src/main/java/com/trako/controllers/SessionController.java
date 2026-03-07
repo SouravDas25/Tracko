@@ -6,6 +6,7 @@ import com.trako.models.responses.JwtResponse;
 import com.trako.services.UserService;
 import com.trako.util.JwtTokenUtil;
 import com.trako.util.Response;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +21,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-import jakarta.validation.Valid;
 
 @RestController
 public class SessionController {
