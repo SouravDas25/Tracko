@@ -45,6 +45,11 @@
 # Database files
 *.mv.db
 *.trace.db
+backend/tracko-dev-db.mv.db
+backend/tracko-dev-db.trace.db
+
+# CLI configuration
+.tracko-cli.json
 
 # OS specific
 .DS_Store
