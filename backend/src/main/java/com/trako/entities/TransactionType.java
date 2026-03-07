@@ -7,9 +7,8 @@ import java.util.Arrays;
 
 public enum TransactionType {
     DEBIT(1),
-    CREDIT(2);
-
-    public static final int TRANSFER_RENDERING_VALUE = 3; // Virtual type for frontend rendering
+    CREDIT(2),
+    TRANSFER(3);
 
     private final int value;
 

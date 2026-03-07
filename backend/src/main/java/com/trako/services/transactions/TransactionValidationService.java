@@ -6,6 +6,7 @@ import com.trako.entities.Transaction;
 import com.trako.exceptions.AuthorizationException;
 import com.trako.exceptions.BadRequestException;
 import com.trako.exceptions.NotFoundException;
+import com.trako.models.request.TransactionRequest;
 import com.trako.repositories.AccountRepository;
 import com.trako.repositories.CategoryRepository;
 import com.trako.repositories.TransactionRepository;
@@ -48,5 +49,75 @@ public class TransactionValidationService {
 
         validateAccountOwnership(userId, transaction.getAccountId());
         return transaction;
+    }
+
+    public void validateTransactionCreateRequest(TransactionRequest request) {
+        if (request.accountId() == null) {
+            throw new BadRequestException("Transaction requires accountId");
+        }
+        if (request.categoryId() == null) {
+            throw new BadRequestException("Transaction requires categoryId");
+        }
+        if (request.originalCurrency() == null) {
+            throw new BadRequestException("Original currency is required");
+        }
+        if (request.originalAmount() == null) {
+            throw new BadRequestException("Original amount is required");
+        }
+    }
+
+    public void validateTransferCreateRequest(TransactionRequest request) {
+        Long fromAccountId = request.getSourceAccountId();
+        if (fromAccountId == null) {
+            throw new BadRequestException("Transfer requires fromAccountId or accountId");
+        }
+        if (request.toAccountId() == null) {
+            throw new BadRequestException("Transfer requires toAccountId");
+        }
+        if (fromAccountId.equals(request.toAccountId())) {
+            throw new BadRequestException("fromAccountId and toAccountId cannot be the same");
+        }
+        if (request.originalCurrency() == null) {
+            throw new BadRequestException("Original currency is required");
+        }
+        if (request.originalAmount() == null || request.originalAmount() <= 0) {
+            throw new BadRequestException("Original amount must be greater than 0");
+        }
+    }
+
+    public void validateToAccountId(Long toAccountId) {
+        if (toAccountId == null) {
+            throw new BadRequestException("toAccountId is required when converting to a transfer");
+        }
+    }
+
+    public void validatePositiveAmount(Double amount) {
+        if (amount != null && amount <= 0) {
+            throw new BadRequestException("Original amount must be greater than 0");
+        }
+    }
+
+    public void validateIsTransfer(Transaction existing) {
+        if (existing.getLinkedTransactionId() == null) {
+            throw new BadRequestException("Transaction is not a transfer");
+        }
+    }
+
+    public void validateIsNotTransfer(Transaction existing) {
+        if (existing.getLinkedTransactionId() != null) {
+            throw new BadRequestException("Transaction is already a transfer");
+        }
+    }
+
+    public void validateLinkedTransactionExists(Long linkedId) {
+        if (!transactionRepository.existsById(linkedId)) {
+            throw new NotFoundException("Linked transaction not found: " + linkedId);
+        }
+    }
+
+    public void validateNotSameAccount(Long accountId1, Long accountId2) {
+        if (accountId1 != null && accountId1.equals(accountId2)) {
+            throw new BadRequestException("Source and destination accounts cannot be the same");
+        }
     }
 }

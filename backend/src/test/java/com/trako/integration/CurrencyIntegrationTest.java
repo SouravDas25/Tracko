@@ -105,7 +105,7 @@ public class CurrencyIntegrationTest extends BaseIntegrationTest {
         // Expected Base Amount = 110.0 USD
 
         Transaction transaction = new Transaction();
-        transaction.setTransactionType(TransactionType.DEBIT); // Expense
+        transaction.setTransactionType(TransactionEntryType.DEBIT); // Expense
         transaction.setName("Dinner in Paris");
         transaction.setDate(new Date());
         transaction.setAccountId(testAccount.getId());
@@ -130,7 +130,7 @@ public class CurrencyIntegrationTest extends BaseIntegrationTest {
     @Test
     public void testTransactionMissingAmountAndConversionData() throws Exception {
         Transaction transaction = new Transaction();
-        transaction.setTransactionType(TransactionType.DEBIT);
+        transaction.setTransactionType(TransactionEntryType.DEBIT);
         transaction.setName("Bad Transaction");
         transaction.setDate(new Date());
         transaction.setAccountId(testAccount.getId());
@@ -166,7 +166,7 @@ public class CurrencyIntegrationTest extends BaseIntegrationTest {
 
         // Create a transaction with the originalCurrency /Amount but NO exchangeRate
         Transaction transaction = new Transaction();
-        transaction.setTransactionType(TransactionType.DEBIT); // Expense
+        transaction.setTransactionType(TransactionEntryType.DEBIT); // Expense
         transaction.setName("Paris Metro Ticket");
         transaction.setDate(new Date());
         transaction.setAccountId(testAccount.getId());
@@ -192,7 +192,7 @@ public class CurrencyIntegrationTest extends BaseIntegrationTest {
         userCurrencyRepository.deleteAll();
 
         Transaction transaction = new Transaction();
-        transaction.setTransactionType(TransactionType.DEBIT);
+        transaction.setTransactionType(TransactionEntryType.DEBIT);
         transaction.setName("Unknown Currency");
         transaction.setDate(new Date());
         transaction.setAccountId(testAccount.getId());

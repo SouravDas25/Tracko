@@ -2,6 +2,7 @@ package com.trako.services.transactions;
 
 import com.trako.dtos.TransferResult;
 import com.trako.entities.Transaction;
+import com.trako.entities.TransactionEntryType;
 import com.trako.entities.TransactionType;
 import com.trako.exceptions.NotFoundException;
 import com.trako.models.request.TransactionRequest;
@@ -71,32 +72,14 @@ public class TransactionWriteService {
         logger.info("Processing transfer request from account {} to account {}",
                 request.getSourceAccountId(), request.toAccountId());
 
-        // Validate required fields for transfer wrapper
-        Long fromAccountId = request.getSourceAccountId();
-        if (fromAccountId == null) {
-            throw new IllegalArgumentException("Transfer requires fromAccountId or accountId");
-        }
-        if (request.toAccountId() == null) {
-            throw new IllegalArgumentException("Transfer requires toAccountId");
-        }
-        if (fromAccountId.equals(request.toAccountId())) {
-            throw new IllegalArgumentException("fromAccountId and toAccountId cannot be same");
-        }
-
-        // Validate Currency and Amount
-        if (request.originalCurrency() == null) {
-            throw new IllegalArgumentException("Original currency is required");
-        }
-        if (request.originalAmount() == null || request.originalAmount() <= 0) {
-            throw new IllegalArgumentException("Original amount must be greater than 0");
-        }
+        validationService.validateTransferCreateRequest(request);
 
         Double exchangeRate = currencyService.resolveExchangeRate(userId, request.originalCurrency(), request.exchangeRate());
 
         // Delegate to internal transfer creation
         TransferResult result = transferService.createTransfer(
                 userId,
-                fromAccountId,
+                request.getSourceAccountId(),
                 request.toAccountId(),
                 request.date(),
                 request.originalAmount(),
@@ -126,7 +109,8 @@ public class TransactionWriteService {
         boolean isExistingTransfer = existing.getLinkedTransactionId() != null;
 
         // CASE 1: Convert Regular Transaction -> Transfer
-        if (!isExistingTransfer && request.toAccountId() != null) {
+        if (!isExistingTransfer && request.transactionType() == TransactionType.TRANSFER) {
+            validationService.validateToAccountId(request.toAccountId());
             TransferResult result = transferConversionService.convertRegularToTransfer(userId, id, request);
             return result.debit();
         }
@@ -144,9 +128,12 @@ public class TransactionWriteService {
 
         // CASE 4: Updating a REGULAR TRANSACTION
         // If a new transactionType is provided, it controls which path we take (DEBIT vs CREDIT).
-        TransactionType targetType = request.transactionType() != null
-                ? request.transactionType()
-                : existing.getTransactionType();
+        TransactionType targetType;
+        if (request.transactionType() != null) {
+            targetType = request.transactionType();
+        } else {
+            targetType = TransactionType.fromValue(existing.getTransactionType().getValue());
+        }
 
         if (targetType == TransactionType.CREDIT) {
             return creditTransactionService.updateCreditTransaction(userId, existing, request);
@@ -157,8 +144,8 @@ public class TransactionWriteService {
     }
 
     private Transaction handleTransferUpdate(String userId, Transaction existing, TransactionRequest request) {
-        boolean isDebitSide = existing.getTransactionType() == TransactionType.DEBIT;
-        boolean isCreditSide = existing.getTransactionType() == TransactionType.CREDIT;
+        boolean isDebitSide = existing.getTransactionType() == TransactionEntryType.DEBIT;
+        boolean isCreditSide = existing.getTransactionType() == TransactionEntryType.CREDIT;
 
         Long resolvedFromAccountId = request.fromAccountId();
         Long resolvedToAccountId = request.toAccountId();
@@ -181,9 +168,7 @@ public class TransactionWriteService {
             }
         }
 
-        if (request.originalAmount() != null && request.originalAmount() <= 0) {
-            throw new IllegalArgumentException("Original amount must be greater than 0");
-        }
+        validationService.validatePositiveAmount(request.originalAmount());
 
         TransferResult result = transferService.updateTransfer(
                 userId,

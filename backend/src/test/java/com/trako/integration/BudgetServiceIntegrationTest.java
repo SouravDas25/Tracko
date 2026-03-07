@@ -87,7 +87,7 @@ public class BudgetServiceIntegrationTest extends BaseIntegrationTest {
         income.setOriginalAmount(1000.0);
         income.setOriginalCurrency("INR");
         income.setExchangeRate(1.0);
-        income.setTransactionType(TransactionType.CREDIT); // CREDIT/INCOME
+        income.setTransactionType(TransactionEntryType.CREDIT); // CREDIT/INCOME
         income.setIsCountable(1);
         income.setDate(date(2026, 1, 5));
         income.setName("Salary");
@@ -102,7 +102,7 @@ public class BudgetServiceIntegrationTest extends BaseIntegrationTest {
         expense.setOriginalAmount(50.0);
         expense.setOriginalCurrency("INR");
         expense.setExchangeRate(1.0);
-        expense.setTransactionType(TransactionType.DEBIT); // DEBIT/EXPENSE
+        expense.setTransactionType(TransactionEntryType.DEBIT); // DEBIT/EXPENSE
         expense.setIsCountable(1);
         expense.setDate(date(2026, 1, 10));
         expense.setName("Grocery Run");
@@ -145,7 +145,7 @@ public class BudgetServiceIntegrationTest extends BaseIntegrationTest {
         incomeJan.setOriginalAmount(1000.0);
         incomeJan.setOriginalCurrency("INR");
         incomeJan.setExchangeRate(1.0);
-        incomeJan.setTransactionType(TransactionType.CREDIT);
+        incomeJan.setTransactionType(TransactionEntryType.CREDIT);
         incomeJan.setIsCountable(1);
         incomeJan.setDate(date(2026, 1, 5));
         incomeJan.setName("Jan Salary");
@@ -159,7 +159,7 @@ public class BudgetServiceIntegrationTest extends BaseIntegrationTest {
         expenseJan.setOriginalAmount(100.0);
         expenseJan.setOriginalCurrency("INR");
         expenseJan.setExchangeRate(1.0);
-        expenseJan.setTransactionType(TransactionType.DEBIT);
+        expenseJan.setTransactionType(TransactionEntryType.DEBIT);
         expenseJan.setIsCountable(1);
         expenseJan.setDate(date(2026, 1, 10));
         expenseJan.setName("Jan Expense");
@@ -200,7 +200,7 @@ public class BudgetServiceIntegrationTest extends BaseIntegrationTest {
         income.setOriginalAmount(100.0);
         income.setOriginalCurrency("INR");
         income.setExchangeRate(1.0);
-        income.setTransactionType(TransactionType.CREDIT);
+        income.setTransactionType(TransactionEntryType.CREDIT);
         income.setIsCountable(1);
         income.setDate(date(2026, 1, 1));
         income.setName("Small Salary");

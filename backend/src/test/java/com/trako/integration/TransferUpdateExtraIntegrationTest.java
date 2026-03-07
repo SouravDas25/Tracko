@@ -2,10 +2,7 @@ package com.trako.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trako.config.TestJwtSecurityConfig;
-import com.trako.entities.Account;
-import com.trako.entities.Transaction;
-import com.trako.entities.TransactionType;
-import com.trako.entities.User;
+import com.trako.entities.*;
 import com.trako.repositories.AccountRepository;
 import com.trako.repositories.TransactionRepository;
 import com.trako.repositories.UsersRepository;
@@ -80,7 +77,7 @@ public class TransferUpdateExtraIntegrationTest extends BaseIntegrationTest {
 
         // Fetch transactions and pick debit side
         List<Transaction> all = transactionRepository.findAll();
-        Transaction debit = all.stream().filter(t -> t.getTransactionType() == TransactionType.DEBIT).findFirst().orElseThrow();
+        Transaction debit = all.stream().filter(t -> t.getTransactionType() == TransactionEntryType.DEBIT).findFirst().orElseThrow();
         Long creditId = debit.getLinkedTransactionId();
 
         // Update toAccountId to acc3
@@ -140,7 +137,7 @@ public class TransferUpdateExtraIntegrationTest extends BaseIntegrationTest {
 
         // Get B's debit id
         List<Transaction> all = transactionRepository.findAll();
-        Transaction bDebit = all.stream().filter(t -> t.getTransactionType() == TransactionType.DEBIT).findFirst().orElseThrow();
+        Transaction bDebit = all.stream().filter(t -> t.getTransactionType() == TransactionEntryType.DEBIT).findFirst().orElseThrow();
 
         // Try to update B's transfer with A's token -> 401
         Map<String, Object> update = new HashMap<>();

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trako.config.TestJwtSecurityConfig;
 import com.trako.entities.Account;
 import com.trako.entities.Transaction;
+import com.trako.entities.TransactionEntryType;
 import com.trako.entities.TransactionType;
 import com.trako.entities.User;
 import com.trako.repositories.AccountRepository;
@@ -74,7 +75,7 @@ public class TransferUpdateHappyPathIntegrationTest extends BaseIntegrationTest 
 
         // Grab debit/credit IDs
         List<Transaction> txs = transactionRepository.findAll();
-        Transaction debit = txs.stream().filter(t -> t.getTransactionType() == TransactionType.DEBIT).findFirst().orElseThrow();
+        Transaction debit = txs.stream().filter(t -> t.getTransactionType() == TransactionEntryType.DEBIT).findFirst().orElseThrow();
         Long creditId = debit.getLinkedTransactionId();
 
         // Update fields

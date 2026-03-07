@@ -201,7 +201,7 @@ public class CategoryIntegrationTest extends BaseIntegrationTest {
 
         // Create a transaction under that category
         Transaction t = new Transaction();
-        t.setTransactionType(TransactionType.DEBIT);
+        t.setTransactionType(TransactionEntryType.DEBIT);
         t.setName("Tx");
         t.setOriginalAmount(10.0);
         t.setOriginalCurrency("INR");
@@ -247,7 +247,7 @@ public class CategoryIntegrationTest extends BaseIntegrationTest {
         rt.setAccountId(a1.getId());
         rt.setToAccountId(a2.getId());
         rt.setCategoryId(category.getId());
-        rt.setTransactionType(com.trako.entities.RecurringTransactionType.DEBIT);
+        rt.setTransactionType(com.trako.entities.TransactionType.DEBIT);
         rt.setFrequency(Frequency.MONTHLY);
         rt.setStartDate(new java.util.Date());
         rt.setNextRunDate(new java.util.Date());

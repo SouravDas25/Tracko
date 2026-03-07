@@ -57,7 +57,7 @@ public class TransactionDeleteEdgeCasesTest extends BaseIntegrationTest {
 
     private Transaction createTransactionForUserA() {
         Transaction t = new Transaction();
-        t.setTransactionType(TransactionType.DEBIT);
+        t.setTransactionType(TransactionEntryType.DEBIT);
         t.setName("T");
         t.setOriginalAmount(10.0);
         t.setOriginalCurrency("INR");

@@ -75,7 +75,7 @@ public class TransactionUpdateIntegrationTest extends BaseIntegrationTest {
     @Test
     public void updateRegularTransactionFields_Success() throws Exception {
         Transaction t = new Transaction();
-        t.setTransactionType(TransactionType.DEBIT);
+        t.setTransactionType(TransactionEntryType.DEBIT);
         t.setName("Old");
         t.setOriginalAmount(10.0);
         t.setOriginalCurrency("INR");
@@ -126,7 +126,7 @@ public class TransactionUpdateIntegrationTest extends BaseIntegrationTest {
         otherCat = categoryRepository.save(otherCat);
 
         Transaction otherTx = new Transaction();
-        otherTx.setTransactionType(TransactionType.DEBIT);
+        otherTx.setTransactionType(TransactionEntryType.DEBIT);
         otherTx.setName("OtherTx");
         otherTx.setOriginalAmount(5.0);
         otherTx.setOriginalCurrency("INR");

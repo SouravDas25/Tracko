@@ -72,7 +72,7 @@ public class TransactionGetAllExpandTest extends BaseIntegrationTest {
         // Create transactions in current month
         Date now = new Date();
         Transaction t1 = new Transaction();
-        t1.setTransactionType(TransactionType.DEBIT);
+        t1.setTransactionType(TransactionEntryType.DEBIT);
         t1.setName("Lunch");
         t1.setOriginalAmount(50.0);
         t1.setOriginalCurrency("INR");
@@ -85,7 +85,7 @@ public class TransactionGetAllExpandTest extends BaseIntegrationTest {
 
         // Create a transfer pair: debit (countable=0) + credit (countable=0) under TRANSFER
         Transaction debit = new Transaction();
-        debit.setTransactionType(TransactionType.DEBIT);
+        debit.setTransactionType(TransactionEntryType.DEBIT);
         debit.setName("Xfer Out");
         debit.setOriginalAmount(100.0);
         debit.setOriginalCurrency("INR");
@@ -97,7 +97,7 @@ public class TransactionGetAllExpandTest extends BaseIntegrationTest {
         debit = transactionWriteService.saveForUser(user.getId(), debit);
 
         Transaction credit = new Transaction();
-        credit.setTransactionType(TransactionType.CREDIT);
+        credit.setTransactionType(TransactionEntryType.CREDIT);
         credit.setName("Xfer In");
         credit.setOriginalAmount(100.0);
         credit.setOriginalCurrency("INR");

@@ -5,6 +5,7 @@ import com.trako.dtos.CategoryStatsResponseDTO;
 import com.trako.dtos.StatsPointDTO;
 import com.trako.dtos.StatsResponseDTO;
 import com.trako.entities.Category;
+import com.trako.entities.TransactionEntryType;
 import com.trako.entities.TransactionType;
 import com.trako.repositories.CategoryRepository;
 import com.trako.repositories.TransactionRepository;
@@ -163,13 +164,21 @@ public class StatsService {
     //     }
     //     return total;
     // }
+    private TransactionEntryType mapToEntryType(TransactionType type) {
+        if (type == TransactionType.CREDIT) return TransactionEntryType.CREDIT;
+        if (type == TransactionType.DEBIT) return TransactionEntryType.DEBIT;
+        // Fallback or error for TRANSFER if stats requested for TRANSFER?
+        // Usually stats are income (CREDIT) or expense (DEBIT).
+        return TransactionEntryType.DEBIT;
+    }
+
     private List<StatsPointDTO> buildSeriesFromDb(String userId, Range range, TransactionType transactionType, Long accountId, Date anchorDate, Date currentStart, Date currentEnd) {
-        List<Object[]> aggs = transactionRepository.sumAmountsByDateForUser(userId, transactionType, accountId);
+        List<Object[]> aggs = transactionRepository.sumAmountsByDateForUser(userId, mapToEntryType(transactionType), accountId);
         return buildSeriesFromAggs(range, anchorDate, aggs, currentStart, currentEnd);
     }
 
     private List<StatsPointDTO> buildSeriesFromDbCategory(String userId, Range range, TransactionType transactionType, Long accountId, Long categoryId, Date anchorDate, Date currentStart, Date currentEnd) {
-        List<Object[]> aggs = transactionRepository.sumAmountsByDateForCategory(userId, transactionType, accountId, categoryId);
+        List<Object[]> aggs = transactionRepository.sumAmountsByDateForCategory(userId, mapToEntryType(transactionType), accountId, categoryId);
         return buildSeriesFromAggs(range, anchorDate, aggs, currentStart, currentEnd);
     }
 
@@ -347,7 +356,7 @@ public class StatsService {
         }
 
         List<Object[]> catAggs = transactionRepository.sumAmountsByCategoryForUserInRange(
-                userId, transactionType, accountId, currentStart, currentEnd);
+                userId, mapToEntryType(transactionType), accountId, currentStart, currentEnd);
 
         List<CategoryStatDTO> catStats = new ArrayList<>();
         double total = 0.0;
@@ -410,7 +419,7 @@ public class StatsService {
 
         // Total for current period only
         Double sum = transactionRepository.sumAmountForCategoryInRange(
-                userId, transactionType, accountId, categoryId, currentStart, currentEnd);
+                userId, mapToEntryType(transactionType), accountId, categoryId, currentStart, currentEnd);
         double total = sum != null ? sum : 0.0;
 
         return new CategoryStatsResponseDTO(

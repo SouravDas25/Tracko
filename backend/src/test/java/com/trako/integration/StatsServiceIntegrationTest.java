@@ -74,8 +74,8 @@ public class StatsServiceIntegrationTest extends BaseIntegrationTest {
         Date start = date(2026, 1, 1);
         Date end = date(2026, 1, 10); // 10 days inclusive
 
-        saveTx(food.getId(), TransactionType.DEBIT, 1, 10.0, date(2026, 1, 2));
-        saveTx(food.getId(), TransactionType.DEBIT, 1, 20.0, date(2026, 1, 5));
+        saveTx(food.getId(), TransactionEntryType.DEBIT, 1, 10.0, date(2026, 1, 2));
+        saveTx(food.getId(), TransactionEntryType.DEBIT, 1, 20.0, date(2026, 1, 5));
 
         StatsResponseDTO dto = statsService.getStats(user.getId(), StatsService.Range.custom, TransactionType.DEBIT, null, null, start, end);
 
@@ -95,10 +95,10 @@ public class StatsServiceIntegrationTest extends BaseIntegrationTest {
         Date start = date(2026, 1, 1);
         Date end = date(2026, 4, 1); // Spans into April (> 62 days threshold)
 
-        saveTx(food.getId(), TransactionType.DEBIT, 1, 10.0, date(2026, 1, 15));
-        saveTx(food.getId(), TransactionType.DEBIT, 1, 20.0, date(2026, 2, 15));
-        saveTx(food.getId(), TransactionType.DEBIT, 1, 30.0, date(2026, 3, 15));
-        saveTx(food.getId(), TransactionType.DEBIT, 1, 40.0, date(2026, 4, 1)); // Transaction on the last day
+        saveTx(food.getId(), TransactionEntryType.DEBIT, 1, 10.0, date(2026, 1, 15));
+        saveTx(food.getId(), TransactionEntryType.DEBIT, 1, 20.0, date(2026, 2, 15));
+        saveTx(food.getId(), TransactionEntryType.DEBIT, 1, 30.0, date(2026, 3, 15));
+        saveTx(food.getId(), TransactionEntryType.DEBIT, 1, 40.0, date(2026, 4, 1)); // Transaction on the last day
 
         StatsResponseDTO dto = statsService.getStats(user.getId(), StatsService.Range.custom, TransactionType.DEBIT, null, null, start, end);
 
@@ -163,10 +163,10 @@ public class StatsServiceIntegrationTest extends BaseIntegrationTest {
     public void monthlyStatsBuildsMonthlySeriesAndSkipsInvalidCategoryIds() {
         Date anchor = date(2026, 2, 10);
 
-        saveTx(food.getId(), TransactionType.DEBIT, 1, 10.0, date(2026, 1, 5));
-        saveTx(food.getId(), TransactionType.DEBIT, 1, 20.0, date(2026, 2, 5));
-        saveTx(travel.getId(), TransactionType.DEBIT, 1, 5.0, date(2026, 2, 6));
-        saveTx(food.getId(), TransactionType.DEBIT, 1, null, date(2026, 2, 7));
+        saveTx(food.getId(), TransactionEntryType.DEBIT, 1, 10.0, date(2026, 1, 5));
+        saveTx(food.getId(), TransactionEntryType.DEBIT, 1, 20.0, date(2026, 2, 5));
+        saveTx(travel.getId(), TransactionEntryType.DEBIT, 1, 5.0, date(2026, 2, 6));
+        saveTx(food.getId(), TransactionEntryType.DEBIT, 1, null, date(2026, 2, 7));
 
         StatsResponseDTO dto = statsService.getStats(user.getId(), StatsService.Range.monthly, TransactionType.DEBIT, null, anchor, null, null);
 
@@ -188,7 +188,7 @@ public class StatsServiceIntegrationTest extends BaseIntegrationTest {
         Date anchor = date(2026, 12, 15);
 
         for (int m = 1; m <= 12; m++) {
-            saveTx(food.getId(), TransactionType.DEBIT, 1, 1.0, date(2026, m, 2));
+            saveTx(food.getId(), TransactionEntryType.DEBIT, 1, 1.0, date(2026, m, 2));
         }
 
         StatsResponseDTO dto = statsService.getStats(user.getId(), StatsService.Range.monthly, TransactionType.DEBIT, null, anchor, null, null);
@@ -204,8 +204,8 @@ public class StatsServiceIntegrationTest extends BaseIntegrationTest {
     public void yearlyStatsBuildsYearlySeries() {
         Date anchor = date(2026, 6, 1);
 
-        saveTx(food.getId(), TransactionType.DEBIT, 1, 10.0, date(2025, 12, 31));
-        saveTx(food.getId(), TransactionType.DEBIT, 1, 20.0, date(2026, 1, 1));
+        saveTx(food.getId(), TransactionEntryType.DEBIT, 1, 10.0, date(2025, 12, 31));
+        saveTx(food.getId(), TransactionEntryType.DEBIT, 1, 20.0, date(2026, 1, 1));
 
         StatsResponseDTO dto = statsService.getStats(user.getId(), StatsService.Range.yearly, TransactionType.DEBIT, null, anchor, null, null);
 
@@ -222,8 +222,8 @@ public class StatsServiceIntegrationTest extends BaseIntegrationTest {
     public void statsHasEmptySeriesWhenNoMatchingKindTransactions() {
         Date anchor = date(2026, 1, 8);
 
-        saveTx(food.getId(), TransactionType.CREDIT, 1, 50.0, date(2026, 1, 7));
-        saveTx(food.getId(), TransactionType.DEBIT, null, 50.0, date(2026, 1, 7));
+        saveTx(food.getId(), TransactionEntryType.CREDIT, 1, 50.0, date(2026, 1, 7));
+        saveTx(food.getId(), TransactionEntryType.DEBIT, null, 50.0, date(2026, 1, 7));
 
         StatsResponseDTO dto = statsService.getStats(user.getId(), StatsService.Range.weekly, TransactionType.DEBIT, null, anchor, null, null);
 
@@ -240,9 +240,9 @@ public class StatsServiceIntegrationTest extends BaseIntegrationTest {
     public void categoryStatsWeeklyFiltersByCategoryAndComputesTotalForCurrentPeriod() {
         Date anchor = date(2026, 1, 8);
 
-        saveTx(food.getId(), TransactionType.DEBIT, 1, 40.0, date(2026, 1, 7));
-        saveTx(travel.getId(), TransactionType.DEBIT, 1, 999.0, date(2026, 1, 7));
-        saveTx(food.getId(), TransactionType.DEBIT, 1, 500.0, date(2025, 12, 15));
+        saveTx(food.getId(), TransactionEntryType.DEBIT, 1, 40.0, date(2026, 1, 7));
+        saveTx(travel.getId(), TransactionEntryType.DEBIT, 1, 999.0, date(2026, 1, 7));
+        saveTx(food.getId(), TransactionEntryType.DEBIT, 1, 500.0, date(2025, 12, 15));
 
         var dto = statsService.getCategoryStats(user.getId(), StatsService.Range.weekly, TransactionType.DEBIT, null, anchor, food.getId(), null, null);
 
@@ -278,15 +278,15 @@ public class StatsServiceIntegrationTest extends BaseIntegrationTest {
     }
 
     private void saveExpense(Long categoryId, double amount, Date d) {
-        saveTx(categoryId, TransactionType.DEBIT, 1, amount, d);
+        saveTx(categoryId, TransactionEntryType.DEBIT, 1, amount, d);
     }
 
-    private void saveTx(Long categoryId, TransactionType transactionType, Integer isCountable, Double amount, Date d) {
+    private void saveTx(Long categoryId, TransactionEntryType transactionType, Integer isCountable, Double amount, Date d) {
         Transaction t = newTx(categoryId, transactionType, isCountable, amount, d);
         transactionWriteService.saveForUser(user.getId(), t);
     }
 
-    private Transaction newTx(Long categoryId, TransactionType transactionType, Integer isCountable, Double amount, Date d) {
+    private Transaction newTx(Long categoryId, TransactionEntryType transactionType, Integer isCountable, Double amount, Date d) {
         Transaction t = new Transaction();
         t.setAccountId(account.getId());
         t.setCategoryId(categoryId);

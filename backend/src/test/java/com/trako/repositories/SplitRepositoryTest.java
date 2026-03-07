@@ -43,7 +43,7 @@ public class SplitRepositoryTest {
         entityManager.persist(testCategory);
 
         testTransaction = new Transaction();
-        testTransaction.setTransactionType(TransactionType.DEBIT);
+        testTransaction.setTransactionType(TransactionEntryType.DEBIT);
         testTransaction.setName("Dinner");
         testTransaction.setDate(new Date());
         testTransaction.setOriginalAmount(100.00);

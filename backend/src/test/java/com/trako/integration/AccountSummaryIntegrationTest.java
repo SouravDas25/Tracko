@@ -63,11 +63,11 @@ public class AccountSummaryIntegrationTest extends BaseIntegrationTest {
     @Test
     public void testGetAccountMonthlySummaries() throws Exception {
         // Add transactions in different months of 2024
-        createTransaction(account.getId(), category.getId(), 2024, Calendar.JANUARY, 1000.0, TransactionType.CREDIT); // Income
-        createTransaction(account.getId(), category.getId(), 2024, Calendar.JANUARY, 200.0, TransactionType.DEBIT);  // Expense
+        createTransaction(account.getId(), category.getId(), 2024, Calendar.JANUARY, 1000.0, TransactionEntryType.CREDIT); // Income
+        createTransaction(account.getId(), category.getId(), 2024, Calendar.JANUARY, 200.0, TransactionEntryType.DEBIT);  // Expense
         // Net Jan: +800
 
-        createTransaction(account.getId(), category.getId(), 2024, Calendar.FEBRUARY, 500.0, TransactionType.CREDIT); // Income
+        createTransaction(account.getId(), category.getId(), 2024, Calendar.FEBRUARY, 500.0, TransactionEntryType.CREDIT); // Income
         // Net Feb: +500
 
         mockMvc.perform(get("/api/accounts/" + account.getId() + "/summary/monthly")
@@ -84,11 +84,11 @@ public class AccountSummaryIntegrationTest extends BaseIntegrationTest {
     @Test
     public void testGetAccountYearlySummaries() throws Exception {
         // 2023
-        createTransaction(account.getId(), category.getId(), 2023, Calendar.DECEMBER, 1000.0, TransactionType.CREDIT); // +1000
+        createTransaction(account.getId(), category.getId(), 2023, Calendar.DECEMBER, 1000.0, TransactionEntryType.CREDIT); // +1000
 
         // 2024
-        createTransaction(account.getId(), category.getId(), 2024, Calendar.JANUARY, 2000.0, TransactionType.CREDIT); // +2000
-        createTransaction(account.getId(), category.getId(), 2024, Calendar.FEBRUARY, 500.0, TransactionType.DEBIT); // -500
+        createTransaction(account.getId(), category.getId(), 2024, Calendar.JANUARY, 2000.0, TransactionEntryType.CREDIT); // +2000
+        createTransaction(account.getId(), category.getId(), 2024, Calendar.FEBRUARY, 500.0, TransactionEntryType.DEBIT); // -500
         // Net 2024: +1500
 
         mockMvc.perform(get("/api/accounts/" + account.getId() + "/summary/yearly")
@@ -115,7 +115,7 @@ public class AccountSummaryIntegrationTest extends BaseIntegrationTest {
                 .andExpect(status().isUnauthorized());
     }
 
-    private void createTransaction(Long accountId, Long categoryId, int year, int month, double amount, TransactionType type) {
+    private void createTransaction(Long accountId, Long categoryId, int year, int month, double amount, TransactionEntryType type) {
         Transaction t = new Transaction();
         t.setAccountId(accountId);
         t.setCategoryId(categoryId);

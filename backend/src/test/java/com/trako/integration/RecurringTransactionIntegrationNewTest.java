@@ -1,13 +1,8 @@
 package com.trako.integration;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trako.config.TestJwtSecurityConfig;
 import com.trako.entities.*;
-import com.trako.repositories.AccountRepository;
-import com.trako.repositories.CategoryRepository;
 import com.trako.repositories.RecurringTransactionRepository;
-import com.trako.repositories.UsersRepository;
-import com.trako.util.JwtTokenUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,10 +11,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -110,7 +103,7 @@ public class RecurringTransactionIntegrationNewTest extends BaseIntegrationTest 
         rt.setName("R");
         rt.setAccountId(accA1.getId());
         rt.setCategoryId(catA1.getId());
-        rt.setTransactionType(com.trako.entities.RecurringTransactionType.DEBIT);
+        rt.setTransactionType(com.trako.entities.TransactionType.DEBIT);
         rt.setFrequency(Frequency.MONTHLY);
         Date now = new Date();
         rt.setStartDate(now);
@@ -134,7 +127,7 @@ public class RecurringTransactionIntegrationNewTest extends BaseIntegrationTest 
         rt.setName("R");
         rt.setAccountId(accA1.getId());
         rt.setCategoryId(catA1.getId());
-        rt.setTransactionType(com.trako.entities.RecurringTransactionType.DEBIT);
+        rt.setTransactionType(com.trako.entities.TransactionType.DEBIT);
         rt.setFrequency(Frequency.MONTHLY);
         Date now = new Date();
         rt.setStartDate(now);

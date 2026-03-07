@@ -2,6 +2,7 @@ package com.trako.services.transactions;
 
 import com.trako.dtos.TransferResult;
 import com.trako.entities.Transaction;
+import com.trako.entities.TransactionEntryType;
 import com.trako.entities.TransactionType;
 import com.trako.exceptions.NotFoundException;
 import com.trako.models.request.TransactionRequest;
@@ -55,7 +56,7 @@ public class TransferConversionServiceTest {
         existingTransaction.setId(TRANSACTION_ID);
         existingTransaction.setAccountId(ACCOUNT_ID);
         existingTransaction.setCategoryId(5L);
-        existingTransaction.setTransactionType(TransactionType.DEBIT);
+        existingTransaction.setTransactionType(TransactionEntryType.DEBIT);
         existingTransaction.setOriginalAmount(100.0);
         existingTransaction.setOriginalCurrency("USD");
         existingTransaction.setExchangeRate(1.0);
@@ -104,7 +105,7 @@ public class TransferConversionServiceTest {
         linkedTransaction = new Transaction();
         linkedTransaction.setId(LINKED_TRANSACTION_ID);
         linkedTransaction.setAccountId(TO_ACCOUNT_ID);
-        linkedTransaction.setTransactionType(TransactionType.CREDIT);
+        linkedTransaction.setTransactionType(TransactionEntryType.CREDIT);
         linkedTransaction.setLinkedTransactionId(TRANSACTION_ID);
     }
 
@@ -133,7 +134,7 @@ public class TransferConversionServiceTest {
         // Verify debit side
         Transaction debit = result.debit();
         assertThat(debit.getId()).isEqualTo(TRANSACTION_ID);
-        assertThat(debit.getTransactionType()).isEqualTo(TransactionType.DEBIT);
+        assertThat(debit.getTransactionType()).isEqualTo(TransactionEntryType.DEBIT);
         assertThat(debit.getCategoryId()).isEqualTo(TRANSFER_CATEGORY_ID);
         assertThat(debit.getIsCountable()).isEqualTo(0);
         assertThat(debit.getLinkedTransactionId()).isEqualTo(LINKED_TRANSACTION_ID);
@@ -141,7 +142,7 @@ public class TransferConversionServiceTest {
         // Verify credit side
         Transaction credit = result.credit();
         assertThat(credit.getId()).isEqualTo(LINKED_TRANSACTION_ID);
-        assertThat(credit.getTransactionType()).isEqualTo(TransactionType.CREDIT);
+        assertThat(credit.getTransactionType()).isEqualTo(TransactionEntryType.CREDIT);
         assertThat(credit.getAccountId()).isEqualTo(TO_ACCOUNT_ID);
         assertThat(credit.getLinkedTransactionId()).isEqualTo(TRANSACTION_ID);
 
@@ -242,7 +243,7 @@ public class TransferConversionServiceTest {
         // Then
         assertThat(result.getLinkedTransactionId()).isNull();
         assertThat(result.getCategoryId()).isEqualTo(5L);
-        assertThat(result.getTransactionType()).isEqualTo(TransactionType.DEBIT);
+        assertThat(result.getTransactionType()).isEqualTo(TransactionEntryType.DEBIT);
         assertThat(result.getIsCountable()).isEqualTo(1);
         assertThat(result.getName()).isEqualTo("Regular");
 
@@ -329,7 +330,7 @@ public class TransferConversionServiceTest {
 
         // Then - should preserve existing values since request has nulls
         assertThat(result.getCategoryId()).isEqualTo(5L);  // original category
-        assertThat(result.getTransactionType()).isEqualTo(TransactionType.DEBIT);  // original type
+        assertThat(result.getTransactionType()).isEqualTo(TransactionEntryType.DEBIT);  // original type
         assertThat(result.getIsCountable()).isEqualTo(1);  // default
         assertThat(result.getName()).isEqualTo("Grocery");  // original name
     }

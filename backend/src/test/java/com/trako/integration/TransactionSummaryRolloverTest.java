@@ -109,10 +109,10 @@ public class TransactionSummaryRolloverTest extends BaseIntegrationTest {
         int prevMonth = 1;
 
         // 1. Create Transactions
-        createTransaction(accountA, incomeCategory, 1000.0, TransactionType.CREDIT, getDate(prevYear, prevMonth, 5));
-        createTransaction(accountB, incomeCategory, 500.0, TransactionType.CREDIT, getDate(prevYear, prevMonth, 10));
-        createTransaction(accountA, expenseCategory, 200.0, TransactionType.DEBIT, getDate(prevYear, prevMonth, 15));
-        createTransaction(accountB, expenseCategory, 100.0, TransactionType.DEBIT, getDate(prevYear, prevMonth, 20));
+        createTransaction(accountA, incomeCategory, 1000.0, TransactionEntryType.CREDIT, getDate(prevYear, prevMonth, 5));
+        createTransaction(accountB, incomeCategory, 500.0, TransactionEntryType.CREDIT, getDate(prevYear, prevMonth, 10));
+        createTransaction(accountA, expenseCategory, 200.0, TransactionEntryType.DEBIT, getDate(prevYear, prevMonth, 15));
+        createTransaction(accountB, expenseCategory, 100.0, TransactionEntryType.DEBIT, getDate(prevYear, prevMonth, 20));
 
         // 2. Verify Summary for Previous Month (All Accounts)
         Date start = getMonthStart(prevYear, prevMonth);
@@ -141,10 +141,10 @@ public class TransactionSummaryRolloverTest extends BaseIntegrationTest {
         int currMonth = 2;
 
         // 1. Create Transactions in Previous Month
-        createTransaction(accountA, incomeCategory, 1000.0, TransactionType.CREDIT, getDate(prevYear, prevMonth, 5));
-        createTransaction(accountB, incomeCategory, 500.0, TransactionType.CREDIT, getDate(prevYear, prevMonth, 10));
+        createTransaction(accountA, incomeCategory, 1000.0, TransactionEntryType.CREDIT, getDate(prevYear, prevMonth, 5));
+        createTransaction(accountB, incomeCategory, 500.0, TransactionEntryType.CREDIT, getDate(prevYear, prevMonth, 10));
         // Consuming the budget so category rollover is 0, ensuring we test unallocated rollover (Income based)
-        createTransaction(accountA, expenseCategory, 1000.0, TransactionType.DEBIT, getDate(prevYear, prevMonth, 15));
+        createTransaction(accountA, expenseCategory, 1000.0, TransactionEntryType.DEBIT, getDate(prevYear, prevMonth, 15));
 
         // 2. Allocate Budget in Previous Month (triggers BudgetMonth creation)
         BudgetAllocationRequestDTO allocReq = new BudgetAllocationRequestDTO();
@@ -185,8 +185,8 @@ public class TransactionSummaryRolloverTest extends BaseIntegrationTest {
         int currYear = 2025;
         int currMonth = 2;
 
-        createTransaction(accountA, incomeCategory, 1000.0, TransactionType.CREDIT, getDate(yearA, monthA, 5));
-        createTransaction(accountA, expenseCategory, 400.0, TransactionType.DEBIT, getDate(yearA, monthA, 10));
+        createTransaction(accountA, incomeCategory, 1000.0, TransactionEntryType.CREDIT, getDate(yearA, monthA, 5));
+        createTransaction(accountA, expenseCategory, 400.0, TransactionEntryType.DEBIT, getDate(yearA, monthA, 10));
         BudgetAllocationRequestDTO allocA = new BudgetAllocationRequestDTO();
         allocA.setCategoryId(expenseCategory.getId());
         allocA.setAmount(400.0);
@@ -194,8 +194,8 @@ public class TransactionSummaryRolloverTest extends BaseIntegrationTest {
         allocA.setYear(yearA);
         budgetCalculationService.allocateFunds(testUser.getId(), allocA);
 
-        createTransaction(accountA, incomeCategory, 500.0, TransactionType.CREDIT, getDate(yearB, monthB, 5));
-        createTransaction(accountA, expenseCategory, 100.0, TransactionType.DEBIT, getDate(yearB, monthB, 10));
+        createTransaction(accountA, incomeCategory, 500.0, TransactionEntryType.CREDIT, getDate(yearB, monthB, 5));
+        createTransaction(accountA, expenseCategory, 100.0, TransactionEntryType.DEBIT, getDate(yearB, monthB, 10));
         BudgetAllocationRequestDTO allocB = new BudgetAllocationRequestDTO();
         allocB.setCategoryId(expenseCategory.getId());
         allocB.setAmount(100.0);
@@ -203,8 +203,8 @@ public class TransactionSummaryRolloverTest extends BaseIntegrationTest {
         allocB.setYear(yearB);
         budgetCalculationService.allocateFunds(testUser.getId(), allocB);
 
-        createTransaction(accountA, incomeCategory, 800.0, TransactionType.CREDIT, getDate(yearC, monthC, 5));
-        createTransaction(accountA, expenseCategory, 300.0, TransactionType.DEBIT, getDate(yearC, monthC, 10));
+        createTransaction(accountA, incomeCategory, 800.0, TransactionEntryType.CREDIT, getDate(yearC, monthC, 5));
+        createTransaction(accountA, expenseCategory, 300.0, TransactionEntryType.DEBIT, getDate(yearC, monthC, 10));
         BudgetAllocationRequestDTO allocC = new BudgetAllocationRequestDTO();
         allocC.setCategoryId(expenseCategory.getId());
         allocC.setAmount(300.0);
@@ -216,7 +216,7 @@ public class TransactionSummaryRolloverTest extends BaseIntegrationTest {
         assertEquals(1500.0, available, 0.001);
     }
 
-    private void createTransaction(Account account, Category category, Double amount, TransactionType type, Date date) {
+    private void createTransaction(Account account, Category category, Double amount, TransactionEntryType type, Date date) {
         Transaction t = new Transaction();
         t.setAccountId(account.getId());
         t.setCategoryId(category.getId());

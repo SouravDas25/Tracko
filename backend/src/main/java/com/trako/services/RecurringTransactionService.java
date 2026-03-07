@@ -2,7 +2,6 @@ package com.trako.services;
 
 import com.trako.entities.Frequency;
 import com.trako.entities.RecurringTransaction;
-import com.trako.entities.RecurringTransactionType;
 import com.trako.entities.TransactionType;
 import com.trako.models.request.TransactionRequest;
 import com.trako.repositories.RecurringTransactionRepository;
@@ -131,7 +130,7 @@ public class RecurringTransactionService {
 
         logger.info("Processing recurring transaction: {} (ID: {})", rt.getName(), rt.getId());
 
-        boolean isTransferType = rt.getTransactionType() == RecurringTransactionType.TRANSFER;
+        boolean isTransferType = rt.getTransactionType() == TransactionType.TRANSFER;
         boolean hasDistinctToAccount = rt.getToAccountId() != null
                 && !rt.getToAccountId().equals(rt.getAccountId());
 
@@ -150,9 +149,9 @@ public class RecurringTransactionService {
             );
         } else { // Regular Transaction (including same-account "transfer" cases)
             TransactionType txType;
-            if (rt.getTransactionType() == RecurringTransactionType.DEBIT) {
+            if (rt.getTransactionType() == TransactionType.DEBIT) {
                 txType = TransactionType.DEBIT;
-            } else if (rt.getTransactionType() == RecurringTransactionType.CREDIT) {
+            } else if (rt.getTransactionType() == TransactionType.CREDIT) {
                 txType = TransactionType.CREDIT;
             } else {
                 // For TRANSFER recurring type without a distinct toAccount, default to DEBIT

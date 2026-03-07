@@ -2,6 +2,7 @@ package com.trako.services.transactions;
 
 import com.trako.dtos.TransferResult;
 import com.trako.entities.Transaction;
+import com.trako.entities.TransactionEntryType;
 import com.trako.entities.TransactionType;
 import com.trako.exceptions.NotFoundException;
 import com.trako.models.request.TransactionRequest;
@@ -53,16 +54,10 @@ public class TransferConversionService {
         Transaction existing = transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new NotFoundException("Transaction not found: " + transactionId));
 
-        if (existing.getLinkedTransactionId() != null) {
-            throw new IllegalArgumentException("Transaction is already a transfer");
-        }
-
+        validationService.validateIsNotTransfer(existing);
         validationService.validateAccountOwnership(userId, existing.getAccountId());
         validationService.validateAccountOwnership(userId, toAccountId);
-
-        if (existing.getAccountId().equals(toAccountId)) {
-            throw new IllegalArgumentException("Source and destination accounts cannot be the same");
-        }
+        validationService.validateNotSameAccount(existing.getAccountId(), toAccountId);
 
         if (request.date() != null) existing.setDate(request.date());
         if (request.name() != null) existing.setName(request.name());
@@ -74,13 +69,13 @@ public class TransferConversionService {
         Long transferCategoryId = transferService.getOrCreateTransferCategory(userId);
 
         existing.setCategoryId(transferCategoryId);
-        existing.setTransactionType(TransactionType.DEBIT);
+        existing.setTransactionType(TransactionEntryType.DEBIT);
         existing.setIsCountable(0);
 
         Transaction credit = new Transaction();
         credit.setAccountId(toAccountId);
         credit.setCategoryId(transferCategoryId);
-        credit.setTransactionType(TransactionType.CREDIT);
+        credit.setTransactionType(TransactionEntryType.CREDIT);
         credit.setOriginalAmount(existing.getOriginalAmount());
         credit.setOriginalCurrency(existing.getOriginalCurrency());
         credit.setExchangeRate(existing.getExchangeRate());
@@ -118,15 +113,11 @@ public class TransferConversionService {
         Transaction existing = transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new NotFoundException("Transaction not found: " + transactionId));
 
-        if (existing.getLinkedTransactionId() == null) {
-            throw new IllegalArgumentException("Transaction is not a transfer");
-        }
+        validationService.validateIsTransfer(existing);
 
         Long linkedId = existing.getLinkedTransactionId();
 
-        if (!transactionRepository.existsById(linkedId)) {
-            throw new NotFoundException("Linked transaction not found: " + linkedId);
-        }
+        validationService.validateLinkedTransactionExists(linkedId);
 
         validationService.validateAccountOwnership(userId, existing.getAccountId());
 
@@ -136,7 +127,12 @@ public class TransferConversionService {
             existing.setCategoryId(request.categoryId());
         }
         if (request.transactionType() != null) {
-            existing.setTransactionType(request.transactionType());
+            // Map unified TransactionType to storage TransactionEntryType
+            if (request.transactionType() == TransactionType.CREDIT) {
+                existing.setTransactionType(TransactionEntryType.CREDIT);
+            } else {
+                existing.setTransactionType(TransactionEntryType.DEBIT);
+            }
         }
         if (request.name() != null) {
             existing.setName(request.name());

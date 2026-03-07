@@ -73,7 +73,7 @@ public class RecurringTransactionIntegrationTest extends BaseIntegrationTest {
         rt.setExchangeRate(1.0);
         rt.setAccountId(testAccount.getId());
         rt.setCategoryId(testCategory.getId());
-        rt.setTransactionType(RecurringTransactionType.DEBIT);
+        rt.setTransactionType(TransactionType.DEBIT);
         rt.setFrequency(Frequency.MONTHLY);
         rt.setStartDate(new Date());
         rt.setNextRunDate(new Date());
@@ -98,7 +98,7 @@ public class RecurringTransactionIntegrationTest extends BaseIntegrationTest {
         rt.setExchangeRate(1.0); // Base amount in INR (approx)
         rt.setAccountId(testAccount.getId());
         rt.setCategoryId(testCategory.getId());
-        rt.setTransactionType(RecurringTransactionType.DEBIT);
+        rt.setTransactionType(TransactionType.DEBIT);
         rt.setFrequency(Frequency.MONTHLY);
         rt.setStartDate(new Date());
         rt.setNextRunDate(new Date());
@@ -142,7 +142,7 @@ public class RecurringTransactionIntegrationTest extends BaseIntegrationTest {
         rt.setAccountId(testAccount.getId());
         rt.setToAccountId(testAccount.getId());
         rt.setCategoryId(testCategory.getId());
-        rt.setTransactionType(RecurringTransactionType.TRANSFER);
+        rt.setTransactionType(TransactionType.TRANSFER);
         rt.setFrequency(Frequency.MONTHLY);
         rt.setStartDate(yesterday);
         rt.setNextRunDate(yesterday);
@@ -194,7 +194,7 @@ public class RecurringTransactionIntegrationTest extends BaseIntegrationTest {
         rt.setAccountId(testAccount.getId());
         rt.setToAccountId(targetAccount.getId()); // Transfer
         rt.setCategoryId(testCategory.getId()); // Usually handled by service but field is required
-        rt.setTransactionType(RecurringTransactionType.TRANSFER); // Transfer
+        rt.setTransactionType(TransactionType.TRANSFER); // Transfer
         rt.setFrequency(Frequency.MONTHLY);
         rt.setStartDate(yesterday);
         rt.setNextRunDate(yesterday);
@@ -208,8 +208,8 @@ public class RecurringTransactionIntegrationTest extends BaseIntegrationTest {
         List<Transaction> transactions = transactionRepository.findAll();
         assertEquals(2, transactions.size());
 
-        boolean hasDebit = transactions.stream().anyMatch(t -> t.getAmount() == 1000.0 && t.getTransactionType() == TransactionType.DEBIT);
-        boolean hasCredit = transactions.stream().anyMatch(t -> t.getAmount() == 1000.0 && t.getTransactionType() == TransactionType.CREDIT);
+        boolean hasDebit = transactions.stream().anyMatch(t -> t.getAmount() == 1000.0 && t.getTransactionType() == TransactionEntryType.DEBIT);
+        boolean hasCredit = transactions.stream().anyMatch(t -> t.getAmount() == 1000.0 && t.getTransactionType() == TransactionEntryType.CREDIT);
 
         assertTrue(hasDebit);
         assertTrue(hasCredit);

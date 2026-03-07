@@ -71,7 +71,7 @@ public class SplitIntegrationTest extends BaseIntegrationTest {
         testCategory = categoryRepository.save(testCategory);
 
         testTransaction = new Transaction();
-        testTransaction.setTransactionType(TransactionType.DEBIT);
+        testTransaction.setTransactionType(TransactionEntryType.DEBIT);
         testTransaction.setName("Dinner");
         testTransaction.setOriginalAmount(100.00);
         testTransaction.setOriginalCurrency("INR");
@@ -410,7 +410,7 @@ public class SplitIntegrationTest extends BaseIntegrationTest {
         // 5. Manually create a transaction for the settlement (Income)
         // This simulates the user explicitly recording the repayment transaction.
         Transaction settlementTransaction = new Transaction();
-        settlementTransaction.setTransactionType(TransactionType.CREDIT); // Credit/Income
+        settlementTransaction.setTransactionType(TransactionEntryType.CREDIT); // Credit/Income
         settlementTransaction.setName("Settlement from " + testContact.getName());
         settlementTransaction.setOriginalAmount(savedSplit.getAmount());
         settlementTransaction.setOriginalCurrency("INR");

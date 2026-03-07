@@ -115,7 +115,7 @@ public class BudgetCalculationService {
 
                 // Filter for expense transactions (type 1)
                 actual = transactions.stream()
-                        .filter(t -> t.getIsCountable() == 1 && t.getTransactionType() == TransactionType.DEBIT)
+                        .filter(t -> t.getIsCountable() == 1 && t.getTransactionType() == TransactionEntryType.DEBIT)
                         .mapToDouble(Transaction::getAmount)
                         .sum();
 
@@ -163,7 +163,7 @@ public class BudgetCalculationService {
         // But if I request a category, I might just care about that category.
         // Let's stick to: totals in the root object are for the MONTH.
         if (categoryId != null) {
-            // We need to fetch total spent for the whole month if we want to report it correctly
+            // We need to fetch total spent for the whole month if we want to report it correctly,
             // Or we just report what we summed up (which is partial).
             // Given the DTO structure, users might expect totals to match the list.
             // Let's set the totals to match the filtered list for now to avoid confusion, 
@@ -225,7 +225,7 @@ public class BudgetCalculationService {
         List<Transaction> transactions = transactionRepository.findByUserIdAndCategoryIdAndDateBetween(
                 userId, category.getId(), startDate, endDate);
         Double actual = transactions.stream()
-                .filter(t -> t.getIsCountable() == 1 && t.getTransactionType() == TransactionType.DEBIT)
+                .filter(t -> t.getIsCountable() == 1 && t.getTransactionType() == TransactionEntryType.DEBIT)
                 .mapToDouble(Transaction::getAmount)
                 .sum();
 

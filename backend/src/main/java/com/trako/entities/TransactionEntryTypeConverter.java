@@ -4,10 +4,10 @@ import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 
 @Converter(autoApply = true)
-public class RecurringTransactionTypeConverter implements AttributeConverter<RecurringTransactionType, Integer> {
+public class TransactionEntryTypeConverter implements AttributeConverter<TransactionEntryType, Integer> {
 
     @Override
-    public Integer convertToDatabaseColumn(RecurringTransactionType attribute) {
+    public Integer convertToDatabaseColumn(TransactionEntryType attribute) {
         if (attribute == null) {
             return null;
         }
@@ -15,10 +15,10 @@ public class RecurringTransactionTypeConverter implements AttributeConverter<Rec
     }
 
     @Override
-    public RecurringTransactionType convertToEntityAttribute(Integer dbData) {
+    public TransactionEntryType convertToEntityAttribute(Integer dbData) {
         if (dbData == null) {
             return null;
         }
-        return RecurringTransactionType.fromValue(dbData);
+        return TransactionEntryType.fromValue(dbData);
     }
 }

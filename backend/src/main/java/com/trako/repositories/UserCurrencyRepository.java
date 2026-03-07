@@ -16,6 +16,6 @@ public interface UserCurrencyRepository extends JpaRepository<UserCurrency, Long
     UserCurrency findByUserIdAndCurrencyCode(String userId, String currencyCode);
 
     @Modifying
-    @Query("DELETE FROM UserCurrency u WHERE u.userId = :userId")
+    @Query("DELETE FROM UserCurrency u WHERE u.user.id = :userId")
     void deleteByUserId(@Param("userId") String userId);
 }

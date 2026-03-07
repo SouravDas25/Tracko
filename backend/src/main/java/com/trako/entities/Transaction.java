@@ -20,8 +20,8 @@ public class Transaction {
 
     @NotNull
     @Column(name = "transaction_type")
-    @Convert(converter = TransactionTypeConverter.class)
-    private TransactionType transactionType;
+    @Convert(converter = TransactionEntryTypeConverter.class)
+    private TransactionEntryType transactionType;
 
     @NotNull
     @Column(name = "name", length = 128)
@@ -87,11 +87,11 @@ public class Transaction {
     }
 
     @JsonIgnore
-    public TransactionType getTransactionType() {
+    public TransactionEntryType getTransactionType() {
         return transactionType;
     }
 
-    public void setTransactionType(TransactionType transactionType) {
+    public void setTransactionType(TransactionEntryType transactionType) {
         this.transactionType = transactionType;
     }
 

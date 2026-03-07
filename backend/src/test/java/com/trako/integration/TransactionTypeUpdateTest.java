@@ -75,11 +75,12 @@ public class TransactionTypeUpdateTest extends BaseIntegrationTest {
         categoryIncome = categoryRepository.save(categoryIncome);
     }
 
+    // Scenario: Convert an existing DEBIT expense transaction into a CREDIT income transaction.
     @Test
     public void testUpdateExpenseToIncome() throws Exception {
         // Create Expense (DEBIT)
         Transaction t = new Transaction();
-        t.setTransactionType(TransactionType.DEBIT);
+        t.setTransactionType(TransactionEntryType.DEBIT);
         t.setName("Expense");
         t.setOriginalAmount(100.0);
         t.setOriginalCurrency("INR");
@@ -90,7 +91,7 @@ public class TransactionTypeUpdateTest extends BaseIntegrationTest {
         t.setIsCountable(1);
         t = transactionWriteService.saveForUser(testUser.getId(), t);
 
-        // Update to Income (CREDIT)
+        // Update to Income (CREDIT) with corresponding TransactionType
         Map<String, Object> payload = new HashMap<>();
         payload.put("transactionType", TransactionType.CREDIT);
         payload.put("categoryId", categoryIncome.getId());
@@ -104,16 +105,17 @@ public class TransactionTypeUpdateTest extends BaseIntegrationTest {
                 .andExpect(status().isOk());
 
         Transaction updated = transactionRepository.findById(t.getId()).orElseThrow();
-        assertThat(updated.getTransactionType()).isEqualTo(TransactionType.CREDIT);
+        assertThat(updated.getTransactionType()).isEqualTo(TransactionEntryType.CREDIT);
         assertThat(updated.getCategoryId()).isEqualTo(categoryIncome.getId());
         assertThat(updated.getName()).isEqualTo("Now Income");
     }
 
+    // Scenario: Convert an existing CREDIT income transaction into a DEBIT expense transaction.
     @Test
     public void testUpdateIncomeToExpense() throws Exception {
         // Create Income (CREDIT)
         Transaction t = new Transaction();
-        t.setTransactionType(TransactionType.CREDIT);
+        t.setTransactionType(TransactionEntryType.CREDIT);
         t.setName("Income");
         t.setOriginalAmount(500.0);
         t.setOriginalCurrency("INR");
@@ -124,7 +126,7 @@ public class TransactionTypeUpdateTest extends BaseIntegrationTest {
         t.setIsCountable(1);
         t = transactionWriteService.saveForUser(testUser.getId(), t);
 
-        // Update to Expense (DEBIT)
+        // Update to Expense (DEBIT) with corresponding TransactionType
         Map<String, Object> payload = new HashMap<>();
         payload.put("transactionType", TransactionType.DEBIT);
         payload.put("categoryId", categoryExpense.getId());
@@ -138,16 +140,17 @@ public class TransactionTypeUpdateTest extends BaseIntegrationTest {
                 .andExpect(status().isOk());
 
         Transaction updated = transactionRepository.findById(t.getId()).orElseThrow();
-        assertThat(updated.getTransactionType()).isEqualTo(TransactionType.DEBIT);
+        assertThat(updated.getTransactionType()).isEqualTo(TransactionEntryType.DEBIT);
         assertThat(updated.getCategoryId()).isEqualTo(categoryExpense.getId());
         assertThat(updated.getName()).isEqualTo("Now Expense");
     }
 
+    // Scenario: Convert an existing DEBIT expense transaction into a TRANSFER from Account 1 to Account 2.
     @Test
     public void testUpdateExpenseToTransfer() throws Exception {
         // Create Expense (DEBIT)
         Transaction t = new Transaction();
-        t.setTransactionType(TransactionType.DEBIT);
+        t.setTransactionType(TransactionEntryType.DEBIT);
         t.setName("Expense");
         t.setOriginalAmount(100.0);
         t.setOriginalCurrency("INR");
@@ -158,9 +161,9 @@ public class TransactionTypeUpdateTest extends BaseIntegrationTest {
         t.setIsCountable(1);
         t = transactionWriteService.saveForUser(testUser.getId(), t);
 
-        // Update to Transfer (to Account 2)
-        // We need to provide toAccountId to signal it's a transfer
+        // Update to Transfer (to Account 2) by providing toAccountId and TransactionType.TRANSFER
         Map<String, Object> payload = new HashMap<>();
+        payload.put("transactionType", TransactionType.TRANSFER);
         payload.put("toAccountId", account2.getId());
         payload.put("name", "Now Transfer");
 
@@ -172,14 +175,15 @@ public class TransactionTypeUpdateTest extends BaseIntegrationTest {
                 .andExpect(status().isOk());
 
         Transaction updated = transactionRepository.findById(t.getId()).orElseThrow();
+        assertThat(updated.getTransactionType()).isEqualTo(TransactionEntryType.DEBIT);
         assertThat(updated.getLinkedTransactionId()).isNotNull();
         assertThat(updated.getName()).isEqualTo("Now Transfer");
         assertThat(updated.getIsCountable()).isEqualTo(0); // Transfers should not be countable
 
-        // Verify linked transaction exists
+        // Verify the linked transaction exists
         Transaction linked = transactionRepository.findById(updated.getLinkedTransactionId()).orElseThrow();
         assertThat(linked.getAccountId()).isEqualTo(account2.getId());
-        assertThat(linked.getTransactionType()).isEqualTo(TransactionType.CREDIT); // Other side of transfer
+        assertThat(linked.getTransactionType()).isEqualTo(TransactionEntryType.CREDIT); // Other side of transfer
         assertThat(linked.getIsCountable()).isEqualTo(0);
 
         // Verify Category is implicitly changed to TRANSFER
@@ -190,6 +194,54 @@ public class TransactionTypeUpdateTest extends BaseIntegrationTest {
         assertThat(linked.getCategoryId()).isEqualTo(transferCatId);
     }
 
+    // Scenario: Convert an existing CREDIT income transaction into a TRANSFER from Account 1 to Account 2.
+    @Test
+    public void testUpdateIncomeToTransfer() throws Exception {
+        // Create Income (CREDIT)
+        Transaction t = new Transaction();
+        t.setTransactionType(TransactionEntryType.CREDIT);
+        t.setName("Income");
+        t.setOriginalAmount(300.0);
+        t.setOriginalCurrency("INR");
+        t.setExchangeRate(1.0);
+        t.setDate(new Date());
+        t.setAccountId(account1.getId());
+        t.setCategoryId(categoryIncome.getId());
+        t.setIsCountable(1);
+        t = transactionWriteService.saveForUser(testUser.getId(), t);
+
+        // Update to Transfer (to Account 2) by providing toAccountId and TransactionType.TRANSFER
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("transactionType", TransactionType.TRANSFER);
+        payload.put("toAccountId", account2.getId());
+        payload.put("name", "Income To Transfer");
+
+        mockMvc.perform(put("/api/transactions/" + t.getId())
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(payload)))
+                .andExpect(status().isOk());
+
+        Transaction updated = transactionRepository.findById(t.getId()).orElseThrow();
+        assertThat(updated.getTransactionType()).isEqualTo(TransactionEntryType.DEBIT); // outgoing side
+        assertThat(updated.getLinkedTransactionId()).isNotNull();
+        assertThat(updated.getName()).isEqualTo("Income To Transfer");
+        assertThat(updated.getIsCountable()).isEqualTo(0);
+
+        Transaction linked = transactionRepository.findById(updated.getLinkedTransactionId()).orElseThrow();
+        assertThat(linked.getAccountId()).isEqualTo(account2.getId());
+        assertThat(linked.getTransactionType()).isEqualTo(TransactionEntryType.CREDIT); // incoming side
+        assertThat(linked.getIsCountable()).isEqualTo(0);
+
+        // Verify TRANSFER category applied to both sides
+        List<Category> transferCats = categoryRepository.findByUserIdAndName(testUser.getId(), "TRANSFER");
+        assertThat(transferCats).isNotEmpty();
+        Long transferCatId = transferCats.get(0).getId();
+        assertThat(updated.getCategoryId()).isEqualTo(transferCatId);
+        assertThat(linked.getCategoryId()).isEqualTo(transferCatId);
+    }
+
+    // Scenario: Convert an existing TRANSFER (debit side on Account 1) into a regular DEBIT expense transaction.
     @Test
     public void testUpdateTransferToExpense() throws Exception {
         // Create Transfer (Account 1 -> Account 2)
@@ -229,7 +281,7 @@ public class TransactionTypeUpdateTest extends BaseIntegrationTest {
 
         Transaction updated = transactionRepository.findById(debitSide.getId()).orElseThrow();
         assertThat(updated.getLinkedTransactionId()).isNull(); // Should be unlinked
-        assertThat(updated.getTransactionType()).isEqualTo(TransactionType.DEBIT);
+        assertThat(updated.getTransactionType()).isEqualTo(TransactionEntryType.DEBIT);
         assertThat(updated.getName()).isEqualTo("Converted to Expense");
         assertThat(updated.getCategoryId()).isEqualTo(categoryExpense.getId());
         assertThat(updated.getIsCountable()).isEqualTo(1); // Should be countable again by default
@@ -239,5 +291,46 @@ public class TransactionTypeUpdateTest extends BaseIntegrationTest {
         // Let's check if the credit side still exists.
         boolean creditExists = transactionRepository.existsById(transferPair.credit().getId());
         assertThat(creditExists).isFalse();
+    }
+
+    // Scenario: Convert an existing TRANSFER (credit side on Account 2) into a regular CREDIT income transaction.
+    @Test
+    public void testUpdateTransferToIncome() throws Exception {
+        // Create Transfer (Account 1 -> Account 2)
+        TransferResult transferPair = transferService.createTransfer(
+                testUser.getId(),
+                account1.getId(),
+                account2.getId(),
+                new Date(),
+                200.0,
+                "INR",
+                1.0,
+                "Transfer",
+                "Comments"
+        );
+        Transaction creditSide = transferPair.credit();
+
+        // Update to Regular Income (CREDIT) on the receiving account
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("transactionType", TransactionType.CREDIT);
+        payload.put("categoryId", categoryIncome.getId());
+        payload.put("name", "Converted to Income");
+
+        mockMvc.perform(put("/api/transactions/" + creditSide.getId())
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(payload)))
+                .andExpect(status().isOk());
+
+        Transaction updated = transactionRepository.findById(creditSide.getId()).orElseThrow();
+        assertThat(updated.getLinkedTransactionId()).isNull(); // Should be unlinked
+        assertThat(updated.getTransactionType()).isEqualTo(TransactionEntryType.CREDIT);
+        assertThat(updated.getName()).isEqualTo("Converted to Income");
+        assertThat(updated.getCategoryId()).isEqualTo(categoryIncome.getId());
+        assertThat(updated.getIsCountable()).isEqualTo(1); // Should be countable again by default
+
+        // Verify the OTHER side (debit) is deleted
+        boolean debitExists = transactionRepository.existsById(transferPair.debit().getId());
+        assertThat(debitExists).isFalse();
     }
 }

@@ -76,7 +76,7 @@ public class TransactionRepositoryAmountNullTest {
         t.setCategoryId(category.getId());
         t.setName("Repo Path");
         t.setDate(new Date());
-        t.setTransactionType(TransactionType.DEBIT);
+        t.setTransactionType(TransactionEntryType.DEBIT);
         t.setOriginalAmount(10.0);
         t.setOriginalCurrency("INR");
         t.setExchangeRate(1.0);

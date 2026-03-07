@@ -89,7 +89,7 @@ public class AccountIntegrationTest extends BaseIntegrationTest {
 
         // Countable income + expense on A1 (should go into account_month_summary)
         Transaction income = new Transaction();
-        income.setTransactionType(TransactionType.CREDIT);
+        income.setTransactionType(TransactionEntryType.CREDIT);
         income.setName("Income");
         income.setOriginalAmount(1000.0);
         income.setOriginalCurrency("INR");
@@ -101,7 +101,7 @@ public class AccountIntegrationTest extends BaseIntegrationTest {
         transactionWriteService.saveForUser(testUser.getId(), income);
 
         Transaction expense = new Transaction();
-        expense.setTransactionType(TransactionType.DEBIT);
+        expense.setTransactionType(TransactionEntryType.DEBIT);
         expense.setName("Expense");
         expense.setOriginalAmount(200.0);
         expense.setOriginalCurrency("INR");
@@ -303,7 +303,7 @@ public class AccountIntegrationTest extends BaseIntegrationTest {
         cat = categoryRepository.save(cat);
 
         Transaction txn = new Transaction();
-        txn.setTransactionType(TransactionType.DEBIT);
+        txn.setTransactionType(TransactionEntryType.DEBIT);
         txn.setName("Tx");
         txn.setOriginalAmount(10.0);
         txn.setOriginalCurrency("INR");
@@ -349,7 +349,7 @@ public class AccountIntegrationTest extends BaseIntegrationTest {
         rt.setAccountId(a1.getId());
         rt.setToAccountId(a2.getId());
         rt.setCategoryId(cat.getId());
-        rt.setTransactionType(com.trako.entities.RecurringTransactionType.DEBIT);
+        rt.setTransactionType(com.trako.entities.TransactionType.DEBIT);
         rt.setFrequency(com.trako.entities.Frequency.MONTHLY);
         rt.setStartDate(new Date());
         rt.setNextRunDate(new Date());

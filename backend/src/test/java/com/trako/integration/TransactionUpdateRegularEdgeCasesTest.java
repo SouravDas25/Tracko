@@ -67,7 +67,7 @@ public class TransactionUpdateRegularEdgeCasesTest extends BaseIntegrationTest {
 
     private Transaction createRegular() {
         Transaction t = new Transaction();
-        t.setTransactionType(TransactionType.DEBIT);
+        t.setTransactionType(TransactionEntryType.DEBIT);
         t.setName("Orig");
         t.setOriginalAmount(10.0);
         t.setOriginalCurrency("INR");

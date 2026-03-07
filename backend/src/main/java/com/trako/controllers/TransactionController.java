@@ -6,6 +6,7 @@ import com.trako.dtos.TransactionSummaryDTO;
 import com.trako.dtos.TransactionsPageDTO;
 import com.trako.entities.Account;
 import com.trako.entities.Transaction;
+import com.trako.entities.TransactionEntryType;
 import com.trako.entities.TransactionType;
 import com.trako.entities.User;
 import com.trako.exceptions.AuthorizationException;
@@ -71,7 +72,7 @@ public class TransactionController {
                 .filter(t -> !(t.getCategoryId() != null
                         && t.getCategoryId().equals(transferCategoryId)
                         && t.getIsCountable() != null && t.getIsCountable() == 0
-                        && t.getTransactionType() != null && t.getTransactionType() == TransactionType.CREDIT)) // hide CREDIT side
+                        && t.getTransactionType() != null && t.getTransactionType() == TransactionEntryType.CREDIT)) // hide CREDIT side
                 .collect(Collectors.toList());
     }
 
@@ -84,7 +85,7 @@ public class TransactionController {
         for (var t : transactions) {
             if (t.getCategoryId() != null && t.getCategoryId().equals(transferCategoryId)
                     && t.getIsCountable() != null && t.getIsCountable() == 0) {
-                t.setRenderedTransactionType(TransactionType.TRANSFER_RENDERING_VALUE); // mark as TRANSFER for response rendering
+                t.setRenderedTransactionType(TransactionEntryType.TRANSFER_RENDERING_VALUE); // mark as TRANSFER for response rendering
             }
         }
         return transactions;
@@ -101,7 +102,7 @@ public class TransactionController {
                     return !(dto.getCategoryId() != null
                             && dto.getCategoryId().equals(transferCategoryId)
                             && dto.getIsCountable() != null && dto.getIsCountable() == 0
-                            && dto.getTransactionType() != null && dto.getTransactionType() == TransactionType.CREDIT.getValue());
+                            && dto.getTransactionType() != null && dto.getTransactionType() == TransactionEntryType.CREDIT.getValue());
                 })
                 .collect(Collectors.toList());
     }
@@ -115,7 +116,7 @@ public class TransactionController {
         for (var dto : dtos) {
             if (dto.getCategoryId() != null && dto.getCategoryId().equals(transferCategoryId)
                     && dto.getIsCountable() != null && dto.getIsCountable() == 0) {
-                dto.setTransactionType(TransactionType.TRANSFER_RENDERING_VALUE); // mark as TRANSFER for response rendering
+                dto.setTransactionType(TransactionEntryType.TRANSFER_RENDERING_VALUE); // mark as TRANSFER for response rendering
             }
         }
         return dtos;

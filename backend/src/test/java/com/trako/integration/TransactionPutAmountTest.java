@@ -64,7 +64,7 @@ public class TransactionPutAmountTest extends BaseIntegrationTest {
     public void testUpdateTransaction_UsesAmountField_WhenOriginalAmountMissing() throws Exception {
         // Create a valid transaction first (amount = originalAmount * exchangeRate)
         Transaction t = new Transaction();
-        t.setTransactionType(TransactionType.DEBIT);
+        t.setTransactionType(TransactionEntryType.DEBIT);
         t.setName("Original Name");
         t.setOriginalAmount(10.0);
         t.setOriginalCurrency("INR");

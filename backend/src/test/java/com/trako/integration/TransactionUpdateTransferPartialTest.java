@@ -1,10 +1,7 @@
 package com.trako.integration;
 
 import com.trako.config.TestJwtSecurityConfig;
-import com.trako.entities.Account;
-import com.trako.entities.Transaction;
-import com.trako.entities.TransactionType;
-import com.trako.entities.User;
+import com.trako.entities.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -67,7 +64,7 @@ public class TransactionUpdateTransferPartialTest extends BaseIntegrationTest {
 
         List<Transaction> transactions = transactionRepository.findAll();
         return transactions.stream()
-                .filter(t -> t.getTransactionType() == TransactionType.DEBIT)
+                .filter(t -> t.getTransactionType() == TransactionEntryType.DEBIT)
                 .findFirst().orElseThrow();
     }
 

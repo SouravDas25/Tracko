@@ -112,7 +112,7 @@ public class TransactionAmountValidationIntegrationTest extends BaseIntegrationT
     public void updateTransaction_setZeroAmount_returnsBadRequest() throws Exception {
         // create valid transaction first
         Transaction t = new Transaction();
-        t.setTransactionType(TransactionType.DEBIT);
+        t.setTransactionType(TransactionEntryType.DEBIT);
         t.setName("T2");
         t.setOriginalAmount(10.0);
         t.setOriginalCurrency("INR");

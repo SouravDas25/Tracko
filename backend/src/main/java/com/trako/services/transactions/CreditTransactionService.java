@@ -1,6 +1,7 @@
 package com.trako.services.transactions;
 
 import com.trako.entities.Transaction;
+import com.trako.entities.TransactionEntryType;
 import com.trako.entities.TransactionType;
 import com.trako.models.request.TransactionRequest;
 import com.trako.repositories.TransactionRepository;
@@ -23,7 +24,7 @@ public class CreditTransactionService {
 
     @Transactional
     public Transaction createCreditTransaction(String userId, TransactionRequest request) {
-        validateRequest(request);
+        validationService.validateTransactionCreateRequest(request);
         validationService.validateAccountOwnership(userId, request.accountId());
         validationService.validateCategoryOwnership(userId, request.categoryId());
 
@@ -32,7 +33,7 @@ public class CreditTransactionService {
         Transaction transaction = new Transaction();
         transaction.setAccountId(request.accountId());
         transaction.setCategoryId(request.categoryId());
-        transaction.setTransactionType(TransactionType.CREDIT);
+        transaction.setTransactionType(TransactionEntryType.CREDIT);
         transaction.setDate(request.date());
         transaction.setName(request.name());
         transaction.setComments(request.comments());
@@ -57,7 +58,7 @@ public class CreditTransactionService {
 
         existing.setAccountId(newAccountId);
         existing.setCategoryId(newCategoryId);
-        existing.setTransactionType(TransactionType.CREDIT);
+        existing.setTransactionType(TransactionEntryType.CREDIT);
 
         // Currency resolution
         String newCurrency = request.originalCurrency();
@@ -75,12 +76,8 @@ public class CreditTransactionService {
         existing.setOriginalCurrency(newCurrency);
         existing.setExchangeRate(newRate);
 
-        if (request.originalAmount() != null) {
-            if (request.originalAmount() <= 0) {
-                throw new IllegalArgumentException("Original amount must be greater than 0");
-            }
-            existing.setOriginalAmount(request.originalAmount());
-        }
+        validationService.validatePositiveAmount(request.originalAmount());
+        if (request.originalAmount() != null) existing.setOriginalAmount(request.originalAmount());
 
         if (request.name() != null) existing.setName(request.name());
         if (request.comments() != null) existing.setComments(request.comments());
@@ -88,21 +85,6 @@ public class CreditTransactionService {
         if (request.isCountable() != null) existing.setIsCountable(request.isCountable());
 
         return saveForUser(userId, existing);
-    }
-
-    private void validateRequest(TransactionRequest request) {
-        if (request.originalCurrency() == null) {
-            throw new IllegalArgumentException("Original currency is required");
-        }
-        if (request.originalAmount() == null) {
-            throw new IllegalArgumentException("Original amount is required");
-        }
-        if (request.accountId() == null) {
-            throw new IllegalArgumentException("Transaction requires accountId");
-        }
-        if (request.categoryId() == null) {
-            throw new IllegalArgumentException("Transaction requires categoryId");
-        }
     }
 
     private Transaction saveForUser(String userId, Transaction transaction) {
