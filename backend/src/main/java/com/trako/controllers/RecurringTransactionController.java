@@ -5,6 +5,7 @@ import com.trako.exceptions.UserNotLoggedInException;
 import com.trako.services.RecurringTransactionService;
 import com.trako.services.UserService;
 import com.trako.util.Response;
+import com.trako.exceptions.AuthorizationException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,24 +64,23 @@ public class RecurringTransactionController {
             return Response.ok(created, "Recurring transaction created successfully");
         } catch (UserNotLoggedInException e) {
             return Response.unauthorized();
+        } catch (AuthorizationException e) {
+            return Response.unauthorized();
         } catch (Exception e) {
             return Response.badRequest(e.getMessage());
         }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> update(@PathVariable @Positive Long id, @Valid @RequestBody RecurringTransaction updates) {
+    public ResponseEntity<?> update(@PathVariable @Positive Long id, @RequestBody RecurringTransaction updates) {
         try {
             String currentUserId = userService.loggedInUser().getId();
             RecurringTransaction updated = recurringTransactionService.update(currentUserId, id, updates);
             return Response.ok(updated, "Recurring transaction updated successfully");
         } catch (UserNotLoggedInException e) {
             return Response.unauthorized();
-        } catch (IllegalArgumentException e) {
-            if (e.getMessage().equals("Unauthorized")) {
-                return Response.unauthorized();
-            }
-            return Response.badRequest(e.getMessage());
+        } catch (AuthorizationException e) {
+            return Response.unauthorized();
         } catch (Exception e) {
             return Response.badRequest(e.getMessage());
         }
@@ -94,11 +94,8 @@ public class RecurringTransactionController {
             return Response.ok("Recurring transaction deleted successfully");
         } catch (UserNotLoggedInException e) {
             return Response.unauthorized();
-        } catch (IllegalArgumentException e) {
-            if (e.getMessage().equals("Unauthorized")) {
-                return Response.unauthorized();
-            }
-            return Response.badRequest(e.getMessage());
+        } catch (AuthorizationException e) {
+            return Response.unauthorized();
         } catch (Exception e) {
             return Response.badRequest(e.getMessage());
         }

@@ -2,15 +2,18 @@ package com.trako.services;
 
 import com.trako.enums.Frequency;
 import com.trako.entities.RecurringTransaction;
+import com.trako.exceptions.AuthorizationException;
 import com.trako.enums.TransactionType;
 import com.trako.models.request.TransactionRequest;
 import com.trako.repositories.RecurringTransactionRepository;
+import com.trako.services.transactions.TransactionValidationService;
 import com.trako.services.transactions.TransactionWriteService;
 import com.trako.services.transactions.TransferService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Calendar;
@@ -35,6 +38,14 @@ public class RecurringTransactionService {
     @Autowired
     private CurrencyService currencyService;
 
+    @Autowired
+    private TransactionValidationService validationService;
+
+    // Self-injection so that processSingleTransaction's REQUIRES_NEW propagation
+    // is honoured through the Spring proxy (intra-bean calls bypass the proxy).
+    @Autowired
+    private RecurringTransactionService self;
+
     public List<RecurringTransaction> getAll(String userId) {
         return recurringTransactionRepository.findByUserId(userId);
     }
@@ -45,6 +56,10 @@ public class RecurringTransactionService {
 
     @Transactional
     public RecurringTransaction create(String userId, RecurringTransaction recurringTransaction) {
+        validationService.validateAccountOwnership(userId, recurringTransaction.getAccountId());
+        validationService.validateCategoryOwnership(userId, recurringTransaction.getCategoryId());
+        validationService.validateAccountOwnership(userId, recurringTransaction.getToAccountId());
+
         recurringTransaction.setUserId(userId);
 
         // Ensure nextRunDate is set. If not, default to startDate
@@ -52,7 +67,14 @@ public class RecurringTransactionService {
             recurringTransaction.setNextRunDate(recurringTransaction.getStartDate());
         }
 
-        return recurringTransactionRepository.save(recurringTransaction);
+        RecurringTransaction saved = recurringTransactionRepository.save(recurringTransaction);
+
+        // Immediately backfill all past-due entries so the user sees transactions right away.
+        // Direct call (not self.) so it runs in the same transaction — if processing fails,
+        // the entire create rolls back.
+        processSingleTransaction(saved);
+
+        return recurringTransactionRepository.findById(saved.getId()).orElse(saved);
     }
 
     @Transactional
@@ -61,11 +83,20 @@ public class RecurringTransactionService {
                 .orElseThrow(() -> new IllegalArgumentException("Recurring transaction not found"));
 
         if (!existing.getUserId().equals(userId)) {
-            throw new IllegalArgumentException("Unauthorized");
+            throw new AuthorizationException("User does not own this recurring transaction: " + id);
+        }
+
+        if (updates.getAccountId() != null) {
+            validationService.validateAccountOwnership(userId, updates.getAccountId());
+        }
+        if (updates.getCategoryId() != null) {
+            validationService.validateCategoryOwnership(userId, updates.getCategoryId());
+        }
+        if (updates.getToAccountId() != null) {
+            validationService.validateAccountOwnership(userId, updates.getToAccountId());
         }
 
         if (updates.getName() != null) existing.setName(updates.getName());
-        if (updates.getAmount() != null) existing.setAmount(updates.getAmount());
         if (updates.getAccountId() != null) existing.setAccountId(updates.getAccountId());
         if (updates.getCategoryId() != null) existing.setCategoryId(updates.getCategoryId());
         if (updates.getToAccountId() != null) existing.setToAccountId(updates.getToAccountId());
@@ -98,13 +129,12 @@ public class RecurringTransactionService {
                 .orElseThrow(() -> new IllegalArgumentException("Recurring transaction not found"));
 
         if (!existing.getUserId().equals(userId)) {
-            throw new IllegalArgumentException("Unauthorized");
+            throw new AuthorizationException("User does not own this recurring transaction: " + id);
         }
 
         recurringTransactionRepository.delete(existing);
     }
 
-    @Transactional
     public void processDueTransactions() {
         Date now = new Date();
         List<RecurringTransaction> dueTransactions = recurringTransactionRepository.findByNextRunDateBeforeAndIsActiveTrue(now);
@@ -113,15 +143,18 @@ public class RecurringTransactionService {
 
         for (RecurringTransaction rt : dueTransactions) {
             try {
-                processSingleTransaction(rt);
+                self.processSingleTransaction(rt);
             } catch (Exception e) {
                 logger.error("Failed to process recurring transaction ID: {}", rt.getId(), e);
             }
         }
     }
 
-    private void processSingleTransaction(RecurringTransaction rt) {
-        // Double check if we passed end date
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void processSingleTransaction(RecurringTransaction rt) {
+        Date now = new Date();
+
+        // Already past end date — deactivate without creating anything
         if (rt.getEndDate() != null && rt.getNextRunDate().after(rt.getEndDate())) {
             rt.setIsActive(false);
             recurringTransactionRepository.save(rt);
@@ -130,12 +163,41 @@ public class RecurringTransactionService {
 
         logger.info("Processing recurring transaction: {} (ID: {})", rt.getName(), rt.getId());
 
+        // Catch-up loop: backfill one entry per missed period until nextRunDate is in the future.
+        // Each entry is dated to the period it belongs to, keeping budgets/summaries accurate.
+        int created = 0;
+        while (!rt.getNextRunDate().after(now)) {
+            if (rt.getEndDate() != null && rt.getNextRunDate().after(rt.getEndDate())) {
+                rt.setIsActive(false);
+                break;
+            }
+
+            createTransactionEntry(rt);
+            created++;
+
+            rt.setLastRunDate(rt.getNextRunDate());
+            Date nextDate = calculateNextRunDate(rt.getNextRunDate(), rt.getFrequency());
+            rt.setNextRunDate(nextDate);
+
+            if (rt.getEndDate() != null && nextDate.after(rt.getEndDate())) {
+                rt.setIsActive(false);
+                break;
+            }
+        }
+
+        if (created > 1) {
+            logger.info("Caught up {} missed entries for recurring transaction ID: {}", created, rt.getId());
+        }
+
+        recurringTransactionRepository.save(rt);
+    }
+
+    private void createTransactionEntry(RecurringTransaction rt) {
         boolean isTransferType = rt.getTransactionType() == TransactionType.TRANSFER;
         boolean hasDistinctToAccount = rt.getToAccountId() != null
                 && !rt.getToAccountId().equals(rt.getAccountId());
 
-        // Create the actual transaction/transfer
-        if (isTransferType && hasDistinctToAccount) { // Transfer between two different accounts
+        if (isTransferType && hasDistinctToAccount) {
             transferService.createTransfer(
                     rt.getUserId(),
                     rt.getAccountId(),
@@ -147,47 +209,34 @@ public class RecurringTransactionService {
                     rt.getName(),
                     "Recurring Transfer: " + rt.getFrequency()
             );
-        } else { // Regular Transaction (including same-account "transfer" cases)
+        } else {
             TransactionType txType;
             if (rt.getTransactionType() == TransactionType.DEBIT) {
                 txType = TransactionType.DEBIT;
             } else if (rt.getTransactionType() == TransactionType.CREDIT) {
                 txType = TransactionType.CREDIT;
             } else {
-                // For TRANSFER recurring type without a distinct toAccount, default to DEBIT
                 txType = TransactionType.DEBIT;
             }
 
             TransactionRequest request = new TransactionRequest(
-                    null, // id
-                    rt.getAccountId(), // accountId
-                    rt.getNextRunDate(), // date
-                    rt.getName(), // name
-                    "Recurring Transaction: " + rt.getFrequency(), // comments
-                    rt.getCategoryId(), // categoryId
-                    txType, // transactionType
-                    1, // isCountable
-                    rt.getOriginalCurrency(), // originalCurrency
-                    rt.getOriginalAmount(), // originalAmount
-                    rt.getExchangeRate(), // exchangeRate
-                    null, // linkedTransactionId
-                    null, // toAccountId
-                    null  // fromAccountId
+                    null,                                           // id
+                    rt.getAccountId(),                              // accountId
+                    rt.getNextRunDate(),                            // date
+                    rt.getName(),                                   // name
+                    "Recurring Transaction: " + rt.getFrequency(),  // comments
+                    rt.getCategoryId(),                             // categoryId
+                    txType,                                         // transactionType
+                    1,                                              // isCountable
+                    rt.getOriginalCurrency(),                       // originalCurrency
+                    rt.getOriginalAmount(),                         // originalAmount
+                    rt.getExchangeRate(),                           // exchangeRate
+                    null,                                           // linkedTransactionId
+                    null,                                           // toAccountId
+                    null                                            // fromAccountId
             );
             transactionWriteService.createTransaction(rt.getUserId(), request);
         }
-
-        // Update dates
-        rt.setLastRunDate(rt.getNextRunDate());
-        Date nextDate = calculateNextRunDate(rt.getNextRunDate(), rt.getFrequency());
-        rt.setNextRunDate(nextDate);
-
-        // Check if next date is after end date
-        if (rt.getEndDate() != null && nextDate.after(rt.getEndDate())) {
-            rt.setIsActive(false);
-        }
-
-        recurringTransactionRepository.save(rt);
     }
 
     private Date calculateNextRunDate(Date current, Frequency frequency) {

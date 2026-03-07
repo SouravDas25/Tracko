@@ -21,16 +21,16 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-// IMPORTANT: Keep Liquibase ENABLED in tests. Do NOT disable it to work around checksum or missing table issues.
-// For isolated test runs, drop schema first and clear checksums so migrations apply cleanly each time.
-@SpringBootTest()
+@SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Import(TestJwtSecurityConfig.class)
@@ -62,14 +62,47 @@ public class RecurringTransactionIntegrationTest extends BaseIntegrationTest {
         testCategory = new Category();
         testCategory.setName("Test Category");
         testCategory.setUserId(testUser.getId());
-        testCategory.setCategoryType(CategoryType.EXPENSE); // Fixed: setType(int) -> setCategoryType(CategoryType)
+        testCategory.setCategoryType(CategoryType.EXPENSE);
         testCategory = categoryRepository.save(testCategory);
     }
 
-    @Test
-    public void testCreateRecurringTransaction() throws Exception {
+    // ==================== Helpers ====================
+
+    private RecurringTransaction buildRt(Date startDate) {
         RecurringTransaction rt = new RecurringTransaction();
-        rt.setName("Netflix Subscription");
+        rt.setUserId(testUser.getId());
+        rt.setName("Test RT");
+        rt.setOriginalAmount(500.0);
+        rt.setOriginalCurrency("INR");
+        rt.setExchangeRate(1.0);
+        rt.setAccountId(testAccount.getId());
+        rt.setCategoryId(testCategory.getId());
+        rt.setTransactionType(TransactionType.DEBIT);
+        rt.setFrequency(Frequency.MONTHLY);
+        rt.setStartDate(startDate);
+        rt.setNextRunDate(startDate);
+        rt.setIsActive(true);
+        return rt;
+    }
+
+    private Date monthsAgo(int months) {
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.MONTH, -months);
+        return cal.getTime();
+    }
+
+    private Date monthsFromNow(int months) {
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.MONTH, months);
+        return cal.getTime();
+    }
+
+    // ==================== Create ====================
+
+    @Test
+    public void create_withCurrentDate_createsOneTransactionImmediately() throws Exception {
+        RecurringTransaction rt = new RecurringTransaction();
+        rt.setName("Netflix");
         rt.setOriginalAmount(199.0);
         rt.setOriginalCurrency("INR");
         rt.setExchangeRate(1.0);
@@ -77,8 +110,9 @@ public class RecurringTransactionIntegrationTest extends BaseIntegrationTest {
         rt.setCategoryId(testCategory.getId());
         rt.setTransactionType(TransactionType.DEBIT);
         rt.setFrequency(Frequency.MONTHLY);
-        rt.setStartDate(new Date());
-        rt.setNextRunDate(new Date());
+        Date now = new Date();
+        rt.setStartDate(now);
+        rt.setNextRunDate(now);
 
         mockMvc.perform(post("/api/recurring-transactions")
                         .header("Authorization", bearerToken)
@@ -86,134 +120,294 @@ public class RecurringTransactionIntegrationTest extends BaseIntegrationTest {
                         .content(objectMapper.writeValueAsString(rt)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.id").exists())
-                .andExpect(jsonPath("$.result.name").value("Netflix Subscription"));
+                .andExpect(jsonPath("$.result.name").value("Netflix"));
 
         assertEquals(1, recurringTransactionRepository.count());
+        // Immediate backfill: one transaction for the current period
+        assertEquals(1, transactionRepository.count());
     }
 
     @Test
-    public void testCreateRecurringTransactionWithCurrency() throws Exception {
+    public void create_withPastStartDate_backfillsMissedTransactions() {
+        // Start 3 months ago → should create at least 3 monthly transactions immediately.
+        // Exact count is 3 or 4 depending on whether the advanced nextRunDate is still <= now
+        // (month boundary arithmetic is not millisecond-precise), so we assert >= 3.
+        RecurringTransaction rt = buildRt(monthsAgo(3));
+
+        RecurringTransaction saved = recurringTransactionService.create(testUser.getId(), rt);
+
+        List<Transaction> transactions = transactionRepository.findAll();
+        assertTrue(transactions.size() >= 3, "Expected at least 3 backfilled transactions");
+        assertTrue(transactions.stream().allMatch(t -> "Test RT".equals(t.getName())));
+        assertNotNull(saved.getLastRunDate());
+        assertTrue(saved.getNextRunDate().after(new Date()));
+    }
+
+    @Test
+    public void create_withCurrency_backfillUsesProvidedExchangeRate() {
         RecurringTransaction rt = new RecurringTransaction();
-        rt.setName("Netflix Subscription USD");
-        rt.setOriginalAmount(1200.0);
-        rt.setOriginalCurrency("INR");
-        rt.setExchangeRate(1.0); // Base amount in INR (approx)
+        rt.setName("USD Sub");
+        rt.setOriginalCurrency("USD");
+        rt.setOriginalAmount(15.0);
+        rt.setExchangeRate(80.0);
         rt.setAccountId(testAccount.getId());
         rt.setCategoryId(testCategory.getId());
         rt.setTransactionType(TransactionType.DEBIT);
         rt.setFrequency(Frequency.MONTHLY);
-        rt.setStartDate(new Date());
-        rt.setNextRunDate(new Date());
+        Date now = new Date();
+        rt.setStartDate(now);
+        rt.setNextRunDate(now);
 
-        // Currency fields
-        rt.setOriginalCurrency("USD");
-        rt.setOriginalAmount(15.0);
-        rt.setExchangeRate(80.0);
+        recurringTransactionService.create(testUser.getId(), rt);
+
+        Transaction t = transactionRepository.findAll().get(0);
+        assertEquals(15.0, t.getOriginalAmount());
+        assertEquals(80.0, t.getExchangeRate());
+        // amount = originalAmount * exchangeRate
+        assertEquals(1200.0, t.getAmount());
+    }
+
+    @Test
+    public void create_withEndDateInPast_createsNoTransactionsAndDeactivates() {
+        // endDate is in the past — nothing should be created
+        RecurringTransaction rt = buildRt(monthsAgo(3));
+        rt.setEndDate(monthsAgo(6)); // end date is before startDate
+
+        RecurringTransaction saved = recurringTransactionService.create(testUser.getId(), rt);
+
+        assertEquals(0, transactionRepository.count());
+        assertFalse(saved.getIsActive());
+    }
+
+    @Test
+    public void create_endDateHitDuringCatchUp_stopsEarlyAndDeactivates() {
+        // startDate 3 months ago, endDate 2 months ago.
+        // End date check is strictly .after(), so the entry ON the endDate is still created.
+        // Entries: 3mo ago ✓, 2mo ago ✓, next advance (1mo ago) > endDate → deactivate.
+        RecurringTransaction rt = buildRt(monthsAgo(3));
+        rt.setEndDate(monthsAgo(2));
+
+        RecurringTransaction saved = recurringTransactionService.create(testUser.getId(), rt);
+
+        assertEquals(2, transactionRepository.count());
+        assertFalse(saved.getIsActive());
+    }
+
+    // ==================== Ownership checks on create ====================
+
+    @Test
+    public void create_unauthorizedAccount_returnsUnauthorized() throws Exception {
+        User other = createUniqueUser("Other");
+        Account otherAcc = new Account();
+        otherAcc.setName("OtherAcc");
+        otherAcc.setUserId(other.getId());
+        otherAcc = accountRepository.save(otherAcc);
+
+        RecurringTransaction rt = new RecurringTransaction();
+        rt.setName("R");
+        rt.setOriginalAmount(100.0);
+        rt.setOriginalCurrency("INR");
+        rt.setExchangeRate(1.0);
+        rt.setAccountId(otherAcc.getId()); // belongs to other user
+        rt.setCategoryId(testCategory.getId());
+        rt.setTransactionType(TransactionType.DEBIT);
+        rt.setFrequency(Frequency.MONTHLY);
+        Date now = new Date();
+        rt.setStartDate(now);
+        rt.setNextRunDate(now);
 
         mockMvc.perform(post("/api/recurring-transactions")
                         .header("Authorization", bearerToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(rt)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result.id").exists())
-                .andExpect(jsonPath("$.result.name").value("Netflix Subscription USD"))
-                .andExpect(jsonPath("$.result.originalCurrency").value("USD"))
-                .andExpect(jsonPath("$.result.originalAmount").value(15.0))
-                .andExpect(jsonPath("$.result.exchangeRate").value(80.0));
-
-        assertEquals(1, recurringTransactionRepository.count());
-        RecurringTransaction saved = recurringTransactionRepository.findAll().get(0);
-        assertEquals("USD", saved.getOriginalCurrency());
-        assertEquals(15.0, saved.getOriginalAmount());
-        assertEquals(80.0, saved.getExchangeRate());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
-    public void testProcessDueTransactions() {
-        // Create a recurring transaction that is due (nextRunDate in the past)
+    public void create_unauthorizedCategory_returnsUnauthorized() throws Exception {
+        User other = createUniqueUser("Other2");
+        Category otherCat = new Category();
+        otherCat.setName("OtherCat");
+        otherCat.setUserId(other.getId());
+        otherCat = categoryRepository.save(otherCat);
+
+        RecurringTransaction rt = new RecurringTransaction();
+        rt.setName("R");
+        rt.setOriginalAmount(100.0);
+        rt.setOriginalCurrency("INR");
+        rt.setExchangeRate(1.0);
+        rt.setAccountId(testAccount.getId());
+        rt.setCategoryId(otherCat.getId()); // belongs to other user
+        rt.setTransactionType(TransactionType.DEBIT);
+        rt.setFrequency(Frequency.MONTHLY);
+        Date now = new Date();
+        rt.setStartDate(now);
+        rt.setNextRunDate(now);
+
+        mockMvc.perform(post("/api/recurring-transactions")
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(rt)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    // ==================== Ownership checks on update ====================
+
+    @Test
+    public void update_unauthorizedAccount_returnsUnauthorized() throws Exception {
+        User other = createUniqueUser("Other3");
+        Account otherAcc = new Account();
+        otherAcc.setName("OtherAcc");
+        otherAcc.setUserId(other.getId());
+        otherAcc = accountRepository.save(otherAcc);
+
+        RecurringTransaction rt = buildRt(new Date());
+        rt = recurringTransactionRepository.save(rt);
+
+        Map<String, Object> update = new HashMap<>();
+        update.put("accountId", otherAcc.getId());
+
+        mockMvc.perform(put("/api/recurring-transactions/" + rt.getId())
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(update)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void update_crossUserAccess_returnsUnauthorized() throws Exception {
+        User other = createUniqueUser("Other4");
+        String otherToken = generateBearerToken(other);
+
+        RecurringTransaction rt = buildRt(new Date());
+        rt = recurringTransactionRepository.save(rt);
+
+        Map<String, Object> update = new HashMap<>();
+        update.put("name", "Hacked");
+
+        mockMvc.perform(put("/api/recurring-transactions/" + rt.getId())
+                        .header("Authorization", otherToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(update)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    // ==================== Delete ====================
+
+    @Test
+    public void delete_crossUserAccess_returnsUnauthorized() throws Exception {
+        User other = createUniqueUser("Other5");
+        String otherToken = generateBearerToken(other);
+
+        RecurringTransaction rt = buildRt(new Date());
+        rt = recurringTransactionRepository.save(rt);
+
+        mockMvc.perform(delete("/api/recurring-transactions/" + rt.getId())
+                        .header("Authorization", otherToken))
+                .andExpect(status().isUnauthorized());
+    }
+
+    // ==================== Scheduler catch-up ====================
+
+    // ==================== Scheduler catch-up (exercised via create) ====================
+    // processSingleTransaction uses REQUIRES_NEW which cannot see uncommitted test data.
+    // We exercise the same catch-up logic through create(), which calls processSingleTransaction
+    // directly (no proxy) so it runs inside the test's transaction and sees all saved entities.
+
+    @Test
+    public void scheduler_transferWithSameAccount_createsDebit() {
+        // Use yesterday so that after 1 monthly advance nextRunDate is clearly in the future
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.DAY_OF_MONTH, -1);
+        RecurringTransaction rt = buildRt(cal.getTime());
+        rt.setTransactionType(TransactionType.TRANSFER);
+        rt.setToAccountId(testAccount.getId()); // same account → falls back to DEBIT
+
+        recurringTransactionService.create(testUser.getId(), rt);
+
+        List<Transaction> txs = transactionRepository.findAll();
+        assertEquals(1, txs.size());
+        assertEquals(TransactionDbType.DEBIT, txs.get(0).getTransactionType());
+    }
+
+    @Test
+    public void scheduler_transfer_createsBothLegs() {
+        Account target = new Account();
+        target.setName("Savings");
+        target.setUserId(testUser.getId());
+        target = accountRepository.save(target);
+
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.DAY_OF_MONTH, -1);
+        RecurringTransaction rt = buildRt(cal.getTime());
+        rt.setTransactionType(TransactionType.TRANSFER);
+        rt.setToAccountId(target.getId());
+
+        recurringTransactionService.create(testUser.getId(), rt);
+
+        List<Transaction> txs = transactionRepository.findAll();
+        assertEquals(2, txs.size());
+        assertTrue(txs.stream().anyMatch(t -> t.getTransactionType() == TransactionDbType.DEBIT));
+        assertTrue(txs.stream().anyMatch(t -> t.getTransactionType() == TransactionDbType.CREDIT));
+    }
+
+    @Test
+    public void scheduler_nextRunDateAdvancedAfterBackfill() {
         Calendar cal = Calendar.getInstance();
         cal.add(Calendar.DAY_OF_MONTH, -1);
         Date yesterday = cal.getTime();
 
-        RecurringTransaction rt = new RecurringTransaction();
-        rt.setUserId(testUser.getId());
-        rt.setName("Due Transaction");
-        rt.setOriginalAmount(500.0);
-        rt.setOriginalCurrency("INR");
-        rt.setExchangeRate(1.0);
-        rt.setAccountId(testAccount.getId());
-        rt.setToAccountId(testAccount.getId());
-        rt.setCategoryId(testCategory.getId());
-        rt.setTransactionType(TransactionType.TRANSFER);
-        rt.setFrequency(Frequency.MONTHLY);
-        rt.setStartDate(yesterday);
-        rt.setNextRunDate(yesterday);
-        rt.setIsActive(true);
-        recurringTransactionRepository.save(rt);
+        RecurringTransaction saved = recurringTransactionService.create(testUser.getId(), buildRt(yesterday));
 
-        // Run the processing logic
-        recurringTransactionService.processDueTransactions();
-
-        // Verify a transaction was created
-        List<Transaction> transactions = transactionRepository.findAll();
-        assertEquals(1, transactions.size());
-        Transaction t = transactions.get(0);
-        assertEquals("Due Transaction", t.getName());
-        assertEquals(500.0, t.getAmount());
-
-        // Verify recurring transaction was updated
-        RecurringTransaction updatedRt = recurringTransactionRepository.findById(rt.getId()).orElseThrow();
-        assertNotNull(updatedRt.getLastRunDate());
-
-        // Next run date should be yesterday + 1 month
+        assertNotNull(saved.getLastRunDate());
         cal.setTime(yesterday);
         cal.add(Calendar.MONTH, 1);
-        Date expectedNextRun = cal.getTime();
+        assertEquals(cal.getTime().toString(), saved.getNextRunDate().toString());
+    }
 
-        // Allow small difference in milliseconds if any, but logic uses Calendar math so should be close
-        // Actually the logic sets it exactly using Calendar add
-        assertEquals(expectedNextRun.toString(), updatedRt.getNextRunDate().toString());
+    // ==================== Bean Validation ====================
+
+    @Test
+    public void create_withZeroOriginalAmount_returnsBadRequest() throws Exception {
+        Map<String, Object> p = new HashMap<>();
+        p.put("name", "Sub");
+        p.put("accountId", testAccount.getId());
+        p.put("categoryId", testCategory.getId());
+        p.put("transactionType", TransactionType.DEBIT);
+        p.put("frequency", "MONTHLY");
+        Date now = new Date();
+        p.put("startDate", now);
+        p.put("nextRunDate", now);
+        p.put("originalCurrency", "INR");
+        p.put("originalAmount", 0.0); // @Positive fails
+        p.put("exchangeRate", 1.0);
+
+        mockMvc.perform(post("/api/recurring-transactions")
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(p)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
-    public void testRecurringTransferCreation() {
-        // Create a second account for transfer
-        Account targetAccount = new Account();
-        targetAccount.setName("Savings");
-        targetAccount.setUserId(testUser.getId());
-        targetAccount = accountRepository.save(targetAccount);
+    public void create_withZeroExchangeRate_returnsBadRequest() throws Exception {
+        Map<String, Object> p = new HashMap<>();
+        p.put("name", "Sub");
+        p.put("accountId", testAccount.getId());
+        p.put("categoryId", testCategory.getId());
+        p.put("transactionType", TransactionType.DEBIT);
+        p.put("frequency", "MONTHLY");
+        Date now = new Date();
+        p.put("startDate", now);
+        p.put("nextRunDate", now);
+        p.put("originalCurrency", "INR");
+        p.put("originalAmount", 10.0);
+        p.put("exchangeRate", 0.0); // @Positive fails
 
-        Calendar cal = Calendar.getInstance();
-        cal.add(Calendar.DAY_OF_MONTH, -1);
-        Date yesterday = cal.getTime();
-
-        RecurringTransaction rt = new RecurringTransaction();
-        rt.setUserId(testUser.getId());
-        rt.setName("Monthly Savings");
-        rt.setOriginalAmount(1000.0);
-        rt.setOriginalCurrency("INR");
-        rt.setExchangeRate(1.0);
-        rt.setAccountId(testAccount.getId());
-        rt.setToAccountId(targetAccount.getId()); // Transfer
-        rt.setCategoryId(testCategory.getId()); // Usually handled by service but field is required
-        rt.setTransactionType(TransactionType.TRANSFER); // Transfer
-        rt.setFrequency(Frequency.MONTHLY);
-        rt.setStartDate(yesterday);
-        rt.setNextRunDate(yesterday);
-        rt.setIsActive(true);
-        recurringTransactionRepository.save(rt);
-
-        // Run processing
-        recurringTransactionService.processDueTransactions();
-
-        // Verify transfer transactions created (Debit and Credit)
-        List<Transaction> transactions = transactionRepository.findAll();
-        assertEquals(2, transactions.size());
-
-        boolean hasDebit = transactions.stream().anyMatch(t -> t.getAmount() == 1000.0 && t.getTransactionType() == TransactionDbType.DEBIT);
-        boolean hasCredit = transactions.stream().anyMatch(t -> t.getAmount() == 1000.0 && t.getTransactionType() == TransactionDbType.CREDIT);
-
-        assertTrue(hasDebit);
-        assertTrue(hasCredit);
+        mockMvc.perform(post("/api/recurring-transactions")
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(p)))
+                .andExpect(status().isBadRequest());
     }
 }

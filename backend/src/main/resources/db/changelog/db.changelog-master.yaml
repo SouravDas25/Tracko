@@ -3,3 +3,5 @@ databaseChangeLog:
             file: db/changelog/000-consolidated-changelog.yaml
     -   include:
             file: db/changelog/001-add-recurring-transactions.yaml
+    -   include:
+            file: db/changelog/002-recurring-transactions-generated-amount.yaml
