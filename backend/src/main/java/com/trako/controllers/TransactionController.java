@@ -7,7 +7,6 @@ import com.trako.dtos.TransactionsPageDTO;
 import com.trako.entities.Account;
 import com.trako.entities.Transaction;
 import com.trako.entities.TransactionEntryType;
-import com.trako.entities.TransactionType;
 import com.trako.entities.User;
 import com.trako.exceptions.AuthorizationException;
 import com.trako.exceptions.NotFoundException;

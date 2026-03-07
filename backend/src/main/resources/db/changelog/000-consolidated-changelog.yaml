@@ -1,457 +1,457 @@
 databaseChangeLog:
-  - property:
-      name: clob.type
-      value: text
-      dbms: postgresql
-  - property:
-      name: clob.type
-      value: varchar(10000)
-      dbms: h2
-
-  - property:
-      name: double.type
-      value: double
-      dbms: h2
-  - property:
-      name: double.type
-      value: double precision
-      dbms: postgresql
-
-  - changeSet:
-      id: 001-initial-schema
-      author: sd25
-      changes:
-        - createTable:
-            tableName: users
-            columns:
-              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
-              - column: { name: name, type: varchar(255) }
-              - column: { name: phone_no, type: varchar(32) }
-              - column: { name: email, type: varchar(255) }
-              - column: { name: profile_pic, type: varchar(512) }
-              - column: { name: password, type: varchar(128) }
-              - column: { name: is_shadow, type: int }
-              - column: { name: global_id, type: varchar(64) }
-              - column: { name: base_currency, type: varchar(3), defaultValue: "INR" }
-              - column: { name: is_admin, type: int, defaultValueNumeric: 0, constraints: { nullable: false } }
-              - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP }
-              - column: { name: updated_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP }
-        - addUniqueConstraint:
-            tableName: users
-            columnNames: phone_no
-            constraintName: uq_users_phone_no
-        - addUniqueConstraint:
-            tableName: users
-            columnNames: global_id
-            constraintName: uq_users_global_id
-
-  - changeSet:
-      id: 002-user-currencies-table
-      author: sd25
-      changes:
-        - createTable:
-            tableName: user_currencies
-            columns:
-              - column:
-                  name: id
-                  type: BIGINT
-                  autoIncrement: true
-                  constraints:
-                    primaryKey: true
-                    nullable: false
-              - column:
-                  name: user_id
-                  type: VARCHAR(36)
-                  constraints:
-                    nullable: false
-              - column:
-                  name: currency_code
-                  type: VARCHAR(3)
-                  constraints:
-                    nullable: false
-              - column:
-                  name: exchange_rate
-                  type: ${double.type}
-                  constraints:
-                    nullable: false
-        - addForeignKeyConstraint:
-            baseTableName: user_currencies
-            baseColumnNames: user_id
-            referencedTableName: users
-            referencedColumnNames: id
-            constraintName: fk_user_currencies_user
-            onDelete: CASCADE
-        - addUniqueConstraint:
-            tableName: user_currencies
-            columnNames: user_id, currency_code
-            constraintName: uq_user_currencies_user_code
-
-  - changeSet:
-      id: 004-contacts-create-table
-      author: sd25
-      changes:
-        - createTable:
-            tableName: contacts
-            columns:
-              - column:
-                  name: id
-                  type: BIGINT
-                  autoIncrement: true
-                  constraints:
-                    primaryKey: true
-                    primaryKeyName: pk_contacts
-              - column:
-                  name: user_id
-                  type: VARCHAR(36)
-                  constraints:
-                    nullable: false
-              - column:
-                  name: name
-                  type: VARCHAR(250)
-                  constraints:
-                    nullable: false
-              - column:
-                  name: phone_no
-                  type: VARCHAR(32)
-              - column:
-                  name: email
-                  type: VARCHAR(150)
-
-  - changeSet:
-      id: 004-contacts-fk-user
-      author: sd25
-      changes:
-        - addForeignKeyConstraint:
-            baseTableName: contacts
-            baseColumnNames: user_id
-            referencedTableName: users
-            referencedColumnNames: id
-            constraintName: fk_contacts_user
-            onDelete: CASCADE
-
-  - changeSet:
-      id: 004-contacts-index-user
-      author: sd25
-      changes:
-        - createIndex:
-            indexName: idx_contacts_user
-            tableName: contacts
-            columns:
-              - column:
-                  name: user_id
-
-  - changeSet:
-      id: 003-add-missing-tables
-      author: sd25
-      changes:
-        - createTable:
-            tableName: accounts
-            columns:
-              - column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
-              - column: { name: name, type: varchar(250), constraints: { nullable: false } }
-              - column: { name: user_id, type: varchar(36), constraints: { nullable: false } }
-              - column: { name: currency, type: varchar(3), defaultValue: "INR" }
-        - addForeignKeyConstraint:
-            baseTableName: accounts
-            baseColumnNames: user_id
-            referencedTableName: users
-            referencedColumnNames: id
-            constraintName: fk_accounts_user
-            onDelete: CASCADE
-        - createIndex:
-            tableName: accounts
-            indexName: idx_accounts_user
-            columns: [ { column: { name: user_id } } ]
-
-        - createTable:
-            tableName: categories
-            columns:
-              - column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
-              - column: { name: name, type: varchar(250), constraints: { nullable: false } }
-              - column: { name: user_id, type: varchar(36), constraints: { nullable: false } }
-              - column: { name: category_type, type: varchar(16), defaultValue: EXPENSE, constraints: { nullable: false } }
-              - column: { name: is_roll_over_enabled, type: boolean, defaultValueBoolean: false }
-              - column: { name: parent_category_id, type: bigint }
-        - addForeignKeyConstraint:
-            baseTableName: categories
-            baseColumnNames: user_id
-            referencedTableName: users
-            referencedColumnNames: id
-            constraintName: fk_categories_user
-            onDelete: CASCADE
-        - addForeignKeyConstraint:
-            baseTableName: categories
-            baseColumnNames: parent_category_id
-            referencedTableName: categories
-            referencedColumnNames: id
-            constraintName: fk_categories_parent
-            onDelete: SET NULL
-        - createIndex:
-            tableName: categories
-            indexName: idx_categories_user
-            columns: [ { column: { name: user_id } } ]
-
-  - changeSet:
-      id: 014-unique-accounts-user-name
-      author: sd25
-      preConditions:
-        - not:
-            - uniqueConstraintExists:
-                tableName: accounts
-                constraintName: uq_accounts_user_name
-      changes:
-        - addUniqueConstraint:
-            tableName: accounts
-            columnNames: user_id, name
-            constraintName: uq_accounts_user_name
-
-  - changeSet:
-      id: 015-unique-categories-user-name
-      author: sd25
-      preConditions:
-        - not:
-            - uniqueConstraintExists:
-                tableName: categories
-                constraintName: uq_categories_user_type_name
-      changes:
-        - addUniqueConstraint:
-            tableName: categories
-            columnNames: user_id, category_type, name
-            constraintName: uq_categories_user_type_name
-
-        - createTable:
-            tableName: transactions
-            columns:
-              - column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
-              - column: { name: transaction_type, type: int, constraints: { nullable: false } }
-              - column: { name: name, type: varchar(128), constraints: { nullable: false } }
-              - column: { name: comments, type: varchar(512) }
-              - column: { name: date, type: timestamp, constraints: { nullable: false } }
-              - column: { name: account_id, type: bigint, constraints: { nullable: false } }
-              - column: { name: category_id, type: bigint, constraints: { nullable: false } }
-              - column: { name: is_countable, type: int, defaultValue: "1" }
-              - column: { name: original_currency, type: varchar(3) }
-              - column:
-                  name: original_amount
-                  type: ${double.type}
-              - column:
-                  name: exchange_rate
-                  type: ${double.type}
-        - sql:
+    -   property:
+            name: clob.type
+            value: text
             dbms: postgresql
-            sql: "ALTER TABLE transactions ADD COLUMN amount DOUBLE PRECISION GENERATED ALWAYS AS (original_amount * exchange_rate) STORED;"
-        - sql:
+    -   property:
+            name: clob.type
+            value: varchar(10000)
             dbms: h2
-            sql: "ALTER TABLE transactions ADD COLUMN amount DOUBLE GENERATED ALWAYS AS (original_amount * exchange_rate);"
-        - addForeignKeyConstraint:
-            baseTableName: transactions
-            baseColumnNames: account_id
-            referencedTableName: accounts
-            referencedColumnNames: id
-            constraintName: fk_transactions_account
-            onDelete: RESTRICT
-        - addForeignKeyConstraint:
-            baseTableName: transactions
-            baseColumnNames: category_id
-            referencedTableName: categories
-            referencedColumnNames: id
-            constraintName: fk_transactions_category
-            onDelete: RESTRICT
-        - createIndex:
-            tableName: transactions
-            indexName: idx_transactions_date
-            columns: [ { column: { name: date } } ]
-        - createIndex:
-            tableName: transactions
-            indexName: idx_transactions_account
-            columns: [ { column: { name: account_id } } ]
-        - createTable:
-            tableName: splits
-            columns:
-              - column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
-              - column: { name: transaction_id, type: bigint, constraints: { nullable: false } }
-              - column: { name: user_id, type: varchar(36), constraints: { nullable: false } }
-              - column:
-                  name: amount
-                  type: ${double.type}
-                  constraints:
-                    nullable: false
-              - column: { name: contact_id, type: BIGINT }
-              - column: { name: settled_at, type: timestamp }
-              - column: { name: is_settled, type: int, defaultValue: "0" }
-        - addForeignKeyConstraint:
-            baseTableName: splits
-            baseColumnNames: transaction_id
-            referencedTableName: transactions
-            referencedColumnNames: id
-            constraintName: fk_splits_transaction
-            onDelete: CASCADE
-        - addForeignKeyConstraint:
-            baseTableName: splits
-            baseColumnNames: user_id
-            referencedTableName: users
-            referencedColumnNames: id
-            constraintName: fk_splits_user
-            onDelete: CASCADE
-        - addForeignKeyConstraint:
-            baseTableName: splits
-            baseColumnNames: contact_id
-            referencedTableName: contacts
-            referencedColumnNames: id
-            constraintName: fk_splits_contact
-            onDelete: RESTRICT
-        - createIndex:
-            tableName: splits
-            indexName: idx_splits_transaction
-            columns: [ { column: { name: transaction_id } } ]
-        - createIndex:
-            tableName: splits
-            indexName: idx_splits_user
-            columns: [ { column: { name: user_id } } ]
-        - createIndex:
-            indexName: idx_splits_contact
-            tableName: splits
-            columns:
-              - column:
-                  name: contact_id
 
-        - createTable:
-            tableName: json_store
-            columns:
-              - column: { name: name, type: varchar(64), constraints: { primaryKey: true, nullable: false } }
-              - column: 
-                    name: json_value 
-                    type: ${clob.type}
+    -   property:
+            name: double.type
+            value: double
+            dbms: h2
+    -   property:
+            name: double.type
+            value: double precision
+            dbms: postgresql
 
-  - changeSet:
-      id: 006-add-zbb-tables
-      author: sd25
-      changes:
-        - createTable:
-            tableName: budget_months
-            columns:
-              - column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
-              - column: { name: budget_month, type: int, constraints: { nullable: false } }
-              - column: { name: budget_year, type: int, constraints: { nullable: false } }
-              - column: { name: user_id, type: varchar(36), constraints: { nullable: false } }
-              - column:
-                  name: total_budget
-                  type: ${double.type}
-                  defaultValueNumeric: 0.0
-              - column: { name: is_closed, type: boolean, defaultValueBoolean: false }
-              - column: { name: created_at, type: timestamp, defaultValueComputed: "CURRENT_TIMESTAMP" }
-              - column: { name: updated_at, type: timestamp, defaultValueComputed: "CURRENT_TIMESTAMP" }
-        - addForeignKeyConstraint:
-            baseTableName: budget_months
-            baseColumnNames: user_id
-            referencedTableName: users
-            referencedColumnNames: id
-            constraintName: fk_budget_months_user
-            onDelete: CASCADE
-        - addUniqueConstraint:
-            tableName: budget_months
-            columnNames: user_id, budget_month, budget_year
-            constraintName: uq_budget_months_user_date
+    -   changeSet:
+            id: 001-initial-schema
+            author: sd25
+            changes:
+                -   createTable:
+                        tableName: users
+                        columns:
+                            -   column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+                            -   column: { name: name, type: varchar(255) }
+                            -   column: { name: phone_no, type: varchar(32) }
+                            -   column: { name: email, type: varchar(255) }
+                            -   column: { name: profile_pic, type: varchar(512) }
+                            -   column: { name: password, type: varchar(128) }
+                            -   column: { name: is_shadow, type: int }
+                            -   column: { name: global_id, type: varchar(64) }
+                            -   column: { name: base_currency, type: varchar(3), defaultValue: "INR" }
+                            -   column: { name: is_admin, type: int, defaultValueNumeric: 0, constraints: { nullable: false } }
+                            -   column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP }
+                            -   column: { name: updated_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP }
+                -   addUniqueConstraint:
+                        tableName: users
+                        columnNames: phone_no
+                        constraintName: uq_users_phone_no
+                -   addUniqueConstraint:
+                        tableName: users
+                        columnNames: global_id
+                        constraintName: uq_users_global_id
 
-        - createTable:
-            tableName: budget_category_allocations
-            columns:
-              - column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
-              - column: { name: budget_month_id, type: bigint, constraints: { nullable: false } }
-              - column: { name: category_id, type: bigint, constraints: { nullable: false } }
-              - column: { name: user_id, type: varchar(36), constraints: { nullable: false } }
-              - column:
-                  name: allocated_amount
-                  type: ${double.type}
-                  defaultValueNumeric: 0.0
-              - column:
-                  name: actual_spent
-                  type: ${double.type}
-                  defaultValueNumeric: 0.0
-              - column:
-                  name: remaining_balance
-                  type: ${double.type}
-                  defaultValueNumeric: 0.0
-        - addForeignKeyConstraint:
-            baseTableName: budget_category_allocations
-            baseColumnNames: budget_month_id
-            referencedTableName: budget_months
-            referencedColumnNames: id
-            constraintName: fk_bca_budget_month
-            onDelete: CASCADE
-        - addForeignKeyConstraint:
-            baseTableName: budget_category_allocations
-            baseColumnNames: category_id
-            referencedTableName: categories
-            referencedColumnNames: id
-            constraintName: fk_bca_category
-            onDelete: RESTRICT
-        - addForeignKeyConstraint:
-            baseTableName: budget_category_allocations
-            baseColumnNames: user_id
-            referencedTableName: users
-            referencedColumnNames: id
-            constraintName: fk_bca_user
-            onDelete: CASCADE
-        - addUniqueConstraint:
-            tableName: budget_category_allocations
-            columnNames: budget_month_id, category_id
-            constraintName: uq_bca_month_category
+    -   changeSet:
+            id: 002-user-currencies-table
+            author: sd25
+            changes:
+                -   createTable:
+                        tableName: user_currencies
+                        columns:
+                            -   column:
+                                    name: id
+                                    type: BIGINT
+                                    autoIncrement: true
+                                    constraints:
+                                        primaryKey: true
+                                        nullable: false
+                            -   column:
+                                    name: user_id
+                                    type: VARCHAR(36)
+                                    constraints:
+                                        nullable: false
+                            -   column:
+                                    name: currency_code
+                                    type: VARCHAR(3)
+                                    constraints:
+                                        nullable: false
+                            -   column:
+                                    name: exchange_rate
+                                    type: ${double.type}
+                                    constraints:
+                                        nullable: false
+                -   addForeignKeyConstraint:
+                        baseTableName: user_currencies
+                        baseColumnNames: user_id
+                        referencedTableName: users
+                        referencedColumnNames: id
+                        constraintName: fk_user_currencies_user
+                        onDelete: CASCADE
+                -   addUniqueConstraint:
+                        tableName: user_currencies
+                        columnNames: user_id, currency_code
+                        constraintName: uq_user_currencies_user_code
 
-        - createTable:
-            tableName: allocation_rules
-            columns:
-              - column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
-              - column: { name: user_id, type: varchar(36), constraints: { nullable: false } }
-              - column: { name: rule_name, type: varchar(255), constraints: { nullable: false } }
-              - column:
-                  name: allocation_percentage
-                  type: ${double.type}
-                  constraints:
-                    nullable: false
-              - column: { name: is_active, type: boolean, defaultValueBoolean: true }
-              - column: { name: created_at, type: timestamp, defaultValueComputed: "CURRENT_TIMESTAMP" }
-              - column: { name: updated_at, type: timestamp, defaultValueComputed: "CURRENT_TIMESTAMP" }
-        - addForeignKeyConstraint:
-            baseTableName: allocation_rules
-            baseColumnNames: user_id
-            referencedTableName: users
-            referencedColumnNames: id
-            constraintName: fk_allocation_rules_user
-            onDelete: CASCADE
+    -   changeSet:
+            id: 004-contacts-create-table
+            author: sd25
+            changes:
+                -   createTable:
+                        tableName: contacts
+                        columns:
+                            -   column:
+                                    name: id
+                                    type: BIGINT
+                                    autoIncrement: true
+                                    constraints:
+                                        primaryKey: true
+                                        primaryKeyName: pk_contacts
+                            -   column:
+                                    name: user_id
+                                    type: VARCHAR(36)
+                                    constraints:
+                                        nullable: false
+                            -   column:
+                                    name: name
+                                    type: VARCHAR(250)
+                                    constraints:
+                                        nullable: false
+                            -   column:
+                                    name: phone_no
+                                    type: VARCHAR(32)
+                            -   column:
+                                    name: email
+                                    type: VARCHAR(150)
+
+    -   changeSet:
+            id: 004-contacts-fk-user
+            author: sd25
+            changes:
+                -   addForeignKeyConstraint:
+                        baseTableName: contacts
+                        baseColumnNames: user_id
+                        referencedTableName: users
+                        referencedColumnNames: id
+                        constraintName: fk_contacts_user
+                        onDelete: CASCADE
+
+    -   changeSet:
+            id: 004-contacts-index-user
+            author: sd25
+            changes:
+                -   createIndex:
+                        indexName: idx_contacts_user
+                        tableName: contacts
+                        columns:
+                            -   column:
+                                    name: user_id
+
+    -   changeSet:
+            id: 003-add-missing-tables
+            author: sd25
+            changes:
+                -   createTable:
+                        tableName: accounts
+                        columns:
+                            -   column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+                            -   column: { name: name, type: varchar(250), constraints: { nullable: false } }
+                            -   column: { name: user_id, type: varchar(36), constraints: { nullable: false } }
+                            -   column: { name: currency, type: varchar(3), defaultValue: "INR" }
+                -   addForeignKeyConstraint:
+                        baseTableName: accounts
+                        baseColumnNames: user_id
+                        referencedTableName: users
+                        referencedColumnNames: id
+                        constraintName: fk_accounts_user
+                        onDelete: CASCADE
+                -   createIndex:
+                        tableName: accounts
+                        indexName: idx_accounts_user
+                        columns: [ { column: { name: user_id } } ]
+
+                -   createTable:
+                        tableName: categories
+                        columns:
+                            -   column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+                            -   column: { name: name, type: varchar(250), constraints: { nullable: false } }
+                            -   column: { name: user_id, type: varchar(36), constraints: { nullable: false } }
+                            -   column: { name: category_type, type: varchar(16), defaultValue: EXPENSE, constraints: { nullable: false } }
+                            -   column: { name: is_roll_over_enabled, type: boolean, defaultValueBoolean: false }
+                            -   column: { name: parent_category_id, type: bigint }
+                -   addForeignKeyConstraint:
+                        baseTableName: categories
+                        baseColumnNames: user_id
+                        referencedTableName: users
+                        referencedColumnNames: id
+                        constraintName: fk_categories_user
+                        onDelete: CASCADE
+                -   addForeignKeyConstraint:
+                        baseTableName: categories
+                        baseColumnNames: parent_category_id
+                        referencedTableName: categories
+                        referencedColumnNames: id
+                        constraintName: fk_categories_parent
+                        onDelete: SET NULL
+                -   createIndex:
+                        tableName: categories
+                        indexName: idx_categories_user
+                        columns: [ { column: { name: user_id } } ]
+
+    -   changeSet:
+            id: 014-unique-accounts-user-name
+            author: sd25
+            preConditions:
+                -   not:
+                        -   uniqueConstraintExists:
+                                tableName: accounts
+                                constraintName: uq_accounts_user_name
+            changes:
+                -   addUniqueConstraint:
+                        tableName: accounts
+                        columnNames: user_id, name
+                        constraintName: uq_accounts_user_name
+
+    -   changeSet:
+            id: 015-unique-categories-user-name
+            author: sd25
+            preConditions:
+                -   not:
+                        -   uniqueConstraintExists:
+                                tableName: categories
+                                constraintName: uq_categories_user_type_name
+            changes:
+                -   addUniqueConstraint:
+                        tableName: categories
+                        columnNames: user_id, category_type, name
+                        constraintName: uq_categories_user_type_name
+
+                -   createTable:
+                        tableName: transactions
+                        columns:
+                            -   column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+                            -   column: { name: transaction_type, type: int, constraints: { nullable: false } }
+                            -   column: { name: name, type: varchar(128), constraints: { nullable: false } }
+                            -   column: { name: comments, type: varchar(512) }
+                            -   column: { name: date, type: timestamp, constraints: { nullable: false } }
+                            -   column: { name: account_id, type: bigint, constraints: { nullable: false } }
+                            -   column: { name: category_id, type: bigint, constraints: { nullable: false } }
+                            -   column: { name: is_countable, type: int, defaultValue: "1" }
+                            -   column: { name: original_currency, type: varchar(3) }
+                            -   column:
+                                    name: original_amount
+                                    type: ${double.type}
+                            -   column:
+                                    name: exchange_rate
+                                    type: ${double.type}
+                -   sql:
+                        dbms: postgresql
+                        sql: "ALTER TABLE transactions ADD COLUMN amount DOUBLE PRECISION GENERATED ALWAYS AS (original_amount * exchange_rate) STORED;"
+                -   sql:
+                        dbms: h2
+                        sql: "ALTER TABLE transactions ADD COLUMN amount DOUBLE GENERATED ALWAYS AS (original_amount * exchange_rate);"
+                -   addForeignKeyConstraint:
+                        baseTableName: transactions
+                        baseColumnNames: account_id
+                        referencedTableName: accounts
+                        referencedColumnNames: id
+                        constraintName: fk_transactions_account
+                        onDelete: RESTRICT
+                -   addForeignKeyConstraint:
+                        baseTableName: transactions
+                        baseColumnNames: category_id
+                        referencedTableName: categories
+                        referencedColumnNames: id
+                        constraintName: fk_transactions_category
+                        onDelete: RESTRICT
+                -   createIndex:
+                        tableName: transactions
+                        indexName: idx_transactions_date
+                        columns: [ { column: { name: date } } ]
+                -   createIndex:
+                        tableName: transactions
+                        indexName: idx_transactions_account
+                        columns: [ { column: { name: account_id } } ]
+                -   createTable:
+                        tableName: splits
+                        columns:
+                            -   column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+                            -   column: { name: transaction_id, type: bigint, constraints: { nullable: false } }
+                            -   column: { name: user_id, type: varchar(36), constraints: { nullable: false } }
+                            -   column:
+                                    name: amount
+                                    type: ${double.type}
+                                    constraints:
+                                        nullable: false
+                            -   column: { name: contact_id, type: BIGINT }
+                            -   column: { name: settled_at, type: timestamp }
+                            -   column: { name: is_settled, type: int, defaultValue: "0" }
+                -   addForeignKeyConstraint:
+                        baseTableName: splits
+                        baseColumnNames: transaction_id
+                        referencedTableName: transactions
+                        referencedColumnNames: id
+                        constraintName: fk_splits_transaction
+                        onDelete: CASCADE
+                -   addForeignKeyConstraint:
+                        baseTableName: splits
+                        baseColumnNames: user_id
+                        referencedTableName: users
+                        referencedColumnNames: id
+                        constraintName: fk_splits_user
+                        onDelete: CASCADE
+                -   addForeignKeyConstraint:
+                        baseTableName: splits
+                        baseColumnNames: contact_id
+                        referencedTableName: contacts
+                        referencedColumnNames: id
+                        constraintName: fk_splits_contact
+                        onDelete: RESTRICT
+                -   createIndex:
+                        tableName: splits
+                        indexName: idx_splits_transaction
+                        columns: [ { column: { name: transaction_id } } ]
+                -   createIndex:
+                        tableName: splits
+                        indexName: idx_splits_user
+                        columns: [ { column: { name: user_id } } ]
+                -   createIndex:
+                        indexName: idx_splits_contact
+                        tableName: splits
+                        columns:
+                            -   column:
+                                    name: contact_id
+
+                -   createTable:
+                        tableName: json_store
+                        columns:
+                            -   column: { name: name, type: varchar(64), constraints: { primaryKey: true, nullable: false } }
+                            -   column:
+                                    name: json_value
+                                    type: ${clob.type}
+
+    -   changeSet:
+            id: 006-add-zbb-tables
+            author: sd25
+            changes:
+                -   createTable:
+                        tableName: budget_months
+                        columns:
+                            -   column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+                            -   column: { name: budget_month, type: int, constraints: { nullable: false } }
+                            -   column: { name: budget_year, type: int, constraints: { nullable: false } }
+                            -   column: { name: user_id, type: varchar(36), constraints: { nullable: false } }
+                            -   column:
+                                    name: total_budget
+                                    type: ${double.type}
+                                    defaultValueNumeric: 0.0
+                            -   column: { name: is_closed, type: boolean, defaultValueBoolean: false }
+                            -   column: { name: created_at, type: timestamp, defaultValueComputed: "CURRENT_TIMESTAMP" }
+                            -   column: { name: updated_at, type: timestamp, defaultValueComputed: "CURRENT_TIMESTAMP" }
+                -   addForeignKeyConstraint:
+                        baseTableName: budget_months
+                        baseColumnNames: user_id
+                        referencedTableName: users
+                        referencedColumnNames: id
+                        constraintName: fk_budget_months_user
+                        onDelete: CASCADE
+                -   addUniqueConstraint:
+                        tableName: budget_months
+                        columnNames: user_id, budget_month, budget_year
+                        constraintName: uq_budget_months_user_date
+
+                -   createTable:
+                        tableName: budget_category_allocations
+                        columns:
+                            -   column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+                            -   column: { name: budget_month_id, type: bigint, constraints: { nullable: false } }
+                            -   column: { name: category_id, type: bigint, constraints: { nullable: false } }
+                            -   column: { name: user_id, type: varchar(36), constraints: { nullable: false } }
+                            -   column:
+                                    name: allocated_amount
+                                    type: ${double.type}
+                                    defaultValueNumeric: 0.0
+                            -   column:
+                                    name: actual_spent
+                                    type: ${double.type}
+                                    defaultValueNumeric: 0.0
+                            -   column:
+                                    name: remaining_balance
+                                    type: ${double.type}
+                                    defaultValueNumeric: 0.0
+                -   addForeignKeyConstraint:
+                        baseTableName: budget_category_allocations
+                        baseColumnNames: budget_month_id
+                        referencedTableName: budget_months
+                        referencedColumnNames: id
+                        constraintName: fk_bca_budget_month
+                        onDelete: CASCADE
+                -   addForeignKeyConstraint:
+                        baseTableName: budget_category_allocations
+                        baseColumnNames: category_id
+                        referencedTableName: categories
+                        referencedColumnNames: id
+                        constraintName: fk_bca_category
+                        onDelete: RESTRICT
+                -   addForeignKeyConstraint:
+                        baseTableName: budget_category_allocations
+                        baseColumnNames: user_id
+                        referencedTableName: users
+                        referencedColumnNames: id
+                        constraintName: fk_bca_user
+                        onDelete: CASCADE
+                -   addUniqueConstraint:
+                        tableName: budget_category_allocations
+                        columnNames: budget_month_id, category_id
+                        constraintName: uq_bca_month_category
+
+                -   createTable:
+                        tableName: allocation_rules
+                        columns:
+                            -   column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+                            -   column: { name: user_id, type: varchar(36), constraints: { nullable: false } }
+                            -   column: { name: rule_name, type: varchar(255), constraints: { nullable: false } }
+                            -   column:
+                                    name: allocation_percentage
+                                    type: ${double.type}
+                                    constraints:
+                                        nullable: false
+                            -   column: { name: is_active, type: boolean, defaultValueBoolean: true }
+                            -   column: { name: created_at, type: timestamp, defaultValueComputed: "CURRENT_TIMESTAMP" }
+                            -   column: { name: updated_at, type: timestamp, defaultValueComputed: "CURRENT_TIMESTAMP" }
+                -   addForeignKeyConstraint:
+                        baseTableName: allocation_rules
+                        baseColumnNames: user_id
+                        referencedTableName: users
+                        referencedColumnNames: id
+                        constraintName: fk_allocation_rules_user
+                        onDelete: CASCADE
 
 
-  - changeSet:
-      id: 012a-add-linked-transaction-id-column
-      author: sd25
-      preConditions:
-        - not:
-            - columnExists:
-                tableName: transactions
-                columnName: linked_transaction_id
-      changes:
-        - addColumn:
-            tableName: transactions
-            columns:
-              - column:
-                  name: linked_transaction_id
-                  type: BIGINT
-                  constraints:
-                    nullable: true
+    -   changeSet:
+            id: 012a-add-linked-transaction-id-column
+            author: sd25
+            preConditions:
+                -   not:
+                        -   columnExists:
+                                tableName: transactions
+                                columnName: linked_transaction_id
+            changes:
+                -   addColumn:
+                        tableName: transactions
+                        columns:
+                            -   column:
+                                    name: linked_transaction_id
+                                    type: BIGINT
+                                    constraints:
+                                        nullable: true
 
-  - changeSet:
-      id: 012b-create-index-linked-transaction-id
-      author: sd25
-      preConditions:
-        - not:
-            - indexExists:
-                tableName: transactions
-                indexName: idx_transactions_linked
-      changes:
-        - createIndex:
-            tableName: transactions
-            indexName: idx_transactions_linked
-            columns:
-              - column:
-                  name: linked_transaction_id
+    -   changeSet:
+            id: 012b-create-index-linked-transaction-id
+            author: sd25
+            preConditions:
+                -   not:
+                        -   indexExists:
+                                tableName: transactions
+                                indexName: idx_transactions_linked
+            changes:
+                -   createIndex:
+                        tableName: transactions
+                        indexName: idx_transactions_linked
+                        columns:
+                            -   column:
+                                    name: linked_transaction_id
 

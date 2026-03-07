@@ -1,143 +1,143 @@
 databaseChangeLog:
-  - changeSet:
-      id: 001-add-recurring-transactions
-      author: Sourav
-      changes:
-        - createTable:
-            tableName: recurring_transactions
-            columns:
-              - column:
-                  name: id
-                  type: BIGINT
-                  autoIncrement: true
-                  constraints:
-                    primaryKey: true
-                    nullable: false
-              - column:
-                  name: user_id
-                  type: VARCHAR(36)
-                  constraints:
-                    nullable: false
-              - column:
-                  name: name
-                  type: VARCHAR(128)
-                  constraints:
-                    nullable: false
-              - column:
-                  name: amount
-                  type: DOUBLE
-              - column:
-                  name: original_currency
-                  type: VARCHAR(3)
-              - column:
-                  name: original_amount
-                  type: DOUBLE
-              - column:
-                  name: exchange_rate
-                  type: DOUBLE
-              - column:
-                  name: account_id
-                  type: BIGINT
-                  constraints:
-                    nullable: false
-              - column:
-                  name: category_id
-                  type: BIGINT
-                  constraints:
-                    nullable: false
-              - column:
-                  name: to_account_id
-                  type: BIGINT
-              - column:
-                  name: transaction_type
-                  type: INT
-                  constraints:
-                    nullable: false
-              - column:
-                  name: frequency
-                  type: VARCHAR(20)
-                  constraints:
-                    nullable: false
-              - column:
-                  name: start_date
-                  type: TIMESTAMP
-                  constraints:
-                    nullable: false
-              - column:
-                  name: next_run_date
-                  type: TIMESTAMP
-                  constraints:
-                    nullable: false
-              - column:
-                  name: end_date
-                  type: TIMESTAMP
-              - column:
-                  name: is_active
-                  type: BOOLEAN
-                  defaultValueBoolean: true
-              - column:
-                  name: last_run_date
-                  type: TIMESTAMP
-              - column:
-                  name: created_at
-                  type: TIMESTAMP
-                  defaultValueComputed: CURRENT_TIMESTAMP
-              - column:
-                  name: updated_at
-                  type: TIMESTAMP
-                  defaultValueComputed: CURRENT_TIMESTAMP
+    -   changeSet:
+            id: 001-add-recurring-transactions
+            author: Sourav
+            changes:
+                -   createTable:
+                        tableName: recurring_transactions
+                        columns:
+                            -   column:
+                                    name: id
+                                    type: BIGINT
+                                    autoIncrement: true
+                                    constraints:
+                                        primaryKey: true
+                                        nullable: false
+                            -   column:
+                                    name: user_id
+                                    type: VARCHAR(36)
+                                    constraints:
+                                        nullable: false
+                            -   column:
+                                    name: name
+                                    type: VARCHAR(128)
+                                    constraints:
+                                        nullable: false
+                            -   column:
+                                    name: amount
+                                    type: DOUBLE
+                            -   column:
+                                    name: original_currency
+                                    type: VARCHAR(3)
+                            -   column:
+                                    name: original_amount
+                                    type: DOUBLE
+                            -   column:
+                                    name: exchange_rate
+                                    type: DOUBLE
+                            -   column:
+                                    name: account_id
+                                    type: BIGINT
+                                    constraints:
+                                        nullable: false
+                            -   column:
+                                    name: category_id
+                                    type: BIGINT
+                                    constraints:
+                                        nullable: false
+                            -   column:
+                                    name: to_account_id
+                                    type: BIGINT
+                            -   column:
+                                    name: transaction_type
+                                    type: INT
+                                    constraints:
+                                        nullable: false
+                            -   column:
+                                    name: frequency
+                                    type: VARCHAR(20)
+                                    constraints:
+                                        nullable: false
+                            -   column:
+                                    name: start_date
+                                    type: TIMESTAMP
+                                    constraints:
+                                        nullable: false
+                            -   column:
+                                    name: next_run_date
+                                    type: TIMESTAMP
+                                    constraints:
+                                        nullable: false
+                            -   column:
+                                    name: end_date
+                                    type: TIMESTAMP
+                            -   column:
+                                    name: is_active
+                                    type: BOOLEAN
+                                    defaultValueBoolean: true
+                            -   column:
+                                    name: last_run_date
+                                    type: TIMESTAMP
+                            -   column:
+                                    name: created_at
+                                    type: TIMESTAMP
+                                    defaultValueComputed: CURRENT_TIMESTAMP
+                            -   column:
+                                    name: updated_at
+                                    type: TIMESTAMP
+                                    defaultValueComputed: CURRENT_TIMESTAMP
 
-        - addForeignKeyConstraint:
-            baseTableName: recurring_transactions
-            baseColumnNames: account_id
-            referencedTableName: accounts
-            referencedColumnNames: id
-            constraintName: fk_recurring_account
-            onDelete: RESTRICT
+                -   addForeignKeyConstraint:
+                        baseTableName: recurring_transactions
+                        baseColumnNames: account_id
+                        referencedTableName: accounts
+                        referencedColumnNames: id
+                        constraintName: fk_recurring_account
+                        onDelete: RESTRICT
 
-        - addForeignKeyConstraint:
-            baseTableName: recurring_transactions
-            baseColumnNames: to_account_id
-            referencedTableName: accounts
-            referencedColumnNames: id
-            constraintName: fk_recurring_to_account
-            onDelete: RESTRICT
+                -   addForeignKeyConstraint:
+                        baseTableName: recurring_transactions
+                        baseColumnNames: to_account_id
+                        referencedTableName: accounts
+                        referencedColumnNames: id
+                        constraintName: fk_recurring_to_account
+                        onDelete: RESTRICT
 
-        - addForeignKeyConstraint:
-            baseTableName: recurring_transactions
-            baseColumnNames: category_id
-            referencedTableName: categories
-            referencedColumnNames: id
-            constraintName: fk_recurring_category
-            onDelete: RESTRICT
+                -   addForeignKeyConstraint:
+                        baseTableName: recurring_transactions
+                        baseColumnNames: category_id
+                        referencedTableName: categories
+                        referencedColumnNames: id
+                        constraintName: fk_recurring_category
+                        onDelete: RESTRICT
 
-        - addForeignKeyConstraint:
-            baseTableName: recurring_transactions
-            baseColumnNames: user_id
-            referencedTableName: users
-            referencedColumnNames: id
-            constraintName: fk_recurring_user
-            onDelete: CASCADE
+                -   addForeignKeyConstraint:
+                        baseTableName: recurring_transactions
+                        baseColumnNames: user_id
+                        referencedTableName: users
+                        referencedColumnNames: id
+                        constraintName: fk_recurring_user
+                        onDelete: CASCADE
 
-        - createIndex:
-            indexName: idx_recurring_user
-            tableName: recurring_transactions
-            columns:
-              - column:
-                  name: user_id
+                -   createIndex:
+                        indexName: idx_recurring_user
+                        tableName: recurring_transactions
+                        columns:
+                            -   column:
+                                    name: user_id
 
-        - createIndex:
-            indexName: idx_recurring_next_run
-            tableName: recurring_transactions
-            columns:
-              - column:
-                  name: next_run_date
+                -   createIndex:
+                        indexName: idx_recurring_next_run
+                        tableName: recurring_transactions
+                        columns:
+                            -   column:
+                                    name: next_run_date
 
-        - createIndex:
-            indexName: idx_recurring_active_next_run
-            tableName: recurring_transactions
-            columns:
-              - column:
-                  name: is_active
-              - column:
-                  name: next_run_date
+                -   createIndex:
+                        indexName: idx_recurring_active_next_run
+                        tableName: recurring_transactions
+                        columns:
+                            -   column:
+                                    name: is_active
+                            -   column:
+                                    name: next_run_date

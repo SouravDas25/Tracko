@@ -3,22 +3,16 @@ package com.trako.integration;
 import com.trako.config.TestJwtSecurityConfig;
 import com.trako.exceptions.NotFoundException;
 import com.trako.models.external.ExchangeRateApiResponse;
-import com.trako.repositories.UsersRepository;
 import com.trako.services.ExchangeRateService;
-import com.trako.util.JwtTokenUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 

@@ -4,7 +4,6 @@ import com.trako.dtos.TransferResult;
 import com.trako.entities.Category;
 import com.trako.entities.Transaction;
 import com.trako.entities.TransactionEntryType;
-import com.trako.entities.TransactionType;
 import com.trako.exceptions.NotFoundException;
 import com.trako.repositories.CategoryRepository;
 import com.trako.repositories.TransactionRepository;
@@ -162,9 +161,9 @@ public class TransferService {
 
     @Transactional
     public TransferResult updateTransfer(String userId, Long transactionId,
-                                        Long fromAccountId, Long toAccountId,
-                                        Date date,
-                                        Double originalAmount, String originalCurrency, Double exchangeRate, String name, String comments) {
+                                         Long fromAccountId, Long toAccountId,
+                                         Date date,
+                                         Double originalAmount, String originalCurrency, Double exchangeRate, String name, String comments) {
         logger.info("Updating transfer containing transaction {} for user {}", transactionId, userId);
 
         Transaction transaction = transactionRepository.findById(transactionId)

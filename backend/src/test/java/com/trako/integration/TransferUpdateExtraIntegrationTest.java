@@ -1,21 +1,17 @@
 package com.trako.integration;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trako.config.TestJwtSecurityConfig;
-import com.trako.entities.*;
-import com.trako.repositories.AccountRepository;
-import com.trako.repositories.TransactionRepository;
-import com.trako.repositories.UsersRepository;
-import com.trako.util.JwtTokenUtil;
+import com.trako.entities.Account;
+import com.trako.entities.Transaction;
+import com.trako.entities.TransactionEntryType;
+import com.trako.entities.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;

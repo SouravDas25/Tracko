@@ -1,42 +1,50 @@
 # Flutter UI Migration Guide: SQLite → Backend APIs
 
 ## Overview
-Replace direct SQLite database access in the Flutter UI with HTTP calls to the Spring Boot backend. The backend now owns all data via H2 (dev) or Postgres (prod) with Liquibase migrations.
+
+Replace direct SQLite database access in the Flutter UI with HTTP calls to the Spring Boot backend. The backend now owns
+all data via H2 (dev) or Postgres (prod) with Liquibase migrations.
 
 ## Backend Endpoints Available
 
 ### Authentication
+
 - **POST** `/api/oauth/token` - Login (returns JWT)
-  - Body: `{ "phoneNo": "string", "firebaseUuid": "string" }`
-  - Response: `{ "token": "jwt-string" }`
+    - Body: `{ "phoneNo": "string", "firebaseUuid": "string" }`
+    - Response: `{ "token": "jwt-string" }`
 
 ### Users
+
 - **GET** `/api/user` - List all users (requires JWT)
 - **GET** `/api/user/{id}` - Get user by ID (requires JWT)
 - **GET** `/api/user/byPhoneNo?phone_no={phoneNo}` - Get user by phone (requires JWT)
 - **POST** `/api/user/save` - Create/update user (requires JWT)
 
 ### Splits
+
 - **GET** `/api/split` - Get all splits for logged-in user (requires JWT)
 - **GET** `/api/split/{userId}` - Get splits by user ID (requires JWT)
 - **POST** `/api/split` - Create splits (requires JWT)
-  - Body: `[{ "userId": "string", "amount": number, "transactionAmount": number, "transactionName": "string" }]`
+    - Body: `[{ "userId": "string", "amount": number, "transactionAmount": number, "transactionName": "string" }]`
 - **PATCH** `/api/split/settle/{splitId}` - Settle a split (requires JWT)
-  - Body: `{ "amount": number }`
+    - Body: `{ "amount": number }`
 
 ### Chat
+
 - **POST** `/api/chat/create` - Create chat group (requires JWT)
-  - Body: `{ "name": "string", "users": ["phoneNo1", "phoneNo2"] }`
+    - Body: `{ "name": "string", "users": ["phoneNo1", "phoneNo2"] }`
 - **POST** `/api/chat/send` - Send message (requires JWT)
-  - Body: `{ "sender": "userId", "chatGroupAddress": "groupId", "message": "string" }`
+    - Body: `{ "sender": "userId", "chatGroupAddress": "groupId", "message": "string" }`
 - **GET/POST** `/api/chat/messages` - Retrieve messages (requires JWT)
-  - Body: `{ "chatGroup": "groupId", "retrieveFrom": "messageId" }`
+    - Body: `{ "chatGroup": "groupId", "retrieveFrom": "messageId" }`
 - **GET** `/api/chat/groups/{userId}` - Get groups for user (requires JWT)
 
 ## Flutter Implementation
 
 ### 1. Add Dependencies
+
 Update `pubspec.yaml`:
+
 ```yaml
 dependencies:
   dio: ^5.4.0  # HTTP client
@@ -45,7 +53,9 @@ dependencies:
 ```
 
 ### 2. API Client Service
+
 Create `lib/services/api_client.dart`:
+
 ```dart
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -171,7 +181,9 @@ class ApiClient {
 ```
 
 ### 3. Auth Service
+
 Create `lib/services/auth_service.dart`:
+
 ```dart
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'api_client.dart';
@@ -212,9 +224,11 @@ class AuthService {
 ```
 
 ### 4. Usage Example
+
 Replace SQLite queries with API calls:
 
 **Before (SQLite):**
+
 ```dart
 // Old SQLite code
 final db = await database;
@@ -223,6 +237,7 @@ return List.generate(maps.length, (i) => User.fromMap(maps[i]));
 ```
 
 **After (API):**
+
 ```dart
 // New API code
 final authService = AuthService();
@@ -232,20 +247,22 @@ return usersData.map((data) => User.fromJson(data)).toList();
 ```
 
 ### 5. Migration Checklist
+
 - [ ] Remove `sqflite` package from `pubspec.yaml`
 - [ ] Add `dio` and `flutter_secure_storage` packages
 - [ ] Create `api_client.dart` and `auth_service.dart`
 - [ ] Update login flow to call `/api/oauth/token` and store JWT
 - [ ] Replace all database queries with API calls:
-  - [ ] User CRUD operations
-  - [ ] Split operations
-  - [ ] Chat operations
+    - [ ] User CRUD operations
+    - [ ] Split operations
+    - [ ] Chat operations
 - [ ] Update models to use `fromJson` instead of `fromMap`
 - [ ] Add error handling for network failures
 - [ ] Test authentication flow end-to-end
 - [ ] Test all features with backend running
 
 ### 6. Error Handling
+
 ```dart
 try {
   final apiClient = await authService.getAuthenticatedClient();
@@ -266,7 +283,9 @@ try {
 ```
 
 ### 7. Environment Configuration
+
 Create `lib/config/environment.dart`:
+
 ```dart
 class Environment {
   static const String apiBaseUrl = String.fromEnvironment(
@@ -277,6 +296,7 @@ class Environment {
 ```
 
 Run with different environments:
+
 ```bash
 # Dev
 flutter run --dart-define=API_BASE_URL=http://localhost:8080
@@ -286,16 +306,18 @@ flutter run --dart-define=API_BASE_URL=https://your-prod-url.com
 ```
 
 ## Testing
+
 1. Start backend: `mvn spring-boot:run -Dspring-boot.run.arguments="--spring.profiles.active=dev"`
 2. Backend runs on `http://localhost:8080`
 3. Run Flutter app and test:
-   - Sign up new user
-   - Login with existing user
-   - Create splits
-   - Send chat messages
-   - Verify all data persists in backend DB (H2 console: `http://localhost:8080/h2-console`)
+    - Sign up new user
+    - Login with existing user
+    - Create splits
+    - Send chat messages
+    - Verify all data persists in backend DB (H2 console: `http://localhost:8080/h2-console`)
 
 ## Next Steps
+
 - Remove all SQLite database files and code
 - Add offline caching if needed (using `hive` or `shared_preferences` for non-sensitive data)
 - Implement refresh token flow if backend supports it

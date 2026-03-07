@@ -1,22 +1,14 @@
 package com.trako.integration;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trako.config.TestJwtSecurityConfig;
 import com.trako.entities.User;
-import com.trako.repositories.UsersRepository;
-import com.trako.util.JwtTokenUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Collections;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -56,7 +48,7 @@ public class UserByPhoneNoIntegrationTest extends BaseIntegrationTest {
         // Let's just use the raw phone if format logic is internal, 
         // or format it like "+91-99988 87777" if we knew the format. 
         // Since we generate random 10 digits, let's just pass it directly for safety or simple format.
-        
+
         mockMvc.perform(get("/api/user/byPhoneNo")
                         .header("Authorization", bearerToken)
                         .queryParam("phone_no", targetPhone))
@@ -70,8 +62,8 @@ public class UserByPhoneNoIntegrationTest extends BaseIntegrationTest {
     public void byPhoneNoWhenNotFoundReturnsResourceEmpty() throws Exception {
         String nonExistentPhone = generateUniquePhone();
         // Ensure it doesn't exist
-        if(usersRepository.findByPhoneNo(nonExistentPhone) != null) {
-             nonExistentPhone = String.valueOf(Long.parseLong(nonExistentPhone) + 1);
+        if (usersRepository.findByPhoneNo(nonExistentPhone) != null) {
+            nonExistentPhone = String.valueOf(Long.parseLong(nonExistentPhone) + 1);
         }
 
         mockMvc.perform(get("/api/user/byPhoneNo")

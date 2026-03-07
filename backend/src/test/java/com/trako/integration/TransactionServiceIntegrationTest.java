@@ -3,7 +3,7 @@ package com.trako.integration;
 import com.trako.config.TestJwtSecurityConfig;
 import com.trako.dtos.TransactionSummaryDTO;
 import com.trako.entities.*;
-import com.trako.repositories.*;
+import com.trako.repositories.UserCurrencyRepository;
 import com.trako.services.transactions.TransactionService;
 import com.trako.services.transactions.TransactionWriteService;
 import org.junit.jupiter.api.BeforeEach;

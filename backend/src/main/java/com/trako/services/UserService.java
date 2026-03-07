@@ -1,7 +1,5 @@
 package com.trako.services;
 
-import com.trako.entities.Account;
-import com.trako.entities.Transaction;
 import com.trako.entities.User;
 import com.trako.exceptions.UserNotLoggedInException;
 import com.trako.models.request.UserSaveRequest;
@@ -18,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 public class UserService {

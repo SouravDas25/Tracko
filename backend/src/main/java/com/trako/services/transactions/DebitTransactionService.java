@@ -2,7 +2,6 @@ package com.trako.services.transactions;
 
 import com.trako.entities.Transaction;
 import com.trako.entities.TransactionEntryType;
-import com.trako.entities.TransactionType;
 import com.trako.models.request.TransactionRequest;
 import com.trako.repositories.TransactionRepository;
 import com.trako.services.CurrencyService;

@@ -6,21 +6,15 @@ import com.trako.dtos.CategoryStatsResponseDTO;
 import com.trako.dtos.StatsPointDTO;
 import com.trako.dtos.StatsResponseDTO;
 import com.trako.entities.TransactionType;
-import com.trako.repositories.UsersRepository;
 import com.trako.services.StatsService;
-import com.trako.util.JwtTokenUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 

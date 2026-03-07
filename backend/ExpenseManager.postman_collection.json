@@ -1,386 +1,386 @@
 {
-	"info": {
-		"_postman_id": "c823b4d6-396a-4f8e-9eb4-883eedf5f31d",
-		"name": "Tracko",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-	},
-	"item": [
-		{
-			"name": "Backend",
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Content-Type",
-						"name": "Content-Type",
-						"value": "application/json",
-						"type": "text"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n\t\"text\" : \"Paid Rs.162  to Compass101153Pos1 at Mar 16, 2019 13:14:00 . Order ID: 201903161313590251 . Updated Balance: Paytm Wallet- Rs 418.41\",\n\t\"address\" : \"TB-Paytm\",\n\t\"date\" : \"21-03-2019\"\n}"
-				},
-				"url": {
-					"raw": "http://souravdas25.pythonanywhere.com/apis/?",
-					"protocol": "http",
-					"host": [
-						"souravdas25",
-						"pythonanywhere",
-						"com"
-					],
-					"path": [
-						"apis",
-						""
-					],
-					"query": [
-						{
-							"key": "data",
-							"value": "apple",
-							"disabled": true
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Clear Bit Domain API",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "https://company.clearbit.com/v1/domains/find?name=paytm",
-					"protocol": "https",
-					"host": [
-						"company",
-						"clearbit",
-						"com"
-					],
-					"path": [
-						"v1",
-						"domains",
-						"find"
-					],
-					"query": [
-						{
-							"key": "name",
-							"value": "paytm"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Local - text",
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Content-Type",
-						"name": "Content-Type",
-						"value": "application/json",
-						"type": "text",
-						"disabled": true
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n\t\"text\" : \"Rs 200 debited from ac 6633 on 12-Apr-2019.\"\n}"
-				},
-				"url": {
-					"raw": "http://127.0.0.1:8000/apis/?",
-					"protocol": "http",
-					"host": [
-						"127",
-						"0",
-						"0",
-						"1"
-					],
-					"port": "8000",
-					"path": [
-						"apis",
-						""
-					],
-					"query": [
-						{
-							"key": "text",
-							"value": "Paid Rs.90  to swiggy.",
-							"disabled": true
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Upload Excel",
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Content-Type",
-						"name": "Content-Type",
-						"value": "multipart/form-data",
-						"type": "text"
-					}
-				],
-				"body": {
-					"mode": "formdata",
-					"formdata": [
-						{
-							"key": "excel",
-							"value": "",
-							"contentType": "x",
-							"type": "file"
-						}
-					]
-				},
-				"url": {
-					"raw": "http://127.0.0.1:8000/upload",
-					"protocol": "http",
-					"host": [
-						"127",
-						"0",
-						"0",
-						"1"
-					],
-					"port": "8000",
-					"path": [
-						"upload"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "SAVE USER",
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Content-Type",
-						"name": "Content-Type",
-						"value": "application/json",
-						"type": "text"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n\t\"name\" : \"Sourav Das\",\n\t\"phoneNo\" : \"8100448204\",\n\t\"email\" : \"souravbumbadas25@gmail.com\",\n\t\"profilePic\" : \"\",\n\t\"uuid\" : \"\"\n}"
-				},
-				"url": {
-					"raw": "{{local}}/api/user/save",
-					"host": [
-						"{{local}}"
-					],
-					"path": [
-						"api",
-						"user",
-						"save"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "GET USER",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{local}}/api/user",
-					"host": [
-						"{{local}}"
-					],
-					"path": [
-						"api",
-						"user"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "CREATE GROUP",
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Content-Type",
-						"name": "Content-Type",
-						"value": "application/json",
-						"type": "text"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n\t\"name\":\"Om Puri\",\n\t\"users\": [\n\t\t\"8100448204\",\n\t\t\"0123456789\"\n\t\t]\n}"
-				},
-				"url": {
-					"raw": "{{local}}/api/chat/create",
-					"host": [
-						"{{local}}"
-					],
-					"path": [
-						"api",
-						"chat",
-						"create"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "SEND MESSAGE",
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Content-Type",
-						"name": "Content-Type",
-						"value": "application/json",
-						"type": "text"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n    \"from\": 1,\n    \"to\": 7,\n    \"message\": \"I am cool too.\"\n}"
-				},
-				"url": {
-					"raw": "{{local}}/api/chat/send",
-					"host": [
-						"{{local}}"
-					],
-					"path": [
-						"api",
-						"chat",
-						"send"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "RETRIVE MESSAGE",
-			"protocolProfileBehavior": {
-				"disableBodyPruning": true
-			},
-			"request": {
-				"method": "GET",
-				"header": [
-					{
-						"key": "Content-Type",
-						"name": "Content-Type",
-						"type": "text",
-						"value": "application/json"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n\t\"groupId\" : 1,\n\t\"retrieveFrom\" : null\n}"
-				},
-				"url": {
-					"raw": "{{local}}/api/chat/messages",
-					"host": [
-						"{{local}}"
-					],
-					"path": [
-						"api",
-						"chat",
-						"messages"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "GET GROUPS BY USER",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{local}}/api/chat/groups/1",
-					"host": [
-						"{{local}}"
-					],
-					"path": [
-						"api",
-						"chat",
-						"groups",
-						"1"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "USER BY PHONE NUMBER",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{local}}/api/user/byPhoneNo?phone_no=8100448204",
-					"host": [
-						"{{local}}"
-					],
-					"path": [
-						"api",
-						"user",
-						"byPhoneNo"
-					],
-					"query": [
-						{
-							"key": "phone_no",
-							"value": "8100448204"
-						}
-					]
-				}
-			},
-			"response": []
-		}
-	],
-	"event": [
-		{
-			"listen": "prerequest",
-			"script": {
-				"id": "8472ff62-88d3-4335-b3e6-2cca775e8721",
-				"type": "text/javascript",
-				"exec": [
-					""
-				]
-			}
-		},
-		{
-			"listen": "test",
-			"script": {
-				"id": "9b782971-b4de-49d1-80e0-635396f1a078",
-				"type": "text/javascript",
-				"exec": [
-					""
-				]
-			}
-		}
-	],
-	"variable": [
-		{
-			"id": "8a2aa611-79f6-4c82-be1e-945359dacf4d",
-			"key": "local",
-			"value": "http://localhost:8080",
-			"type": "string"
-		},
-		{
-			"id": "85b16117-3c4b-45c2-9639-ba6d104419be",
-			"key": "neo",
-			"value": "https://demoi353584trial.hanatrial.ondemand.com/expensemanager",
-			"type": "string"
-		},
-		{
-			"id": "b14ce74a-5f74-4ac9-986f-574f174d24f3",
-			"key": "heroku",
-			"value": "https://tracko-expense.herokuapp.com",
-			"type": "string"
-		}
-	]
+    "info": {
+        "_postman_id": "c823b4d6-396a-4f8e-9eb4-883eedf5f31d",
+        "name": "Tracko",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Backend",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "name": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n\t\"text\" : \"Paid Rs.162  to Compass101153Pos1 at Mar 16, 2019 13:14:00 . Order ID: 201903161313590251 . Updated Balance: Paytm Wallet- Rs 418.41\",\n\t\"address\" : \"TB-Paytm\",\n\t\"date\" : \"21-03-2019\"\n}"
+                },
+                "url": {
+                    "raw": "http://souravdas25.pythonanywhere.com/apis/?",
+                    "protocol": "http",
+                    "host": [
+                        "souravdas25",
+                        "pythonanywhere",
+                        "com"
+                    ],
+                    "path": [
+                        "apis",
+                        ""
+                    ],
+                    "query": [
+                        {
+                            "key": "data",
+                            "value": "apple",
+                            "disabled": true
+                        }
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "Clear Bit Domain API",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "https://company.clearbit.com/v1/domains/find?name=paytm",
+                    "protocol": "https",
+                    "host": [
+                        "company",
+                        "clearbit",
+                        "com"
+                    ],
+                    "path": [
+                        "v1",
+                        "domains",
+                        "find"
+                    ],
+                    "query": [
+                        {
+                            "key": "name",
+                            "value": "paytm"
+                        }
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "Local - text",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "name": "Content-Type",
+                        "value": "application/json",
+                        "type": "text",
+                        "disabled": true
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n\t\"text\" : \"Rs 200 debited from ac 6633 on 12-Apr-2019.\"\n}"
+                },
+                "url": {
+                    "raw": "http://127.0.0.1:8000/apis/?",
+                    "protocol": "http",
+                    "host": [
+                        "127",
+                        "0",
+                        "0",
+                        "1"
+                    ],
+                    "port": "8000",
+                    "path": [
+                        "apis",
+                        ""
+                    ],
+                    "query": [
+                        {
+                            "key": "text",
+                            "value": "Paid Rs.90  to swiggy.",
+                            "disabled": true
+                        }
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "Upload Excel",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "name": "Content-Type",
+                        "value": "multipart/form-data",
+                        "type": "text"
+                    }
+                ],
+                "body": {
+                    "mode": "formdata",
+                    "formdata": [
+                        {
+                            "key": "excel",
+                            "value": "",
+                            "contentType": "x",
+                            "type": "file"
+                        }
+                    ]
+                },
+                "url": {
+                    "raw": "http://127.0.0.1:8000/upload",
+                    "protocol": "http",
+                    "host": [
+                        "127",
+                        "0",
+                        "0",
+                        "1"
+                    ],
+                    "port": "8000",
+                    "path": [
+                        "upload"
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "SAVE USER",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "name": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n\t\"name\" : \"Sourav Das\",\n\t\"phoneNo\" : \"8100448204\",\n\t\"email\" : \"souravbumbadas25@gmail.com\",\n\t\"profilePic\" : \"\",\n\t\"uuid\" : \"\"\n}"
+                },
+                "url": {
+                    "raw": "{{local}}/api/user/save",
+                    "host": [
+                        "{{local}}"
+                    ],
+                    "path": [
+                        "api",
+                        "user",
+                        "save"
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "GET USER",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{local}}/api/user",
+                    "host": [
+                        "{{local}}"
+                    ],
+                    "path": [
+                        "api",
+                        "user"
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "CREATE GROUP",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "name": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n\t\"name\":\"Om Puri\",\n\t\"users\": [\n\t\t\"8100448204\",\n\t\t\"0123456789\"\n\t\t]\n}"
+                },
+                "url": {
+                    "raw": "{{local}}/api/chat/create",
+                    "host": [
+                        "{{local}}"
+                    ],
+                    "path": [
+                        "api",
+                        "chat",
+                        "create"
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "SEND MESSAGE",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "name": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"from\": 1,\n    \"to\": 7,\n    \"message\": \"I am cool too.\"\n}"
+                },
+                "url": {
+                    "raw": "{{local}}/api/chat/send",
+                    "host": [
+                        "{{local}}"
+                    ],
+                    "path": [
+                        "api",
+                        "chat",
+                        "send"
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "RETRIVE MESSAGE",
+            "protocolProfileBehavior": {
+                "disableBodyPruning": true
+            },
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "name": "Content-Type",
+                        "type": "text",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n\t\"groupId\" : 1,\n\t\"retrieveFrom\" : null\n}"
+                },
+                "url": {
+                    "raw": "{{local}}/api/chat/messages",
+                    "host": [
+                        "{{local}}"
+                    ],
+                    "path": [
+                        "api",
+                        "chat",
+                        "messages"
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "GET GROUPS BY USER",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{local}}/api/chat/groups/1",
+                    "host": [
+                        "{{local}}"
+                    ],
+                    "path": [
+                        "api",
+                        "chat",
+                        "groups",
+                        "1"
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "USER BY PHONE NUMBER",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{local}}/api/user/byPhoneNo?phone_no=8100448204",
+                    "host": [
+                        "{{local}}"
+                    ],
+                    "path": [
+                        "api",
+                        "user",
+                        "byPhoneNo"
+                    ],
+                    "query": [
+                        {
+                            "key": "phone_no",
+                            "value": "8100448204"
+                        }
+                    ]
+                }
+            },
+            "response": []
+        }
+    ],
+    "event": [
+        {
+            "listen": "prerequest",
+            "script": {
+                "id": "8472ff62-88d3-4335-b3e6-2cca775e8721",
+                "type": "text/javascript",
+                "exec": [
+                    ""
+                ]
+            }
+        },
+        {
+            "listen": "test",
+            "script": {
+                "id": "9b782971-b4de-49d1-80e0-635396f1a078",
+                "type": "text/javascript",
+                "exec": [
+                    ""
+                ]
+            }
+        }
+    ],
+    "variable": [
+        {
+            "id": "8a2aa611-79f6-4c82-be1e-945359dacf4d",
+            "key": "local",
+            "value": "http://localhost:8080",
+            "type": "string"
+        },
+        {
+            "id": "85b16117-3c4b-45c2-9639-ba6d104419be",
+            "key": "neo",
+            "value": "https://demoi353584trial.hanatrial.ondemand.com/expensemanager",
+            "type": "string"
+        },
+        {
+            "id": "b14ce74a-5f74-4ac9-986f-574f174d24f3",
+            "key": "heroku",
+            "value": "https://tracko-expense.herokuapp.com",
+            "type": "string"
+        }
+    ]
 }

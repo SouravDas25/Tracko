@@ -3,6 +3,7 @@
 This guide provides complete Dart code to migrate your Flutter UI from SQLite to the Spring Boot backend API.
 
 ## Table of Contents
+
 1. [Setup & Dependencies](#setup--dependencies)
 2. [API Client Service](#api-client-service)
 3. [Model Classes](#model-classes)
@@ -377,6 +378,7 @@ class JsonStore {
 ```
 
 **Run code generation:**
+
 ```bash
 flutter pub run build_runner build --delete-conflicting-outputs
 ```
@@ -835,6 +837,7 @@ await ErrorHandler.handleAsync(
 ## Complete Migration Checklist
 
 ### 1. Remove SQLite Dependencies
+
 ```yaml
 # Remove from pubspec.yaml:
 # sqflite: ^x.x.x
@@ -842,21 +845,25 @@ await ErrorHandler.handleAsync(
 ```
 
 ### 2. Delete Old Database Files
+
 - Delete `lib/Utils/DatabaseUtil.dart`
 - Delete any SQLite helper classes
 
 ### 3. Add New Dependencies
+
 ```bash
 flutter pub add dio flutter_secure_storage json_annotation
 flutter pub add --dev build_runner json_serializable
 ```
 
 ### 4. Generate Model Code
+
 ```bash
 flutter pub run build_runner build --delete-conflicting-outputs
 ```
 
 ### 5. Update Main App
+
 ```dart
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -869,6 +876,7 @@ void main() async {
 ```
 
 ### 6. Test Each Screen
+
 - [ ] Login/Signup screens
 - [ ] Accounts list and CRUD
 - [ ] Categories list and CRUD
@@ -901,6 +909,7 @@ void main() async {
 ## Support
 
 For backend API documentation, see:
+
 - Swagger UI: `http://localhost:8080/swagger-ui.html` (if enabled)
 - Migration guide: `docs/MIGRATION_COMPLETE.md`
 - All endpoints return: `{ "result": <data>, "message": "..." }`

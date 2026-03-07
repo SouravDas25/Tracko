@@ -1,7 +1,10 @@
 package com.trako.integration;
 
 import com.trako.config.TestJwtSecurityConfig;
-import com.trako.entities.*;
+import com.trako.entities.Account;
+import com.trako.entities.Transaction;
+import com.trako.entities.TransactionEntryType;
+import com.trako.entities.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
