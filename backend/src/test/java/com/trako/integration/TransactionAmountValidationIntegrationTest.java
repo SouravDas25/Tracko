@@ -8,6 +8,7 @@ import com.trako.repositories.CategoryRepository;
 import com.trako.repositories.TransactionRepository;
 import com.trako.repositories.UsersRepository;
 import com.trako.services.transactions.TransactionWriteService;
+import com.trako.dtos.TransferResult;
 import com.trako.services.transactions.TransferService;
 import com.trako.util.JwtTokenUtil;
 import org.junit.jupiter.api.BeforeEach;
@@ -171,7 +172,7 @@ public class TransactionAmountValidationIntegrationTest {
     @Test
     public void updateTransfer_setNegativeAmount_returnsBadRequest() throws Exception {
         // create valid transfer via service for setup
-        Transaction[] pair = transferService.createTransfer(
+        TransferResult pair = transferService.createTransfer(
                 testUser.getId(),
                 testAccount.getId(),
                 secondAccount.getId(),
@@ -183,7 +184,7 @@ public class TransactionAmountValidationIntegrationTest {
                 null
         );
 
-        Long anySideId = pair[0].getId();
+        Long anySideId = pair.debit().getId();
 
         Map<String, Object> payload = new HashMap<>();
         payload.put("originalAmount", -1.0);

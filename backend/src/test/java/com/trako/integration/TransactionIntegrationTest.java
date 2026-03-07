@@ -5,6 +5,7 @@ import com.trako.config.TestJwtSecurityConfig;
 import com.trako.entities.*;
 import com.trako.repositories.*;
 import com.trako.services.transactions.TransactionWriteService;
+import com.trako.dtos.TransferResult;
 import com.trako.services.transactions.TransferService;
 import com.trako.util.JwtTokenUtil;
 import org.junit.jupiter.api.BeforeEach;
@@ -183,7 +184,7 @@ public class TransactionIntegrationTest {
         toAccount = accountRepository.save(toAccount);
 
         Date initialDate = new GregorianCalendar(2020, Calendar.FEBRUARY, 1).getTime();
-        Transaction[] created = transferService.createTransfer(
+        TransferResult created = transferService.createTransfer(
                 testUser.getId(),
                 testAccount.getId(),
                 toAccount.getId(),
@@ -195,7 +196,7 @@ public class TransactionIntegrationTest {
                 "init"
         );
 
-        Transaction debit = created[0];
+        Transaction debit = created.debit();
         assertNotNull(debit.getId());
         assertNotNull(debit.getLinkedTransactionId());
 
@@ -1591,7 +1592,7 @@ public class TransactionIntegrationTest {
         toAccount.setUserId(testUser.getId());
         toAccount = accountRepository.save(toAccount);
 
-        Transaction[] transferPair = transferService.createTransfer(
+        TransferResult transferPair = transferService.createTransfer(
                 testUser.getId(),
                 testAccount.getId(),
                 toAccount.getId(),
@@ -1602,7 +1603,7 @@ public class TransactionIntegrationTest {
                 "Original Transfer",
                 "Original Comment"
         );
-        Transaction debit = transferPair[0];
+        Transaction debit = transferPair.debit();
 
         // Update name via partial PUT on the debit transaction
         Map<String, Object> partialUpdate = new HashMap<>();

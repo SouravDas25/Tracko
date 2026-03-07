@@ -1,5 +1,6 @@
 package com.trako.services.transactions;
 
+import com.trako.dtos.TransferResult;
 import com.trako.entities.Transaction;
 import com.trako.entities.TransactionType;
 import com.trako.exceptions.NotFoundException;
@@ -28,6 +29,9 @@ public class TransactionWriteService {
 
     @Autowired
     private CurrencyService currencyService;
+
+    @Autowired
+    private TransferConversionService transferConversionService;
 
     @Autowired
     private TransferService transferService;
@@ -90,7 +94,7 @@ public class TransactionWriteService {
         Double exchangeRate = currencyService.resolveExchangeRate(userId, request.originalCurrency(), request.exchangeRate());
 
         // Delegate to internal transfer creation
-        Transaction[] result = transferService.createTransfer(
+        TransferResult result = transferService.createTransfer(
                 userId,
                 fromAccountId,
                 request.toAccountId(),
@@ -103,7 +107,7 @@ public class TransactionWriteService {
         );
 
         // Return the debit side
-        return result[0];
+        return result.debit();
     }
 
     /**
@@ -123,13 +127,14 @@ public class TransactionWriteService {
 
         // CASE 1: Convert Regular Transaction -> Transfer
         if (!isExistingTransfer && request.toAccountId() != null) {
-            return transferService.convertRegularToTransfer(userId, id, request)[0];
+            TransferResult result = transferConversionService.convertRegularToTransfer(userId, id, request);
+            return result.debit();
         }
 
         // CASE 2: Convert Transfer -> Regular Transaction
         // If it's a transfer and we are changing the category, we assume conversion to regular.
         if (isExistingTransfer && request.categoryId() != null) {
-            return transferService.convertTransferToRegular(userId, id, request);
+            return transferConversionService.convertTransferToRegular(userId, id, request);
         }
 
         // CASE 3: Updating a TRANSFER (that stays a transfer)
@@ -180,7 +185,7 @@ public class TransactionWriteService {
             throw new IllegalArgumentException("Original amount must be greater than 0");
         }
 
-        Transaction[] result = transferService.updateTransfer(
+        TransferResult result = transferService.updateTransfer(
                 userId,
                 existing.getId(),
                 resolvedFromAccountId,
@@ -193,7 +198,7 @@ public class TransactionWriteService {
                 request.comments()
         );
 
-        return result[0].getId().equals(existing.getId()) ? result[0] : result[1];
+        return result.getById(existing.getId());
     }
 
     /**

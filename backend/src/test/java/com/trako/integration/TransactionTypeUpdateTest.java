@@ -8,6 +8,7 @@ import com.trako.repositories.CategoryRepository;
 import com.trako.repositories.TransactionRepository;
 import com.trako.repositories.UsersRepository;
 import com.trako.services.transactions.TransactionWriteService;
+import com.trako.dtos.TransferResult;
 import com.trako.services.transactions.TransferService;
 import com.trako.util.JwtTokenUtil;
 import org.junit.jupiter.api.BeforeEach;
@@ -220,7 +221,7 @@ public class TransactionTypeUpdateTest {
     @Test
     public void testUpdateTransferToExpense() throws Exception {
         // Create Transfer (Account 1 -> Account 2)
-        Transaction[] transferPair = transferService.createTransfer(
+        TransferResult transferPair = transferService.createTransfer(
                 testUser.getId(),
                 account1.getId(),
                 account2.getId(),
@@ -231,7 +232,7 @@ public class TransactionTypeUpdateTest {
                 "Transfer",
                 "Comments"
         );
-        Transaction debitSide = transferPair[0];
+        Transaction debitSide = transferPair.debit();
 
         // Update to Regular Expense (DEBIT)
         // We signal conversion to regular by ... ? 
@@ -264,7 +265,7 @@ public class TransactionTypeUpdateTest {
         // Verify the OTHER side is deleted or handled?
         // Ideally, if we convert Transfer -> Expense, the other side (Credit) should be deleted.
         // Let's check if the credit side still exists.
-        boolean creditExists = transactionRepository.existsById(transferPair[1].getId());
+        boolean creditExists = transactionRepository.existsById(transferPair.credit().getId());
         assertThat(creditExists).isFalse();
     }
 }
