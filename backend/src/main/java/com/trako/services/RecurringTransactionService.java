@@ -12,6 +12,7 @@ import com.trako.services.transactions.TransferService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,6 +45,7 @@ public class RecurringTransactionService {
     // Self-injection so that processSingleTransaction's REQUIRES_NEW propagation
     // is honoured through the Spring proxy (intra-bean calls bypass the proxy).
     @Autowired
+    @Lazy
     private RecurringTransactionService self;
 
     public List<RecurringTransaction> getAll(String userId) {

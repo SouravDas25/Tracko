@@ -51,6 +51,13 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
+# Default Environment Variables
+ENV SPRING_PROFILES_ACTIVE=prod
+ENV SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/tracko_db
+ENV SPRING_DATASOURCE_USERNAME=tracko
+ENV SPRING_DATASOURCE_PASSWORD=tracko
+ENV JWT_SECRET=tracko_jwt_secret_change_me_to_32+_chars_min
+
 EXPOSE 80 443
 
 ENTRYPOINT ["/entrypoint.sh"]
