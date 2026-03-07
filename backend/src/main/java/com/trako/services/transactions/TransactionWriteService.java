@@ -2,8 +2,8 @@ package com.trako.services.transactions;
 
 import com.trako.dtos.TransferResult;
 import com.trako.entities.Transaction;
-import com.trako.entities.TransactionEntryType;
-import com.trako.entities.TransactionType;
+import com.trako.enums.TransactionDbType;
+import com.trako.enums.TransactionType;
 import com.trako.exceptions.NotFoundException;
 import com.trako.models.request.TransactionRequest;
 import com.trako.repositories.TransactionRepository;
@@ -54,25 +54,30 @@ public class TransactionWriteService {
      */
     @Transactional
     public Transaction createUnifiedTransaction(String userId, TransactionRequest request) {
-        // Check if this is a transfer request (has toAccountId field)
-        if (request.isTransfer()) {
+        if (request.transactionType() == null) {
+            throw new IllegalArgumentException("transactionType cannot be null");
+        }
+        if (request.transactionType() == TransactionType.TRANSFER) {
             return createTransfer(userId, request);
         } else {
-            // REGULAR TRANSACTION
-            if (request.transactionType() == TransactionType.CREDIT) {
-                return creditTransactionService.createCreditTransaction(userId, request);
-            } else {
-                // Default to DEBIT if not specified or explicitly DEBIT
-                return debitTransactionService.createDebitTransaction(userId, request);
-            }
+            return createRegularTransaction(userId, request);
+        }
+    }
+
+    private Transaction createRegularTransaction(String userId, TransactionRequest request) {
+        validationService.validateCreateTransaction(request);
+        if (request.transactionType() == TransactionType.CREDIT) {
+            return creditTransactionService.createCreditTransaction(userId, request);
+        } else {
+            return debitTransactionService.createDebitTransaction(userId, request);
         }
     }
 
     private Transaction createTransfer(String userId, TransactionRequest request) {
+        validationService.validateCreateTransfer(request);
+
         logger.info("Processing transfer request from account {} to account {}",
                 request.getSourceAccountId(), request.toAccountId());
-
-        validationService.validateTransferCreateRequest(request);
 
         Double exchangeRate = currencyService.resolveExchangeRate(userId, request.originalCurrency(), request.exchangeRate());
 
@@ -99,53 +104,43 @@ public class TransactionWriteService {
      */
     @Transactional
     public Transaction updateTransaction(String userId, Long id, TransactionRequest request) {
+        if (request.transactionType() == null) {
+            throw new IllegalArgumentException("transactionType cannot be null");
+        }
         Transaction existing = transactionRepository.findById(id).orElseThrow(
                 () -> new NotFoundException("Transaction not found")
         );
-
-        // Verify basic ownership of the transaction via its account
         validationService.validateAccountOwnership(userId, existing.getAccountId());
 
         boolean isExistingTransfer = existing.getLinkedTransactionId() != null;
+        TransactionType requestedType = request.transactionType();
 
-        // CASE 1: Convert Regular Transaction -> Transfer
-        if (!isExistingTransfer && request.transactionType() == TransactionType.TRANSFER) {
-            validationService.validateToAccountId(request.toAccountId());
-            TransferResult result = transferConversionService.convertRegularToTransfer(userId, id, request);
-            return result.debit();
-        }
-
-        // CASE 2: Convert Transfer -> Regular Transaction
-        // If it's a transfer and we are changing the category, we assume conversion to regular.
-        if (isExistingTransfer && request.categoryId() != null) {
-            return transferConversionService.convertTransferToRegular(userId, id, request);
-        }
-
-        // CASE 3: Updating a TRANSFER (that stays a transfer)
-        if (isExistingTransfer || request.isTransfer()) {
+        if (isExistingTransfer && requestedType == TransactionType.TRANSFER) {
+            // Transfer stays a transfer
+            validationService.validateUpdateTransfer(request);
             return handleTransferUpdate(userId, existing, request);
-        }
-
-        // CASE 4: Updating a REGULAR TRANSACTION
-        // If a new transactionType is provided, it controls which path we take (DEBIT vs CREDIT).
-        TransactionType targetType;
-        if (request.transactionType() != null) {
-            targetType = request.transactionType();
+        } else if (isExistingTransfer) {
+            // Transfer → Regular (DEBIT or CREDIT)
+            validationService.validateConvertToTransaction(request, existing);
+            return transferConversionService.convertTransferToRegular(userId, id, request);
+        } else if (requestedType == TransactionType.TRANSFER) {
+            // Regular → Transfer
+            validationService.validateConvertToTransfer(request, existing);
+            return transferConversionService.convertRegularToTransfer(userId, id, request).debit();
         } else {
-            targetType = TransactionType.fromValue(existing.getTransactionType().getValue());
-        }
-
-        if (targetType == TransactionType.CREDIT) {
-            return creditTransactionService.updateCreditTransaction(userId, existing, request);
-        } else {
-            // Default to DEBIT when null or explicitly DEBIT
-            return debitTransactionService.updateDebitTransaction(userId, existing, request);
+            // Regular stays/changes to DEBIT or CREDIT
+            validationService.validateUpdateTransaction(request);
+            if (requestedType == TransactionType.CREDIT) {
+                return creditTransactionService.updateCreditTransaction(userId, existing, request);
+            } else {
+                return debitTransactionService.updateDebitTransaction(userId, existing, request);
+            }
         }
     }
 
     private Transaction handleTransferUpdate(String userId, Transaction existing, TransactionRequest request) {
-        boolean isDebitSide = existing.getTransactionType() == TransactionEntryType.DEBIT;
-        boolean isCreditSide = existing.getTransactionType() == TransactionEntryType.CREDIT;
+        boolean isDebitSide = existing.getTransactionType() == TransactionDbType.DEBIT;
+        boolean isCreditSide = existing.getTransactionType() == TransactionDbType.CREDIT;
 
         Long resolvedFromAccountId = request.fromAccountId();
         Long resolvedToAccountId = request.toAccountId();
@@ -167,8 +162,6 @@ public class TransactionWriteService {
                 rate = existing.getExchangeRate();
             }
         }
-
-        validationService.validatePositiveAmount(request.originalAmount());
 
         TransferResult result = transferService.updateTransfer(
                 userId,

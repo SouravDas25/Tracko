@@ -1,7 +1,7 @@
 package com.trako.services.transactions;
 
 import com.trako.entities.Transaction;
-import com.trako.entities.TransactionEntryType;
+import com.trako.enums.TransactionDbType;
 import com.trako.models.request.TransactionRequest;
 import com.trako.repositories.TransactionRepository;
 import com.trako.services.CurrencyService;
@@ -23,7 +23,6 @@ public class CreditTransactionService {
 
     @Transactional
     public Transaction createCreditTransaction(String userId, TransactionRequest request) {
-        validationService.validateTransactionCreateRequest(request);
         validationService.validateAccountOwnership(userId, request.accountId());
         validationService.validateCategoryOwnership(userId, request.categoryId());
 
@@ -32,7 +31,7 @@ public class CreditTransactionService {
         Transaction transaction = new Transaction();
         transaction.setAccountId(request.accountId());
         transaction.setCategoryId(request.categoryId());
-        transaction.setTransactionType(TransactionEntryType.CREDIT);
+        transaction.setTransactionType(TransactionDbType.CREDIT);
         transaction.setDate(request.date());
         transaction.setName(request.name());
         transaction.setComments(request.comments());
@@ -57,7 +56,7 @@ public class CreditTransactionService {
 
         existing.setAccountId(newAccountId);
         existing.setCategoryId(newCategoryId);
-        existing.setTransactionType(TransactionEntryType.CREDIT);
+        existing.setTransactionType(TransactionDbType.CREDIT);
 
         // Currency resolution
         String newCurrency = request.originalCurrency();
@@ -75,7 +74,6 @@ public class CreditTransactionService {
         existing.setOriginalCurrency(newCurrency);
         existing.setExchangeRate(newRate);
 
-        validationService.validatePositiveAmount(request.originalAmount());
         if (request.originalAmount() != null) existing.setOriginalAmount(request.originalAmount());
 
         if (request.name() != null) existing.setName(request.name());

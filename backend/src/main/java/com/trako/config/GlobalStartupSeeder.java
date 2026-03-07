@@ -1,6 +1,7 @@
 package com.trako.config;
 
 import com.trako.entities.*;
+import com.trako.enums.CategoryType;
 import com.trako.repositories.AccountRepository;
 import com.trako.repositories.CategoryRepository;
 import com.trako.repositories.UsersRepository;

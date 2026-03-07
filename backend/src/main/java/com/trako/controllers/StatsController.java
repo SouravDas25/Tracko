@@ -1,7 +1,7 @@
 package com.trako.controllers;
 
 import com.trako.dtos.StatsResponseDTO;
-import com.trako.entities.TransactionType;
+import com.trako.enums.TransactionType;
 import com.trako.exceptions.UserNotLoggedInException;
 import com.trako.services.StatsService;
 import com.trako.services.UserService;

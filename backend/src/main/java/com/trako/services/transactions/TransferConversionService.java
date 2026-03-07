@@ -2,8 +2,8 @@ package com.trako.services.transactions;
 
 import com.trako.dtos.TransferResult;
 import com.trako.entities.Transaction;
-import com.trako.entities.TransactionEntryType;
-import com.trako.entities.TransactionType;
+import com.trako.enums.TransactionDbType;
+import com.trako.enums.TransactionType;
 import com.trako.exceptions.NotFoundException;
 import com.trako.models.request.TransactionRequest;
 import com.trako.repositories.TransactionRepository;
@@ -15,6 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Service for converting transactions between regular and transfer types.
+ *
+ * <p>Validation is performed by the caller (TransactionWriteService) before invoking these methods.
  *
  * <p>This service handles the conversion logic:
  * <ul>
@@ -54,10 +56,8 @@ public class TransferConversionService {
         Transaction existing = transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new NotFoundException("Transaction not found: " + transactionId));
 
-        validationService.validateIsNotTransfer(existing);
         validationService.validateAccountOwnership(userId, existing.getAccountId());
         validationService.validateAccountOwnership(userId, toAccountId);
-        validationService.validateNotSameAccount(existing.getAccountId(), toAccountId);
 
         if (request.date() != null) existing.setDate(request.date());
         if (request.name() != null) existing.setName(request.name());
@@ -69,13 +69,13 @@ public class TransferConversionService {
         Long transferCategoryId = transferService.getOrCreateTransferCategory(userId);
 
         existing.setCategoryId(transferCategoryId);
-        existing.setTransactionType(TransactionEntryType.DEBIT);
+        existing.setTransactionType(TransactionDbType.DEBIT);
         existing.setIsCountable(0);
 
         Transaction credit = new Transaction();
         credit.setAccountId(toAccountId);
         credit.setCategoryId(transferCategoryId);
-        credit.setTransactionType(TransactionEntryType.CREDIT);
+        credit.setTransactionType(TransactionDbType.CREDIT);
         credit.setOriginalAmount(existing.getOriginalAmount());
         credit.setOriginalCurrency(existing.getOriginalCurrency());
         credit.setExchangeRate(existing.getExchangeRate());
@@ -103,7 +103,7 @@ public class TransferConversionService {
      *
      * @param userId        the authenticated user id
      * @param transactionId the id of the transaction to convert
-     * @param request       contains new categoryId, transactionType, and optional fields
+     * @param request       contains categoryId (required), transactionType (required), and optional fields
      * @return the updated transaction now as a regular transaction
      */
     @Transactional
@@ -113,27 +113,19 @@ public class TransferConversionService {
         Transaction existing = transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new NotFoundException("Transaction not found: " + transactionId));
 
-        validationService.validateIsTransfer(existing);
+        validationService.validateAccountOwnership(userId, existing.getAccountId());
 
         Long linkedId = existing.getLinkedTransactionId();
 
-        validationService.validateLinkedTransactionExists(linkedId);
-
-        validationService.validateAccountOwnership(userId, existing.getAccountId());
-
         existing.setLinkedTransactionId(null);
+        existing.setCategoryId(request.categoryId());
 
-        if (request.categoryId() != null) {
-            existing.setCategoryId(request.categoryId());
+        if (request.transactionType() == TransactionType.CREDIT) {
+            existing.setTransactionType(TransactionDbType.CREDIT);
+        } else {
+            existing.setTransactionType(TransactionDbType.DEBIT);
         }
-        if (request.transactionType() != null) {
-            // Map unified TransactionType to storage TransactionEntryType
-            if (request.transactionType() == TransactionType.CREDIT) {
-                existing.setTransactionType(TransactionEntryType.CREDIT);
-            } else {
-                existing.setTransactionType(TransactionEntryType.DEBIT);
-            }
-        }
+
         if (request.name() != null) {
             existing.setName(request.name());
         }

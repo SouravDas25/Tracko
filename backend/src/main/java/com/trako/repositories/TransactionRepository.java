@@ -1,7 +1,7 @@
 package com.trako.repositories;
 
 import com.trako.entities.Transaction;
-import com.trako.entities.TransactionEntryType;
+import com.trako.enums.TransactionDbType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -305,7 +305,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             "ORDER BY t.date ASC")
     List<Object[]> sumAmountsByDateForUser(
             @Param("userId") String userId,
-            @Param("transactionType") TransactionEntryType transactionType,
+            @Param("transactionType") TransactionDbType transactionType,
             @Param("accountId") Long accountId
     );
 
@@ -320,7 +320,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             "ORDER BY t.date ASC")
     List<Object[]> sumAmountsByDateForCategory(
             @Param("userId") String userId,
-            @Param("transactionType") TransactionEntryType transactionType,
+            @Param("transactionType") TransactionDbType transactionType,
             @Param("accountId") Long accountId,
             @Param("categoryId") Long categoryId
     );
@@ -335,7 +335,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             "GROUP BY t.categoryId")
     List<Object[]> sumAmountsByCategoryForUserInRange(
             @Param("userId") String userId,
-            @Param("transactionType") TransactionEntryType transactionType,
+            @Param("transactionType") TransactionDbType transactionType,
             @Param("accountId") Long accountId,
             @Param("startDate") Date startDate,
             @Param("endDate") Date endDate
@@ -351,7 +351,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             "AND t.date >= :startDate AND t.date < :endDate")
     Double sumAmountForCategoryInRange(
             @Param("userId") String userId,
-            @Param("transactionType") TransactionEntryType transactionType,
+            @Param("transactionType") TransactionDbType transactionType,
             @Param("accountId") Long accountId,
             @Param("categoryId") Long categoryId,
             @Param("startDate") Date startDate,

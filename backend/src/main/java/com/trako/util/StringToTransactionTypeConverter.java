@@ -1,6 +1,6 @@
 package com.trako.util;
 
-import com.trako.entities.TransactionType;
+import com.trako.enums.TransactionType;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 

@@ -5,6 +5,8 @@ import com.trako.dtos.BudgetCategoryDTO;
 import com.trako.dtos.BudgetResponseDTO;
 import com.trako.dtos.TransactionSummaryDTO;
 import com.trako.entities.*;
+import com.trako.enums.CategoryType;
+import com.trako.enums.TransactionDbType;
 import com.trako.repositories.BudgetCategoryAllocationRepository;
 import com.trako.repositories.BudgetMonthRepository;
 import com.trako.repositories.CategoryRepository;
@@ -115,7 +117,7 @@ public class BudgetCalculationService {
 
                 // Filter for expense transactions (type 1)
                 actual = transactions.stream()
-                        .filter(t -> t.getIsCountable() == 1 && t.getTransactionType() == TransactionEntryType.DEBIT)
+                        .filter(t -> t.getIsCountable() == 1 && t.getTransactionType() == TransactionDbType.DEBIT)
                         .mapToDouble(Transaction::getAmount)
                         .sum();
 
@@ -225,7 +227,7 @@ public class BudgetCalculationService {
         List<Transaction> transactions = transactionRepository.findByUserIdAndCategoryIdAndDateBetween(
                 userId, category.getId(), startDate, endDate);
         Double actual = transactions.stream()
-                .filter(t -> t.getIsCountable() == 1 && t.getTransactionType() == TransactionEntryType.DEBIT)
+                .filter(t -> t.getIsCountable() == 1 && t.getTransactionType() == TransactionDbType.DEBIT)
                 .mapToDouble(Transaction::getAmount)
                 .sum();
 

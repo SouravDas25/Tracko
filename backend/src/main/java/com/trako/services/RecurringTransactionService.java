@@ -1,8 +1,8 @@
 package com.trako.services;
 
-import com.trako.entities.Frequency;
+import com.trako.enums.Frequency;
 import com.trako.entities.RecurringTransaction;
-import com.trako.entities.TransactionType;
+import com.trako.enums.TransactionType;
 import com.trako.models.request.TransactionRequest;
 import com.trako.repositories.RecurringTransactionRepository;
 import com.trako.services.transactions.TransactionWriteService;

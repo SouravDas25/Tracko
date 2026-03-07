@@ -1,5 +1,8 @@
 package com.trako.entities;
 
+import com.trako.enums.Frequency;
+import com.trako.enums.TransactionType;
+import com.trako.enums.TransactionTypeConverter;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

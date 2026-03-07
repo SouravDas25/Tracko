@@ -83,7 +83,7 @@ tasks:
     desc: Run Backend tests (Maven verify)
     dir: "{{.BACKEND_DIR}}"
     cmds:
-      - cmd: mvn verify
+      - cmd: mvn clean verify
 
   test:flutter:
     desc: Run Flutter tests

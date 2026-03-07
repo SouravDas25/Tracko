@@ -1,6 +1,6 @@
 package com.trako.models.request;
 
-import com.trako.entities.TransactionType;
+import com.trako.enums.TransactionType;
 
 import java.util.Date;
 

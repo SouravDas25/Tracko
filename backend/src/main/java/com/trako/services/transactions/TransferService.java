@@ -3,7 +3,7 @@ package com.trako.services.transactions;
 import com.trako.dtos.TransferResult;
 import com.trako.entities.Category;
 import com.trako.entities.Transaction;
-import com.trako.entities.TransactionEntryType;
+import com.trako.enums.TransactionDbType;
 import com.trako.exceptions.NotFoundException;
 import com.trako.repositories.CategoryRepository;
 import com.trako.repositories.TransactionRepository;
@@ -97,7 +97,7 @@ public class TransferService {
         Transaction debit = new Transaction();
         debit.setAccountId(fromAccountId);
         debit.setCategoryId(transferCategoryId);
-        debit.setTransactionType(TransactionEntryType.DEBIT);
+        debit.setTransactionType(TransactionDbType.DEBIT);
         debit.setOriginalAmount(originalAmount);
         debit.setOriginalCurrency(originalCurrency);
         debit.setExchangeRate(exchangeRate);
@@ -115,7 +115,7 @@ public class TransferService {
         Transaction credit = new Transaction();
         credit.setAccountId(toAccountId);
         credit.setCategoryId(transferCategoryId);
-        credit.setTransactionType(TransactionEntryType.CREDIT);
+        credit.setTransactionType(TransactionDbType.CREDIT);
         credit.setOriginalAmount(originalAmount);
         credit.setOriginalCurrency(originalCurrency);
         credit.setExchangeRate(exchangeRate);
@@ -177,8 +177,8 @@ public class TransferService {
         Transaction linkedTx = transactionRepository.findById(linkedId)
                 .orElseThrow(() -> new IllegalArgumentException("Linked transaction not found: " + linkedId));
 
-        Transaction debit = transaction.getTransactionType() != null && transaction.getTransactionType() == TransactionEntryType.DEBIT ? transaction : linkedTx;
-        Transaction credit = transaction.getTransactionType() != null && transaction.getTransactionType() == TransactionEntryType.CREDIT ? transaction : linkedTx;
+        Transaction debit = transaction.getTransactionType() != null && transaction.getTransactionType() == TransactionDbType.DEBIT ? transaction : linkedTx;
+        Transaction credit = transaction.getTransactionType() != null && transaction.getTransactionType() == TransactionDbType.CREDIT ? transaction : linkedTx;
 
         validationService.validateAccountOwnership(userId, debit.getAccountId());
         validationService.validateAccountOwnership(userId, credit.getAccountId());

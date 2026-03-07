@@ -5,8 +5,8 @@ import com.trako.dtos.CategoryStatsResponseDTO;
 import com.trako.dtos.StatsPointDTO;
 import com.trako.dtos.StatsResponseDTO;
 import com.trako.entities.Category;
-import com.trako.entities.TransactionEntryType;
-import com.trako.entities.TransactionType;
+import com.trako.enums.TransactionDbType;
+import com.trako.enums.TransactionType;
 import com.trako.repositories.CategoryRepository;
 import com.trako.repositories.TransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -164,12 +164,12 @@ public class StatsService {
     //     }
     //     return total;
     // }
-    private TransactionEntryType mapToEntryType(TransactionType type) {
-        if (type == TransactionType.CREDIT) return TransactionEntryType.CREDIT;
-        if (type == TransactionType.DEBIT) return TransactionEntryType.DEBIT;
+    private TransactionDbType mapToEntryType(TransactionType type) {
+        if (type == TransactionType.CREDIT) return TransactionDbType.CREDIT;
+        if (type == TransactionType.DEBIT) return TransactionDbType.DEBIT;
         // Fallback or error for TRANSFER if stats requested for TRANSFER?
         // Usually stats are income (CREDIT) or expense (DEBIT).
-        return TransactionEntryType.DEBIT;
+        return TransactionDbType.DEBIT;
     }
 
     private List<StatsPointDTO> buildSeriesFromDb(String userId, Range range, TransactionType transactionType, Long accountId, Date anchorDate, Date currentStart, Date currentEnd) {

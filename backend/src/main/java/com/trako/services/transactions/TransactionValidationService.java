@@ -25,6 +25,8 @@ public class TransactionValidationService {
     @Autowired
     private TransactionRepository transactionRepository;
 
+    // ==================== Ownership Validators ====================
+
     public void validateAccountOwnership(String userId, Long accountId) {
         if (accountId == null) return;
         Account account = accountRepository.findById(accountId)
@@ -51,22 +53,38 @@ public class TransactionValidationService {
         return transaction;
     }
 
-    public void validateTransactionCreateRequest(TransactionRequest request) {
+    // ==================== Create Validators ====================
+
+    /**
+     * Validates a request to create a DEBIT or CREDIT transaction.
+     * Required: transactionType, accountId, categoryId, originalCurrency, originalAmount.
+     */
+    public void validateCreateTransaction(TransactionRequest request) {
+        if (request.transactionType() == null) {
+            throw new BadRequestException("transactionType is required");
+        }
         if (request.accountId() == null) {
-            throw new BadRequestException("Transaction requires accountId");
+            throw new BadRequestException("accountId is required");
         }
         if (request.categoryId() == null) {
-            throw new BadRequestException("Transaction requires categoryId");
+            throw new BadRequestException("categoryId is required");
         }
         if (request.originalCurrency() == null) {
-            throw new BadRequestException("Original currency is required");
+            throw new BadRequestException("originalCurrency is required");
         }
         if (request.originalAmount() == null) {
-            throw new BadRequestException("Original amount is required");
+            throw new BadRequestException("originalAmount is required");
         }
     }
 
-    public void validateTransferCreateRequest(TransactionRequest request) {
+    /**
+     * Validates a request to create a TRANSFER.
+     * Required: transactionType, fromAccountId/accountId, toAccountId, originalCurrency, originalAmount (>0).
+     */
+    public void validateCreateTransfer(TransactionRequest request) {
+        if (request.transactionType() == null) {
+            throw new BadRequestException("transactionType is required");
+        }
         Long fromAccountId = request.getSourceAccountId();
         if (fromAccountId == null) {
             throw new BadRequestException("Transfer requires fromAccountId or accountId");
@@ -78,46 +96,76 @@ public class TransactionValidationService {
             throw new BadRequestException("fromAccountId and toAccountId cannot be the same");
         }
         if (request.originalCurrency() == null) {
-            throw new BadRequestException("Original currency is required");
+            throw new BadRequestException("originalCurrency is required");
         }
         if (request.originalAmount() == null || request.originalAmount() <= 0) {
-            throw new BadRequestException("Original amount must be greater than 0");
+            throw new BadRequestException("originalAmount must be greater than 0");
         }
     }
 
-    public void validateToAccountId(Long toAccountId) {
-        if (toAccountId == null) {
+    // ==================== Update Validators ====================
+
+    /**
+     * Validates a request to update a regular transaction (stays DEBIT or CREDIT, or switches between them).
+     * Required: transactionType. All other fields are optional (partial update).
+     * If originalAmount is provided, it must be > 0.
+     */
+    public void validateUpdateTransaction(TransactionRequest request) {
+        if (request.transactionType() == null) {
+            throw new BadRequestException("transactionType is required");
+        }
+        if (request.originalAmount() != null && request.originalAmount() <= 0) {
+            throw new BadRequestException("originalAmount must be greater than 0");
+        }
+    }
+
+    /**
+     * Validates a request to update a transfer (stays a transfer).
+     * Required: transactionType. All other fields are optional (partial update).
+     * If originalAmount is provided, it must be > 0.
+     */
+    public void validateUpdateTransfer(TransactionRequest request) {
+        if (request.transactionType() == null) {
+            throw new BadRequestException("transactionType is required");
+        }
+        if (request.originalAmount() != null && request.originalAmount() <= 0) {
+            throw new BadRequestException("originalAmount must be greater than 0");
+        }
+    }
+
+    /**
+     * Validates a request to convert a regular transaction into a transfer.
+     * Required: transactionType, toAccountId.
+     */
+    public void validateConvertToTransfer(TransactionRequest request, Transaction existing) {
+        if (request.transactionType() == null) {
+            throw new BadRequestException("transactionType is required");
+        }
+        if (request.toAccountId() == null) {
             throw new BadRequestException("toAccountId is required when converting to a transfer");
         }
-    }
-
-    public void validatePositiveAmount(Double amount) {
-        if (amount != null && amount <= 0) {
-            throw new BadRequestException("Original amount must be greater than 0");
+        if (existing.getAccountId().equals(request.toAccountId())) {
+            throw new BadRequestException("Source and destination accounts cannot be the same");
         }
     }
 
-    public void validateIsTransfer(Transaction existing) {
+    /**
+     * Validates a request to convert a transfer back into a regular transaction.
+     * Required: transactionType, categoryId.
+     * The linked transaction must exist.
+     */
+    public void validateConvertToTransaction(TransactionRequest request, Transaction existing) {
+        if (request.transactionType() == null) {
+            throw new BadRequestException("transactionType is required");
+        }
+        if (request.categoryId() == null) {
+            throw new BadRequestException("categoryId is required when converting a transfer to a regular transaction");
+        }
         if (existing.getLinkedTransactionId() == null) {
             throw new BadRequestException("Transaction is not a transfer");
         }
-    }
-
-    public void validateIsNotTransfer(Transaction existing) {
-        if (existing.getLinkedTransactionId() != null) {
-            throw new BadRequestException("Transaction is already a transfer");
-        }
-    }
-
-    public void validateLinkedTransactionExists(Long linkedId) {
-        if (!transactionRepository.existsById(linkedId)) {
-            throw new NotFoundException("Linked transaction not found: " + linkedId);
-        }
-    }
-
-    public void validateNotSameAccount(Long accountId1, Long accountId2) {
-        if (accountId1 != null && accountId1.equals(accountId2)) {
-            throw new BadRequestException("Source and destination accounts cannot be the same");
+        if (!transactionRepository.existsById(existing.getLinkedTransactionId())) {
+            throw new NotFoundException("Linked transaction not found: " + existing.getLinkedTransactionId());
         }
     }
 }

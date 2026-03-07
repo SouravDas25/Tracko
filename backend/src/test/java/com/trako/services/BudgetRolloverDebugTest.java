@@ -3,6 +3,7 @@ package com.trako.services;
 import com.trako.dtos.BudgetAllocationRequestDTO;
 import com.trako.dtos.BudgetCategoryDTO;
 import com.trako.entities.*;
+import com.trako.enums.TransactionDbType;
 import com.trako.repositories.*;
 import com.trako.services.transactions.TransactionWriteService;
 import org.junit.jupiter.api.BeforeEach;
@@ -90,7 +91,7 @@ public class BudgetRolloverDebugTest {
 
         // 1. Add Income for Previous Month
         Transaction prevIncome = new Transaction();
-        prevIncome.setTransactionType(TransactionEntryType.CREDIT); // Income
+        prevIncome.setTransactionType(TransactionDbType.CREDIT); // Income
         prevIncome.setName("Prev Salary");
         prevIncome.setOriginalAmount(1000.0);
         prevIncome.setOriginalCurrency("INR");
@@ -113,7 +114,7 @@ public class BudgetRolloverDebugTest {
 
         // 3. Add Expense in Previous Month
         Transaction expense = new Transaction();
-        expense.setTransactionType(TransactionEntryType.DEBIT); // Expense
+        expense.setTransactionType(TransactionDbType.DEBIT); // Expense
         expense.setName("Prev Expense");
         expense.setOriginalAmount(50.0);
         expense.setOriginalCurrency("INR");

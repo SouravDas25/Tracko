@@ -1,7 +1,7 @@
 package com.trako.controllers;
 
 import com.trako.entities.Category;
-import com.trako.entities.CategoryType;
+import com.trako.enums.CategoryType;
 import com.trako.models.request.CategorySaveRequest;
 import com.trako.services.CategoryService;
 import com.trako.services.UserService;

@@ -2,6 +2,8 @@ package com.trako.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.trako.enums.TransactionDbType;
+import com.trako.enums.TransactionEntryTypeConverter;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import org.hibernate.annotations.Generated;
@@ -21,7 +23,7 @@ public class Transaction {
     @NotNull
     @Column(name = "transaction_type")
     @Convert(converter = TransactionEntryTypeConverter.class)
-    private TransactionEntryType transactionType;
+    private TransactionDbType transactionType;
 
     @NotNull
     @Column(name = "name", length = 128)
@@ -87,11 +89,11 @@ public class Transaction {
     }
 
     @JsonIgnore
-    public TransactionEntryType getTransactionType() {
+    public TransactionDbType getTransactionType() {
         return transactionType;
     }
 
-    public void setTransactionType(TransactionEntryType transactionType) {
+    public void setTransactionType(TransactionDbType transactionType) {
         this.transactionType = transactionType;
     }
 

@@ -1,7 +1,7 @@
 package com.trako.repositories;
 
 import com.trako.entities.Category;
-import com.trako.entities.CategoryType;
+import com.trako.enums.CategoryType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

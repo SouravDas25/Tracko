@@ -2,6 +2,7 @@ package com.trako.services;
 
 import com.trako.config.TestJwtSecurityConfig;
 import com.trako.entities.*;
+import com.trako.enums.TransactionDbType;
 import com.trako.repositories.AccountRepository;
 import com.trako.repositories.CategoryRepository;
 import com.trako.repositories.TransactionRepository;
@@ -76,7 +77,7 @@ public class TransactionRepositoryAmountNullTest {
         t.setCategoryId(category.getId());
         t.setName("Repo Path");
         t.setDate(new Date());
-        t.setTransactionType(TransactionEntryType.DEBIT);
+        t.setTransactionType(TransactionDbType.DEBIT);
         t.setOriginalAmount(10.0);
         t.setOriginalCurrency("INR");
         t.setExchangeRate(1.0);

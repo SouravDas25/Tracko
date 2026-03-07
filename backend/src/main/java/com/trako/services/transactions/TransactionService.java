@@ -5,6 +5,7 @@ import com.trako.dtos.TransactionDetailDTO;
 import com.trako.dtos.TransactionPeriodSummaryDTO;
 import com.trako.dtos.TransactionSummaryDTO;
 import com.trako.entities.*;
+import com.trako.enums.TransactionDbType;
 import com.trako.repositories.*;
 import com.trako.util.NumberUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -281,9 +282,9 @@ public class TransactionService {
         for (Transaction t : transactions) {
             if (t.getIsCountable() == 1) {
                 count++;
-                if (t.getTransactionType() == TransactionEntryType.CREDIT) {
+                if (t.getTransactionType() == TransactionDbType.CREDIT) {
                     totalIncome += t.getAmount();
-                } else if (t.getTransactionType() == TransactionEntryType.DEBIT) {
+                } else if (t.getTransactionType() == TransactionDbType.DEBIT) {
                     totalExpense += t.getAmount();
                 }
             }
@@ -400,7 +401,7 @@ public class TransactionService {
     public Double getTotalIncome(String userId, Date startDate, Date endDate) {
         List<Transaction> transactions = transactionRepository.findByUserIdAndDateBetween(userId, startDate, endDate);
         return transactions.stream()
-                .filter(t -> t.getIsCountable() == 1 && t.getTransactionType() == TransactionEntryType.CREDIT) // CREDIT = income
+                .filter(t -> t.getIsCountable() == 1 && t.getTransactionType() == TransactionDbType.CREDIT) // CREDIT = income
                 .mapToDouble(Transaction::getAmount)
                 .sum();
     }
@@ -408,7 +409,7 @@ public class TransactionService {
     public Double getTotalExpense(String userId, Date startDate, Date endDate) {
         List<Transaction> transactions = transactionRepository.findByUserIdAndDateBetween(userId, startDate, endDate);
         return transactions.stream()
-                .filter(t -> t.getIsCountable() == 1 && t.getTransactionType() == TransactionEntryType.DEBIT) // DEBIT = expense
+                .filter(t -> t.getIsCountable() == 1 && t.getTransactionType() == TransactionDbType.DEBIT) // DEBIT = expense
                 .mapToDouble(Transaction::getAmount)
                 .sum();
     }

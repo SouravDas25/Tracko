@@ -1,6 +1,7 @@
 package com.trako.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.trako.enums.CategoryType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 
