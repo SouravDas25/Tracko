@@ -3,6 +3,9 @@ package com.trako.repositories;
 import com.trako.entities.Category;
 import com.trako.entities.CategoryType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -27,5 +30,7 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
 
     boolean existsByUserIdAndCategoryTypeAndNameIgnoreCaseAndIdNot(String userId, CategoryType categoryType, String name, Long id);
 
-    void deleteByUserId(String userId);
+    @Modifying
+    @Query("DELETE FROM Category c WHERE c.userId = :userId")
+    void deleteByUserId(@Param("userId") String userId);
 }

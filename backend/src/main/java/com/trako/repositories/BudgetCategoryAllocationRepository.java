@@ -18,7 +18,9 @@ public interface BudgetCategoryAllocationRepository extends JpaRepository<Budget
 
     List<BudgetCategoryAllocation> findByUserIdAndBudgetMonthId(String userId, Long budgetMonthId);
 
-    void deleteByUserId(String userId);
+    @Modifying
+    @Query("DELETE FROM BudgetCategoryAllocation b WHERE b.userId = :userId")
+    void deleteByUserId(@Param("userId") String userId);
 
     boolean existsByCategoryId(Long categoryId);
 

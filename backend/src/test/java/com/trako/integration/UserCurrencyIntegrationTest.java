@@ -36,12 +36,11 @@ public class UserCurrencyIntegrationTest extends BaseIntegrationTest {
     @Autowired
     private UserCurrencyRepository userCurrencyRepository;
 
-    private User testUser;
     private String bearerToken;
 
     @BeforeEach
     public void setup() {
-        testUser = createUniqueUser("Test User");
+        User testUser = createUniqueUser("Test User");
         bearerToken = generateBearerToken(testUser);
     }
 

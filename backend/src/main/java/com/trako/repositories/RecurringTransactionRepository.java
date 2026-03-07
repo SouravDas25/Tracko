@@ -2,6 +2,9 @@ package com.trako.repositories;
 
 import com.trako.entities.RecurringTransaction;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Date;
@@ -20,5 +23,7 @@ public interface RecurringTransactionRepository extends JpaRepository<RecurringT
 
     boolean existsByCategoryId(Long categoryId);
 
-    void deleteByUserId(String userId);
+    @Modifying
+    @Query("DELETE FROM RecurringTransaction rt WHERE rt.userId = :userId")
+    void deleteByUserId(@Param("userId") String userId);
 }
