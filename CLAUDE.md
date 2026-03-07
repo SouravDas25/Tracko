@@ -105,10 +105,21 @@ The transaction system has a deliberate read/write split:
 **Transfer implementation**: Transfers are stored as two `Transaction` rows (DEBIT + CREDIT) both under a system-created `TRANSFER` category, linked via `linkedTransactionId`. The CREDIT leg has `isCountable=0` so it is excluded from budget/summary calculations. The frontend uses `transactionType=3` (TRANSFER) as a rendering hint — the backend stores only `DEBIT(1)` or `CREDIT(2)` in `TransactionEntryType`.
 
 **Type distinction**:
-- `TransactionEntryType` (DB enum): `DEBIT(1)`, `CREDIT(2)` — stored in the database
+- `TransactionDbType` (DB enum): `DEBIT(1)`, `CREDIT(2)` — stored in the database
 - `TransactionType` (API enum): `DEBIT(1)`, `CREDIT(2)`, `TRANSFER(3)` — used in request/response
-- `TransactionEntryType.TRANSFER_RENDERING_VALUE = 3` is a virtual value for frontend rendering only
+- `TransactionDbType.TRANSFER_RENDERING_VALUE = 3` is a virtual value for frontend rendering only
 - `Transaction.getRenderedTransactionType()` returns 3 for the debit leg of a transfer
+
+**Write flow**:
+- All writes go through `TransactionWriteService.createTransaction(userId, TransactionRequest)`
+- `TransactionRequest` is the single inbound model for all transaction creates/updates
+- `TransactionValidationService` handles ownership checks: `validateAccountOwnership`, `validateCategoryOwnership` — throws `AuthorizationException` on failure
+- Controllers must catch `AuthorizationException` explicitly before the broad `catch (Exception e)` handler, otherwise it maps to 400 instead of 401
+
+**Update flow**:
+- Convert transfer → regular: requires `categoryId` in the update payload; triggers when a TRANSFER transaction is updated with `transactionType = DEBIT` or `CREDIT`
+- Convert regular → transfer: requires `toAccountId`; creates the second (CREDIT) leg and links both via `linkedTransactionId`
+- Updating either leg of a transfer by ID will update both linked legs (date, amount, etc.)
 
 ### Budget System (ZBB)
 
@@ -145,8 +156,25 @@ All integration tests extend `BaseIntegrationTest` (`backend/src/test/java/com/t
 - Provides helpers: `createUniqueUser()`, `generateBearerToken()`, `generateUniquePhone()`
 - Uses `TestJwtSecurityConfig` to bypass real JWT secret configuration in tests
 
+### Recurring Transaction Subsystem
+
+- `RecurringTransactionService` handles creation, updates, deletion, and scheduled processing
+- **Immediate processing on create**: `create()` calls `processSingleTransaction(saved)` directly (not via proxy) so backfill runs inside the same transaction — user sees generated transactions immediately
+- **Catch-up loop**: `processSingleTransaction` loops `while (!nextRunDate.after(now))`, creating one transaction per missed period, each dated to its period. End-date check uses `.after()` (strictly after) — entry exactly on the end date is still created
+- **Transaction isolation**: `processDueTransactions()` (scheduler) has no `@Transactional`; it calls `self.processSingleTransaction(rt)` via self-injection so each RT processes in its own `REQUIRES_NEW` transaction — one failure doesn't affect others
+- **Self-injection pattern**: `@Autowired private RecurringTransactionService self` is required so `REQUIRES_NEW` is honoured through the Spring proxy. Direct intra-bean calls bypass the proxy
+- **Transfer fallback**: `TRANSFER` type with `toAccountId == accountId` (or null) falls back to a regular DEBIT entry
+- **Generated column**: `amount = original_amount * exchange_rate` is a DB-generated column (`insertable=false, updatable=false` in JPA), matching the `transactions` table pattern
+
 ### Key Config
 
 - JWT secret: `application.properties` → `jwt.secret`
 - Dev DB: file-based H2 at `./tracko-dev-db` (relative to `backend/`)
 - Profiles: `dev` (default, H2), `prod` (PostgreSQL — requires env vars `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`)
+
+## Gotchas / Patterns
+
+- **`TransactionType` enum deserialization**: Uses `@JsonValue` (returns int) and `@JsonCreator` (accepts int). Never send `"TRANSFER"` as a string in JSON — always use the enum constant which serializes to its int value (e.g. `TransactionType.TRANSFER` → `3`). String deserialization will fail with 400.
+- **`@Valid` on partial update endpoints**: Do not put `@Valid @RequestBody` on update endpoints that accept a partial entity. Required field constraints on the entity will reject partial payloads before the service is called. Only use `@Valid` on create endpoints.
+- **`REQUIRES_NEW` + `@Transactional` tests**: Methods with `REQUIRES_NEW` start an independent DB transaction that cannot see uncommitted test data. In integration tests, call the parent `@Transactional` method (e.g. `create()`) instead of the `REQUIRES_NEW` method directly, or save/flush explicitly before calling.
+- **Month boundary arithmetic in tests**: `monthsAgo(N) + N monthly advances ≈ now` is not millisecond-precise. Use `assertTrue(count >= N)` for multi-period assertions, or use `yesterday` (1 day ago) when exactly 1 period must fire.
