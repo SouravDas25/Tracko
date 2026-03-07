@@ -27,22 +27,10 @@ import static org.junit.jupiter.api.Assertions.*;
 @ActiveProfiles("test")
 @Import(TestJwtSecurityConfig.class)
 @Transactional
-public class StatsServiceIntegrationTest {
+public class StatsServiceIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private StatsService statsService;
-
-    @Autowired
-    private UsersRepository usersRepository;
-
-    @Autowired
-    private AccountRepository accountRepository;
-
-    @Autowired
-    private CategoryRepository categoryRepository;
-
-    @Autowired
-    private TransactionRepository transactionRepository;
 
     @Autowired
     private TransactionWriteService transactionWriteService;
@@ -54,17 +42,7 @@ public class StatsServiceIntegrationTest {
 
     @BeforeEach
     public void setup() {
-        transactionRepository.deleteAll();
-        categoryRepository.deleteAll();
-        accountRepository.deleteAll();
-        usersRepository.deleteAll();
-
-        user = new User();
-        user.setName("Stats Svc");
-        user.setPhoneNo("7777777777");
-        user.setEmail("statssvc@example.com");
-        user.setPassword("pass");
-        user = usersRepository.save(user);
+        user = createUniqueUser("Stats Svc");
 
         account = new Account();
         account.setName("A1");

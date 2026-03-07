@@ -32,44 +32,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @Import(TestJwtSecurityConfig.class)
 @Transactional
-public class ContactIntegrationTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @Autowired
-    private UsersRepository usersRepository;
+public class ContactIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private ContactRepository contactRepository;
-
-    @Autowired
-    private JwtTokenUtil jwtTokenUtil;
 
     private User testUser;
     private String bearerToken;
 
     @BeforeEach
     public void setup() {
-        contactRepository.deleteAll();
-        usersRepository.deleteAll();
-
-        testUser = new User();
-        testUser.setName("Test User");
-        testUser.setPhoneNo("1234567890");
-        testUser.setEmail("test@example.com");
-        testUser.setPassword("password");
-        testUser = usersRepository.save(testUser);
-
-        UserDetails principal = new org.springframework.security.core.userdetails.User(
-                testUser.getPhoneNo(),
-                testUser.getPassword(),
-                Collections.emptyList()
-        );
-        bearerToken = "Bearer " + jwtTokenUtil.generateToken(principal);
+        testUser = createUniqueUser("Test User");
+        bearerToken = generateBearerToken(testUser);
     }
 
     @Test
@@ -206,12 +180,7 @@ public class ContactIntegrationTest {
 
     @Test
     public void getUpdateDeleteForeignContactReturnsNotFound() throws Exception {
-        User other = new User();
-        other.setName("Other");
-        other.setPhoneNo("2002002000");
-        other.setEmail("other@example.com");
-        other.setPassword("other_pass");
-        other = usersRepository.save(other);
+        User other = createUniqueUser("Other");
 
         Contact foreign = new Contact();
         foreign.setUserId(other.getId());

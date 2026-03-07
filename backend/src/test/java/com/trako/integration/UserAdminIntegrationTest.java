@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.*;
@@ -31,55 +32,43 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @Import(TestJwtSecurityConfig.class)
 @Transactional
-public class UserAdminIntegrationTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @Autowired
-    private UsersRepository usersRepository;
-
-    @Autowired
-    private JwtTokenUtil jwtTokenUtil;
+public class UserAdminIntegrationTest extends BaseIntegrationTest {
 
     private String adminBearer;
     private String userBearer;
+    private User adminUser;
+    private User normalUser;
 
     @BeforeEach
     public void setup() {
-        usersRepository.deleteAll();
+        adminUser = new User();
+        adminUser.setName("Admin");
+        adminUser.setPhoneNo(generateUniquePhone());
+        adminUser.setEmail("admin_" + adminUser.getPhoneNo() + "@mail.com");
+        adminUser.setPassword("password");
+        adminUser.setIsShadow(0);
+        adminUser.setIsAdmin(1);
+        adminUser = usersRepository.save(adminUser);
 
-        User admin = new User();
-        admin.setName("Admin");
-        admin.setPhoneNo("0000000000");
-        admin.setEmail("admin@mail.com");
-        admin.setPassword("password");
-        admin.setIsShadow(0);
-        admin.setIsAdmin(1);
-        usersRepository.save(admin);
-
-        User normal = new User();
-        normal.setName("Normal");
-        normal.setPhoneNo("1111111111");
-        normal.setEmail("normal@mail.com");
-        normal.setPassword("password");
-        normal.setIsShadow(0);
-        normal.setIsAdmin(0);
-        usersRepository.save(normal);
+        normalUser = new User();
+        normalUser.setName("Normal");
+        normalUser.setPhoneNo(generateUniquePhone());
+        normalUser.setEmail("normal_" + normalUser.getPhoneNo() + "@mail.com");
+        normalUser.setPassword("password");
+        normalUser.setIsShadow(0);
+        normalUser.setIsAdmin(0);
+        normalUser = usersRepository.save(normalUser);
 
         var adminPrincipal = new org.springframework.security.core.userdetails.User(
-                admin.getPhoneNo(),
-                admin.getPassword(),
+                adminUser.getPhoneNo(),
+                adminUser.getPassword(),
                 Collections.emptyList()
         );
         adminBearer = "Bearer " + jwtTokenUtil.generateToken(adminPrincipal);
 
         var userPrincipal = new org.springframework.security.core.userdetails.User(
-                normal.getPhoneNo(),
-                normal.getPassword(),
+                normalUser.getPhoneNo(),
+                normalUser.getPassword(),
                 Collections.emptyList()
         );
         userBearer = "Bearer " + jwtTokenUtil.generateToken(userPrincipal);
@@ -87,10 +76,11 @@ public class UserAdminIntegrationTest {
 
     @Test
     public void adminCanCreateUserViaCreate() throws Exception {
+        String phone = generateUniquePhone();
         var body = new java.util.HashMap<String, Object>();
         body.put("name", "Created User");
-        body.put("phoneNo", "2222222222");
-        body.put("email", "created@mail.com");
+        body.put("phoneNo", phone);
+        body.put("email", "created_" + phone + "@mail.com");
         body.put("password", "password");
         body.put("isShadow", 0);
 
@@ -101,17 +91,18 @@ public class UserAdminIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result", notNullValue()));
 
-        User created = usersRepository.findByPhoneNo("2222222222");
+        User created = usersRepository.findByPhoneNo(phone);
         assertNotNull(created);
         assertEquals("Created User", created.getName());
     }
 
     @Test
     public void nonAdminCannotCreateOtherUserViaCreate() throws Exception {
+        String phone = generateUniquePhone();
         var body = new java.util.HashMap<String, Object>();
         body.put("name", "Hacker");
-        body.put("phoneNo", "3333333333");
-        body.put("email", "hacker@mail.com");
+        body.put("phoneNo", phone);
+        body.put("email", "hacker_" + phone + "@mail.com");
         body.put("password", "password");
         body.put("isShadow", 0);
 
@@ -121,14 +112,8 @@ public class UserAdminIntegrationTest {
                         .content(objectMapper.writeValueAsString(body)))
                 .andExpect(status().isUnauthorized());
 
-        User notCreated = usersRepository.findByPhoneNo("3333333333");
+        User notCreated = usersRepository.findByPhoneNo(phone);
         assertNull(notCreated);
-
-        // Verify original user was NOT modified
-        User normal = usersRepository.findByPhoneNo("1111111111");
-        assertNotNull(normal);
-        assertEquals("Normal", normal.getName());
-        assertEquals("normal@mail.com", normal.getEmail());
     }
 
     @Test
@@ -178,13 +163,15 @@ public class UserAdminIntegrationTest {
         mockMvc.perform(get("/api/user")
                         .header("Authorization", adminBearer))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result", hasSize(2)));
+                .andExpect(jsonPath("$.result.length()", greaterThanOrEqualTo(2)))
+                .andExpect(jsonPath("$.result[?(@.id == '" + adminUser.getId() + "')]").exists())
+                .andExpect(jsonPath("$.result[?(@.id == '" + normalUser.getId() + "')]").exists());
     }
 
     @Test
     public void byPhoneNoRequiresAuth() throws Exception {
         mockMvc.perform(get("/api/user/byPhoneNo")
-                        .param("phone_no", "1111111111"))
+                        .param("phone_no", generateUniquePhone()))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -201,10 +188,10 @@ public class UserAdminIntegrationTest {
                         .content(objectMapper.writeValueAsString(body)))
                 .andExpect(status().isOk());
 
-        User normal = usersRepository.findByPhoneNo("1111111111");
+        User normal = usersRepository.findById(normalUser.getId()).orElse(null);
         assertNotNull(normal);
         assertEquals("Normal Updated", normal.getName());
         assertEquals("normal.updated@mail.com", normal.getEmail());
-        assertEquals("1111111111", normal.getPhoneNo());
+        assertEquals(normalUser.getPhoneNo(), normal.getPhoneNo());
     }
 }

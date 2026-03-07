@@ -33,34 +33,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @Import(TestJwtSecurityConfig.class)
 @Transactional
-public class RecurringTransactionIntegrationTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
+public class RecurringTransactionIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private RecurringTransactionRepository recurringTransactionRepository;
 
     @Autowired
-    private TransactionRepository transactionRepository;
-
-    @Autowired
     private RecurringTransactionService recurringTransactionService;
-
-    @Autowired
-    private AccountRepository accountRepository;
-
-    @Autowired
-    private CategoryRepository categoryRepository;
-
-    @Autowired
-    private UsersRepository usersRepository;
-
-    @Autowired
-    private JwtTokenUtil jwtTokenUtil;
 
     private User testUser;
     private Account testAccount;
@@ -69,25 +48,8 @@ public class RecurringTransactionIntegrationTest {
 
     @BeforeEach
     public void setup() {
-        recurringTransactionRepository.deleteAll();
-        transactionRepository.deleteAll();
-        accountRepository.deleteAll();
-        categoryRepository.deleteAll();
-        usersRepository.deleteAll();
-
-        testUser = new User();
-        testUser.setName("Test User");
-        testUser.setPhoneNo("1234567890");
-        testUser.setEmail("test@example.com");
-        testUser.setPassword("firebase_id_123"); // Set firebaseId as it is used as password in principal
-        testUser = usersRepository.save(testUser);
-
-        var principal = new org.springframework.security.core.userdetails.User(
-                testUser.getPhoneNo(),
-                testUser.getPassword(),
-                java.util.Collections.emptyList()
-        );
-        bearerToken = "Bearer " + jwtTokenUtil.generateToken(principal);
+        testUser = createUniqueUser("Test User");
+        bearerToken = generateBearerToken(testUser);
 
         testAccount = new Account();
         testAccount.setName("Test Account");

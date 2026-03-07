@@ -32,23 +32,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @Import(TestJwtSecurityConfig.class)
 @Transactional
-public class RecurringTransactionIntegrationNewTest {
+public class RecurringTransactionIntegrationNewTest extends BaseIntegrationTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @Autowired
-    private UsersRepository usersRepository;
-    @Autowired
-    private AccountRepository accountRepository;
-    @Autowired
-    private CategoryRepository categoryRepository;
     @Autowired
     private RecurringTransactionRepository recurringTransactionRepository;
-    @Autowired
-    private JwtTokenUtil jwtTokenUtil;
 
     private String tokenA;
     private String tokenB;
@@ -59,28 +46,11 @@ public class RecurringTransactionIntegrationNewTest {
 
     @BeforeEach
     public void setup() {
-        recurringTransactionRepository.deleteAll();
-        categoryRepository.deleteAll();
-        accountRepository.deleteAll();
-        usersRepository.deleteAll();
+        userA = createUniqueUser("A");
+        tokenA = generateBearerToken(userA);
 
-        userA = new User();
-        userA.setName("A");
-        userA.setPhoneNo("7000000001");
-        userA.setEmail("a@x.com");
-        userA.setPassword("p");
-        userA = usersRepository.save(userA);
-        userB = new User();
-        userB.setName("B");
-        userB.setPhoneNo("7000000002");
-        userB.setEmail("b@x.com");
-        userB.setPassword("p");
-        userB = usersRepository.save(userB);
-
-        var pA = new org.springframework.security.core.userdetails.User(userA.getPhoneNo(), userA.getPassword(), Collections.emptyList());
-        var pB = new org.springframework.security.core.userdetails.User(userB.getPhoneNo(), userB.getPassword(), Collections.emptyList());
-        tokenA = "Bearer " + jwtTokenUtil.generateToken(pA);
-        tokenB = "Bearer " + jwtTokenUtil.generateToken(pB);
+        userB = createUniqueUser("B");
+        tokenB = generateBearerToken(userB);
 
         accA1 = new Account();
         accA1.setName("A1");

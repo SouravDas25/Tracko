@@ -24,19 +24,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @ActiveProfiles("test")
 @Import(TestJwtSecurityConfig.class)
 @Transactional
-public class BudgetServiceIntegrationTest {
+public class BudgetServiceIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private BudgetCalculationService budgetCalculationService;
-
-    @Autowired
-    private UsersRepository usersRepository;
-
-    @Autowired
-    private CategoryRepository categoryRepository;
-
-    @Autowired
-    private TransactionRepository transactionRepository;
 
     @Autowired
     private TransactionWriteService transactionWriteService;
@@ -47,9 +38,6 @@ public class BudgetServiceIntegrationTest {
     @Autowired
     private BudgetCategoryAllocationRepository budgetCategoryAllocationRepository;
 
-    @Autowired
-    private AccountRepository accountRepository;
-
     private User testUser;
     private Category expenseCategory;
     private Category incomeCategory;
@@ -57,21 +45,8 @@ public class BudgetServiceIntegrationTest {
 
     @BeforeEach
     public void setup() {
-        // Clean up
-        budgetCategoryAllocationRepository.deleteAll();
-        budgetMonthRepository.deleteAll();
-        transactionRepository.deleteAll();
-        categoryRepository.deleteAll();
-        accountRepository.deleteAll();
-        usersRepository.deleteAll();
-
         // Seed User
-        testUser = new User();
-        testUser.setName("Budget User");
-        testUser.setPhoneNo("5551234567");
-        testUser.setEmail("budget@example.com");
-        testUser.setPassword("pass");
-        testUser = usersRepository.save(testUser);
+        testUser = createUniqueUser("Budget User");
 
         // Seed Account
         testAccount = new Account();

@@ -35,16 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @Import(TestJwtSecurityConfig.class)
 @Transactional
-public class SessionIntegrationTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @Autowired
-    private UsersRepository usersRepository;
+public class SessionIntegrationTest extends BaseIntegrationTest {
 
     @MockBean
     private AuthenticationManager authenticationManager;
@@ -53,14 +44,7 @@ public class SessionIntegrationTest {
 
     @BeforeEach
     public void setup() {
-        usersRepository.deleteAll();
-
-        testUser = new User();
-        testUser.setName("Test User");
-        testUser.setPhoneNo("1234567890");
-        testUser.setEmail("test@example.com");
-        testUser.setPassword("password");
-        testUser = usersRepository.save(testUser);
+        testUser = createUniqueUser("Test User");
 
         // For /api/oauth/token we mock the authentication manager so we don't depend on password encoding config.
         UserDetails principal = new org.springframework.security.core.userdetails.User(

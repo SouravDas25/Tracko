@@ -35,20 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @Import(TestJwtSecurityConfig.class)
 @Transactional
-public class TransferUpdateHappyPathIntegrationTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-    @Autowired
-    private ObjectMapper objectMapper;
-    @Autowired
-    private UsersRepository usersRepository;
-    @Autowired
-    private AccountRepository accountRepository;
-    @Autowired
-    private TransactionRepository transactionRepository;
-    @Autowired
-    private JwtTokenUtil jwtTokenUtil;
+public class TransferUpdateHappyPathIntegrationTest extends BaseIntegrationTest {
 
     private String token;
     private User user;
@@ -57,20 +44,8 @@ public class TransferUpdateHappyPathIntegrationTest {
 
     @BeforeEach
     public void setup() {
-        transactionRepository.deleteAll();
-        accountRepository.deleteAll();
-        usersRepository.deleteAll();
-
-        user = new User();
-        user.setName("U1");
-        user.setPhoneNo("6000000000");
-        user.setEmail("u1@example.com");
-        user.setPassword("pass");
-        user = usersRepository.save(user);
-
-        var principal = new org.springframework.security.core.userdetails.User(
-                user.getPhoneNo(), user.getPassword(), Collections.emptyList());
-        token = "Bearer " + jwtTokenUtil.generateToken(principal);
+        user = createUniqueUser("U1");
+        token = generateBearerToken(user);
 
         a1 = new Account();
         a1.setName("A1");

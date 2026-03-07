@@ -34,31 +34,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @Import(TestJwtSecurityConfig.class)
 @Transactional
-public class TransactionSummaryEndpointIntegrationTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @Autowired
-    private AccountRepository accountRepository;
-
-    @Autowired
-    private TransactionRepository transactionRepository;
-
-    @Autowired
-    private CategoryRepository categoryRepository;
+public class TransactionSummaryEndpointIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private TransactionWriteService transactionWriteService;
-
-    @Autowired
-    private UsersRepository usersRepository;
-
-    @Autowired
-    private JwtTokenUtil jwtTokenUtil;
 
     private User testUser;
     private String bearerToken;
@@ -68,24 +47,8 @@ public class TransactionSummaryEndpointIntegrationTest {
 
     @BeforeEach
     public void setup() {
-        transactionRepository.deleteAll();
-        accountRepository.deleteAll();
-        categoryRepository.deleteAll();
-        usersRepository.deleteAll();
-
-        testUser = new User();
-        testUser.setName("Test User");
-        testUser.setPhoneNo("1234567890");
-        testUser.setEmail("test@example.com");
-        testUser.setPassword("password");
-        testUser = usersRepository.save(testUser);
-
-        UserDetails principal = new org.springframework.security.core.userdetails.User(
-                testUser.getPhoneNo(),
-                testUser.getPassword(),
-                Collections.emptyList()
-        );
-        bearerToken = "Bearer " + jwtTokenUtil.generateToken(principal);
+        testUser = createUniqueUser("Test User");
+        bearerToken = generateBearerToken(testUser);
 
         account1 = new Account();
         account1.setName("Acc 1");

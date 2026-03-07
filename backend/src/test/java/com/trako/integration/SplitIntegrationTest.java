@@ -31,37 +31,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @Import(TestJwtSecurityConfig.class)
 @Transactional
-public class SplitIntegrationTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
+public class SplitIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private SplitRepository splitRepository;
 
     @Autowired
-    private TransactionRepository transactionRepository;
-
-    @Autowired
     private TransactionWriteService transactionWriteService;
 
     @Autowired
-    private AccountRepository accountRepository;
-
-    @Autowired
-    private CategoryRepository categoryRepository;
-
-    @Autowired
-    private UsersRepository usersRepository;
-
-    @Autowired
     private ContactRepository contactRepository;
-
-    @Autowired
-    private JwtTokenUtil jwtTokenUtil;
 
     @Autowired
     private jakarta.persistence.EntityManager entityManager;
@@ -75,40 +54,11 @@ public class SplitIntegrationTest {
 
     @BeforeEach
     public void setup() {
-        splitRepository.deleteAll();
-        transactionRepository.deleteAll();
-        contactRepository.deleteAll();
-        accountRepository.deleteAll();
-        categoryRepository.deleteAll();
-        usersRepository.deleteAll();
+        testUser = createUniqueUser("Test User");
+        bearerToken = generateBearerToken(testUser);
 
-        testUser = new User();
-        testUser.setName("Test User");
-        testUser.setPhoneNo("1234567890");
-        testUser.setEmail("test@example.com");
-        testUser.setPassword("password");
-        testUser = usersRepository.save(testUser);
-
-        var principal = new org.springframework.security.core.userdetails.User(
-                testUser.getPhoneNo(),
-                testUser.getPassword(),
-                Collections.emptyList()
-        );
-        bearerToken = "Bearer " + jwtTokenUtil.generateToken(principal);
-
-        otherUser = new User();
-        otherUser.setName("Other User");
-        otherUser.setPhoneNo("5555555555");
-        otherUser.setEmail("other@example.com");
-        otherUser.setPassword("password");
-        otherUser = usersRepository.save(otherUser);
-
-        var otherPrincipal = new org.springframework.security.core.userdetails.User(
-                otherUser.getPhoneNo(),
-                otherUser.getPassword(),
-                Collections.emptyList()
-        );
-        otherBearerToken = "Bearer " + jwtTokenUtil.generateToken(otherPrincipal);
+        otherUser = createUniqueUser("Other User");
+        otherBearerToken = generateBearerToken(otherUser);
 
         Account testAccount = new Account();
         testAccount.setName("Savings");
@@ -134,7 +84,7 @@ public class SplitIntegrationTest {
         testContact = new Contact();
         testContact.setUserId(testUser.getId());
         testContact.setName("C1");
-        testContact.setPhoneNo("9990001111");
+        testContact.setPhoneNo(generateUniquePhone());
         testContact = contactRepository.save(testContact);
     }
 

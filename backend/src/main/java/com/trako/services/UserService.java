@@ -56,6 +56,9 @@ public class UserService {
     AllocationRuleRepository allocationRuleRepository;
 
     @Autowired
+    RecurringTransactionRepository recurringTransactionRepository;
+
+    @Autowired
     PasswordEncoder passwordEncoder;
 
     public User loggedInUser() throws UserNotLoggedInException {
@@ -193,10 +196,13 @@ public class UserService {
         // 10. Delete User Currencies
         currencyService.deleteAllForUser(userId);
 
-        // 11. Delete Accounts
+        // 11. Delete Recurring Transactions
+        recurringTransactionRepository.deleteByUserId(userId);
+
+        // 12. Delete Accounts
         accountRepository.deleteByUserId(userId);
 
-        // 12. Delete Categories
+        // 13. Delete Categories
         categoryRepository.deleteByUserId(userId);
 
         log.info("Data reset completed for user: {}", userId);

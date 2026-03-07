@@ -31,34 +31,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Import(TestJwtSecurityConfig.class)
-public class ExchangeRateIntegrationTest {
-
-    @Autowired
-    private MockMvc mockMvc;
+public class ExchangeRateIntegrationTest extends BaseIntegrationTest {
 
     @MockBean
     private ExchangeRateService exchangeRateService;
-
-    @Autowired
-    private JwtTokenUtil jwtTokenUtil;
-
-    @Autowired
-    private UsersRepository usersRepository;
 
     private String bearerToken;
 
     @BeforeEach
     public void setup() {
-        usersRepository.deleteAll();
-        var user = new com.trako.entities.User();
-        user.setName("X");
-        user.setPhoneNo("9999999999");
-        user.setEmail("x@example.com");
-        user.setPassword("pass");
-        usersRepository.save(user);
-        UserDetails principal = new org.springframework.security.core.userdetails.User(
-                user.getPhoneNo(), user.getPassword(), Collections.emptyList());
-        bearerToken = "Bearer " + jwtTokenUtil.generateToken(principal);
+        var user = createUniqueUser("X");
+        bearerToken = generateBearerToken(user);
     }
 
     @Test

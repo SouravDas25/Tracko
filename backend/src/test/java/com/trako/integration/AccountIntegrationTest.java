@@ -35,34 +35,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @Import(TestJwtSecurityConfig.class)
 @Transactional
-public class AccountIntegrationTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @Autowired
-    private AccountRepository accountRepository;
-
-    @Autowired
-    private TransactionRepository transactionRepository;
-
-    @Autowired
-    private CategoryRepository categoryRepository;
+public class AccountIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private TransactionWriteService transactionWriteService;
 
     @Autowired
     private TransferService transferService;
-
-    @Autowired
-    private UsersRepository usersRepository;
-
-    @Autowired
-    private JwtTokenUtil jwtTokenUtil;
 
     @Autowired
     private RecurringTransactionRepository recurringTransactionRepository;
@@ -72,24 +51,12 @@ public class AccountIntegrationTest {
 
     @BeforeEach
     public void setup() {
-        transactionRepository.deleteAll();
-        accountRepository.deleteAll();
-        categoryRepository.deleteAll();
-        usersRepository.deleteAll();
-
-        testUser = new User();
-        testUser.setName("Test User");
-        testUser.setPhoneNo("1234567890");
-        testUser.setEmail("test@example.com");
-        testUser.setPassword("password");
-        testUser = usersRepository.save(testUser);
-
-        UserDetails principal = new org.springframework.security.core.userdetails.User(
-                testUser.getPhoneNo(),
-                testUser.getPassword(),
-                Collections.emptyList()
-        );
-        bearerToken = "Bearer " + jwtTokenUtil.generateToken(principal);
+        // We don't necessarily need to deleteAll if every test uses a unique user,
+        // but it doesn't hurt for small suites. However, for parallel execution,
+        // relying on unique users is key.
+        
+        testUser = createUniqueUser();
+        bearerToken = generateBearerToken(testUser);
     }
 
     @Test

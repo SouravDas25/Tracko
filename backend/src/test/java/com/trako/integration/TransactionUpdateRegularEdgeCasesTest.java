@@ -7,6 +7,7 @@ import com.trako.repositories.AccountRepository;
 import com.trako.repositories.CategoryRepository;
 import com.trako.repositories.TransactionRepository;
 import com.trako.repositories.UsersRepository;
+import com.trako.services.transactions.TransactionWriteService;
 import com.trako.util.JwtTokenUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,23 +34,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @Import(TestJwtSecurityConfig.class)
 @Transactional
-public class TransactionUpdateRegularEdgeCasesTest {
+public class TransactionUpdateRegularEdgeCasesTest extends BaseIntegrationTest {
 
     @Autowired
-    private MockMvc mockMvc;
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @Autowired
-    private UsersRepository usersRepository;
-    @Autowired
-    private AccountRepository accountRepository;
-    @Autowired
-    private CategoryRepository categoryRepository;
-    @Autowired
-    private TransactionRepository transactionRepository;
-    @Autowired
-    private JwtTokenUtil jwtTokenUtil;
+    private TransactionWriteService transactionWriteService;
 
     private String tokenA;
     private User userA;
@@ -59,21 +47,8 @@ public class TransactionUpdateRegularEdgeCasesTest {
 
     @BeforeEach
     public void setup() {
-        transactionRepository.deleteAll();
-        categoryRepository.deleteAll();
-        accountRepository.deleteAll();
-        usersRepository.deleteAll();
-
-        userA = new User();
-        userA.setName("UserA");
-        userA.setPhoneNo("5550001111");
-        userA.setEmail("a@example.com");
-        userA.setPassword("pass");
-        userA = usersRepository.save(userA);
-
-        var principalA = new org.springframework.security.core.userdetails.User(
-                userA.getPhoneNo(), userA.getPassword(), Collections.emptyList());
-        tokenA = "Bearer " + jwtTokenUtil.generateToken(principalA);
+        userA = createUniqueUser("UserA");
+        tokenA = generateBearerToken(userA);
 
         accA1 = new Account();
         accA1.setName("A1");
@@ -121,12 +96,7 @@ public class TransactionUpdateRegularEdgeCasesTest {
         Transaction t = createRegular();
 
         // Create other user and account
-        User userB = new User();
-        userB.setName("UserB");
-        userB.setPhoneNo("5550002222");
-        userB.setEmail("b@example.com");
-        userB.setPassword("pass");
-        userB = usersRepository.save(userB);
+        User userB = createUniqueUser("UserB");
         Account accB = new Account();
         accB.setName("B1");
         accB.setUserId(userB.getId());

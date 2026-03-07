@@ -35,31 +35,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @Import(TestJwtSecurityConfig.class)
 @Transactional
-public class CurrencyIntegrationTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @Autowired
-    private UsersRepository usersRepository;
-
-    @Autowired
-    private AccountRepository accountRepository;
-
-    @Autowired
-    private CategoryRepository categoryRepository;
-
-    @Autowired
-    private TransactionRepository transactionRepository;
+public class CurrencyIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private UserCurrencyRepository userCurrencyRepository;
-
-    @Autowired
-    private JwtTokenUtil jwtTokenUtil;
 
     @MockBean
     private AuthenticationManager authenticationManager;
@@ -84,27 +63,12 @@ public class CurrencyIntegrationTest {
             );
         });
 
-        transactionRepository.deleteAll();
-        accountRepository.deleteAll();
-        categoryRepository.deleteAll();
-        userCurrencyRepository.deleteAll();
-        usersRepository.deleteAll();
-
         // Create initial user
-        testUser = new User();
-        testUser.setName("Currency User");
-        testUser.setPhoneNo("9876543210");
-        testUser.setEmail("currency@example.com");
-        testUser.setPassword("currency_pass");
-        testUser.setBaseCurrency("USD"); // Base currency is USD
+        testUser = createUniqueUser("Currency User");
+        testUser.setBaseCurrency("USD"); // Base currency is USD for this test
         testUser = usersRepository.save(testUser);
 
-        var principal = new org.springframework.security.core.userdetails.User(
-                testUser.getPhoneNo(),
-                testUser.getPassword(),
-                Collections.emptyList()
-        );
-        bearerToken = "Bearer " + jwtTokenUtil.generateToken(principal);
+        bearerToken = generateBearerToken(testUser);
 
         // Create Category
         testCategory = new Category();

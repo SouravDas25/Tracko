@@ -32,20 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @Import(TestJwtSecurityConfig.class)
 @Transactional
-public class TransactionCreateValidationTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-    @Autowired
-    private ObjectMapper objectMapper;
-    @Autowired
-    private UsersRepository usersRepository;
-    @Autowired
-    private AccountRepository accountRepository;
-    @Autowired
-    private CategoryRepository categoryRepository;
-    @Autowired
-    private JwtTokenUtil jwtTokenUtil;
+public class TransactionCreateValidationTest extends BaseIntegrationTest {
 
     private String bearerToken;
     private User testUser;
@@ -55,20 +42,8 @@ public class TransactionCreateValidationTest {
 
     @BeforeEach
     public void setup() {
-        categoryRepository.deleteAll();
-        accountRepository.deleteAll();
-        usersRepository.deleteAll();
-
-        testUser = new User();
-        testUser.setName("U1");
-        testUser.setPhoneNo("1111111111");
-        testUser.setEmail("u1@example.com");
-        testUser.setPassword("pass");
-        testUser = usersRepository.save(testUser);
-
-        var principal = new org.springframework.security.core.userdetails.User(
-                testUser.getPhoneNo(), testUser.getPassword(), Collections.emptyList());
-        bearerToken = "Bearer " + jwtTokenUtil.generateToken(principal);
+        testUser = createUniqueUser("U1");
+        bearerToken = generateBearerToken(testUser);
 
         acc = new Account();
         acc.setName("A1");

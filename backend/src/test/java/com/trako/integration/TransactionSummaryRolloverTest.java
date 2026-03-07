@@ -25,31 +25,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @ActiveProfiles("test")
 @Import(TestJwtSecurityConfig.class)
 @Transactional
-public class TransactionSummaryRolloverTest {
+public class TransactionSummaryRolloverTest extends BaseIntegrationTest {
 
     @Autowired
     private TransactionService transactionService;
 
     @Autowired
     private BudgetCalculationService budgetCalculationService;
-
-    @Autowired
-    private TransactionRepository transactionRepository;
-
-    @Autowired
-    private AccountRepository accountRepository;
-
-    @Autowired
-    private UsersRepository usersRepository;
-
-    @Autowired
-    private CategoryRepository categoryRepository;
-
-    @Autowired
-    private BudgetMonthRepository budgetMonthRepository;
-
-    @Autowired
-    private BudgetCategoryAllocationRepository budgetCategoryAllocationRepository;
 
     @Autowired
     private TransactionWriteService transactionWriteService;
@@ -62,21 +44,8 @@ public class TransactionSummaryRolloverTest {
 
     @BeforeEach
     public void setup() {
-        // Cleanup
-        budgetCategoryAllocationRepository.deleteAll();
-        budgetMonthRepository.deleteAll();
-        transactionRepository.deleteAll();
-        categoryRepository.deleteAll();
-        accountRepository.deleteAll();
-        usersRepository.deleteAll();
-
         // User
-        testUser = new User();
-        testUser.setName("Summary Test User");
-        testUser.setPhoneNo("9998887777");
-        testUser.setEmail("summary@test.com");
-        testUser.setPassword("summary_pass");
-        testUser = usersRepository.save(testUser);
+        testUser = createUniqueUser("Summary Test User");
 
         // Accounts
         accountA = new Account();

@@ -34,16 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @Import(TestJwtSecurityConfig.class)
 @Transactional
-public class TransactionIntegrationTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @Autowired
-    private TransactionRepository transactionRepository;
+public class TransactionIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private TransactionWriteService transactionWriteService;
@@ -52,25 +43,13 @@ public class TransactionIntegrationTest {
     private TransferService transferService;
 
     @Autowired
-    private AccountRepository accountRepository;
-
-    @Autowired
-    private CategoryRepository categoryRepository;
-
-    @Autowired
     private SplitRepository splitRepository;
 
     @Autowired
     private ContactRepository contactRepository;
 
     @Autowired
-    private UsersRepository usersRepository;
-
-    @Autowired
     private UserCurrencyRepository userCurrencyRepository;
-
-    @Autowired
-    private JwtTokenUtil jwtTokenUtil;
 
     private User testUser;
     private Account testAccount;
@@ -79,26 +58,8 @@ public class TransactionIntegrationTest {
 
     @BeforeEach
     public void setup() {
-        splitRepository.deleteAll();
-        transactionRepository.deleteAll();
-        contactRepository.deleteAll();
-        accountRepository.deleteAll();
-        categoryRepository.deleteAll();
-        usersRepository.deleteAll();
-
-        testUser = new User();
-        testUser.setName("Test User");
-        testUser.setPhoneNo("1234567890");
-        testUser.setEmail("test@example.com");
-        testUser.setPassword("password");
-        testUser = usersRepository.save(testUser);
-
-        var principal = new org.springframework.security.core.userdetails.User(
-                testUser.getPhoneNo(),
-                testUser.getPassword(),
-                Collections.emptyList()
-        );
-        bearerToken = "Bearer " + jwtTokenUtil.generateToken(principal);
+        testUser = createUniqueUser();
+        bearerToken = generateBearerToken(testUser);
 
         testAccount = new Account();
         testAccount.setName("Savings");

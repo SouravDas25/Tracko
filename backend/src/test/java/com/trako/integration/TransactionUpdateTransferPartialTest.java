@@ -1,27 +1,19 @@
 package com.trako.integration;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trako.config.TestJwtSecurityConfig;
 import com.trako.entities.Account;
 import com.trako.entities.Transaction;
 import com.trako.entities.TransactionType;
 import com.trako.entities.User;
-import com.trako.repositories.AccountRepository;
-import com.trako.repositories.TransactionRepository;
-import com.trako.repositories.UsersRepository;
-import com.trako.util.JwtTokenUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,20 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @Import(TestJwtSecurityConfig.class)
 @Transactional
-public class TransactionUpdateTransferPartialTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-    @Autowired
-    private ObjectMapper objectMapper;
-    @Autowired
-    private UsersRepository usersRepository;
-    @Autowired
-    private AccountRepository accountRepository;
-    @Autowired
-    private TransactionRepository transactionRepository;
-    @Autowired
-    private JwtTokenUtil jwtTokenUtil;
+public class TransactionUpdateTransferPartialTest extends BaseIntegrationTest {
 
     private String bearerToken;
     private User user;
@@ -59,20 +38,8 @@ public class TransactionUpdateTransferPartialTest {
 
     @BeforeEach
     public void setup() {
-        transactionRepository.deleteAll();
-        accountRepository.deleteAll();
-        usersRepository.deleteAll();
-
-        user = new User();
-        user.setName("U1");
-        user.setPhoneNo("7777777777");
-        user.setEmail("u1@example.com");
-        user.setPassword("pass");
-        user = usersRepository.save(user);
-
-        var principal = new org.springframework.security.core.userdetails.User(
-                user.getPhoneNo(), user.getPassword(), Collections.emptyList());
-        bearerToken = "Bearer " + jwtTokenUtil.generateToken(principal);
+        user = createUniqueUser("U1");
+        bearerToken = generateBearerToken(user);
 
         a1 = new Account();
         a1.setName("A1");

@@ -34,24 +34,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @Import(TestJwtSecurityConfig.class)
 @Transactional
-public class TransactionUpdateIntegrationTest {
+public class TransactionUpdateIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
-    private MockMvc mockMvc;
-    @Autowired
-    private ObjectMapper objectMapper;
-    @Autowired
-    private UsersRepository usersRepository;
-    @Autowired
-    private AccountRepository accountRepository;
-    @Autowired
-    private CategoryRepository categoryRepository;
-    @Autowired
-    private TransactionRepository transactionRepository;
-    @Autowired
     private TransactionWriteService transactionWriteService;
-    @Autowired
-    private JwtTokenUtil jwtTokenUtil;
 
     private User testUser;
     private String bearerToken;
@@ -62,21 +48,8 @@ public class TransactionUpdateIntegrationTest {
 
     @BeforeEach
     public void setup() {
-        transactionRepository.deleteAll();
-        categoryRepository.deleteAll();
-        accountRepository.deleteAll();
-        usersRepository.deleteAll();
-
-        testUser = new User();
-        testUser.setName("U1");
-        testUser.setPhoneNo("9990001111");
-        testUser.setEmail("u1@example.com");
-        testUser.setPassword("pass");
-        testUser = usersRepository.save(testUser);
-
-        var principal = new org.springframework.security.core.userdetails.User(
-                testUser.getPhoneNo(), testUser.getPassword(), Collections.emptyList());
-        bearerToken = "Bearer " + jwtTokenUtil.generateToken(principal);
+        testUser = createUniqueUser("U1");
+        bearerToken = generateBearerToken(testUser);
 
         account1 = new Account();
         account1.setName("A1");
@@ -140,12 +113,7 @@ public class TransactionUpdateIntegrationTest {
     @Test
     public void updateRegularTransaction_Unauthorized() throws Exception {
         // Create transaction for another user
-        User other = new User();
-        other.setName("Other");
-        other.setPhoneNo("8880001111");
-        other.setEmail("o@example.com");
-        other.setPassword("pass");
-        other = usersRepository.save(other);
+        User other = createUniqueUser("Other");
 
         Account otherAcc = new Account();
         otherAcc.setName("OtherAcc");

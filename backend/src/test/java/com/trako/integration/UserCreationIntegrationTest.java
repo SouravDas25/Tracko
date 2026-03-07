@@ -30,19 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @Import(TestJwtSecurityConfig.class)
 @Transactional
-public class UserCreationIntegrationTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @Autowired
-    private UsersRepository usersRepository;
-
-    @Autowired
-    private JwtTokenUtil jwtTokenUtil;
+public class UserCreationIntegrationTest extends BaseIntegrationTest {
 
     @MockBean
     private AuthenticationManager authenticationManager;
@@ -56,8 +44,6 @@ public class UserCreationIntegrationTest {
 
     @BeforeEach
     public void setup() {
-        usersRepository.deleteAll();
-
         // Create Admin User
         adminUser = new User();
         adminUser.setName("Admin User");
@@ -79,17 +65,12 @@ public class UserCreationIntegrationTest {
         regularToken = "Bearer " + jwtTokenUtil.generateToken(new org.springframework.security.core.userdetails.User(regularUser.getPhoneNo(), regularUser.getPassword(), Collections.emptyList()));
     }
 
-    private String generateUniquePhone() {
-        long base = Math.abs(System.nanoTime());
-        long tenDigits = (base % 1_000_000_0000L) + 1_000_000_000L; // ensure 10 digits, not starting with 0
-        return String.valueOf(tenDigits);
-    }
-
     @Test
     public void testAdminCanCreateNewUser() throws Exception {
         UserSaveRequest request = new UserSaveRequest();
         request.setName("New User");
-        request.setPhoneNo("7777777777");
+        String newUserPhone = generateUniquePhone();
+        request.setPhoneNo(newUserPhone);
         request.setPassword("new_pass");
 
         mockMvc.perform(post("/api/user/create")
@@ -98,7 +79,7 @@ public class UserCreationIntegrationTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk());
 
-        User newUser = usersRepository.findByPhoneNo("7777777777");
+        User newUser = usersRepository.findByPhoneNo(newUserPhone);
         assertNotNull(newUser);
         assertEquals("New User", newUser.getName());
     }
@@ -107,7 +88,8 @@ public class UserCreationIntegrationTest {
     public void testRegularUserCannotCreateNewUser() throws Exception {
         UserSaveRequest request = new UserSaveRequest();
         request.setName("Hacker User");
-        request.setPhoneNo("7777777777"); // Trying to create this number
+        String newUserPhone = generateUniquePhone();
+        request.setPhoneNo(newUserPhone);
         request.setPassword("new_pass");
 
         mockMvc.perform(post("/api/user/create")
@@ -116,8 +98,8 @@ public class UserCreationIntegrationTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized());
 
-        // Verify "7777777777" was NOT created
-        User newUser = usersRepository.findByPhoneNo("7777777777");
+        // Verify "newUserPhone" was NOT created
+        User newUser = usersRepository.findByPhoneNo(newUserPhone);
         assertNull(newUser);
 
         // Verify regularUser was NOT modified

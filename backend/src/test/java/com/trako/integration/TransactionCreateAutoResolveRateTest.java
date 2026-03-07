@@ -35,23 +35,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @Import(TestJwtSecurityConfig.class)
 @Transactional
-public class TransactionCreateAutoResolveRateTest {
+public class TransactionCreateAutoResolveRateTest extends BaseIntegrationTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @Autowired
-    private UsersRepository usersRepository;
-    @Autowired
-    private AccountRepository accountRepository;
-    @Autowired
-    private CategoryRepository categoryRepository;
     @Autowired
     private UserCurrencyRepository userCurrencyRepository;
-    @Autowired
-    private JwtTokenUtil jwtTokenUtil;
 
     private String bearerToken;
     private User user;
@@ -60,22 +47,8 @@ public class TransactionCreateAutoResolveRateTest {
 
     @BeforeEach
     public void setup() {
-        userCurrencyRepository.deleteAll();
-        categoryRepository.deleteAll();
-        accountRepository.deleteAll();
-        usersRepository.deleteAll();
-
-        user = new User();
-        user.setName("U1");
-        user.setPhoneNo("8000000000");
-        user.setEmail("u1@example.com");
-        user.setPassword("pass");
-        // baseCurrency defaults to INR from changelog; leave as default or set explicitly if needed
-        user = usersRepository.save(user);
-
-        var principal = new org.springframework.security.core.userdetails.User(
-                user.getPhoneNo(), user.getPassword(), Collections.emptyList());
-        bearerToken = "Bearer " + jwtTokenUtil.generateToken(principal);
+        user = createUniqueUser("U1");
+        bearerToken = generateBearerToken(user);
 
         account = new Account();
         account.setName("A1");

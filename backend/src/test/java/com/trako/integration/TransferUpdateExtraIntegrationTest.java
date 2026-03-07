@@ -36,20 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @Import(TestJwtSecurityConfig.class)
 @Transactional
-public class TransferUpdateExtraIntegrationTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-    @Autowired
-    private ObjectMapper objectMapper;
-    @Autowired
-    private UsersRepository usersRepository;
-    @Autowired
-    private AccountRepository accountRepository;
-    @Autowired
-    private TransactionRepository transactionRepository;
-    @Autowired
-    private JwtTokenUtil jwtTokenUtil;
+public class TransferUpdateExtraIntegrationTest extends BaseIntegrationTest {
 
     private User userA;
     private String tokenA;
@@ -59,20 +46,8 @@ public class TransferUpdateExtraIntegrationTest {
 
     @BeforeEach
     public void setup() {
-        transactionRepository.deleteAll();
-        accountRepository.deleteAll();
-        usersRepository.deleteAll();
-
-        userA = new User();
-        userA.setName("UserA");
-        userA.setPhoneNo("7000000001");
-        userA.setEmail("a@example.com");
-        userA.setPassword("pass");
-        userA = usersRepository.save(userA);
-
-        var principalA = new org.springframework.security.core.userdetails.User(
-                userA.getPhoneNo(), userA.getPassword(), Collections.emptyList());
-        tokenA = "Bearer " + jwtTokenUtil.generateToken(principalA);
+        userA = createUniqueUser("UserA");
+        tokenA = generateBearerToken(userA);
 
         acc1 = new Account();
         acc1.setName("A1");

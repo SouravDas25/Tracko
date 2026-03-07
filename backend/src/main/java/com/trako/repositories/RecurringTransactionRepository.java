@@ -19,4 +19,6 @@ public interface RecurringTransactionRepository extends JpaRepository<RecurringT
     boolean existsByToAccountId(Long toAccountId);
 
     boolean existsByCategoryId(Long categoryId);
+
+    void deleteByUserId(String userId);
 }

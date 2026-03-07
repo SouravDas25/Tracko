@@ -35,16 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Import(TestJwtSecurityConfig.class)
-public class StatsIntegrationTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private JwtTokenUtil jwtTokenUtil;
-
-    @Autowired
-    private UsersRepository usersRepository;
+public class StatsIntegrationTest extends BaseIntegrationTest {
 
     @MockBean
     private StatsService statsService;
@@ -53,17 +44,8 @@ public class StatsIntegrationTest {
 
     @BeforeEach
     public void setup() {
-        usersRepository.deleteAll();
-        var user = new com.trako.entities.User();
-        user.setName("StatsUser");
-        user.setPhoneNo("9090909090");
-        user.setEmail("stats@example.com");
-        user.setPassword("pass");
-        usersRepository.save(user);
-
-        UserDetails principal = new org.springframework.security.core.userdetails.User(
-                user.getPhoneNo(), user.getPassword(), Collections.emptyList());
-        bearerToken = "Bearer " + jwtTokenUtil.generateToken(principal);
+        var user = createUniqueUser("StatsUser");
+        bearerToken = generateBearerToken(user);
 
         StatsResponseDTO dto = new StatsResponseDTO(
                 "weekly",

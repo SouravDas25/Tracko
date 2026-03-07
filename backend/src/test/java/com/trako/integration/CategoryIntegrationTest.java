@@ -33,25 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @Import(TestJwtSecurityConfig.class)
 @Transactional
-public class CategoryIntegrationTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @Autowired
-    private CategoryRepository categoryRepository;
-
-    @Autowired
-    private AccountRepository accountRepository;
-
-    @Autowired
-    private UsersRepository usersRepository;
-
-    @Autowired
-    private JwtTokenUtil jwtTokenUtil;
+public class CategoryIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private TransactionWriteService transactionWriteService;
@@ -64,28 +46,8 @@ public class CategoryIntegrationTest {
 
     @BeforeEach
     public void setup() {
-        categoryRepository.deleteAll();
-        usersRepository.deleteAll();
-
-        testUser = new User();
-        testUser.setName("Test User");
-        testUser.setPhoneNo(generateUniquePhone());
-        testUser.setEmail("test@example.com");
-        testUser.setPassword("password");
-        testUser = usersRepository.save(testUser);
-
-        var principal = new org.springframework.security.core.userdetails.User(
-                testUser.getPhoneNo(),
-                testUser.getPassword(),
-                Collections.emptyList()
-        );
-        bearerToken = "Bearer " + jwtTokenUtil.generateToken(principal);
-    }
-
-    private String generateUniquePhone() {
-        long base = Math.abs(System.nanoTime());
-        long tenDigits = (base % 9_000_000_000L) + 1_000_000_000L; // ensure exactly 10 digits [1,000,000,000 - 9,999,999,999]
-        return String.valueOf(tenDigits);
+        testUser = createUniqueUser();
+        bearerToken = generateBearerToken(testUser);
     }
 
     @Test

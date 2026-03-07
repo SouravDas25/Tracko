@@ -19,10 +19,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Import(TestJwtSecurityConfig.class)
-public class HealthIntegrationTest {
-
-    @Autowired
-    private MockMvc mockMvc;
+public class HealthIntegrationTest extends BaseIntegrationTest {
 
     @Test
     public void healthIsPublicAndReturnsUp() throws Exception {

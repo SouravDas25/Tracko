@@ -33,25 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @Import(TestJwtSecurityConfig.class)
 @Transactional
-public class BudgetIntegrationTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @Autowired
-    private UsersRepository usersRepository;
-
-    @Autowired
-    private AccountRepository accountRepository;
-
-    @Autowired
-    private CategoryRepository categoryRepository;
-
-    @Autowired
-    private TransactionRepository transactionRepository;
+public class BudgetIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private TransactionWriteService transactionWriteService;
@@ -62,9 +44,6 @@ public class BudgetIntegrationTest {
     @Autowired
     private BudgetCategoryAllocationRepository budgetCategoryAllocationRepository;
 
-    @Autowired
-    private JwtTokenUtil jwtTokenUtil;
-
     private User testUser;
     private String bearerToken;
     private Account testAccount;
@@ -72,29 +51,9 @@ public class BudgetIntegrationTest {
 
     @BeforeEach
     public void setup() {
-        // Clear data
-        budgetCategoryAllocationRepository.deleteAll();
-        budgetMonthRepository.deleteAll();
-        transactionRepository.deleteAll();
-        categoryRepository.deleteAll();
-        accountRepository.deleteAll();
-        usersRepository.deleteAll();
-
         // Create User
-        testUser = new User();
-        testUser.setName("Test User");
-        testUser.setPhoneNo("1234567890");
-        testUser.setEmail("test@example.com");
-        testUser.setPassword("password");
-        testUser = usersRepository.save(testUser);
-
-        // Generate Token
-        UserDetails principal = new org.springframework.security.core.userdetails.User(
-                testUser.getPhoneNo(),
-                testUser.getPassword(),
-                Collections.emptyList()
-        );
-        bearerToken = "Bearer " + jwtTokenUtil.generateToken(principal);
+        testUser = createUniqueUser("Test User");
+        bearerToken = generateBearerToken(testUser);
 
         // Create Account
         testAccount = new Account();

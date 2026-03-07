@@ -48,28 +48,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @Import(TestJwtSecurityConfig.class)
 @Transactional
-public class TransferIntegrationTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @Autowired
-    private TransactionRepository transactionRepository;
-
-    @Autowired
-    private AccountRepository accountRepository;
-
-    @Autowired
-    private UsersRepository userRepository;
-
-    @Autowired
-    private CategoryRepository categoryRepository;
-
-    @Autowired
-    private JwtTokenUtil jwtTokenUtil;
+public class TransferIntegrationTest extends BaseIntegrationTest {
 
     private User testUser;
     private Account sourceAccount;
@@ -80,21 +59,8 @@ public class TransferIntegrationTest {
     @BeforeEach
     public void setup() {
         // Create test user
-        testUser = new User();
-        testUser.setId("test-user-" + System.currentTimeMillis());
-        testUser.setName("Test User");
-        testUser.setEmail("test@example.com");
-        testUser.setPhoneNo("1234567890");
-        testUser.setPassword("firebase-" + System.currentTimeMillis());
-        testUser = userRepository.save(testUser);
-
-        // Generate JWT token for authentication
-        UserDetails principal = new org.springframework.security.core.userdetails.User(
-                testUser.getPhoneNo(),
-                testUser.getPassword(),
-                Collections.emptyList()
-        );
-        bearerToken = "Bearer " + jwtTokenUtil.generateToken(principal);
+        testUser = createUniqueUser("Test User");
+        bearerToken = generateBearerToken(testUser);
 
         // Create source account
         sourceAccount = new Account();
