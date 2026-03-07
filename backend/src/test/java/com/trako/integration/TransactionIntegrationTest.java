@@ -2,22 +2,10 @@ package com.trako.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trako.config.TestJwtSecurityConfig;
-import com.trako.entities.Account;
-import com.trako.entities.Category;
-import com.trako.entities.Contact;
-import com.trako.entities.Split;
-import com.trako.entities.Transaction;
-import com.trako.entities.TransactionType;
-import com.trako.entities.User;
-import com.trako.repositories.AccountRepository;
-import com.trako.repositories.CategoryRepository;
-import com.trako.repositories.ContactRepository;
-import com.trako.repositories.SplitRepository;
-import com.trako.repositories.TransactionRepository;
-import com.trako.repositories.UserCurrencyRepository;
-import com.trako.repositories.UsersRepository;
-import com.trako.services.TransactionWriteService;
-import com.trako.services.TransferService;
+import com.trako.entities.*;
+import com.trako.repositories.*;
+import com.trako.services.transactions.TransactionWriteService;
+import com.trako.services.transactions.TransferService;
 import com.trako.util.JwtTokenUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,18 +18,12 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import java.util.*;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -142,9 +124,9 @@ public class TransactionIntegrationTest {
         transaction.setComments("Pizza");
 
         mockMvc.perform(post("/api/transactions")
-                .header("Authorization", bearerToken)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(transaction)))
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(transaction)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.name").value("Lunch"))
                 .andExpect(jsonPath("$.result.amount").value(25.50))
@@ -418,9 +400,9 @@ public class TransactionIntegrationTest {
         saved.setExchangeRate(1.0);
 
         mockMvc.perform(put("/api/transactions/" + saved.getId())
-                .header("Authorization", bearerToken)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(saved)))
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(saved)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.name").value("Updated Name"))
                 .andExpect(jsonPath("$.result.amount").value(15.00));
@@ -490,9 +472,9 @@ public class TransactionIntegrationTest {
         transactionWriteService.saveForUser(testUser.getId(), nonCountable);
 
         mockMvc.perform(get("/api/transactions/summary")
-                .header("Authorization", bearerToken)
-                .param("startDate", "2020-01-01")
-                .param("endDate", "2030-12-31"))
+                        .header("Authorization", bearerToken)
+                        .param("startDate", "2020-01-01")
+                        .param("endDate", "2030-12-31"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.totalIncome").value(1000.00))
                 .andExpect(jsonPath("$.result.totalExpense").value(200.00))
@@ -641,9 +623,9 @@ public class TransactionIntegrationTest {
         transactionWriteService.saveForUser(testUser.getId(), income2);
 
         mockMvc.perform(get("/api/transactions/total-income")
-                .header("Authorization", bearerToken)
-                .param("startDate", "2020-01-01")
-                .param("endDate", "2030-12-31"))
+                        .header("Authorization", bearerToken)
+                        .param("startDate", "2020-01-01")
+                        .param("endDate", "2030-12-31"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result").value(1500.00));
     }
@@ -675,9 +657,9 @@ public class TransactionIntegrationTest {
         transactionWriteService.saveForUser(testUser.getId(), expense2);
 
         mockMvc.perform(get("/api/transactions/total-expense")
-                .header("Authorization", bearerToken)
-                .param("startDate", "2020-01-01")
-                .param("endDate", "2030-12-31"))
+                        .header("Authorization", bearerToken)
+                        .param("startDate", "2020-01-01")
+                        .param("endDate", "2030-12-31"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result").value(350.00));
     }
@@ -710,9 +692,9 @@ public class TransactionIntegrationTest {
         transactionWriteService.saveForUser(testUser.getId(), nonCountable2);
 
         mockMvc.perform(get("/api/transactions/summary")
-                .header("Authorization", bearerToken)
-                .param("startDate", "2020-01-01")
-                .param("endDate", "2030-12-31"))
+                        .header("Authorization", bearerToken)
+                        .param("startDate", "2020-01-01")
+                        .param("endDate", "2030-12-31"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.totalIncome").value(0.00))
                 .andExpect(jsonPath("$.result.totalExpense").value(0.00))
@@ -1689,7 +1671,7 @@ public class TransactionIntegrationTest {
         transaction.setDate(new Date());
         transaction.setAccountId(testAccount.getId());
         transaction.setCategoryId(testCategory.getId());
-        
+
         // We let the service calculate the amount on creation
         Transaction saved = transactionWriteService.saveForUser(testUser.getId(), transaction);
         assertEquals(15.00, saved.getAmount(), 0.001);
@@ -1698,7 +1680,7 @@ public class TransactionIntegrationTest {
         // New amount should be: 10 * 2.0 = 20.0
         Map<String, Object> updatePayload = new HashMap<>();
         updatePayload.put("exchangeRate", 2.0);
-        
+
         // We DO NOT send "amount". We expect the backend to recalculate it because we changed exchangeRate.
 
         mockMvc.perform(put("/api/transactions/" + saved.getId())
@@ -1740,7 +1722,7 @@ public class TransactionIntegrationTest {
         transaction.setName("Trip");
         transaction.setOriginalAmount(100.00);
         transaction.setOriginalCurrency("INR");
-        transaction.setExchangeRate(1.0); 
+        transaction.setExchangeRate(1.0);
         transaction.setDate(new Date());
         transaction.setAccountId(testAccount.getId());
         transaction.setCategoryId(testCategory.getId());
@@ -1901,7 +1883,7 @@ public class TransactionIntegrationTest {
         transaction.setAccountId(testAccount.getId());
         transaction.setCategoryId(testCategory.getId());
         Transaction saved = transactionWriteService.saveForUser(testUser.getId(), transaction);
-        
+
         assertEquals("USD", saved.getOriginalCurrency());
         assertEquals(800.00, saved.getAmount(), 0.001);
 
@@ -1912,7 +1894,7 @@ public class TransactionIntegrationTest {
         Map<String, Object> updatePayload = new HashMap<>();
         updatePayload.put("originalCurrency", "INR");
         updatePayload.put("originalAmount", 500.00);
-        
+
         mockMvc.perform(put("/api/transactions/" + saved.getId())
                         .header("Authorization", bearerToken)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -1922,7 +1904,7 @@ public class TransactionIntegrationTest {
                 .andExpect(jsonPath("$.result.originalCurrency").value("INR"))
                 .andExpect(jsonPath("$.result.originalAmount").value(500.00))
                 .andExpect(jsonPath("$.result.exchangeRate").value(1.0));
-                
+
         // Verify DB
         Transaction updated = transactionRepository.findById(saved.getId()).orElseThrow();
         assertEquals(500.00, updated.getAmount(), 0.001);

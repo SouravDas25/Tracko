@@ -3,8 +3,11 @@ package com.trako.integration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trako.config.TestJwtSecurityConfig;
 import com.trako.entities.*;
-import com.trako.repositories.*;
-import com.trako.services.TransactionWriteService;
+import com.trako.repositories.AccountRepository;
+import com.trako.repositories.CategoryRepository;
+import com.trako.repositories.TransactionRepository;
+import com.trako.repositories.UsersRepository;
+import com.trako.services.transactions.TransactionWriteService;
 import com.trako.util.JwtTokenUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,12 +15,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Date;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -31,14 +35,22 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 public class TransactionGetAllExpandTest {
 
-    @Autowired private MockMvc mockMvc;
-    @Autowired private ObjectMapper objectMapper;
-    @Autowired private UsersRepository usersRepository;
-    @Autowired private AccountRepository accountRepository;
-    @Autowired private CategoryRepository categoryRepository;
-    @Autowired private TransactionRepository transactionRepository;
-    @Autowired private TransactionWriteService transactionWriteService;
-    @Autowired private JwtTokenUtil jwtTokenUtil;
+    @Autowired
+    private MockMvc mockMvc;
+    @Autowired
+    private ObjectMapper objectMapper;
+    @Autowired
+    private UsersRepository usersRepository;
+    @Autowired
+    private AccountRepository accountRepository;
+    @Autowired
+    private CategoryRepository categoryRepository;
+    @Autowired
+    private TransactionRepository transactionRepository;
+    @Autowired
+    private TransactionWriteService transactionWriteService;
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
 
     private String bearerToken;
     private User user;
@@ -65,12 +77,24 @@ public class TransactionGetAllExpandTest {
                 user.getPhoneNo(), user.getPassword(), Collections.emptyList());
         bearerToken = "Bearer " + jwtTokenUtil.generateToken(principal);
 
-        acc1 = new Account(); acc1.setName("A1"); acc1.setUserId(user.getId()); acc1 = accountRepository.save(acc1);
-        acc2 = new Account(); acc2.setName("A2"); acc2.setUserId(user.getId()); acc2 = accountRepository.save(acc2);
+        acc1 = new Account();
+        acc1.setName("A1");
+        acc1.setUserId(user.getId());
+        acc1 = accountRepository.save(acc1);
+        acc2 = new Account();
+        acc2.setName("A2");
+        acc2.setUserId(user.getId());
+        acc2 = accountRepository.save(acc2);
 
-        food = new Category(); food.setName("Food"); food.setUserId(user.getId()); food = categoryRepository.save(food);
+        food = new Category();
+        food.setName("Food");
+        food.setUserId(user.getId());
+        food = categoryRepository.save(food);
         // Ensure TRANSFER category exists for hiding
-        transferCat = new Category(); transferCat.setName("TRANSFER"); transferCat.setUserId(user.getId()); transferCat = categoryRepository.save(transferCat);
+        transferCat = new Category();
+        transferCat.setName("TRANSFER");
+        transferCat.setUserId(user.getId());
+        transferCat = categoryRepository.save(transferCat);
 
         // Create transactions in current month
         Date now = new Date();

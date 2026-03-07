@@ -4,28 +4,26 @@ import com.trako.config.TestJwtSecurityConfig;
 import com.trako.dtos.TransactionSummaryDTO;
 import com.trako.entities.*;
 import com.trako.repositories.*;
-import com.trako.services.TransactionService;
-import com.trako.services.TransactionWriteService;
+import com.trako.services.transactions.TransactionService;
+import com.trako.services.transactions.TransactionWriteService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.data.domain.PageRequest;
 
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -132,7 +130,7 @@ public class TransactionServiceIntegrationTest {
 
         List<Transaction> result = transactionService.findByUserId(testUser.getId());
         assertEquals(3, result.size());
-        
+
         assertEquals("Newest", result.get(0).getName());
         assertEquals("Middle", result.get(1).getName());
         assertEquals("Oldest", result.get(2).getName());
@@ -152,7 +150,7 @@ public class TransactionServiceIntegrationTest {
         // amount is null
 
         Transaction saved = transactionWriteService.saveForUser(testUser.getId(), t);
-        
+
         assertNotNull(saved.getAmount());
         assertEquals(150.0, saved.getAmount(), 0.01);
     }
@@ -229,7 +227,7 @@ public class TransactionServiceIntegrationTest {
         Date end = monthStart(2026, 3);
 
         TransactionSummaryDTO summary = transactionService.getSummary(testUser.getId(), start, end);
-        
+
         assertEquals(500.0, summary.getTotalIncome(), 0.01);
         assertEquals(200.0, summary.getTotalExpense(), 0.01);
         assertEquals(300.0, summary.getNetTotal(), 0.01); // 500 - 200

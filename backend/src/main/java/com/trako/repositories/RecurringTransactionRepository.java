@@ -9,12 +9,14 @@ import java.util.List;
 
 @Repository
 public interface RecurringTransactionRepository extends JpaRepository<RecurringTransaction, Long> {
-    
+
     List<RecurringTransaction> findByUserId(String userId);
 
     List<RecurringTransaction> findByNextRunDateBeforeAndIsActiveTrue(Date date);
 
     boolean existsByAccountId(Long accountId);
+
     boolean existsByToAccountId(Long toAccountId);
+
     boolean existsByCategoryId(Long categoryId);
 }

@@ -21,9 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -95,9 +93,9 @@ public class UserCreationIntegrationTest {
         request.setPassword("new_pass");
 
         mockMvc.perform(post("/api/user/create")
-                .header("Authorization", adminToken)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                        .header("Authorization", adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk());
 
         User newUser = usersRepository.findByPhoneNo("7777777777");
@@ -113,9 +111,9 @@ public class UserCreationIntegrationTest {
         request.setPassword("new_pass");
 
         mockMvc.perform(post("/api/user/create")
-                .header("Authorization", regularToken)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                        .header("Authorization", regularToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized());
 
         // Verify "7777777777" was NOT created

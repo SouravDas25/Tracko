@@ -9,9 +9,9 @@ import com.trako.repositories.AccountRepository;
 import com.trako.repositories.CategoryRepository;
 import com.trako.repositories.UserCurrencyRepository;
 import com.trako.services.JwtUserDetailsService;
-import com.trako.services.TransactionService;
-import com.trako.services.TransactionWriteService;
 import com.trako.services.UserService;
+import com.trako.services.transactions.TransactionService;
+import com.trako.services.transactions.TransactionWriteService;
 import com.trako.util.JwtTokenUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,6 +25,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Optional;
 
@@ -106,11 +107,11 @@ public class TransactionControllerTest {
     @WithMockUser
     public void testGetAll() throws Exception {
         when(transactionService.findByUserIdAndDateBetween(anyString(), any(Date.class), any(Date.class), any(Pageable.class)))
-                .thenReturn(new PageImpl<>(Arrays.asList(testTransaction)));
+                .thenReturn(new PageImpl<>(Collections.singletonList(testTransaction)));
 
         mockMvc.perform(get("/api/transactions")
-                .param("month", "1")
-                .param("year", "2026"))
+                        .param("month", "1")
+                        .param("year", "2026"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.transactions[0].name").value("Lunch"));
 
@@ -138,9 +139,9 @@ public class TransactionControllerTest {
                 .thenReturn(testTransaction);
 
         mockMvc.perform(post("/api/transactions")
-                .with(csrf())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(testTransaction)))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(testTransaction)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.name").value("Lunch"));
 
@@ -154,7 +155,7 @@ public class TransactionControllerTest {
         doNothing().when(transactionWriteService).deleteUnifiedTransaction(anyString(), eq(1L));
 
         mockMvc.perform(delete("/api/transactions/1")
-                .with(csrf()))
+                        .with(csrf()))
                 .andExpect(status().isOk());
 
         verify(transactionWriteService, times(1)).deleteUnifiedTransaction(anyString(), eq(1L));

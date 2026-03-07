@@ -2,11 +2,7 @@ package com.trako.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trako.config.TestJwtSecurityConfig;
-import com.trako.entities.Account;
-import com.trako.entities.Category;
-import com.trako.entities.Transaction;
-import com.trako.entities.TransactionType;
-import com.trako.entities.User;
+import com.trako.entities.*;
 import com.trako.repositories.AccountRepository;
 import com.trako.repositories.CategoryRepository;
 import com.trako.repositories.TransactionRepository;
@@ -39,14 +35,21 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 public class TransactionUpdateRegularEdgeCasesTest {
 
-    @Autowired private MockMvc mockMvc;
-    @Autowired private ObjectMapper objectMapper;
+    @Autowired
+    private MockMvc mockMvc;
+    @Autowired
+    private ObjectMapper objectMapper;
 
-    @Autowired private UsersRepository usersRepository;
-    @Autowired private AccountRepository accountRepository;
-    @Autowired private CategoryRepository categoryRepository;
-    @Autowired private TransactionRepository transactionRepository;
-    @Autowired private JwtTokenUtil jwtTokenUtil;
+    @Autowired
+    private UsersRepository usersRepository;
+    @Autowired
+    private AccountRepository accountRepository;
+    @Autowired
+    private CategoryRepository categoryRepository;
+    @Autowired
+    private TransactionRepository transactionRepository;
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
 
     private String tokenA;
     private User userA;
@@ -72,10 +75,19 @@ public class TransactionUpdateRegularEdgeCasesTest {
                 userA.getPhoneNo(), userA.getPassword(), Collections.emptyList());
         tokenA = "Bearer " + jwtTokenUtil.generateToken(principalA);
 
-        accA1 = new Account(); accA1.setName("A1"); accA1.setUserId(userA.getId()); accA1 = accountRepository.save(accA1);
-        accA2 = new Account(); accA2.setName("A2"); accA2.setUserId(userA.getId()); accA2 = accountRepository.save(accA2);
+        accA1 = new Account();
+        accA1.setName("A1");
+        accA1.setUserId(userA.getId());
+        accA1 = accountRepository.save(accA1);
+        accA2 = new Account();
+        accA2.setName("A2");
+        accA2.setUserId(userA.getId());
+        accA2 = accountRepository.save(accA2);
 
-        catA1 = new Category(); catA1.setName("Food"); catA1.setUserId(userA.getId()); catA1 = categoryRepository.save(catA1);
+        catA1 = new Category();
+        catA1.setName("Food");
+        catA1.setUserId(userA.getId());
+        catA1 = categoryRepository.save(catA1);
     }
 
     private Transaction createRegular() {
@@ -115,7 +127,10 @@ public class TransactionUpdateRegularEdgeCasesTest {
         userB.setEmail("b@example.com");
         userB.setPassword("pass");
         userB = usersRepository.save(userB);
-        Account accB = new Account(); accB.setName("B1"); accB.setUserId(userB.getId()); accB = accountRepository.save(accB);
+        Account accB = new Account();
+        accB.setName("B1");
+        accB.setUserId(userB.getId());
+        accB = accountRepository.save(accB);
 
         Map<String, Object> payload = new HashMap<>();
         payload.put("accountId", accB.getId());

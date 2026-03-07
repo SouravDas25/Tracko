@@ -5,7 +5,7 @@ import com.trako.config.TestJwtSecurityConfig;
 import com.trako.dtos.BudgetAllocationRequestDTO;
 import com.trako.entities.*;
 import com.trako.repositories.*;
-import com.trako.services.TransactionWriteService;
+import com.trako.services.transactions.TransactionWriteService;
 import com.trako.util.JwtTokenUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,22 +43,22 @@ public class BudgetIntegrationTest {
 
     @Autowired
     private UsersRepository usersRepository;
-    
+
     @Autowired
     private AccountRepository accountRepository;
 
     @Autowired
     private CategoryRepository categoryRepository;
-    
+
     @Autowired
     private TransactionRepository transactionRepository;
 
     @Autowired
     private TransactionWriteService transactionWriteService;
-    
+
     @Autowired
     private BudgetMonthRepository budgetMonthRepository;
-    
+
     @Autowired
     private BudgetCategoryAllocationRepository budgetCategoryAllocationRepository;
 
@@ -95,13 +95,13 @@ public class BudgetIntegrationTest {
                 Collections.emptyList()
         );
         bearerToken = "Bearer " + jwtTokenUtil.generateToken(principal);
-        
+
         // Create Account
         testAccount = new Account();
         testAccount.setName("Test Account");
         testAccount.setUserId(testUser.getId());
         testAccount = accountRepository.save(testAccount);
-        
+
         // Create Category
         testCategory = new Category();
         testCategory.setName("Food");
@@ -116,7 +116,7 @@ public class BudgetIntegrationTest {
         // Set date to Jan 2024 to match request
         java.util.Calendar cal = java.util.Calendar.getInstance();
         cal.set(2024, java.util.Calendar.JANUARY, 15);
-        
+
         Transaction income = new Transaction();
         income.setTransactionType(TransactionType.CREDIT); // Credit/Income
         income.setName("Salary");
@@ -136,15 +136,15 @@ public class BudgetIntegrationTest {
         request.setAmount(500.0);
 
         mockMvc.perform(post("/api/budget/allocate")
-                .header("Authorization", bearerToken)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.categoryName").value("Food"))
                 .andExpect(jsonPath("$.result.allocatedAmount").value(500.0))
                 .andExpect(jsonPath("$.result.remainingBalance").value(500.0));
     }
-    
+
     @Test
     public void testGetAvailableToAssign() throws Exception {
         // 1. Add Income Transaction (Type 2)
@@ -156,10 +156,10 @@ public class BudgetIntegrationTest {
         income.setExchangeRate(1.0);
         income.setDate(new Date()); // Today
         income.setAccountId(testAccount.getId());
-        income.setCategoryId(testCategory.getId()); 
+        income.setCategoryId(testCategory.getId());
         income.setIsCountable(1);
         transactionWriteService.saveForUser(testUser.getId(), income);
-        
+
         // 2. Allocate some funds
         BudgetAllocationRequestDTO request = new BudgetAllocationRequestDTO();
         LocalDate now = LocalDate.now();
@@ -169,14 +169,14 @@ public class BudgetIntegrationTest {
         request.setAmount(400.0);
 
         mockMvc.perform(post("/api/budget/allocate")
-                .header("Authorization", bearerToken)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk());
-                
+
         // 3. Check Available (1000 - 400 = 600)
         mockMvc.perform(get("/api/budget/available")
-                .header("Authorization", bearerToken))
+                        .header("Authorization", bearerToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result").value(600.0));
     }
@@ -209,17 +209,17 @@ public class BudgetIntegrationTest {
         prevBudgetMonth.setTotalBudget(800.0);
         prevBudgetMonth.setIsClosed(false);
         budgetMonthRepository.save(prevBudgetMonth);
-        
+
         // 2. Check Current Month Available
         // Account Balance = 1000 (Prev Income) - 0 (Expense).
         // Current Allocations = 0.
         // Available = 1000.
-        
+
         LocalDate now = LocalDate.now();
         mockMvc.perform(get("/api/budget/available")
-                .param("month", String.valueOf(now.getMonthValue()))
-                .param("year", String.valueOf(now.getYear()))
-                .header("Authorization", bearerToken))
+                        .param("month", String.valueOf(now.getMonthValue()))
+                        .param("year", String.valueOf(now.getYear()))
+                        .header("Authorization", bearerToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result").value(1000.0));
     }
@@ -261,12 +261,12 @@ public class BudgetIntegrationTest {
         // Account Balance = 1000 (Income) - 50 (Expense) = 950.
         // Current Allocations = 0.
         // Available = 950.
-        
+
         LocalDate now = LocalDate.now();
         mockMvc.perform(get("/api/budget/available")
-                .param("month", String.valueOf(now.getMonthValue()))
-                .param("year", String.valueOf(now.getYear()))
-                .header("Authorization", bearerToken))
+                        .param("month", String.valueOf(now.getMonthValue()))
+                        .param("year", String.valueOf(now.getYear()))
+                        .header("Authorization", bearerToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result").value(950.0));
     }
@@ -302,7 +302,7 @@ public class BudgetIntegrationTest {
         expense.setCategoryId(testCategory.getId());
         expense.setIsCountable(1);
         transactionWriteService.saveForUser(testUser.getId(), expense);
-        
+
         // 2. Allocate funds
         BudgetAllocationRequestDTO request = new BudgetAllocationRequestDTO();
         request.setMonth(month);
@@ -311,16 +311,16 @@ public class BudgetIntegrationTest {
         request.setAmount(200.0);
 
         mockMvc.perform(post("/api/budget/allocate")
-                .header("Authorization", bearerToken)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk());
 
         // 3. Get Budget Details
         mockMvc.perform(get("/api/budget")
-                .param("month", String.valueOf(month))
-                .param("year", String.valueOf(year))
-                .header("Authorization", bearerToken))
+                        .param("month", String.valueOf(month))
+                        .param("year", String.valueOf(year))
+                        .header("Authorization", bearerToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.totalBudget").value(200.0))
                 .andExpect(jsonPath("$.result.totalSpent").value(50.0))
@@ -352,16 +352,16 @@ public class BudgetIntegrationTest {
         request1.setAmount(800.0);
 
         mockMvc.perform(post("/api/budget/allocate")
-                .header("Authorization", bearerToken)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request1)))
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request1)))
                 .andExpect(status().isOk());
 
         // 3. Try to allocate 300 (Total 1100 > 1000) -> Should SUCCEED now (Simplification)
         BudgetAllocationRequestDTO request2 = new BudgetAllocationRequestDTO();
         request2.setMonth(now.getMonthValue());
         request2.setYear(now.getYear());
-        
+
         Category secondCategory = new Category();
         secondCategory.setName("Fun");
         secondCategory.setUserId(testUser.getId());
@@ -372,9 +372,9 @@ public class BudgetIntegrationTest {
         request2.setAmount(300.0); // 800 + 300 = 1100 > 1000
 
         mockMvc.perform(post("/api/budget/allocate")
-                .header("Authorization", bearerToken)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request2)))
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request2)))
                 .andExpect(status().isOk()); // EXPECTING OK NOW
     }
 
@@ -382,14 +382,14 @@ public class BudgetIntegrationTest {
     public void testCurrentMonthExpenseDoesNotReduceAvailable() throws Exception {
         // Logic: Available = (Opening Balance + Current Income) - Current Allocated.
         // Current Expenses are assumed to be covered by allocations and do not double-dip from Available.
-        
+
         LocalDate now = LocalDate.now();
         int month = now.getMonthValue();
         int year = now.getYear();
 
         // 1. Add Income (1000)
         Transaction income = new Transaction();
-        income.setTransactionType(TransactionType.CREDIT); 
+        income.setTransactionType(TransactionType.CREDIT);
         income.setName("Income");
         income.setOriginalAmount(1000.0);
         income.setOriginalCurrency("INR");
@@ -417,11 +417,11 @@ public class BudgetIntegrationTest {
         // Expected: 1000 (Income) - 0 (Allocated) = 1000.
         // Expense of 100 does NOT reduce Available. 
         // (Real Cash is 900, but Available to Assign is 1000 because we haven't assigned the 100 job yet).
-        
+
         mockMvc.perform(get("/api/budget/available")
-                .param("month", String.valueOf(month))
-                .param("year", String.valueOf(year))
-                .header("Authorization", bearerToken))
+                        .param("month", String.valueOf(month))
+                        .param("year", String.valueOf(year))
+                        .header("Authorization", bearerToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result").value(1000.0));
     }

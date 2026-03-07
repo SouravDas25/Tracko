@@ -6,7 +6,7 @@ import com.trako.dtos.BudgetResponseDTO;
 import com.trako.entities.*;
 import com.trako.repositories.*;
 import com.trako.services.BudgetCalculationService;
-import com.trako.services.TransactionWriteService;
+import com.trako.services.transactions.TransactionWriteService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +19,6 @@ import java.util.Calendar;
 import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -208,10 +207,10 @@ public class BudgetServiceIntegrationTest {
         // Total Rollover = Unallocated Prev Month (600) + Rollover Enabled Categories Remaining (300) = 900
 
         BudgetResponseDTO febDetails = budgetCalculationService.getBudgetDetails(testUser.getId(), 2, 2026, false, null);
-        
+
         // Expected Rollover: 600 (Global) + 300 (Category) = 900
         assertEquals(900.0, febDetails.getRolloverAmount(), 0.001);
-        
+
         // Available to Assign in Feb = Feb Income (0) + Rollover (900) - Feb Allocated (0) = 900
         assertEquals(900.0, febDetails.getAvailableToAssign(), 0.001);
     }

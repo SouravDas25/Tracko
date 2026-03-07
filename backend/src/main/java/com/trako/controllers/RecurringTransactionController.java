@@ -9,8 +9,8 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -41,14 +41,14 @@ public class RecurringTransactionController {
         try {
             String currentUserId = userService.loggedInUser().getId();
             RecurringTransaction rt = recurringTransactionService.getById(id).orElse(null);
-            
+
             if (rt == null) {
                 return Response.notFound("Recurring transaction not found");
             }
             if (!rt.getUserId().equals(currentUserId)) {
                 return Response.unauthorized();
             }
-            
+
             return Response.ok(rt);
         } catch (UserNotLoggedInException e) {
             return Response.unauthorized();

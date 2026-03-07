@@ -2,11 +2,7 @@ package com.trako.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trako.config.TestJwtSecurityConfig;
-import com.trako.entities.Account;
-import com.trako.entities.Category;
-import com.trako.entities.Transaction;
-import com.trako.entities.TransactionType;
-import com.trako.entities.User;
+import com.trako.entities.*;
 import com.trako.repositories.AccountRepository;
 import com.trako.repositories.CategoryRepository;
 import com.trako.repositories.TransactionRepository;
@@ -30,18 +26,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.hamcrest.Matchers.any;
+import static org.hamcrest.Matchers.containsString;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * API Integration tests for transfer operations.
- * 
+ * <p>
  * Tests verify complete API flow by calling actual HTTP endpoints:
  * - POST /api/transactions (with toAccountId) - Create transfer
  * - DELETE /api/transactions/{id} - Delete transfer
@@ -115,7 +109,7 @@ public class TransferIntegrationTest {
         destinationAccount.setUserId(testUser.getId());
         destinationAccount.setCurrency("USD");
         destinationAccount = accountRepository.save(destinationAccount);
-        
+
         // Create test category for regular transaction tests
         testCategory = new Category();
         testCategory.setName("Test Category");
@@ -125,7 +119,7 @@ public class TransferIntegrationTest {
 
     /**
      * Test: Create a transfer successfully via API
-     * 
+     * <p>
      * Scenario: User creates a transfer between two accounts
      * Expected: Transfer creates two linked transactions (debit + credit) atomically
      */
@@ -176,20 +170,20 @@ public class TransferIntegrationTest {
         assertNotNull(credit, "Credit transaction should exist");
 
         // VERIFY: Bidirectional linking (debit ↔ credit)
-        assertEquals(credit.getId(), debit.getLinkedTransactionId(), 
-                    "Debit should link to credit");
-        assertEquals(debit.getId(), credit.getLinkedTransactionId(), 
-                    "Credit should link back to debit");
+        assertEquals(credit.getId(), debit.getLinkedTransactionId(),
+                "Debit should link to credit");
+        assertEquals(debit.getId(), credit.getLinkedTransactionId(),
+                "Credit should link back to debit");
 
         // VERIFY: Both transactions have same amount
         assertEquals(500.0, debit.getAmount(), "Debit amount should be 500");
         assertEquals(500.0, credit.getAmount(), "Credit amount should be 500");
 
         // VERIFY: Transactions are on correct accounts
-        assertEquals(sourceAccount.getId(), debit.getAccountId(), 
-                    "Debit should be on source account");
-        assertEquals(destinationAccount.getId(), credit.getAccountId(), 
-                    "Credit should be on destination account");
+        assertEquals(sourceAccount.getId(), debit.getAccountId(),
+                "Debit should be on source account");
+        assertEquals(destinationAccount.getId(), credit.getAccountId(),
+                "Credit should be on destination account");
 
         // VERIFY: Transfers are non-countable (don't affect account summaries)
         assertEquals(0, debit.getIsCountable(), "Debit should be non-countable");
@@ -198,7 +192,7 @@ public class TransferIntegrationTest {
 
     /**
      * Test: Attempt to create transfer with same source and destination account
-     * 
+     * <p>
      * Scenario: User tries to transfer money from Account A to Account A
      * Expected: API rejects with 400 Bad Request and appropriate error message
      */
@@ -228,7 +222,7 @@ public class TransferIntegrationTest {
 
     /**
      * Test: Attempt to create transfer with non-existent account
-     * 
+     * <p>
      * Scenario: User tries to transfer to an account that doesn't exist
      * Expected: API rejects with 400 Bad Request
      */
@@ -258,7 +252,7 @@ public class TransferIntegrationTest {
 
     /**
      * Test: Delete a transfer by deleting the debit side
-     * 
+     * <p>
      * Scenario: User deletes a transfer by calling DELETE on the debit transaction
      * Expected: BOTH debit AND credit transactions are deleted atomically
      */
@@ -282,7 +276,7 @@ public class TransferIntegrationTest {
         // Get the created transactions from database
         List<Transaction> transactions = transactionRepository.findAll();
         assertEquals(2, transactions.size(), "Should have 2 transactions");
-        
+
         // Find the debit transaction (money out)
         Transaction debit = transactions.stream()
                 .filter(t -> t.getTransactionType() == TransactionType.DEBIT)  // TYPE_DEBIT
@@ -300,15 +294,15 @@ public class TransferIntegrationTest {
                 .andExpect(jsonPath("$.message", containsString("Transaction deleted successfully")));
 
         // VERIFY: BOTH transactions should be deleted from database
-        assertFalse(transactionRepository.findById(debitId).isPresent(), 
-                   "Debit transaction should be deleted");
-        assertFalse(transactionRepository.findById(creditId).isPresent(), 
-                   "Credit transaction should also be deleted (atomic operation)");
+        assertFalse(transactionRepository.findById(debitId).isPresent(),
+                "Debit transaction should be deleted");
+        assertFalse(transactionRepository.findById(creditId).isPresent(),
+                "Credit transaction should also be deleted (atomic operation)");
     }
 
     /**
      * Test: Delete a transfer by deleting the credit side
-     * 
+     * <p>
      * Scenario: User deletes a transfer by calling DELETE on the credit transaction
      * Expected: BOTH debit AND credit transactions are deleted (symmetric behavior)
      */
@@ -348,15 +342,15 @@ public class TransferIntegrationTest {
                 .andExpect(jsonPath("$.message", containsString("Transaction deleted successfully")));
 
         // VERIFY: Both transactions deleted (symmetric behavior)
-        assertFalse(transactionRepository.findById(debitId).isPresent(), 
-                   "Debit should be deleted");
-        assertFalse(transactionRepository.findById(creditId).isPresent(), 
-                   "Credit should be deleted");
+        assertFalse(transactionRepository.findById(debitId).isPresent(),
+                "Debit should be deleted");
+        assertFalse(transactionRepository.findById(creditId).isPresent(),
+                "Credit should be deleted");
     }
 
     /**
      * Test: Delete a regular (non-transfer) transaction
-     * 
+     * <p>
      * Scenario: User deletes a normal transaction (not part of a transfer)
      * Expected: Only the single transaction is deleted, no special transfer handling
      */
@@ -391,7 +385,7 @@ public class TransferIntegrationTest {
 
     /**
      * Test: Create multiple transfers and verify they don't interfere
-     * 
+     * <p>
      * Scenario: User creates 3 separate transfers in sequence
      * Expected: Each transfer is independent, properly linked, no cross-linking
      */
@@ -426,23 +420,23 @@ public class TransferIntegrationTest {
 
         // For each debit, verify it has a corresponding linked credit
         for (Transaction debit : debits) {
-            assertNotNull(debit.getLinkedTransactionId(), 
-                         "Each debit should have linked transaction");
-            
+            assertNotNull(debit.getLinkedTransactionId(),
+                    "Each debit should have linked transaction");
+
             // Find the linked credit transaction
             Transaction credit = transactionRepository.findById(debit.getLinkedTransactionId())
                     .orElse(null);
             assertNotNull(credit, "Linked credit should exist");
-            
+
             // Verify bidirectional link
-            assertEquals(debit.getId(), credit.getLinkedTransactionId(), 
-                        "Credit should link back to debit");
+            assertEquals(debit.getId(), credit.getLinkedTransactionId(),
+                    "Credit should link back to debit");
         }
     }
 
     /**
      * Test: Verify TRANSFER category is auto-created on first transfer
-     * 
+     * <p>
      * Scenario: User creates first transfer when no TRANSFER category exists
      * Expected: System automatically creates TRANSFER category for the user
      */
@@ -450,7 +444,7 @@ public class TransferIntegrationTest {
     public void testTransferCategoryAutoCreatedViaAPI() throws Exception {
         // GIVEN: No TRANSFER category exists yet
         assertTrue(categoryRepository.findByUserIdAndName(testUser.getId(), "TRANSFER").isEmpty(),
-                  "TRANSFER category should not exist initially");
+                "TRANSFER category should not exist initially");
 
         // WHEN: Create first transfer
         Map<String, Object> request = new HashMap<>();
@@ -468,12 +462,12 @@ public class TransferIntegrationTest {
 
         // THEN: TRANSFER category should be automatically created
         assertFalse(categoryRepository.findByUserIdAndName(testUser.getId(), "TRANSFER").isEmpty(),
-                   "TRANSFER category should be auto-created by the system");
+                "TRANSFER category should be auto-created by the system");
     }
 
     /**
      * Test: Attempt to update a transfer to have same from/to accounts
-     * 
+     * <p>
      * Scenario: User creates a valid transfer, then tries to update it to have same from/to accounts
      * Expected: System prevents this invalid state
      */
@@ -523,7 +517,7 @@ public class TransferIntegrationTest {
 
     /**
      * Test: Comprehensive validation for same account scenarios
-     * 
+     * <p>
      * Scenario: Various attempts to create transfers with same from/to accounts
      * Expected: All attempts should be rejected with clear error messages
      */
@@ -575,13 +569,13 @@ public class TransferIntegrationTest {
 
     /**
      * Test: Complete transfer lifecycle from creation to deletion
-     * 
+     * <p>
      * Scenario: Full end-to-end workflow
      * 1. Create transfer via API
      * 2. Verify transfer exists in database with correct properties
      * 3. Delete transfer via API
      * 4. Verify complete cleanup
-     * 
+     * <p>
      * Expected: All operations succeed, no data left behind
      */
     @Test
@@ -631,7 +625,7 @@ public class TransferIntegrationTest {
 
     /**
      * Test: Update transfer amount via API
-     * 
+     * <p>
      * Scenario: User creates a transfer and then updates the amount
      * Expected: Both debit and credit sides updated atomically with new amount
      */
@@ -658,7 +652,7 @@ public class TransferIntegrationTest {
                 .filter(t -> t.getTransactionType() == TransactionType.DEBIT)  // TYPE_DEBIT = 1
                 .findFirst()
                 .orElseThrow();
-        
+
         // Get the linked credit transaction ID for later verification
         Long creditId = debit.getLinkedTransactionId();
 
@@ -691,7 +685,7 @@ public class TransferIntegrationTest {
 
     /**
      * Test: Update transfer name and comments via API
-     * 
+     * <p>
      * Scenario: User updates the descriptive fields of a transfer
      * Expected: Both sides updated with new name and comments
      */
@@ -719,7 +713,7 @@ public class TransferIntegrationTest {
                 .filter(t -> t.getTransactionType() == TransactionType.DEBIT)  // TYPE_DEBIT = 1
                 .findFirst()
                 .orElseThrow();
-        
+
         // Store the credit ID for later verification
         Long creditId = debit.getLinkedTransactionId();
 
@@ -747,7 +741,7 @@ public class TransferIntegrationTest {
         // Verify both sides have new name
         assertEquals("Updated Name", updatedDebit.getName(), "Debit name should be updated");
         assertEquals("Updated Name", updatedCredit.getName(), "Credit name should be updated");
-        
+
         // Verify both sides have new comments
         assertEquals("Updated Comment", updatedDebit.getComments(), "Debit comments should be updated");
         assertEquals("Updated Comment", updatedCredit.getComments(), "Credit comments should be updated");
@@ -755,7 +749,7 @@ public class TransferIntegrationTest {
 
     /**
      * Test: Update transfer via credit side
-     * 
+     * <p>
      * Scenario: User updates transfer by calling PUT on the credit transaction
      * Expected: Both sides updated (symmetric behavior)
      */
@@ -813,7 +807,7 @@ public class TransferIntegrationTest {
 
     /**
      * Test: Update transfer to change source account
-     * 
+     * <p>
      * Scenario: User updates transfer to move money from a different account
      * Expected: Debit side account updated, credit side unchanged, both still linked
      */
@@ -866,10 +860,10 @@ public class TransferIntegrationTest {
         Transaction updatedDebit = transactionRepository.findById(debit.getId()).orElseThrow();
         Transaction updatedCredit = transactionRepository.findById(creditId).orElseThrow();
 
-        assertEquals(thirdAccount.getId(), updatedDebit.getAccountId(), 
-                    "Debit should be on new source account");
-        assertEquals(destinationAccount.getId(), updatedCredit.getAccountId(), 
-                    "Credit should still be on original destination");
+        assertEquals(thirdAccount.getId(), updatedDebit.getAccountId(),
+                "Debit should be on new source account");
+        assertEquals(destinationAccount.getId(), updatedCredit.getAccountId(),
+                "Credit should still be on original destination");
         // Verify still linked
         assertEquals(creditId, updatedDebit.getLinkedTransactionId());
         assertEquals(debit.getId(), updatedCredit.getLinkedTransactionId());
@@ -877,7 +871,7 @@ public class TransferIntegrationTest {
 
     /**
      * Test: Attempt to update transfer to make source and destination the same
-     * 
+     * <p>
      * Scenario: User tries to update a valid transfer to have same from/to accounts
      * Expected: API rejects with 400 Bad Request
      */
@@ -914,7 +908,7 @@ public class TransferIntegrationTest {
 
         // Get the credit transaction to try changing its account
         Transaction credit = transactionRepository.findById(debit.getLinkedTransactionId()).orElseThrow();
-        
+
         // Try updating credit to use same account as debit
         Map<String, Object> creditUpdate = new HashMap<>();
         creditUpdate.put("accountId", sourceAccount.getId());  // Try to make it same as debit - REQUIRED @NotNull
@@ -937,14 +931,14 @@ public class TransferIntegrationTest {
         // VERIFY: Original transfer unchanged
         Transaction unchangedDebit = transactionRepository.findById(debit.getId()).orElseThrow();
         Transaction unchangedCredit = transactionRepository.findById(credit.getId()).orElseThrow();
-        
+
         assertEquals(sourceAccount.getId(), unchangedDebit.getAccountId());
         assertEquals(destinationAccount.getId(), unchangedCredit.getAccountId());
     }
 
     /**
      * Test: Update regular (non-transfer) transaction should work normally
-     * 
+     * <p>
      * Scenario: User updates a regular transaction (not part of a transfer)
      * Expected: Only that transaction updated, no transfer logic triggered
      */
@@ -995,7 +989,7 @@ public class TransferIntegrationTest {
 
     /**
      * Test: Update transfer multiple times in sequence
-     * 
+     * <p>
      * Scenario: User updates the same transfer several times
      * Expected: Each update succeeds, final state reflects last update
      */
@@ -1056,7 +1050,7 @@ public class TransferIntegrationTest {
 
     /**
      * Test: Complete CRUD lifecycle including update
-     * 
+     * <p>
      * Scenario: Create -> Update -> Delete
      * Expected: All operations work correctly in sequence
      */

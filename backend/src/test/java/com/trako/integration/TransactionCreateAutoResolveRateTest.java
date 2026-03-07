@@ -26,7 +26,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.hamcrest.Matchers.closeTo;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -38,14 +37,21 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 public class TransactionCreateAutoResolveRateTest {
 
-    @Autowired private MockMvc mockMvc;
-    @Autowired private ObjectMapper objectMapper;
+    @Autowired
+    private MockMvc mockMvc;
+    @Autowired
+    private ObjectMapper objectMapper;
 
-    @Autowired private UsersRepository usersRepository;
-    @Autowired private AccountRepository accountRepository;
-    @Autowired private CategoryRepository categoryRepository;
-    @Autowired private UserCurrencyRepository userCurrencyRepository;
-    @Autowired private JwtTokenUtil jwtTokenUtil;
+    @Autowired
+    private UsersRepository usersRepository;
+    @Autowired
+    private AccountRepository accountRepository;
+    @Autowired
+    private CategoryRepository categoryRepository;
+    @Autowired
+    private UserCurrencyRepository userCurrencyRepository;
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
 
     private String bearerToken;
     private User user;
@@ -71,8 +77,14 @@ public class TransactionCreateAutoResolveRateTest {
                 user.getPhoneNo(), user.getPassword(), Collections.emptyList());
         bearerToken = "Bearer " + jwtTokenUtil.generateToken(principal);
 
-        account = new Account(); account.setName("A1"); account.setUserId(user.getId()); account = accountRepository.save(account);
-        category = new Category(); category.setName("Food"); category.setUserId(user.getId()); category = categoryRepository.save(category);
+        account = new Account();
+        account.setName("A1");
+        account.setUserId(user.getId());
+        account = accountRepository.save(account);
+        category = new Category();
+        category.setName("Food");
+        category.setUserId(user.getId());
+        category = categoryRepository.save(category);
 
         // Configure a secondary currency USD with rate 2.0
         UserCurrency uc = new UserCurrency();

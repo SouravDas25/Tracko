@@ -3,12 +3,11 @@ package com.trako.integration;
 import com.trako.config.TestJwtSecurityConfig;
 import com.trako.dtos.BudgetAllocationRequestDTO;
 import com.trako.dtos.TransactionSummaryDTO;
-import com.trako.entities.TransactionType;
 import com.trako.entities.*;
 import com.trako.repositories.*;
 import com.trako.services.BudgetCalculationService;
-import com.trako.services.TransactionService;
-import com.trako.services.TransactionWriteService;
+import com.trako.services.transactions.TransactionService;
+import com.trako.services.transactions.TransactionWriteService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,7 +47,7 @@ public class TransactionSummaryRolloverTest {
 
     @Autowired
     private BudgetMonthRepository budgetMonthRepository;
-    
+
     @Autowired
     private BudgetCategoryAllocationRepository budgetCategoryAllocationRepository;
 
@@ -149,7 +148,7 @@ public class TransactionSummaryRolloverTest {
         // 2. Verify Summary for Previous Month (All Accounts)
         Date start = getMonthStart(prevYear, prevMonth);
         Date end = getMonthEnd(prevYear, prevMonth);
-        
+
         // Pass null for accountIds to get summary for all accounts
         TransactionSummaryDTO summary = transactionService.getSummary(testUser.getId(), start, end, null);
 
@@ -166,7 +165,7 @@ public class TransactionSummaryRolloverTest {
         // - Income across accounts: 1500
         // - Allocated Budget: 1000
         // - Expected Unallocated Rollover: 1500 - 1000 = 500
-        
+
         int prevYear = 2025;
         int prevMonth = 1;
         int currYear = 2025;
@@ -189,9 +188,9 @@ public class TransactionSummaryRolloverTest {
         // 3. Verify Budget Details for Previous Month
         // Total Income should be 1500 (from summary of all accounts)
         // Total Budget should be 1000
-        TransactionSummaryDTO prevSummary = transactionService.getSummary(testUser.getId(), 
-                getMonthStart(prevYear, prevMonth), 
-                getMonthEnd(prevYear, prevMonth), 
+        TransactionSummaryDTO prevSummary = transactionService.getSummary(testUser.getId(),
+                getMonthStart(prevYear, prevMonth),
+                getMonthEnd(prevYear, prevMonth),
                 null);
         assertEquals(1500.0, prevSummary.getTotalIncome(), 0.001);
 
@@ -200,9 +199,9 @@ public class TransactionSummaryRolloverTest {
         // Rollover = Jan Income (1500) - Jan Allocated (1000) = 500
         // Current Income = 0
         // Available = 0 + 500 = 500
-        
+
         Double available = budgetCalculationService.calculateAvailableToAssign(testUser.getId(), currMonth, currYear);
-        
+
         assertEquals(500.0, available, 0.001, "Available to assign should include unallocated funds from previous month");
     }
 

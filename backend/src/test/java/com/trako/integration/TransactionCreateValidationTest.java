@@ -34,12 +34,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 public class TransactionCreateValidationTest {
 
-    @Autowired private MockMvc mockMvc;
-    @Autowired private ObjectMapper objectMapper;
-    @Autowired private UsersRepository usersRepository;
-    @Autowired private AccountRepository accountRepository;
-    @Autowired private CategoryRepository categoryRepository;
-    @Autowired private JwtTokenUtil jwtTokenUtil;
+    @Autowired
+    private MockMvc mockMvc;
+    @Autowired
+    private ObjectMapper objectMapper;
+    @Autowired
+    private UsersRepository usersRepository;
+    @Autowired
+    private AccountRepository accountRepository;
+    @Autowired
+    private CategoryRepository categoryRepository;
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
 
     private String bearerToken;
     private User testUser;
@@ -64,10 +70,19 @@ public class TransactionCreateValidationTest {
                 testUser.getPhoneNo(), testUser.getPassword(), Collections.emptyList());
         bearerToken = "Bearer " + jwtTokenUtil.generateToken(principal);
 
-        acc = new Account(); acc.setName("A1"); acc.setUserId(testUser.getId()); acc = accountRepository.save(acc);
-        acc2 = new Account(); acc2.setName("A2"); acc2.setUserId(testUser.getId()); acc2 = accountRepository.save(acc2);
+        acc = new Account();
+        acc.setName("A1");
+        acc.setUserId(testUser.getId());
+        acc = accountRepository.save(acc);
+        acc2 = new Account();
+        acc2.setName("A2");
+        acc2.setUserId(testUser.getId());
+        acc2 = accountRepository.save(acc2);
 
-        cat = new Category(); cat.setName("Food"); cat.setUserId(testUser.getId()); cat = categoryRepository.save(cat);
+        cat = new Category();
+        cat.setName("Food");
+        cat.setUserId(testUser.getId());
+        cat = categoryRepository.save(cat);
     }
 
     // Transfer validations

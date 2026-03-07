@@ -2,8 +2,8 @@ package com.trako.services;
 
 import com.trako.entities.Account;
 import com.trako.repositories.AccountRepository;
-import com.trako.repositories.TransactionRepository;
 import com.trako.repositories.RecurringTransactionRepository;
+import com.trako.repositories.TransactionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,6 +12,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -46,7 +47,7 @@ public class AccountServiceTest {
 
     @Test
     public void testFindAll() {
-        when(accountRepository.findAll()).thenReturn(Arrays.asList(testAccount));
+        when(accountRepository.findAll()).thenReturn(Collections.singletonList(testAccount));
 
         List<Account> accounts = accountService.findAll();
 
@@ -68,7 +69,7 @@ public class AccountServiceTest {
 
     @Test
     public void testFindByUserId() {
-        when(accountRepository.findByUserIdOrderByNameAsc("user123")).thenReturn(Arrays.asList(testAccount));
+        when(accountRepository.findByUserIdOrderByNameAsc("user123")).thenReturn(Collections.singletonList(testAccount));
 
         List<Account> accounts = accountService.findByUserId("user123");
 

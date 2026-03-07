@@ -3,6 +3,7 @@ package com.trako.controllers;
 import com.trako.dtos.TransactionDetailDTO;
 import com.trako.dtos.TransactionPeriodSummaryDTO;
 import com.trako.dtos.TransactionSummaryDTO;
+import com.trako.dtos.TransactionsPageDTO;
 import com.trako.entities.Account;
 import com.trako.entities.Transaction;
 import com.trako.entities.TransactionType;
@@ -13,10 +14,11 @@ import com.trako.exceptions.UserNotLoggedInException;
 import com.trako.models.request.TransactionRequest;
 import com.trako.repositories.AccountRepository;
 import com.trako.repositories.CategoryRepository;
-import com.trako.services.TransactionService;
-import com.trako.services.TransactionWriteService;
 import com.trako.services.UserService;
+import com.trako.services.transactions.TransactionService;
+import com.trako.services.transactions.TransactionWriteService;
 import com.trako.util.Response;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import org.slf4j.Logger;
@@ -28,15 +30,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
 import java.util.stream.Collectors;
-
-// OpenAPI annotations
-import io.swagger.v3.oas.annotations.Operation;
-import com.trako.dtos.TransactionsPageDTO;
 
 @RestController
 @RequestMapping("/api/transactions")
@@ -128,14 +129,14 @@ public class TransactionController {
     @Operation(summary = "List transactions with optional filters")
     @GetMapping
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
-        responseCode = "200",
-        description = "OK",
-        content = @io.swagger.v3.oas.annotations.media.Content(
-            mediaType = "application/json",
-            schema = @io.swagger.v3.oas.annotations.media.Schema(
-                implementation = com.trako.dtos.TransactionsPageDTO.class
+            responseCode = "200",
+            description = "OK",
+            content = @io.swagger.v3.oas.annotations.media.Content(
+                    mediaType = "application/json",
+                    schema = @io.swagger.v3.oas.annotations.media.Schema(
+                            implementation = com.trako.dtos.TransactionsPageDTO.class
+                    )
             )
-        )
     )
     public ResponseEntity<?> getAll(
             @RequestParam(required = false) Integer month,
@@ -174,7 +175,7 @@ public class TransactionController {
             String currentUserId = userService.loggedInUser().getId();
             List<Long> ids = com.trako.util.CommonUtil.parseAccountIds(accountIds);
             Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "date").and(Sort.by(Sort.Direction.DESC, "id")));
-            
+
             if (expand) {
                 Page<TransactionDetailDTO> dtoPage;
                 if (categoryId != null && categoryId > 0) {
@@ -194,11 +195,11 @@ public class TransactionController {
                             pageable
                     );
                 }
-                
+
                 List<TransactionDetailDTO> dtos = new ArrayList<>(dtoPage.getContent());
                 dtos = hideTransferCreditsForDTO(dtos, currentUserId);
                 dtos = markTransferTypeAsTransferForDTO(dtos, currentUserId);
-                
+
                 TransactionsPageDTO payload = new TransactionsPageDTO();
                 payload.setMonth(month);
                 payload.setYear(resolvedYear);
@@ -209,7 +210,7 @@ public class TransactionController {
                 payload.setHasNext(dtoPage.hasNext());
                 payload.setHasPrevious(dtoPage.hasPrevious());
                 payload.setTransactions(dtos);
-                
+
                 return Response.ok(payload);
             }
 
@@ -375,11 +376,11 @@ public class TransactionController {
     /**
      * POST /api/transactions
      * Creates a new transaction OR transfer for the authenticated user.
-     * 
+     *
      * <p>For regular transactions: Include accountId, categoryId, transactionType, amount, etc.
      * <p>For transfers: Include accountId (or fromAccountId), toAccountId, and amount.
      * The presence of toAccountId indicates this is a transfer request.
-     * 
+     *
      * <p>Validates that accounts and categories exist and are owned by the current user before saving.
      */
     @Operation(summary = "Create a transaction or transfer")
@@ -388,9 +389,9 @@ public class TransactionController {
         try {
             User user = userService.loggedInUser();
             String currentUserId = user.getId();
-            
+
             Transaction saved = transactionWriteService.createUnifiedTransaction(currentUserId, request);
-            
+
             if (request.isTransfer()) {
                 return Response.ok(saved, "Transfer created successfully");
             } else {
@@ -417,7 +418,7 @@ public class TransactionController {
      * PUT /api/transactions/{id}
      * Updates an existing transaction or transfer by id.
      * Supports partial updates - only non-null fields in the request are updated.
-     * 
+     *
      * <p>Delegates all writing logic to TransactionWriteService.
      */
     @Operation(summary = "Update a transaction or transfer")
@@ -429,7 +430,7 @@ public class TransactionController {
 
             Transaction updated = transactionWriteService.updateTransaction(currentUserId, id, request);
             return Response.ok(updated, "Transaction updated successfully");
-            
+
         } catch (UserNotLoggedInException e) {
             log.warn("Transaction update failed: User not logged in");
             return Response.unauthorized();
@@ -456,9 +457,9 @@ public class TransactionController {
     public ResponseEntity<?> delete(@PathVariable @Positive Long id) {
         try {
             String currentUserId = userService.loggedInUser().getId();
-            
+
             transactionWriteService.deleteUnifiedTransaction(currentUserId, id);
-            
+
             return Response.ok("Transaction deleted successfully");
         } catch (UserNotLoggedInException e) {
             return Response.unauthorized();
@@ -487,10 +488,10 @@ public class TransactionController {
         try {
             String currentUserId = userService.loggedInUser().getId();
             List<Long> ids = com.trako.util.CommonUtil.parseAccountIds(accountIds);
-            
+
             // Default to current year if not provided
             int resolvedYear = (year == null) ? Calendar.getInstance().get(Calendar.YEAR) : year;
-            
+
             List<TransactionPeriodSummaryDTO> summaries = transactionService.getMonthlySummaries(currentUserId, resolvedYear, ids);
             return Response.ok(summaries);
         } catch (UserNotLoggedInException e) {
@@ -509,7 +510,7 @@ public class TransactionController {
         try {
             String currentUserId = userService.loggedInUser().getId();
             List<Long> ids = com.trako.util.CommonUtil.parseAccountIds(accountIds);
-            
+
             List<TransactionPeriodSummaryDTO> summaries = transactionService.getYearlySummaries(currentUserId, ids);
             return Response.ok(summaries);
         } catch (UserNotLoggedInException e) {

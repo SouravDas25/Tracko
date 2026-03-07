@@ -3,9 +3,12 @@ package com.trako.integration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trako.config.TestJwtSecurityConfig;
 import com.trako.entities.*;
-import com.trako.repositories.*;
-import com.trako.services.TransactionWriteService;
-import com.trako.services.TransferService;
+import com.trako.repositories.AccountRepository;
+import com.trako.repositories.CategoryRepository;
+import com.trako.repositories.TransactionRepository;
+import com.trako.repositories.UsersRepository;
+import com.trako.services.transactions.TransactionWriteService;
+import com.trako.services.transactions.TransferService;
 import com.trako.util.JwtTokenUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,11 +21,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -35,15 +34,24 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 public class TransactionTypeUpdateTest {
 
-    @Autowired private MockMvc mockMvc;
-    @Autowired private ObjectMapper objectMapper;
-    @Autowired private UsersRepository usersRepository;
-    @Autowired private AccountRepository accountRepository;
-    @Autowired private CategoryRepository categoryRepository;
-    @Autowired private TransactionRepository transactionRepository;
-    @Autowired private TransactionWriteService transactionWriteService;
-    @Autowired private TransferService transferService;
-    @Autowired private JwtTokenUtil jwtTokenUtil;
+    @Autowired
+    private MockMvc mockMvc;
+    @Autowired
+    private ObjectMapper objectMapper;
+    @Autowired
+    private UsersRepository usersRepository;
+    @Autowired
+    private AccountRepository accountRepository;
+    @Autowired
+    private CategoryRepository categoryRepository;
+    @Autowired
+    private TransactionRepository transactionRepository;
+    @Autowired
+    private TransactionWriteService transactionWriteService;
+    @Autowired
+    private TransferService transferService;
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
 
     private User testUser;
     private String bearerToken;
@@ -71,11 +79,27 @@ public class TransactionTypeUpdateTest {
                 testUser.getPhoneNo(), testUser.getPassword(), Collections.emptyList());
         bearerToken = "Bearer " + jwtTokenUtil.generateToken(principal);
 
-        account1 = new Account(); account1.setName("A1"); account1.setUserId(testUser.getId()); account1.setCurrency("INR"); account1 = accountRepository.save(account1);
-        account2 = new Account(); account2.setName("A2"); account2.setUserId(testUser.getId()); account2.setCurrency("INR"); account2 = accountRepository.save(account2);
+        account1 = new Account();
+        account1.setName("A1");
+        account1.setUserId(testUser.getId());
+        account1.setCurrency("INR");
+        account1 = accountRepository.save(account1);
+        account2 = new Account();
+        account2.setName("A2");
+        account2.setUserId(testUser.getId());
+        account2.setCurrency("INR");
+        account2 = accountRepository.save(account2);
 
-        categoryExpense = new Category(); categoryExpense.setName("ExpenseCat"); categoryExpense.setUserId(testUser.getId()); categoryExpense.setCategoryType(CategoryType.EXPENSE); categoryExpense = categoryRepository.save(categoryExpense);
-        categoryIncome = new Category(); categoryIncome.setName("IncomeCat"); categoryIncome.setUserId(testUser.getId()); categoryIncome.setCategoryType(CategoryType.INCOME); categoryIncome = categoryRepository.save(categoryIncome);
+        categoryExpense = new Category();
+        categoryExpense.setName("ExpenseCat");
+        categoryExpense.setUserId(testUser.getId());
+        categoryExpense.setCategoryType(CategoryType.EXPENSE);
+        categoryExpense = categoryRepository.save(categoryExpense);
+        categoryIncome = new Category();
+        categoryIncome.setName("IncomeCat");
+        categoryIncome.setUserId(testUser.getId());
+        categoryIncome.setCategoryType(CategoryType.INCOME);
+        categoryIncome = categoryRepository.save(categoryIncome);
     }
 
     @Test
@@ -184,7 +208,7 @@ public class TransactionTypeUpdateTest {
         assertThat(linked.getAccountId()).isEqualTo(account2.getId());
         assertThat(linked.getTransactionType()).isEqualTo(TransactionType.CREDIT); // Other side of transfer
         assertThat(linked.getIsCountable()).isEqualTo(0);
-        
+
         // Verify Category is implicitly changed to TRANSFER
         List<Category> transferCats = categoryRepository.findByUserIdAndName(testUser.getId(), "TRANSFER");
         assertThat(transferCats).isNotEmpty();
@@ -208,7 +232,7 @@ public class TransactionTypeUpdateTest {
                 "Comments"
         );
         Transaction debitSide = transferPair[0];
-        
+
         // Update to Regular Expense (DEBIT)
         // We signal conversion to regular by ... ? 
         // Current API might not have a clear signal if we just omit toAccountId.
@@ -217,7 +241,7 @@ public class TransactionTypeUpdateTest {
         // If the controller logic sees it's an existing transfer, it enforces transfer update.
         // We might need a flag or specific logic. 
         // For now, let's try to update it as if it's a regular transaction (no toAccountId).
-        
+
         Map<String, Object> payload = new HashMap<>();
         payload.put("transactionType", TransactionType.DEBIT);
         payload.put("categoryId", categoryExpense.getId());

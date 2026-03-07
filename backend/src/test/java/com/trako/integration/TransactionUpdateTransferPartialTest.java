@@ -22,7 +22,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,12 +39,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 public class TransactionUpdateTransferPartialTest {
 
-    @Autowired private MockMvc mockMvc;
-    @Autowired private ObjectMapper objectMapper;
-    @Autowired private UsersRepository usersRepository;
-    @Autowired private AccountRepository accountRepository;
-    @Autowired private TransactionRepository transactionRepository;
-    @Autowired private JwtTokenUtil jwtTokenUtil;
+    @Autowired
+    private MockMvc mockMvc;
+    @Autowired
+    private ObjectMapper objectMapper;
+    @Autowired
+    private UsersRepository usersRepository;
+    @Autowired
+    private AccountRepository accountRepository;
+    @Autowired
+    private TransactionRepository transactionRepository;
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
 
     private String bearerToken;
     private User user;
@@ -69,8 +74,14 @@ public class TransactionUpdateTransferPartialTest {
                 user.getPhoneNo(), user.getPassword(), Collections.emptyList());
         bearerToken = "Bearer " + jwtTokenUtil.generateToken(principal);
 
-        a1 = new Account(); a1.setName("A1"); a1.setUserId(user.getId()); a1 = accountRepository.save(a1);
-        a2 = new Account(); a2.setName("A2"); a2.setUserId(user.getId()); a2 = accountRepository.save(a2);
+        a1 = new Account();
+        a1.setName("A1");
+        a1.setUserId(user.getId());
+        a1 = accountRepository.save(a1);
+        a2 = new Account();
+        a2.setName("A2");
+        a2.setUserId(user.getId());
+        a2 = accountRepository.save(a2);
     }
 
     private Transaction createTransfer(double originalAmount, String currency, Double exchangeRate) throws Exception {

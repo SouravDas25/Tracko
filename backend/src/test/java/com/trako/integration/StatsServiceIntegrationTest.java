@@ -3,13 +3,12 @@ package com.trako.integration;
 import com.trako.config.TestJwtSecurityConfig;
 import com.trako.dtos.StatsResponseDTO;
 import com.trako.entities.*;
-import com.trako.entities.TransactionType;
 import com.trako.repositories.AccountRepository;
 import com.trako.repositories.CategoryRepository;
 import com.trako.repositories.TransactionRepository;
 import com.trako.repositories.UsersRepository;
 import com.trako.services.StatsService;
-import com.trako.services.TransactionWriteService;
+import com.trako.services.transactions.TransactionWriteService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,14 +18,10 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -134,13 +129,13 @@ public class StatsServiceIntegrationTest {
         assertNotNull(dto.getSeries());
         // Should span 4 months: Jan, Feb, Mar, Apr
         assertEquals(4, dto.getSeries().size());
-        
+
         // Labels should be monthly format MMM YYYY (e.g. "Jan 2026")
         assertEquals("Jan 2026", dto.getSeries().get(0).getLabel());
         assertEquals("Feb 2026", dto.getSeries().get(1).getLabel());
         assertEquals("Mar 2026", dto.getSeries().get(2).getLabel());
         assertEquals("Apr 2026", dto.getSeries().get(3).getLabel());
-        
+
         assertEquals(10.0, dto.getSeries().get(0).getValue(), 0.001);
         assertEquals(20.0, dto.getSeries().get(1).getValue(), 0.001);
         assertEquals(30.0, dto.getSeries().get(2).getValue(), 0.001);

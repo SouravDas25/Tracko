@@ -9,6 +9,8 @@ import java.util.List;
 @Repository
 public interface UserCurrencyRepository extends JpaRepository<UserCurrency, Long> {
     List<UserCurrency> findByUserId(String userId);
+
     UserCurrency findByUserIdAndCurrencyCode(String userId, String currencyCode);
+
     void deleteByUserId(String userId);
 }

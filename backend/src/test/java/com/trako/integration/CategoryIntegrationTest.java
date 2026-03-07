@@ -2,17 +2,13 @@ package com.trako.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trako.config.TestJwtSecurityConfig;
-import com.trako.entities.Category;
-import com.trako.entities.Account;
-import com.trako.entities.Transaction;
-import com.trako.entities.Frequency;
-import com.trako.entities.TransactionType;
-import com.trako.entities.User;
+import com.trako.entities.*;
 import com.trako.models.request.CategorySaveRequest;
-import com.trako.repositories.CategoryRepository;
 import com.trako.repositories.AccountRepository;
+import com.trako.repositories.CategoryRepository;
 import com.trako.repositories.RecurringTransactionRepository;
 import com.trako.repositories.UsersRepository;
+import com.trako.services.transactions.TransactionWriteService;
 import com.trako.util.JwtTokenUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -58,7 +54,7 @@ public class CategoryIntegrationTest {
     private JwtTokenUtil jwtTokenUtil;
 
     @Autowired
-    private com.trako.services.TransactionWriteService transactionWriteService;
+    private TransactionWriteService transactionWriteService;
 
     @Autowired
     private RecurringTransactionRepository recurringTransactionRepository;
@@ -308,9 +304,9 @@ public class CategoryIntegrationTest {
         body.put("name", "Food");
 
         mockMvc.perform(post("/api/categories")
-                .header("Authorization", bearerToken)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(body)))
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(body)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.name").value("Food"))
                 .andExpect(jsonPath("$.result.userId").value(testUser.getId()))
@@ -380,9 +376,9 @@ public class CategoryIntegrationTest {
         body.put("categoryType", "INCOME");
 
         mockMvc.perform(put("/api/categories/" + saved.getId())
-                .header("Authorization", bearerToken)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(body)))
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(body)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.name").value("Updated Category"))
                 .andExpect(jsonPath("$.result.categoryType").value("INCOME"));

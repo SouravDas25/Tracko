@@ -2,20 +2,11 @@ package com.trako.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trako.config.TestJwtSecurityConfig;
-import com.trako.entities.Account;
-import com.trako.entities.Category;
-import com.trako.entities.Transaction;
-import com.trako.entities.TransactionType;
-import com.trako.entities.Frequency;
-import com.trako.entities.User;
+import com.trako.entities.*;
 import com.trako.models.request.AccountSaveRequest;
-import com.trako.repositories.AccountRepository;
-import com.trako.repositories.CategoryRepository;
-import com.trako.repositories.TransactionRepository;
-import com.trako.repositories.RecurringTransactionRepository;
-import com.trako.repositories.UsersRepository;
-import com.trako.services.TransactionWriteService;
-import com.trako.services.TransferService;
+import com.trako.repositories.*;
+import com.trako.services.transactions.TransactionWriteService;
+import com.trako.services.transactions.TransferService;
 import com.trako.util.JwtTokenUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,10 +20,10 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.Calendar;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -423,9 +414,9 @@ public class AccountIntegrationTest {
         account.setUserId(testUser.getId());
 
         mockMvc.perform(post("/api/accounts")
-                .header("Authorization", bearerToken)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(account)))
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(account)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.name").value("Savings"))
                 .andExpect(jsonPath("$.result.userId").value(testUser.getId()))
@@ -494,9 +485,9 @@ public class AccountIntegrationTest {
         saved.setName("New Name");
 
         mockMvc.perform(put("/api/accounts/" + saved.getId())
-                .header("Authorization", bearerToken)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(saved)))
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(saved)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.name").value("New Name"))
                 .andExpect(jsonPath("$.result.id").value(saved.getId()));

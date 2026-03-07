@@ -3,8 +3,11 @@ package com.trako.integration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trako.config.TestJwtSecurityConfig;
 import com.trako.entities.*;
-import com.trako.repositories.*;
-import com.trako.services.TransactionWriteService;
+import com.trako.repositories.AccountRepository;
+import com.trako.repositories.CategoryRepository;
+import com.trako.repositories.TransactionRepository;
+import com.trako.repositories.UsersRepository;
+import com.trako.services.transactions.TransactionWriteService;
 import com.trako.util.JwtTokenUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,14 +36,22 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 public class TransactionUpdateIntegrationTest {
 
-    @Autowired private MockMvc mockMvc;
-    @Autowired private ObjectMapper objectMapper;
-    @Autowired private UsersRepository usersRepository;
-    @Autowired private AccountRepository accountRepository;
-    @Autowired private CategoryRepository categoryRepository;
-    @Autowired private TransactionRepository transactionRepository;
-    @Autowired private TransactionWriteService transactionWriteService;
-    @Autowired private JwtTokenUtil jwtTokenUtil;
+    @Autowired
+    private MockMvc mockMvc;
+    @Autowired
+    private ObjectMapper objectMapper;
+    @Autowired
+    private UsersRepository usersRepository;
+    @Autowired
+    private AccountRepository accountRepository;
+    @Autowired
+    private CategoryRepository categoryRepository;
+    @Autowired
+    private TransactionRepository transactionRepository;
+    @Autowired
+    private TransactionWriteService transactionWriteService;
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
 
     private User testUser;
     private String bearerToken;

@@ -1,6 +1,7 @@
 package com.trako.dtos;
 
 import com.trako.entities.TransactionType;
+
 import java.util.List;
 
 public class StatsResponseDTO {

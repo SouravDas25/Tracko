@@ -19,18 +19,43 @@ public class TransferRequest {
 
     private String comments;
 
-    public Long getFromAccountId() { return fromAccountId; }
-    public void setFromAccountId(Long fromAccountId) { this.fromAccountId = fromAccountId; }
+    public Long getFromAccountId() {
+        return fromAccountId;
+    }
 
-    public Long getToAccountId() { return toAccountId; }
-    public void setToAccountId(Long toAccountId) { this.toAccountId = toAccountId; }
+    public void setFromAccountId(Long fromAccountId) {
+        this.fromAccountId = fromAccountId;
+    }
 
-    public Double getAmount() { return amount; }
-    public void setAmount(Double amount) { this.amount = amount; }
+    public Long getToAccountId() {
+        return toAccountId;
+    }
 
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+    public void setToAccountId(Long toAccountId) {
+        this.toAccountId = toAccountId;
+    }
 
-    public String getComments() { return comments; }
-    public void setComments(String comments) { this.comments = comments; }
+    public Double getAmount() {
+        return amount;
+    }
+
+    public void setAmount(Double amount) {
+        this.amount = amount;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getComments() {
+        return comments;
+    }
+
+    public void setComments(String comments) {
+        this.comments = comments;
+    }
 }

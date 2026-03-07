@@ -26,9 +26,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 public class TransactionGetAllValidationTest {
 
-    @Autowired private MockMvc mockMvc;
-    @Autowired private UsersRepository usersRepository;
-    @Autowired private JwtTokenUtil jwtTokenUtil;
+    @Autowired
+    private MockMvc mockMvc;
+    @Autowired
+    private UsersRepository usersRepository;
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
 
     private String bearerToken;
 

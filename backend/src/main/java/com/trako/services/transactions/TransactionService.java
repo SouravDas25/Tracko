@@ -1,11 +1,10 @@
-package com.trako.services;
+package com.trako.services.transactions;
 
 import com.trako.dtos.SplitDetailDTO;
 import com.trako.dtos.TransactionDetailDTO;
 import com.trako.dtos.TransactionPeriodSummaryDTO;
 import com.trako.dtos.TransactionSummaryDTO;
 import com.trako.entities.*;
-import com.trako.entities.TransactionType;
 import com.trako.repositories.*;
 import com.trako.util.NumberUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -332,16 +331,6 @@ public class TransactionService {
         );
     }
 
-    private static class YearMonthKey {
-        final int year;
-        final int month;
-
-        YearMonthKey(int year, int month) {
-            this.year = year;
-            this.month = month;
-        }
-    }
-
     private YearMonthKey toYearMonthKey(Date date) {
         if (date == null) return null;
         Calendar cal = Calendar.getInstance();
@@ -431,7 +420,7 @@ public class TransactionService {
         } else {
             rows = transactionRepository.findMonthlySummariesForUserAndYearAndAccounts(userId, year, accountIds);
         }
-        
+
         return rows.stream().map(row -> {
             row = normalizeAggregateRow(row);
             int y = NumberUtil.asInt(row[0]);
@@ -461,5 +450,8 @@ public class TransactionService {
             int count = NumberUtil.asInt(row[4]);
             return new TransactionPeriodSummaryDTO(income, expense, net, count, y, null);
         }).collect(Collectors.toList());
+    }
+
+    private record YearMonthKey(int year, int month) {
     }
 }

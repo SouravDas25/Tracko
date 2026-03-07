@@ -15,102 +15,102 @@ import java.util.Map;
 
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
-    
+
     @Query("SELECT t FROM Transaction t WHERE t.accountId IN " +
-           "(SELECT a.id FROM Account a WHERE a.userId = :userId) " +
-           "ORDER BY t.date DESC")
+            "(SELECT a.id FROM Account a WHERE a.userId = :userId) " +
+            "ORDER BY t.date DESC")
     List<Transaction> findByUserId(@Param("userId") String userId);
-    
+
     @Query("SELECT t FROM Transaction t WHERE t.accountId IN " +
-           "(SELECT a.id FROM Account a WHERE a.userId = :userId) " +
-           "AND t.date >= :startDate AND t.date < :endDate " +
-           "ORDER BY t.date DESC")
+            "(SELECT a.id FROM Account a WHERE a.userId = :userId) " +
+            "AND t.date >= :startDate AND t.date < :endDate " +
+            "ORDER BY t.date DESC")
     List<Transaction> findByUserIdAndDateBetween(
-        @Param("userId") String userId,
-        @Param("startDate") Date startDate,
-        @Param("endDate") Date endDate
+            @Param("userId") String userId,
+            @Param("startDate") Date startDate,
+            @Param("endDate") Date endDate
     );
 
     @Query("SELECT t FROM Transaction t WHERE t.accountId IN " +
-           "(SELECT a.id FROM Account a WHERE a.userId = :userId) " +
-           "AND t.date >= :startDate AND t.date < :endDate")
+            "(SELECT a.id FROM Account a WHERE a.userId = :userId) " +
+            "AND t.date >= :startDate AND t.date < :endDate")
     Page<Transaction> findByUserIdAndDateBetween(
-        @Param("userId") String userId,
-        @Param("startDate") Date startDate,
-        @Param("endDate") Date endDate,
-        Pageable pageable
+            @Param("userId") String userId,
+            @Param("startDate") Date startDate,
+            @Param("endDate") Date endDate,
+            Pageable pageable
     );
 
     @Query("SELECT t FROM Transaction t WHERE t.accountId IN " +
-           "(SELECT a.id FROM Account a WHERE a.userId = :userId AND a.id IN :accountIds) " +
-           "AND t.date >= :startDate AND t.date < :endDate " +
-           "ORDER BY t.date DESC")
+            "(SELECT a.id FROM Account a WHERE a.userId = :userId AND a.id IN :accountIds) " +
+            "AND t.date >= :startDate AND t.date < :endDate " +
+            "ORDER BY t.date DESC")
     List<Transaction> findByUserIdAndDateBetweenAndAccountIds(
-        @Param("userId") String userId,
-        @Param("startDate") Date startDate,
-        @Param("endDate") Date endDate,
-        @Param("accountIds") List<Long> accountIds
+            @Param("userId") String userId,
+            @Param("startDate") Date startDate,
+            @Param("endDate") Date endDate,
+            @Param("accountIds") List<Long> accountIds
     );
 
     @Query("SELECT t FROM Transaction t WHERE t.accountId IN " +
-           "(SELECT a.id FROM Account a WHERE a.userId = :userId AND a.id IN :accountIds) " +
-           "AND t.date >= :startDate AND t.date < :endDate")
+            "(SELECT a.id FROM Account a WHERE a.userId = :userId AND a.id IN :accountIds) " +
+            "AND t.date >= :startDate AND t.date < :endDate")
     Page<Transaction> findByUserIdAndDateBetweenAndAccountIds(
-        @Param("userId") String userId,
-        @Param("startDate") Date startDate,
-        @Param("endDate") Date endDate,
-        @Param("accountIds") List<Long> accountIds,
-        Pageable pageable
+            @Param("userId") String userId,
+            @Param("startDate") Date startDate,
+            @Param("endDate") Date endDate,
+            @Param("accountIds") List<Long> accountIds,
+            Pageable pageable
     );
 
     @Query("SELECT t FROM Transaction t WHERE t.accountId IN " +
-           "(SELECT a.id FROM Account a WHERE a.userId = :userId) " +
-           "AND t.categoryId = :categoryId " +
-           "AND t.date >= :startDate AND t.date < :endDate " +
-           "ORDER BY t.date DESC")
+            "(SELECT a.id FROM Account a WHERE a.userId = :userId) " +
+            "AND t.categoryId = :categoryId " +
+            "AND t.date >= :startDate AND t.date < :endDate " +
+            "ORDER BY t.date DESC")
     List<Transaction> findByUserIdAndCategoryIdAndDateBetween(
-        @Param("userId") String userId,
-        @Param("categoryId") Long categoryId,
-        @Param("startDate") Date startDate,
-        @Param("endDate") Date endDate
+            @Param("userId") String userId,
+            @Param("categoryId") Long categoryId,
+            @Param("startDate") Date startDate,
+            @Param("endDate") Date endDate
     );
 
     @Query("SELECT t FROM Transaction t WHERE t.accountId IN " +
-           "(SELECT a.id FROM Account a WHERE a.userId = :userId AND a.id IN :accountIds) " +
-           "AND t.categoryId = :categoryId " +
-           "AND t.date >= :startDate AND t.date < :endDate " +
-           "ORDER BY t.date DESC")
+            "(SELECT a.id FROM Account a WHERE a.userId = :userId AND a.id IN :accountIds) " +
+            "AND t.categoryId = :categoryId " +
+            "AND t.date >= :startDate AND t.date < :endDate " +
+            "ORDER BY t.date DESC")
     List<Transaction> findByUserIdAndCategoryIdAndDateBetweenAndAccountIds(
-        @Param("userId") String userId,
-        @Param("categoryId") Long categoryId,
-        @Param("startDate") Date startDate,
-        @Param("endDate") Date endDate,
-        @Param("accountIds") List<Long> accountIds
+            @Param("userId") String userId,
+            @Param("categoryId") Long categoryId,
+            @Param("startDate") Date startDate,
+            @Param("endDate") Date endDate,
+            @Param("accountIds") List<Long> accountIds
     );
 
     @Query("SELECT t FROM Transaction t WHERE t.accountId IN " +
-           "(SELECT a.id FROM Account a WHERE a.userId = :userId) " +
-           "AND t.categoryId = :categoryId " +
-           "AND t.date >= :startDate AND t.date < :endDate")
+            "(SELECT a.id FROM Account a WHERE a.userId = :userId) " +
+            "AND t.categoryId = :categoryId " +
+            "AND t.date >= :startDate AND t.date < :endDate")
     Page<Transaction> findByUserIdAndCategoryIdAndDateBetween(
-        @Param("userId") String userId,
-        @Param("categoryId") Long categoryId,
-        @Param("startDate") Date startDate,
-        @Param("endDate") Date endDate,
-        Pageable pageable
+            @Param("userId") String userId,
+            @Param("categoryId") Long categoryId,
+            @Param("startDate") Date startDate,
+            @Param("endDate") Date endDate,
+            Pageable pageable
     );
 
     @Query("SELECT t FROM Transaction t WHERE t.accountId IN " +
-           "(SELECT a.id FROM Account a WHERE a.userId = :userId AND a.id IN :accountIds) " +
-           "AND t.categoryId = :categoryId " +
-           "AND t.date >= :startDate AND t.date < :endDate")
+            "(SELECT a.id FROM Account a WHERE a.userId = :userId AND a.id IN :accountIds) " +
+            "AND t.categoryId = :categoryId " +
+            "AND t.date >= :startDate AND t.date < :endDate")
     Page<Transaction> findByUserIdAndCategoryIdAndDateBetweenAndAccountIds(
-        @Param("userId") String userId,
-        @Param("categoryId") Long categoryId,
-        @Param("startDate") Date startDate,
-        @Param("endDate") Date endDate,
-        @Param("accountIds") List<Long> accountIds,
-        Pageable pageable
+            @Param("userId") String userId,
+            @Param("categoryId") Long categoryId,
+            @Param("startDate") Date startDate,
+            @Param("endDate") Date endDate,
+            @Param("accountIds") List<Long> accountIds,
+            Pageable pageable
     );
 
     @Query("SELECT COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.CREDIT THEN t.amount " +
@@ -213,14 +213,17 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     );
 
     List<Transaction> findByAccountId(Long accountId);
+
     List<Transaction> findByAccountIdIn(List<Long> accountIds);
+
     List<Transaction> findByCategoryId(Long categoryId);
 
     boolean existsByAccountId(Long accountId);
+
     boolean existsByCategoryId(Long categoryId);
 
     void deleteByAccountIdIn(List<Long> accountIds);
-    
+
     @Query("SELECT YEAR(t.date) as y, MONTH(t.date) as m, " +
             "COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.CREDIT THEN t.amount ELSE 0 END), 0), " +
             "COALESCE(SUM(CASE WHEN t.transactionType = com.trako.entities.TransactionType.DEBIT THEN t.amount ELSE 0 END), 0), " +

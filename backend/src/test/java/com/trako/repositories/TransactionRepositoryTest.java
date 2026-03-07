@@ -1,10 +1,6 @@
 package com.trako.repositories;
 
-import com.trako.entities.Account;
-import com.trako.entities.Category;
-import com.trako.entities.Transaction;
-import com.trako.entities.TransactionType;
-import com.trako.entities.User;
+import com.trako.entities.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -107,10 +103,10 @@ public class TransactionRepositoryTest {
     public void testFindByUserIdAndDateBetween() {
         Calendar cal = Calendar.getInstance();
         Date today = cal.getTime();
-        
+
         cal.add(Calendar.DAY_OF_MONTH, -5);
         Date fiveDaysAgo = cal.getTime();
-        
+
         cal.add(Calendar.DAY_OF_MONTH, -10);
         Date fifteenDaysAgo = cal.getTime();
 
@@ -143,7 +139,7 @@ public class TransactionRepositoryTest {
         Date tomorrow = cal.getTime();
 
         List<Transaction> transactions = transactionRepository.findByUserIdAndDateBetween(
-            testUser.getId(), fiveDaysAgo, tomorrow);
+                testUser.getId(), fiveDaysAgo, tomorrow);
 
         assertThat(transactions).hasSize(1);
         assertThat(transactions.get(0).getName()).isEqualTo("Recent");

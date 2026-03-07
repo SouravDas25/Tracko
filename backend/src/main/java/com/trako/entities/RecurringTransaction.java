@@ -118,6 +118,7 @@ public class RecurringTransaction {
     public void setName(String name) {
         this.name = name;
     }
+
     public String getOriginalCurrency() {
         return originalCurrency;
     }

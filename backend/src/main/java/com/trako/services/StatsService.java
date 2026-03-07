@@ -5,7 +5,6 @@ import com.trako.dtos.CategoryStatsResponseDTO;
 import com.trako.dtos.StatsPointDTO;
 import com.trako.dtos.StatsResponseDTO;
 import com.trako.entities.Category;
-import com.trako.entities.Transaction;
 import com.trako.entities.TransactionType;
 import com.trako.repositories.CategoryRepository;
 import com.trako.repositories.TransactionRepository;
@@ -18,21 +17,12 @@ import java.util.*;
 @Service
 public class StatsService {
 
-    public enum Range {
-        weekly,
-        monthly,
-        yearly,
-        custom
-    }
-
+    private static final SimpleDateFormat DATE_FMT = new SimpleDateFormat("yyyy-MM-dd");
     @Autowired
     private TransactionRepository transactionRepository;
 
     @Autowired
     private CategoryRepository categoryRepository;
-
-    private static final SimpleDateFormat DATE_FMT = new SimpleDateFormat("yyyy-MM-dd");
-    // private static final SimpleDateFormat DOW_FMT = new SimpleDateFormat("EEE", Locale.ENGLISH);
 
     /**
      * Normalizes a Date to 00:00:00.000 in the server timezone.
@@ -46,6 +36,7 @@ public class StatsService {
         c.set(Calendar.MILLISECOND, 0);
         return c.getTime();
     }
+    // private static final SimpleDateFormat DOW_FMT = new SimpleDateFormat("EEE", Locale.ENGLISH);
 
     /**
      * Adds days to a date and returns the resulting Date.
@@ -172,13 +163,11 @@ public class StatsService {
     //     }
     //     return total;
     // }
-
-
     private List<StatsPointDTO> buildSeriesFromDb(String userId, Range range, TransactionType transactionType, Long accountId, Date anchorDate, Date currentStart, Date currentEnd) {
         List<Object[]> aggs = transactionRepository.sumAmountsByDateForUser(userId, transactionType, accountId);
         return buildSeriesFromAggs(range, anchorDate, aggs, currentStart, currentEnd);
     }
-    
+
     private List<StatsPointDTO> buildSeriesFromDbCategory(String userId, Range range, TransactionType transactionType, Long accountId, Long categoryId, Date anchorDate, Date currentStart, Date currentEnd) {
         List<Object[]> aggs = transactionRepository.sumAmountsByDateForCategory(userId, transactionType, accountId, categoryId);
         return buildSeriesFromAggs(range, anchorDate, aggs, currentStart, currentEnd);
@@ -190,7 +179,7 @@ public class StatsService {
         }
 
         Date anchor = (anchorDate == null) ? new Date() : anchorDate;
-        
+
         if (range == Range.custom) {
             long diff = currentEnd.getTime() - currentStart.getTime();
             long days = diff / (24 * 60 * 60 * 1000);
@@ -205,15 +194,15 @@ public class StatsService {
                     int key = toYearMonthKey(d);
                     byMonth.put(key, byMonth.getOrDefault(key, 0.0) + amt);
                 }
-                
+
                 List<StatsPointDTO> out = new ArrayList<>();
                 // Even if empty, we want to generate the zero-filled series for the range
-                
+
                 int startKey = toYearMonthKey(currentStart);
-                // For endKey, since currentEnd is exclusive (start of next day), 
+                // For endKey, since currentEnd is exclusive (start of next day),
                 // we should look at the last inclusive day (currentEnd - 1ms)
                 int endKey = toYearMonthKey(addDays(currentEnd, -1));
-                
+
                 int spanMonths = monthsBetweenKeys(startKey, endKey);
                 for (int i = 0; i <= spanMonths; i++) {
                     int key = addMonthsToYearMonthKey(startKey, i);
@@ -244,7 +233,7 @@ public class StatsService {
                 return out;
             }
         }
-        
+
         if (range == Range.yearly) {
             TreeMap<Integer, Double> byYear = new TreeMap<>();
             for (Object[] row : aggs) {
@@ -311,7 +300,6 @@ public class StatsService {
         return out;
     }
 
-
     /**
      * Returns stats summary for the authenticated user:
      * - current-period total and category breakdown
@@ -363,18 +351,18 @@ public class StatsService {
 
         List<CategoryStatDTO> catStats = new ArrayList<>();
         double total = 0.0;
-        
+
         for (Object[] row : catAggs) {
             Long cid = row[0] != null ? ((Number) row[0]).longValue() : null;
             if (cid == null || cid == 0) continue;
-            
+
             Double amt = row[1] != null ? ((Number) row[1]).doubleValue() : 0.0;
             if (amt <= 0) continue;
-            
+
             total += amt;
             catStats.add(new CategoryStatDTO(cid, categoryNames.getOrDefault(cid, "Category " + cid), amt));
         }
-        
+
         catStats.sort((a, b) -> Double.compare(b.getAmount(), a.getAmount()));
 
         return new StatsResponseDTO(
@@ -468,5 +456,12 @@ public class StatsService {
             default:
                 return "";
         }
+    }
+
+    public enum Range {
+        weekly,
+        monthly,
+        yearly,
+        custom
     }
 }

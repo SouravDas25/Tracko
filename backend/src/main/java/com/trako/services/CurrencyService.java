@@ -94,9 +94,9 @@ public class CurrencyService {
 
     /**
      * Resolves the exchange rate for a given currency and user.
-     * 
-     * @param userId the user ID
-     * @param currency the currency code to resolve
+     *
+     * @param userId       the user ID
+     * @param currency     the currency code to resolve
      * @param providedRate optional explicitly provided rate (returns this if not null)
      * @return the exchange rate
      * @throws IllegalArgumentException if currency is not configured for user
@@ -105,14 +105,14 @@ public class CurrencyService {
         if (providedRate != null) {
             return providedRate;
         }
-        
+
         User user = userRepository.findById(userId)
-            .orElseThrow(() -> new NotFoundException("User not found"));
-            
+                .orElseThrow(() -> new NotFoundException("User not found"));
+
         if (currency.equals(user.getBaseCurrency())) {
             return 1.0;
         }
-        
+
         UserCurrency uc = userCurrencyRepository.findByUserIdAndCurrencyCode(userId, currency);
         if (uc == null) {
             throw new IllegalArgumentException("Currency not configured: " + currency);

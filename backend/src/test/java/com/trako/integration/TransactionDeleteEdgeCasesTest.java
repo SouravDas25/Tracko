@@ -1,12 +1,7 @@
 package com.trako.integration;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trako.config.TestJwtSecurityConfig;
-import com.trako.entities.Account;
-import com.trako.entities.Category;
-import com.trako.entities.Transaction;
-import com.trako.entities.TransactionType;
-import com.trako.entities.User;
+import com.trako.entities.*;
 import com.trako.repositories.AccountRepository;
 import com.trako.repositories.CategoryRepository;
 import com.trako.repositories.TransactionRepository;
@@ -35,12 +30,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 public class TransactionDeleteEdgeCasesTest {
 
-    @Autowired private MockMvc mockMvc;
-    @Autowired private UsersRepository usersRepository;
-    @Autowired private AccountRepository accountRepository;
-    @Autowired private CategoryRepository categoryRepository;
-    @Autowired private TransactionRepository transactionRepository;
-    @Autowired private JwtTokenUtil jwtTokenUtil;
+    @Autowired
+    private MockMvc mockMvc;
+    @Autowired
+    private UsersRepository usersRepository;
+    @Autowired
+    private AccountRepository accountRepository;
+    @Autowired
+    private CategoryRepository categoryRepository;
+    @Autowired
+    private TransactionRepository transactionRepository;
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
 
     private String tokenA;
     private String tokenB;
@@ -56,16 +57,32 @@ public class TransactionDeleteEdgeCasesTest {
         accountRepository.deleteAll();
         usersRepository.deleteAll();
 
-        userA = new User(); userA.setName("A"); userA.setPhoneNo("5100000001"); userA.setEmail("a@x.com"); userA.setPassword("p"); userA = usersRepository.save(userA);
-        userB = new User(); userB.setName("B"); userB.setPhoneNo("5100000002"); userB.setEmail("b@x.com"); userB.setPassword("p"); userB = usersRepository.save(userB);
+        userA = new User();
+        userA.setName("A");
+        userA.setPhoneNo("5100000001");
+        userA.setEmail("a@x.com");
+        userA.setPassword("p");
+        userA = usersRepository.save(userA);
+        userB = new User();
+        userB.setName("B");
+        userB.setPhoneNo("5100000002");
+        userB.setEmail("b@x.com");
+        userB.setPassword("p");
+        userB = usersRepository.save(userB);
 
         var pA = new org.springframework.security.core.userdetails.User(userA.getPhoneNo(), userA.getPassword(), Collections.emptyList());
         var pB = new org.springframework.security.core.userdetails.User(userB.getPhoneNo(), userB.getPassword(), Collections.emptyList());
         tokenA = "Bearer " + jwtTokenUtil.generateToken(pA);
         tokenB = "Bearer " + jwtTokenUtil.generateToken(pB);
 
-        accA = new Account(); accA.setName("A1"); accA.setUserId(userA.getId()); accA = accountRepository.save(accA);
-        catA = new Category(); catA.setName("Food"); catA.setUserId(userA.getId()); catA = categoryRepository.save(catA);
+        accA = new Account();
+        accA.setName("A1");
+        accA.setUserId(userA.getId());
+        accA = accountRepository.save(accA);
+        catA = new Category();
+        catA.setName("Food");
+        catA.setUserId(userA.getId());
+        catA = categoryRepository.save(catA);
     }
 
     private Transaction createTransactionForUserA() {

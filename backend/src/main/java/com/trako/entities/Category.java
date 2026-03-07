@@ -62,6 +62,10 @@ public class Category {
         return userId;
     }
 
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
     public CategoryType getCategoryType() {
         return categoryType;
     }
@@ -69,7 +73,6 @@ public class Category {
     public void setCategoryType(CategoryType categoryType) {
         this.categoryType = categoryType;
     }
-
 
     public Boolean getIsRollOverEnabled() {
         return isRollOverEnabled;
@@ -93,9 +96,6 @@ public class Category {
 
     public void setParentCategory(Category parentCategory) {
         this.parentCategory = parentCategory;
-    }
-    public void setUserId(String userId) {
-        this.userId = userId;
     }
 
     public User getUser() {

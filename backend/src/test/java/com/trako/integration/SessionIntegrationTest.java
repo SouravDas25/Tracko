@@ -5,7 +5,6 @@ import com.trako.config.TestJwtSecurityConfig;
 import com.trako.entities.User;
 import com.trako.models.request.AuthicationRequest;
 import com.trako.models.request.LoginRequest;
-import com.trako.models.request.UserSaveRequest;
 import com.trako.repositories.UsersRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

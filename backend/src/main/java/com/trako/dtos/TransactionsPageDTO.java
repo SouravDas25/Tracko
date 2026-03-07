@@ -13,30 +13,75 @@ public class TransactionsPageDTO {
     private Boolean hasPrevious;
     private List<?> transactions;
 
-    public Integer getMonth() { return month; }
-    public void setMonth(Integer month) { this.month = month; }
+    public Integer getMonth() {
+        return month;
+    }
 
-    public Integer getYear() { return year; }
-    public void setYear(Integer year) { this.year = year; }
+    public void setMonth(Integer month) {
+        this.month = month;
+    }
 
-    public Integer getPage() { return page; }
-    public void setPage(Integer page) { this.page = page; }
+    public Integer getYear() {
+        return year;
+    }
 
-    public Integer getSize() { return size; }
-    public void setSize(Integer size) { this.size = size; }
+    public void setYear(Integer year) {
+        this.year = year;
+    }
 
-    public Long getTotalElements() { return totalElements; }
-    public void setTotalElements(Long totalElements) { this.totalElements = totalElements; }
+    public Integer getPage() {
+        return page;
+    }
 
-    public Integer getTotalPages() { return totalPages; }
-    public void setTotalPages(Integer totalPages) { this.totalPages = totalPages; }
+    public void setPage(Integer page) {
+        this.page = page;
+    }
 
-    public Boolean getHasNext() { return hasNext; }
-    public void setHasNext(Boolean hasNext) { this.hasNext = hasNext; }
+    public Integer getSize() {
+        return size;
+    }
 
-    public Boolean getHasPrevious() { return hasPrevious; }
-    public void setHasPrevious(Boolean hasPrevious) { this.hasPrevious = hasPrevious; }
+    public void setSize(Integer size) {
+        this.size = size;
+    }
 
-    public List<?> getTransactions() { return transactions; }
-    public void setTransactions(List<?> transactions) { this.transactions = transactions; }
+    public Long getTotalElements() {
+        return totalElements;
+    }
+
+    public void setTotalElements(Long totalElements) {
+        this.totalElements = totalElements;
+    }
+
+    public Integer getTotalPages() {
+        return totalPages;
+    }
+
+    public void setTotalPages(Integer totalPages) {
+        this.totalPages = totalPages;
+    }
+
+    public Boolean getHasNext() {
+        return hasNext;
+    }
+
+    public void setHasNext(Boolean hasNext) {
+        this.hasNext = hasNext;
+    }
+
+    public Boolean getHasPrevious() {
+        return hasPrevious;
+    }
+
+    public void setHasPrevious(Boolean hasPrevious) {
+        this.hasPrevious = hasPrevious;
+    }
+
+    public List<?> getTransactions() {
+        return transactions;
+    }
+
+    public void setTransactions(List<?> transactions) {
+        this.transactions = transactions;
+    }
 }

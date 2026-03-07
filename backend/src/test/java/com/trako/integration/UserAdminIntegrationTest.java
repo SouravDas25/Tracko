@@ -20,9 +20,7 @@ import java.util.Collections;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -97,9 +95,9 @@ public class UserAdminIntegrationTest {
         body.put("isShadow", 0);
 
         mockMvc.perform(post("/api/user/create")
-                .header("Authorization", adminBearer)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(body)))
+                        .header("Authorization", adminBearer)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(body)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result", notNullValue()));
 
@@ -118,9 +116,9 @@ public class UserAdminIntegrationTest {
         body.put("isShadow", 0);
 
         mockMvc.perform(post("/api/user/create")
-                .header("Authorization", userBearer)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(body)))
+                        .header("Authorization", userBearer)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(body)))
                 .andExpect(status().isUnauthorized());
 
         User notCreated = usersRepository.findByPhoneNo("3333333333");
@@ -145,7 +143,7 @@ public class UserAdminIntegrationTest {
         target = usersRepository.save(target);
 
         mockMvc.perform(get("/api/user/" + target.getId())
-                .header("Authorization", adminBearer))
+                        .header("Authorization", adminBearer))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result", hasSize(1)))
                 .andExpect(jsonPath("$.result[0].id").value(target.getId()))

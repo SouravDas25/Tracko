@@ -24,9 +24,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -36,14 +34,21 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 public class RecurringTransactionIntegrationNewTest {
 
-    @Autowired private MockMvc mockMvc;
-    @Autowired private ObjectMapper objectMapper;
+    @Autowired
+    private MockMvc mockMvc;
+    @Autowired
+    private ObjectMapper objectMapper;
 
-    @Autowired private UsersRepository usersRepository;
-    @Autowired private AccountRepository accountRepository;
-    @Autowired private CategoryRepository categoryRepository;
-    @Autowired private RecurringTransactionRepository recurringTransactionRepository;
-    @Autowired private JwtTokenUtil jwtTokenUtil;
+    @Autowired
+    private UsersRepository usersRepository;
+    @Autowired
+    private AccountRepository accountRepository;
+    @Autowired
+    private CategoryRepository categoryRepository;
+    @Autowired
+    private RecurringTransactionRepository recurringTransactionRepository;
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
 
     private String tokenA;
     private String tokenB;
@@ -59,16 +64,32 @@ public class RecurringTransactionIntegrationNewTest {
         accountRepository.deleteAll();
         usersRepository.deleteAll();
 
-        userA = new User(); userA.setName("A"); userA.setPhoneNo("7000000001"); userA.setEmail("a@x.com"); userA.setPassword("p"); userA = usersRepository.save(userA);
-        userB = new User(); userB.setName("B"); userB.setPhoneNo("7000000002"); userB.setEmail("b@x.com"); userB.setPassword("p"); userB = usersRepository.save(userB);
+        userA = new User();
+        userA.setName("A");
+        userA.setPhoneNo("7000000001");
+        userA.setEmail("a@x.com");
+        userA.setPassword("p");
+        userA = usersRepository.save(userA);
+        userB = new User();
+        userB.setName("B");
+        userB.setPhoneNo("7000000002");
+        userB.setEmail("b@x.com");
+        userB.setPassword("p");
+        userB = usersRepository.save(userB);
 
         var pA = new org.springframework.security.core.userdetails.User(userA.getPhoneNo(), userA.getPassword(), Collections.emptyList());
         var pB = new org.springframework.security.core.userdetails.User(userB.getPhoneNo(), userB.getPassword(), Collections.emptyList());
         tokenA = "Bearer " + jwtTokenUtil.generateToken(pA);
         tokenB = "Bearer " + jwtTokenUtil.generateToken(pB);
 
-        accA1 = new Account(); accA1.setName("A1"); accA1.setUserId(userA.getId()); accA1 = accountRepository.save(accA1);
-        catA1 = new Category(); catA1.setName("Food"); catA1.setUserId(userA.getId()); catA1 = categoryRepository.save(catA1);
+        accA1 = new Account();
+        accA1.setName("A1");
+        accA1.setUserId(userA.getId());
+        accA1 = accountRepository.save(accA1);
+        catA1 = new Category();
+        catA1.setName("Food");
+        catA1.setUserId(userA.getId());
+        catA1 = categoryRepository.save(catA1);
     }
 
     private Map<String, Object> basePayload() {

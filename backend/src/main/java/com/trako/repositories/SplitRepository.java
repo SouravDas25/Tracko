@@ -13,9 +13,9 @@ public interface SplitRepository extends JpaRepository<Split, Long>, JpaSpecific
     List<Split> findByTransactionId(Long transactionId);
 
     List<Split> findByTransactionIdIn(List<Long> transactionIds);
-    
+
     List<Split> findByUserId(String userId);
-    
+
     List<Split> findByUserIdAndIsSettled(String userId, Integer isSettled);
 
     List<Split> findByContactId(Long contactId);
@@ -23,10 +23,11 @@ public interface SplitRepository extends JpaRepository<Split, Long>, JpaSpecific
     List<Split> findByContactIdAndIsSettled(Long contactId, Integer isSettled);
 
     void deleteByUserId(String userId);
+
     void deleteByTransactionIdIn(List<Long> transactionIds);
 
     boolean existsByContactId(Long contactId);
-    
+
     @Modifying
     @Query("UPDATE Split s SET s.isSettled = 1, s.settledAt = CURRENT_TIMESTAMP WHERE s.id = ?1")
     void settleSplit(Long splitId);

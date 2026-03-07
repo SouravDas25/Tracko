@@ -17,16 +17,16 @@ public enum TransactionType {
         this.value = value;
     }
 
-    @JsonValue
-    public int getValue() {
-        return value;
-    }
-
     @JsonCreator
     public static TransactionType fromValue(int value) {
         return Arrays.stream(TransactionType.values())
                 .filter(t -> t.value == value)
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Unknown TransactionType value: " + value));
+    }
+
+    @JsonValue
+    public int getValue() {
+        return value;
     }
 }

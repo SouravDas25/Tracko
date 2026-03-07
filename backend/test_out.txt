@@ -164,11 +164,11 @@ Liquibase: Update has been successful. Rows affected: 12
 OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
 2026-03-06T22:31:30.482Z  INFO 25004 --- [           main] c.t.s.RecurringTransactionService        : Found 1 recurring transactions due for processing
 2026-03-06T22:31:30.483Z  INFO 25004 --- [           main] c.t.s.RecurringTransactionService        : Processing recurring transaction: Due Transaction (ID: 1)
-2026-03-06T22:31:30.484Z  INFO 25004 --- [           main] com.trako.services.TransferService       : Creating transfer: 500.0 INR from account 1 to account 1 for user 0faed02d-4109-4bbb-8a21-38d7ccc511f8
+2026-03-06T22:31:30.484Z  INFO 25004 --- [           main] com.trako.services.transactions.TransferService       : Creating transfer: 500.0 INR from account 1 to account 1 for user 0faed02d-4109-4bbb-8a21-38d7ccc511f8
 2026-03-06T22:31:30.485Z ERROR 25004 --- [           main] c.t.s.RecurringTransactionService        : Failed to process recurring transaction ID: 1
 
 java.lang.IllegalArgumentException: fromAccountId and toAccountId cannot be same
-	at com.trako.services.TransferService.createTransfer(TransferService.java:103)
+	at com.trako.services.transactions.TransferService.createTransfer(TransferService.java:103)
 	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
 	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
 	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
@@ -183,7 +183,7 @@ java.lang.IllegalArgumentException: fromAccountId and toAccountId cannot be same
 	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
 	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:765)
 	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:717)
-	at com.trako.services.TransferService$$SpringCGLIB$$0.createTransfer(<generated>)
+	at com.trako.services.transactions.TransferService$$SpringCGLIB$$0.createTransfer(<generated>)
 	at com.trako.services.RecurringTransactionService.processSingleTransaction(RecurringTransactionService.java:135)
 	at com.trako.services.RecurringTransactionService.processDueTransactions(RecurringTransactionService.java:116)
 	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)

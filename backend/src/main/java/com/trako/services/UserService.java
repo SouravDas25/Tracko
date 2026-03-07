@@ -144,7 +144,7 @@ public class UserService {
         } else if (user.getBaseCurrency() == null) {
             user.setBaseCurrency("INR");
         }
-        
+
         user = usersRepository.save(user);
         return user.getId();
     }
@@ -170,7 +170,7 @@ public class UserService {
             if (!transactionIds.isEmpty()) {
                 splitRepository.deleteByTransactionIdIn(transactionIds);
             }
-            
+
             // 4. Delete Transactions
             transactionRepository.deleteByAccountIdIn(accountIds);
         }

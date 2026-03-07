@@ -15,8 +15,8 @@ public class TestJwtSecurityConfig {
 
     @Bean
     public SecurityFilterChain testJwtSecurityFilterChain(HttpSecurity http,
-                                                         JwtRequestFilter jwtRequestFilter,
-                                                         JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint) throws Exception {
+                                                          JwtRequestFilter jwtRequestFilter,
+                                                          JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

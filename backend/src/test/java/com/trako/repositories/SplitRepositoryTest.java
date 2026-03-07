@@ -1,7 +1,6 @@
 package com.trako.repositories;
 
 import com.trako.entities.*;
-import com.trako.entities.TransactionType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

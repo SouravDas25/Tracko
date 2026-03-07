@@ -16,16 +16,16 @@ public enum RecurringTransactionType {
         this.value = value;
     }
 
-    @JsonValue
-    public int getValue() {
-        return value;
-    }
-
     @JsonCreator
     public static RecurringTransactionType fromValue(int value) {
         return Arrays.stream(RecurringTransactionType.values())
                 .filter(t -> t.value == value)
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Unknown RecurringTransactionType value: " + value));
+    }
+
+    @JsonValue
+    public int getValue() {
+        return value;
     }
 }

@@ -13,9 +13,9 @@ import java.util.Optional;
 @Repository
 public interface BudgetCategoryAllocationRepository extends JpaRepository<BudgetCategoryAllocation, Long> {
     List<BudgetCategoryAllocation> findByBudgetMonthId(Long budgetMonthId);
-    
+
     Optional<BudgetCategoryAllocation> findByBudgetMonthIdAndCategoryId(Long budgetMonthId, Long categoryId);
-    
+
     List<BudgetCategoryAllocation> findByUserIdAndBudgetMonthId(String userId, Long budgetMonthId);
 
     void deleteByUserId(String userId);

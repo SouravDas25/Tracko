@@ -23,16 +23,16 @@ import java.io.IOException;
 
 /**
  * JWT Authentication Filter that processes incoming HTTP requests to validate JWT tokens.
- * 
+ * <p>
  * This filter intercepts every request (except OPTIONS pre-flight requests) to:
  * 1. Extract JWT token from Authorization header (Bearer format)
  * 2. Validate the token and extract username
  * 3. Load user details and authenticate the user in Spring Security context
  * 4. Allow the request to proceed through the filter chain
- * 
+ * <p>
  * The filter ensures that only authenticated users can access protected endpoints
  * while allowing public endpoints to be accessed without authentication.
- * 
+ *
  * @author Tracko Team
  * @since 1.0
  */
@@ -59,11 +59,11 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
     /**
      * Determines whether the filter should be skipped for certain requests.
-     * 
+     * <p>
      * This method skips JWT validation for OPTIONS requests to support CORS pre-flight
      * requests, which don't contain authentication headers and should be allowed
      * to proceed without authentication.
-     * 
+     *
      * @param request The current HTTP request
      * @return true if the filter should be skipped (OPTIONS requests), false otherwise
      */
@@ -74,7 +74,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
     /**
      * Core filter method that processes each incoming HTTP request for JWT authentication.
-     * 
+     * <p>
      * This method implements the JWT authentication flow:
      * 1. Extracts JWT token from Authorization header (Bearer format)
      * 2. Validates the token and extracts username
@@ -82,16 +82,16 @@ public class JwtRequestFilter extends OncePerRequestFilter {
      * 4. Validates token against user details
      * 5. Sets authentication in Spring Security context if valid
      * 6. Continues the filter chain regardless of authentication status
-     * 
+     * <p>
      * The filter is designed to be permissive - it allows requests to proceed
      * even without valid authentication, letting Spring Security's authorization
      * rules determine access to protected resources.
-     * 
-     * @param httpServletRequest The incoming HTTP request
+     *
+     * @param httpServletRequest  The incoming HTTP request
      * @param httpServletResponse The HTTP response
-     * @param filterChain The filter chain to continue processing
+     * @param filterChain         The filter chain to continue processing
      * @throws ServletException If servlet processing fails
-     * @throws IOException If I/O operations fail
+     * @throws IOException      If I/O operations fail
      */
     @Override
     protected void doFilterInternal(HttpServletRequest httpServletRequest, @NonNull HttpServletResponse httpServletResponse, @NonNull FilterChain filterChain) throws ServletException, IOException {
@@ -104,7 +104,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
             String username = null;
             String jwtToken = null;
-            
+
             // JWT Token is expected in the format "Bearer <token>"
             // Remove "Bearer " prefix to get the actual token
             if (requestTokenHeader != null && requestTokenHeader.startsWith("Bearer ")) {
@@ -117,7 +117,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                     filterChain.doFilter(httpServletRequest, httpServletResponse);
                     return;
                 }
-                
+
                 // Attempt to extract username from the JWT token
                 try {
                     username = jwtTokenUtil.getUserNameFromToken(jwtToken);
@@ -153,11 +153,11 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                     // Create authentication token with user details and authorities
                     UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(
                             userDetails, null, userDetails.getAuthorities());
-                    
+
                     // Set authentication details including request information
                     usernamePasswordAuthenticationToken
                             .setDetails(new WebAuthenticationDetailsSource().buildDetails(httpServletRequest));
-                    
+
                     // Set the authentication in Spring Security context
                     // This marks the user as authenticated for the current request
                     SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
@@ -165,12 +165,12 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                     logger.warn("JwtRequestFilter: Token validation failed for user: " + username);
                 }
             } else {
-                 // Log if user is already authenticated (useful for debugging)
-                 if (username != null) {
-                     logger.info("JwtRequestFilter: SecurityContext already has authentication: " + SecurityContextHolder.getContext().getAuthentication());
-                 }
+                // Log if user is already authenticated (useful for debugging)
+                if (username != null) {
+                    logger.info("JwtRequestFilter: SecurityContext already has authentication: " + SecurityContextHolder.getContext().getAuthentication());
+                }
             }
-            
+
             // Continue with the filter chain regardless of authentication status
             // This allows Spring Security to handle authorization based on endpoint configuration
             filterChain.doFilter(httpServletRequest, httpServletResponse);

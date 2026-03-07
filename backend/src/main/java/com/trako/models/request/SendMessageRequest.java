@@ -10,6 +10,10 @@ public class SendMessageRequest {
         return message;
     }
 
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
     public String getSender() {
         return sender;
     }
@@ -24,9 +28,5 @@ public class SendMessageRequest {
 
     public void setChatGroupAddress(String chatGroupAddress) {
         this.chatGroupAddress = chatGroupAddress;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
     }
 }

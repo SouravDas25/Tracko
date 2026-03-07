@@ -2,19 +2,8 @@ package com.trako.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trako.config.TestJwtSecurityConfig;
-import com.trako.entities.Account;
-import com.trako.entities.Category;
-import com.trako.entities.Frequency;
-import com.trako.entities.RecurringTransaction;
-import com.trako.entities.RecurringTransactionType;
-import com.trako.entities.Transaction;
-import com.trako.entities.TransactionType;
-import com.trako.entities.User;
-import com.trako.repositories.AccountRepository;
-import com.trako.repositories.CategoryRepository;
-import com.trako.repositories.RecurringTransactionRepository;
-import com.trako.repositories.TransactionRepository;
-import com.trako.repositories.UsersRepository;
+import com.trako.entities.*;
+import com.trako.repositories.*;
 import com.trako.services.RecurringTransactionService;
 import com.trako.util.JwtTokenUtil;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,7 +22,7 @@ import java.util.Date;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -128,9 +117,9 @@ public class RecurringTransactionIntegrationTest {
         rt.setNextRunDate(new Date());
 
         mockMvc.perform(post("/api/recurring-transactions")
-                .header("Authorization", bearerToken)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(rt)))
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(rt)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.id").exists())
                 .andExpect(jsonPath("$.result.name").value("Netflix Subscription"));
@@ -151,16 +140,16 @@ public class RecurringTransactionIntegrationTest {
         rt.setFrequency(Frequency.MONTHLY);
         rt.setStartDate(new Date());
         rt.setNextRunDate(new Date());
-        
+
         // Currency fields
         rt.setOriginalCurrency("USD");
         rt.setOriginalAmount(15.0);
         rt.setExchangeRate(80.0);
 
         mockMvc.perform(post("/api/recurring-transactions")
-                .header("Authorization", bearerToken)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(rt)))
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(rt)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.id").exists())
                 .andExpect(jsonPath("$.result.name").value("Netflix Subscription USD"))
@@ -211,12 +200,12 @@ public class RecurringTransactionIntegrationTest {
         // Verify recurring transaction was updated
         RecurringTransaction updatedRt = recurringTransactionRepository.findById(rt.getId()).orElseThrow();
         assertNotNull(updatedRt.getLastRunDate());
-        
+
         // Next run date should be yesterday + 1 month
         cal.setTime(yesterday);
         cal.add(Calendar.MONTH, 1);
         Date expectedNextRun = cal.getTime();
-        
+
         // Allow small difference in milliseconds if any, but logic uses Calendar math so should be close
         // Actually the logic sets it exactly using Calendar add
         assertEquals(expectedNextRun.toString(), updatedRt.getNextRunDate().toString());
@@ -256,10 +245,10 @@ public class RecurringTransactionIntegrationTest {
         // Verify transfer transactions created (Debit and Credit)
         List<Transaction> transactions = transactionRepository.findAll();
         assertEquals(2, transactions.size());
-        
+
         boolean hasDebit = transactions.stream().anyMatch(t -> t.getAmount() == 1000.0 && t.getTransactionType() == TransactionType.DEBIT);
         boolean hasCredit = transactions.stream().anyMatch(t -> t.getAmount() == 1000.0 && t.getTransactionType() == TransactionType.CREDIT);
-        
+
         assertTrue(hasDebit);
         assertTrue(hasCredit);
     }

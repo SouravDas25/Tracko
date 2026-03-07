@@ -1,11 +1,8 @@
-package com.trako.services;
+package com.trako.services.transactions;
 
-import com.trako.entities.Account;
 import com.trako.entities.Category;
 import com.trako.entities.Transaction;
 import com.trako.entities.TransactionType;
-import com.trako.exceptions.AuthorizationException;
-import com.trako.exceptions.BadRequestException;
 import com.trako.exceptions.NotFoundException;
 import com.trako.models.request.TransactionRequest;
 import com.trako.repositories.AccountRepository;
@@ -33,27 +30,19 @@ public class TransferService {
     @Autowired
     private CategoryRepository categoryRepository;
 
-    private void validateAccountOwnership(String userId, Long accountId) {
-        if (accountId == null) return;
-        Account account = accountRepository.findById(accountId)
-                .orElseThrow(() -> new BadRequestException("Account not found: " + accountId));
-        if (!userId.equals(account.getUserId())) {
-            throw new AuthorizationException("User does not own account: " + accountId);
-        }
-    }
+    @Autowired
+    private TransactionValidationService validationService;
 
     private Transaction saveTransaction(String userId, Transaction transaction) {
         if (transaction.getAccountId() != null) {
-            validateAccountOwnership(userId, transaction.getAccountId());
+            validationService.validateAccountOwnership(userId, transaction.getAccountId());
         }
         Transaction persisted = transactionRepository.saveAndFlush(transaction);
         return transactionRepository.findById(persisted.getId()).orElse(persisted);
     }
 
     private void deleteTransaction(String userId, Long transactionId) {
-        Transaction transaction = transactionRepository.findById(transactionId)
-                .orElseThrow(() -> new NotFoundException("Transaction not found: " + transactionId));
-        validateAccountOwnership(userId, transaction.getAccountId());
+        Transaction transaction = validationService.validateTransactionOwnership(userId, transactionId);
         transactionRepository.delete(transaction);
     }
 
@@ -85,10 +74,10 @@ public class TransferService {
     }
 
     @Transactional
-    public Transaction[] createTransfer(String userId, Long fromAccountId, Long toAccountId, 
-                                       Date date, Double originalAmount, String originalCurrency, Double exchangeRate, String name, String comments) {
-        logger.info("Creating transfer: {} {} from account {} to account {} for user {}", 
-                   originalAmount, originalCurrency, fromAccountId, toAccountId, userId);
+    public Transaction[] createTransfer(String userId, Long fromAccountId, Long toAccountId,
+                                        Date date, Double originalAmount, String originalCurrency, Double exchangeRate, String name, String comments) {
+        logger.info("Creating transfer: {} {} from account {} to account {} for user {}",
+                originalAmount, originalCurrency, fromAccountId, toAccountId, userId);
 
         if (originalCurrency == null) {
             throw new IllegalArgumentException("Original currency is required for transfer");
@@ -103,8 +92,8 @@ public class TransferService {
             throw new IllegalArgumentException("fromAccountId and toAccountId cannot be same");
         }
 
-        validateAccountOwnership(userId, fromAccountId);
-        validateAccountOwnership(userId, toAccountId);
+        validationService.validateAccountOwnership(userId, fromAccountId);
+        validationService.validateAccountOwnership(userId, toAccountId);
 
         Long transferCategoryId = getOrCreateTransferCategory(userId);
         Date transferDate = (date != null) ? date : new Date();
@@ -167,18 +156,18 @@ public class TransferService {
         Transaction linkedTx = transactionRepository.findById(linkedId)
                 .orElseThrow(() -> new NotFoundException("Linked transaction not found: " + linkedId));
 
-        validateAccountOwnership(userId, transaction.getAccountId());
-        validateAccountOwnership(userId, linkedTx.getAccountId());
+        validationService.validateAccountOwnership(userId, transaction.getAccountId());
+        validationService.validateAccountOwnership(userId, linkedTx.getAccountId());
 
         deleteTransaction(userId, transactionId);
         deleteTransaction(userId, linkedId);
     }
 
     @Transactional
-    public Transaction[] updateTransfer(String userId, Long transactionId, 
-                                       Long fromAccountId, Long toAccountId,
-                                       Date date,
-                                       Double originalAmount, String originalCurrency, Double exchangeRate, String name, String comments) {
+    public Transaction[] updateTransfer(String userId, Long transactionId,
+                                        Long fromAccountId, Long toAccountId,
+                                        Date date,
+                                        Double originalAmount, String originalCurrency, Double exchangeRate, String name, String comments) {
         logger.info("Updating transfer containing transaction {} for user {}", transactionId, userId);
 
         Transaction transaction = transactionRepository.findById(transactionId)
@@ -195,8 +184,8 @@ public class TransferService {
         Transaction debit = transaction.getTransactionType() != null && transaction.getTransactionType() == TransactionType.DEBIT ? transaction : linkedTx;
         Transaction credit = transaction.getTransactionType() != null && transaction.getTransactionType() == TransactionType.CREDIT ? transaction : linkedTx;
 
-        validateAccountOwnership(userId, debit.getAccountId());
-        validateAccountOwnership(userId, credit.getAccountId());
+        validationService.validateAccountOwnership(userId, debit.getAccountId());
+        validationService.validateAccountOwnership(userId, credit.getAccountId());
 
         if (date != null) {
             debit.setDate(date);
@@ -225,13 +214,13 @@ public class TransferService {
 
         Long newDebitAccountId = debit.getAccountId();
         if (fromAccountId != null && !fromAccountId.equals(debit.getAccountId())) {
-            validateAccountOwnership(userId, fromAccountId);
+            validationService.validateAccountOwnership(userId, fromAccountId);
             newDebitAccountId = fromAccountId;
         }
-        
+
         Long newCreditAccountId = credit.getAccountId();
         if (toAccountId != null && !toAccountId.equals(credit.getAccountId())) {
-            validateAccountOwnership(userId, toAccountId);
+            validationService.validateAccountOwnership(userId, toAccountId);
             newCreditAccountId = toAccountId;
         }
 
@@ -264,9 +253,9 @@ public class TransferService {
             throw new IllegalArgumentException("Transaction is already a transfer");
         }
 
-        validateAccountOwnership(userId, existing.getAccountId());
-        validateAccountOwnership(userId, toAccountId);
-        
+        validationService.validateAccountOwnership(userId, existing.getAccountId());
+        validationService.validateAccountOwnership(userId, toAccountId);
+
         if (existing.getAccountId().equals(toAccountId)) {
             throw new IllegalArgumentException("Source and destination accounts cannot be the same");
         }
@@ -295,12 +284,12 @@ public class TransferService {
         credit.setIsCountable(0);
         credit.setName(existing.getName());
         credit.setComments(existing.getComments());
-        
+
         Transaction savedCredit = saveTransaction(userId, credit);
-        
+
         existing.setLinkedTransactionId(savedCredit.getId());
         Transaction savedDebit = saveTransaction(userId, existing);
-        
+
         savedCredit.setLinkedTransactionId(savedDebit.getId());
         saveTransaction(userId, savedCredit);
 
@@ -319,13 +308,16 @@ public class TransferService {
         }
 
         Long linkedId = existing.getLinkedTransactionId();
-        Transaction linkedTx = transactionRepository.findById(linkedId)
-                .orElseThrow(() -> new NotFoundException("Linked transaction not found: " + linkedId));
 
-        validateAccountOwnership(userId, existing.getAccountId());
+        // Check if a linked transaction exists before deleting (validation happens in deleteTransaction)
+        if (!transactionRepository.existsById(linkedId)) {
+            throw new NotFoundException("Linked transaction not found: " + linkedId);
+        }
+
+        validationService.validateAccountOwnership(userId, existing.getAccountId());
 
         existing.setLinkedTransactionId(null);
-        
+
         if (request.categoryId() != null) {
             existing.setCategoryId(request.categoryId());
         }
@@ -338,9 +330,9 @@ public class TransferService {
         if (request.isCountable() != null) {
             existing.setIsCountable(request.isCountable());
         } else {
-            existing.setIsCountable(1); 
+            existing.setIsCountable(1);
         }
-        
+
         Transaction saved = saveTransaction(userId, existing);
         deleteTransaction(userId, linkedId);
 

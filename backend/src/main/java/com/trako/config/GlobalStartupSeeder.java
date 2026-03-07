@@ -120,7 +120,7 @@ public class GlobalStartupSeeder implements ApplicationRunner {
                     existing.setIsShadow(isShadow);
                     changed = true;
                 }
-                
+
                 if (existing.getPassword() == null || !passwordEncoder.matches(password, existing.getPassword())) {
                     existing.setPassword(passwordEncoder.encode(password));
                     changed = true;

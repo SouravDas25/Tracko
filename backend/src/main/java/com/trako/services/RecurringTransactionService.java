@@ -3,10 +3,11 @@ package com.trako.services;
 import com.trako.entities.Frequency;
 import com.trako.entities.RecurringTransaction;
 import com.trako.entities.RecurringTransactionType;
-import com.trako.entities.Transaction;
 import com.trako.entities.TransactionType;
 import com.trako.models.request.TransactionRequest;
 import com.trako.repositories.RecurringTransactionRepository;
+import com.trako.services.transactions.TransactionWriteService;
+import com.trako.services.transactions.TransferService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,7 +47,7 @@ public class RecurringTransactionService {
     @Transactional
     public RecurringTransaction create(String userId, RecurringTransaction recurringTransaction) {
         recurringTransaction.setUserId(userId);
-        
+
         // Ensure nextRunDate is set. If not, default to startDate
         if (recurringTransaction.getNextRunDate() == null) {
             recurringTransaction.setNextRunDate(recurringTransaction.getStartDate());
@@ -75,7 +76,7 @@ public class RecurringTransactionService {
         if (updates.getNextRunDate() != null) existing.setNextRunDate(updates.getNextRunDate());
         if (updates.getEndDate() != null) existing.setEndDate(updates.getEndDate());
         if (updates.getIsActive() != null) existing.setIsActive(updates.getIsActive());
-        
+
         // Currency fields
         if (updates.getOriginalCurrency() != null) {
             if (updates.getOriginalCurrency().isEmpty()) {

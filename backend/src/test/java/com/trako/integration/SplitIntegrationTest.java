@@ -3,9 +3,8 @@ package com.trako.integration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trako.config.TestJwtSecurityConfig;
 import com.trako.entities.*;
-import com.trako.entities.TransactionType;
 import com.trako.repositories.*;
-import com.trako.services.TransactionWriteService;
+import com.trako.services.transactions.TransactionWriteService;
 import com.trako.util.JwtTokenUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -148,9 +147,9 @@ public class SplitIntegrationTest {
         split.setIsSettled(0);
 
         mockMvc.perform(post("/api/splits")
-                .header("Authorization", bearerToken)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(split)))
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(split)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.amount").value(50.00))
                 .andExpect(jsonPath("$.result.isSettled").value(0));

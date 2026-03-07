@@ -2,8 +2,13 @@ package com.trako.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trako.config.TestJwtSecurityConfig;
-import com.trako.entities.*;
-import com.trako.repositories.*;
+import com.trako.entities.Account;
+import com.trako.entities.Transaction;
+import com.trako.entities.TransactionType;
+import com.trako.entities.User;
+import com.trako.repositories.AccountRepository;
+import com.trako.repositories.TransactionRepository;
+import com.trako.repositories.UsersRepository;
 import com.trako.util.JwtTokenUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,12 +38,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 public class TransferUpdateExtraIntegrationTest {
 
-    @Autowired private MockMvc mockMvc;
-    @Autowired private ObjectMapper objectMapper;
-    @Autowired private UsersRepository usersRepository;
-    @Autowired private AccountRepository accountRepository;
-    @Autowired private TransactionRepository transactionRepository;
-    @Autowired private JwtTokenUtil jwtTokenUtil;
+    @Autowired
+    private MockMvc mockMvc;
+    @Autowired
+    private ObjectMapper objectMapper;
+    @Autowired
+    private UsersRepository usersRepository;
+    @Autowired
+    private AccountRepository accountRepository;
+    @Autowired
+    private TransactionRepository transactionRepository;
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
 
     private User userA;
     private String tokenA;
@@ -63,9 +74,18 @@ public class TransferUpdateExtraIntegrationTest {
                 userA.getPhoneNo(), userA.getPassword(), Collections.emptyList());
         tokenA = "Bearer " + jwtTokenUtil.generateToken(principalA);
 
-        acc1 = new Account(); acc1.setName("A1"); acc1.setUserId(userA.getId()); acc1 = accountRepository.save(acc1);
-        acc2 = new Account(); acc2.setName("A2"); acc2.setUserId(userA.getId()); acc2 = accountRepository.save(acc2);
-        acc3 = new Account(); acc3.setName("A3"); acc3.setUserId(userA.getId()); acc3 = accountRepository.save(acc3);
+        acc1 = new Account();
+        acc1.setName("A1");
+        acc1.setUserId(userA.getId());
+        acc1 = accountRepository.save(acc1);
+        acc2 = new Account();
+        acc2.setName("A2");
+        acc2.setUserId(userA.getId());
+        acc2 = accountRepository.save(acc2);
+        acc3 = new Account();
+        acc3.setName("A3");
+        acc3.setUserId(userA.getId());
+        acc3 = accountRepository.save(acc3);
     }
 
     @Test
@@ -118,8 +138,14 @@ public class TransferUpdateExtraIntegrationTest {
         userB.setPassword("pass");
         userB = usersRepository.save(userB);
 
-        Account b1 = new Account(); b1.setName("B1"); b1.setUserId(userB.getId()); b1 = accountRepository.save(b1);
-        Account b2 = new Account(); b2.setName("B2"); b2.setUserId(userB.getId()); b2 = accountRepository.save(b2);
+        Account b1 = new Account();
+        b1.setName("B1");
+        b1.setUserId(userB.getId());
+        b1 = accountRepository.save(b1);
+        Account b2 = new Account();
+        b2.setName("B2");
+        b2.setUserId(userB.getId());
+        b2 = accountRepository.save(b2);
 
         var principalB = new org.springframework.security.core.userdetails.User(
                 userB.getPhoneNo(), userB.getPassword(), Collections.emptyList());

@@ -3,9 +3,7 @@ package com.trako.integration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trako.config.TestJwtSecurityConfig;
 import com.trako.entities.*;
-import com.trako.entities.TransactionType;
 import com.trako.models.request.AccountSaveRequest;
-import com.trako.models.request.UserSaveRequest;
 import com.trako.repositories.*;
 import com.trako.util.JwtTokenUtil;
 import org.junit.jupiter.api.BeforeEach;
@@ -129,9 +127,9 @@ public class CurrencyIntegrationTest {
         request.setCurrency("JPY");
 
         mockMvc.perform(post("/api/accounts")
-                .header("Authorization", bearerToken)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.currency").value("JPY"));
     }
@@ -148,23 +146,23 @@ public class CurrencyIntegrationTest {
         transaction.setDate(new Date());
         transaction.setAccountId(testAccount.getId());
         transaction.setCategoryId(testCategory.getId());
-        
+
         // Don't set amount directly, let backend calculate it
         transaction.setOriginalCurrency("EUR");
         transaction.setOriginalAmount(100.0);
         transaction.setExchangeRate(1.1);
 
         mockMvc.perform(post("/api/transactions")
-                .header("Authorization", bearerToken)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(transaction)))
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(transaction)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.amount").value(closeTo(110.0, 1e-9))) // 100 * 1.1
                 .andExpect(jsonPath("$.result.originalCurrency").value("EUR"))
                 .andExpect(jsonPath("$.result.originalAmount").value(100.0))
                 .andExpect(jsonPath("$.result.exchangeRate").value(1.1));
     }
-    
+
     @Test
     public void testTransactionMissingAmountAndConversionData() throws Exception {
         Transaction transaction = new Transaction();
@@ -176,21 +174,21 @@ public class CurrencyIntegrationTest {
         // No amount, no conversion data
 
         mockMvc.perform(post("/api/transactions")
-                .header("Authorization", bearerToken)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(transaction)))
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(transaction)))
                 .andExpect(status().isBadRequest()); // Should fail validation or service logic? 
-                // Actually TransactionService throws IllegalArgumentException, which might bubble up as 500 or caught by global handler.
-                // Looking at BudgetController, it catches Exception and returns badRequest.
-                // TransactionController catches UserNotLoggedInException, but valid @RequestBody might pass validation if amount is not @NotNull anymore (we removed it).
-                // Let's check TransactionController.create catch block.
-                // It only catches UserNotLoggedInException. RuntimeException will likely cause 500 unless there's a GlobalExceptionHandler.
-                // Wait, we removed @NotNull from amount in Transaction.java entity.
-                // So @Valid will pass.
-                // Service will throw IllegalArgumentException.
-                // Controller doesn't catch it explicitly, so default error handling.
-                // Let's assume 500 or 400 depending on Spring config.
-                // Ideally we should verify it fails.
+        // Actually TransactionService throws IllegalArgumentException, which might bubble up as 500 or caught by global handler.
+        // Looking at BudgetController, it catches Exception and returns badRequest.
+        // TransactionController catches UserNotLoggedInException, but valid @RequestBody might pass validation if amount is not @NotNull anymore (we removed it).
+        // Let's check TransactionController.create catch block.
+        // It only catches UserNotLoggedInException. RuntimeException will likely cause 500 unless there's a GlobalExceptionHandler.
+        // Wait, we removed @NotNull from amount in Transaction.java entity.
+        // So @Valid will pass.
+        // Service will throw IllegalArgumentException.
+        // Controller doesn't catch it explicitly, so default error handling.
+        // Let's assume 500 or 400 depending on Spring config.
+        // Ideally we should verify it fails.
     }
 
     @Test
@@ -214,9 +212,9 @@ public class CurrencyIntegrationTest {
         // Do NOT set exchangeRate or amount
 
         mockMvc.perform(post("/api/transactions")
-                .header("Authorization", bearerToken)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(transaction)))
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(transaction)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.amount").value(closeTo(2.80, 1e-9))) // 2.50 * 1.12 rounded to ~2.80
                 .andExpect(jsonPath("$.result.originalCurrency").value("EUR"))
@@ -240,9 +238,9 @@ public class CurrencyIntegrationTest {
         // No exchangeRate and EUR not configured
 
         mockMvc.perform(post("/api/transactions")
-                .header("Authorization", bearerToken)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(transaction)))
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(transaction)))
                 .andExpect(status().isBadRequest()); // Service throws IllegalArgumentException
     }
 }

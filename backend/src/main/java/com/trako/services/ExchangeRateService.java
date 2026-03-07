@@ -14,10 +14,9 @@ import java.util.Map;
 @Service
 public class ExchangeRateService {
 
+    private final RestTemplate restTemplate;
     @Value("${exchange-rate.api-url:https://open.er-api.com/v6/latest/}")
     private String apiUrl;
-
-    private final RestTemplate restTemplate;
 
     public ExchangeRateService(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
@@ -28,7 +27,8 @@ public class ExchangeRateService {
                 apiUrl + baseCurrency,
                 HttpMethod.GET,
                 null,
-                new ParameterizedTypeReference<Map<String, Object>>() {}
+                new ParameterizedTypeReference<Map<String, Object>>() {
+                }
         );
 
         if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
