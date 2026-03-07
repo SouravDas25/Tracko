@@ -1,13 +1,21 @@
-from ..core.client import TrackoClient
+import json
+
+from ..core.api import make_api_client
+
 
 def get_id_name_map(base_url: str, token: str | None, path: str) -> dict[int, str]:
-    client = TrackoClient(base_url, token)
-    result = client.get(path)
-    payload = result.get("json")
-    if not (result.get("ok") and isinstance(payload, dict)):
-        return {}
-    
-    items = payload.get("result")
+    with make_api_client(base_url, token) as api_client:
+        headers = {"Accept": "application/json"}
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
+        try:
+            resp = api_client.rest_client.request("GET", base_url.rstrip("/") + path, headers=headers)
+            resp.read()
+            payload = json.loads(resp.data) if resp.data else {}
+        except Exception:
+            return {}
+
+    items = payload.get("result") if isinstance(payload, dict) else None
     if not isinstance(items, list):
         return {}
 

@@ -1,29 +1,39 @@
 import argparse
-import urllib.parse
+import json
+
 from ..core.config import get_token_from_args_or_config
-from ..core.client import TrackoClient
-from ..utils.formatting import print_result
+from ..core.api import make_api_client, sdk_call
+
+import tracko_sdk
+from tracko_sdk.models.user_save_request import UserSaveRequest
+
+
+def _print_raw(data) -> None:
+    if data is None:
+        print("null")
+        return
+    if hasattr(data, "to_dict"):
+        print(json.dumps(data.to_dict(), indent=2, default=str))
+    else:
+        print(json.dumps(data, indent=2, default=str))
 
 
 def setup_parser(subparsers):
     sp = subparsers.add_parser("users")
-    sub_usr = sp.add_subparsers(dest="users_cmd", required=True)
+    sub = sp.add_subparsers(dest="users_cmd", required=True)
 
-    sp2 = sub_usr.add_parser("list")
-    sp2.set_defaults(func=cmd_users_list)
+    sub.add_parser("list").set_defaults(func=cmd_users_list)
+    sub.add_parser("me").set_defaults(func=cmd_users_me)
 
-    sp2 = sub_usr.add_parser("me")
-    sp2.set_defaults(func=cmd_users_me)
-
-    sp2 = sub_usr.add_parser("get")
+    sp2 = sub.add_parser("get")
     sp2.add_argument("--id", required=True)
     sp2.set_defaults(func=cmd_users_get)
 
-    sp2 = sub_usr.add_parser("find-phone")
+    sp2 = sub.add_parser("find-phone")
     sp2.add_argument("--phone-no", required=True)
     sp2.set_defaults(func=cmd_users_find_phone)
 
-    sp2 = sub_usr.add_parser("upsert")
+    sp2 = sub.add_parser("upsert")
     sp2.add_argument("--phone-no", required=True)
     sp2.add_argument("--password", required=True)
     sp2.add_argument("--name")
@@ -37,55 +47,63 @@ def setup_parser(subparsers):
 
 def cmd_users_list(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
-    client = TrackoClient(base_url, token)
-    result = client.get("/api/user")
-    print_result(result, raw=args.raw)
-    return 0 if result["ok"] else 1
+    with make_api_client(base_url, token) as api_client:
+        api = tracko_sdk.UserControllerApi(api_client)
+        result = sdk_call(lambda: api.show())
+    if result is None:
+        return 1
+    _print_raw(result)
+    return 0
 
 
 def cmd_users_me(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
-    client = TrackoClient(base_url, token)
-    result = client.get("/api/user/me")
-    print_result(result, raw=args.raw)
-    return 0 if result.get("ok") else 1
+    with make_api_client(base_url, token) as api_client:
+        api = tracko_sdk.UserControllerApi(api_client)
+        result = sdk_call(lambda: api.me())
+    if result is None:
+        return 1
+    _print_raw(result)
+    return 0
 
 
 def cmd_users_get(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
-    client = TrackoClient(base_url, token)
-    result = client.get(f"/api/user/{urllib.parse.quote(str(args.id))}")
-    print_result(result, raw=args.raw)
-    return 0 if result.get("ok") else 1
+    with make_api_client(base_url, token) as api_client:
+        api = tracko_sdk.UserControllerApi(api_client)
+        result = sdk_call(lambda: api.show1(id=args.id))
+    if result is None:
+        return 1
+    _print_raw(result)
+    return 0
 
 
 def cmd_users_find_phone(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
-    client = TrackoClient(base_url, token)
-    q = urllib.parse.urlencode({"phone_no": str(args.phone_no)})
-    result = client.get("/api/user/byPhoneNo" + "?" + q)
-    print_result(result, raw=args.raw)
-    return 0 if result.get("ok") else 1
+    with make_api_client(base_url, token) as api_client:
+        api = tracko_sdk.UserControllerApi(api_client)
+        result = sdk_call(lambda: api.show_by_phone(phone_no=str(args.phone_no)))
+    if result is None:
+        return 1
+    _print_raw(result)
+    return 0
 
 
 def cmd_users_upsert(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
-    client = TrackoClient(base_url, token)
-
-    body: dict = {
-        "phoneNo": str(args.phone_no),
-        "password": str(args.password),
-    }
-    if args.name is not None:
-        body["name"] = args.name
-    if args.email is not None:
-        body["email"] = args.email
-    if args.profile_pic is not None:
-        body["profilePic"] = args.profile_pic
-    if args.base_currency is not None:
-        body["baseCurrency"] = args.base_currency
-    if args.shadow is not None:
-        body["isShadow"] = 1 if args.shadow else 0
-    result = client.post("/api/user/create", json_body=body)
-    print_result(result, raw=args.raw)
-    return 0 if result.get("ok") else 1
+    req = UserSaveRequest(
+        phone_no=str(args.phone_no),
+        password=str(args.password),
+        name=args.name,
+        email=args.email,
+        profile_pic=args.profile_pic,
+        base_currency=args.base_currency,
+        is_shadow=1 if args.shadow else (0 if args.shadow is False else None),
+    )
+    with make_api_client(base_url, token) as api_client:
+        api = tracko_sdk.UserControllerApi(api_client)
+        result = sdk_call(lambda: api.create(req))
+    if result is None:
+        return 1
+    _print_raw(result)
+    return 0

@@ -1,8 +1,21 @@
 import argparse
-import urllib.parse
+import json
+
 from ..core.config import get_token_from_args_or_config
-from ..core.client import TrackoClient
-from ..utils.formatting import print_result
+from ..core.api import make_api_client, sdk_call
+
+import tracko_sdk
+from tracko_sdk.models.json_store import JsonStore
+
+
+def _print_raw(data) -> None:
+    if data is None:
+        print("null")
+        return
+    if hasattr(data, "to_dict"):
+        print(json.dumps(data.to_dict(), indent=2, default=str))
+    else:
+        print(json.dumps(data, indent=2, default=str))
 
 
 def setup_parser(subparsers):
@@ -15,8 +28,7 @@ def setup_parser(subparsers):
     sp_js = subparsers.add_parser("json-store")
     sub_js = sp_js.add_subparsers(dest="json_store_cmd", required=True)
 
-    sp2 = sub_js.add_parser("list")
-    sp2.set_defaults(func=cmd_json_store_list)
+    sub_js.add_parser("list").set_defaults(func=cmd_json_store_list)
 
     sp2 = sub_js.add_parser("get")
     sp2.add_argument("--name", required=True)
@@ -39,58 +51,67 @@ def setup_parser(subparsers):
 
 def cmd_exchange_rates_get(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
-    client = TrackoClient(base_url, token)
-    result = client.get(
-        f"/api/exchange-rates/{urllib.parse.quote(str(args.base_currency))}"
-    )
-    print_result(result, raw=args.raw)
-    return 0 if result.get("ok") else 1
+    with make_api_client(base_url, token) as api_client:
+        api = tracko_sdk.ExchangeRateControllerApi(api_client)
+        result = sdk_call(lambda: api.get_rates(base_currency=str(args.base_currency)))
+    if result is None:
+        return 1
+    _print_raw(result)
+    return 0
 
 
 def cmd_json_store_list(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
-    client = TrackoClient(base_url, token)
-    result = client.get("/api/json-store")
-    print_result(result, raw=args.raw)
-    return 0 if result.get("ok") else 1
+    with make_api_client(base_url, token) as api_client:
+        api = tracko_sdk.JsonStoreControllerApi(api_client)
+        result = sdk_call(lambda: api.get_all4())
+    if result is None:
+        return 1
+    _print_raw(result)
+    return 0
 
 
 def cmd_json_store_get(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
-    client = TrackoClient(base_url, token)
-    result = client.get(f"/api/json-store/{urllib.parse.quote(str(args.name))}")
-    print_result(result, raw=args.raw)
-    return 0 if result.get("ok") else 1
+    with make_api_client(base_url, token) as api_client:
+        api = tracko_sdk.JsonStoreControllerApi(api_client)
+        result = sdk_call(lambda: api.get_by_name(name=args.name))
+    if result is None:
+        return 1
+    _print_raw(result)
+    return 0
 
 
 def cmd_json_store_create(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
-    client = TrackoClient(base_url, token)
-
-    body = {
-        "name": args.name,
-        "value": args.value,
-    }
-    result = client.post("/api/json-store", json_body=body)
-    print_result(result, raw=args.raw)
-    return 0 if result.get("ok") else 1
+    req = JsonStore(name=args.name, value=args.value)
+    with make_api_client(base_url, token) as api_client:
+        api = tracko_sdk.JsonStoreControllerApi(api_client)
+        result = sdk_call(lambda: api.create4(req))
+    if result is None:
+        return 1
+    _print_raw(result)
+    return 0
 
 
 def cmd_json_store_update(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
-    client = TrackoClient(base_url, token)
-
-    body = {"value": args.value}
-    result = client.put(
-        f"/api/json-store/{urllib.parse.quote(str(args.name))}", json_body=body
-    )
-    print_result(result, raw=args.raw)
-    return 0 if result.get("ok") else 1
+    req = JsonStore(name=args.name, value=args.value)
+    with make_api_client(base_url, token) as api_client:
+        api = tracko_sdk.JsonStoreControllerApi(api_client)
+        result = sdk_call(lambda: api.update2(name=args.name, json_store=req))
+    if result is None:
+        return 1
+    _print_raw(result)
+    return 0
 
 
 def cmd_json_store_delete(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
-    client = TrackoClient(base_url, token)
-    result = client.delete(f"/api/json-store/{urllib.parse.quote(str(args.name))}")
-    print_result(result, raw=args.raw)
-    return 0 if result.get("ok") else 1
+    with make_api_client(base_url, token) as api_client:
+        api = tracko_sdk.JsonStoreControllerApi(api_client)
+        result = sdk_call(lambda: api.delete4(name=args.name))
+    if result is None:
+        return 1
+    _print_raw(result)
+    return 0
