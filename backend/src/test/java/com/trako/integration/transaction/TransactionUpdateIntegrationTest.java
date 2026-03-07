@@ -3,6 +3,8 @@ package com.trako.integration.transaction;
 import com.trako.config.TestJwtSecurityConfig;
 import com.trako.entities.*;
 import com.trako.enums.TransactionDbType;
+import com.trako.enums.TransactionType;
+import com.trako.models.request.TransactionRequest;
 import com.trako.integration.BaseIntegrationTest;
 import com.trako.services.transactions.TransactionWriteService;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,8 +18,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -80,15 +80,22 @@ public class TransactionUpdateIntegrationTest extends BaseIntegrationTest {
         t.setIsCountable(1);
         t = transactionWriteService.saveForUser(testUser.getId(), t);
 
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("name", "NewName");
-        payload.put("comments", "Updated");
-        payload.put("date", new Date());
-        payload.put("accountId", account2.getId());
-        payload.put("categoryId", category2.getId());
-        payload.put("isCountable", 0);
-        payload.put("originalCurrency", "INR");
-        payload.put("exchangeRate", 1.0);
+        TransactionRequest payload = new TransactionRequest(
+                null,                    // id
+                account2.getId(),        // accountId
+                new Date(),              // date
+                "NewName",               // name
+                "Updated",              // comments
+                category2.getId(),        // categoryId
+                TransactionType.DEBIT,   // transactionType
+                0,                       // isCountable
+                "INR",                   // originalCurrency
+                null,                    // originalAmount
+                1.0,                     // exchangeRate
+                null,                    // linkedTransactionId
+                null,                    // toAccountId
+                null                     // fromAccountId
+        );
 
         mockMvc.perform(put("/api/transactions/" + t.getId())
                         .header("Authorization", bearerToken)
@@ -131,8 +138,22 @@ public class TransactionUpdateIntegrationTest extends BaseIntegrationTest {
         otherTx.setIsCountable(1);
         otherTx = transactionRepository.save(otherTx);
 
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("name", "Hack");
+        TransactionRequest payload = new TransactionRequest(
+                null,                    // id
+                null,                    // accountId
+                null,                    // date
+                "Hack",                  // name
+                null,                    // comments
+                null,                    // categoryId
+                TransactionType.DEBIT,   // transactionType
+                null,                    // isCountable
+                null,                    // originalCurrency
+                null,                    // originalAmount
+                null,                    // exchangeRate
+                null,                    // linkedTransactionId
+                null,                    // toAccountId
+                null                     // fromAccountId
+        );
 
         mockMvc.perform(put("/api/transactions/" + otherTx.getId())
                         .header("Authorization", bearerToken)

@@ -19,6 +19,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Collections;
 import java.util.UUID;
 
+@SpringBootTest
+@ActiveProfiles("test")
+@Import(TestJwtSecurityConfig.class)
+@AutoConfigureMockMvc
 public abstract class BaseIntegrationTest {
 
     @Autowired

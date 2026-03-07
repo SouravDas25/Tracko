@@ -5,6 +5,7 @@ import com.trako.entities.*;
 import com.trako.enums.Frequency;
 import com.trako.enums.TransactionDbType;
 import com.trako.enums.TransactionType;
+import com.trako.integration.BaseIntegrationTest;
 import com.trako.models.request.AccountSaveRequest;
 import com.trako.repositories.RecurringTransactionRepository;
 import com.trako.services.transactions.TransactionWriteService;

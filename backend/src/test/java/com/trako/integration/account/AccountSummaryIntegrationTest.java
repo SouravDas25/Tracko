@@ -3,6 +3,7 @@ package com.trako.integration.account;
 import com.trako.config.TestJwtSecurityConfig;
 import com.trako.entities.*;
 import com.trako.enums.TransactionDbType;
+import com.trako.integration.BaseIntegrationTest;
 import com.trako.services.transactions.TransactionWriteService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

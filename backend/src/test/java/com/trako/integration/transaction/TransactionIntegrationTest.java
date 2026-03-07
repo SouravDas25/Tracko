@@ -4,6 +4,8 @@ import com.trako.config.TestJwtSecurityConfig;
 import com.trako.dtos.TransferResult;
 import com.trako.entities.*;
 import com.trako.enums.TransactionDbType;
+import com.trako.enums.TransactionType;
+import com.trako.models.request.TransactionRequest;
 import com.trako.integration.BaseIntegrationTest;
 import com.trako.repositories.ContactRepository;
 import com.trako.repositories.SplitRepository;
@@ -105,17 +107,22 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
 
         Date transferDate = new GregorianCalendar(2020, Calendar.JANUARY, 15).getTime();
 
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("transactionType", "TRANSFER");
-        payload.put("accountId", testAccount.getId());
-        payload.put("toAccountId", toAccount.getId());
-        // Provide currency fields as per new contract; base currency resolves to rate=1.0 if missing
-        payload.put("originalAmount", 123.45);
-        payload.put("originalCurrency", "INR");
-        // omit exchangeRate to allow controller to resolve 1.0 for base currency
-        payload.put("date", transferDate);
-        payload.put("name", "My Transfer");
-        payload.put("comments", "date-check");
+        TransactionRequest payload = new TransactionRequest(
+                null,                    // id
+                testAccount.getId(),     // accountId (source)
+                transferDate,            // date
+                "My Transfer",          // name
+                "date-check",           // comments
+                null,                    // categoryId
+                TransactionType.TRANSFER,// transactionType
+                null,                    // isCountable
+                "INR",                   // originalCurrency
+                123.45,                  // originalAmount
+                null,                    // exchangeRate (auto-resolve to 1.0 for base currency)
+                null,                    // linkedTransactionId
+                toAccount.getId(),        // toAccountId
+                null                     // fromAccountId
+        );
 
         var mvcResult = mockMvc.perform(post("/api/transactions")
                         .header("Authorization", bearerToken)
@@ -165,15 +172,22 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
 
         Date newDate = new GregorianCalendar(2021, Calendar.MARCH, 10).getTime();
 
-        Map<String, Object> updatePayload = new HashMap<>();
-        updatePayload.put("accountId", debit.getAccountId());
-        updatePayload.put("date", newDate);
-        // Use originalAmount & originalCurrency on updates; controller will keep existing rate if not provided
-        updatePayload.put("originalAmount", debit.getOriginalAmount());
-        updatePayload.put("originalCurrency", debit.getOriginalCurrency());
-        updatePayload.put("name", "Updated Transfer");
-        updatePayload.put("comments", "updated");
-        updatePayload.put("transactionType", debit.getTransactionType());
+        TransactionRequest updatePayload = new TransactionRequest(
+                null,                    // id
+                debit.getAccountId(),    // accountId
+                newDate,                 // date
+                "Updated Transfer",     // name
+                "updated",              // comments
+                null,                    // categoryId
+                TransactionType.TRANSFER, // transactionType - updating a transfer, not converting
+                null,                    // isCountable
+                debit.getOriginalCurrency(), // originalCurrency
+                debit.getOriginalAmount(),   // originalAmount
+                null,                    // exchangeRate (keep existing)
+                null,                    // linkedTransactionId
+                null,                    // toAccountId
+                null                     // fromAccountId
+        );
 
         mockMvc.perform(put("/api/transactions/{id}", debit.getId())
                         .header("Authorization", bearerToken)
@@ -1412,34 +1426,56 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
 
     @Test
     public void testCreateTransferValidationMissingAccountId_triggersBeanValidation() throws Exception {
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("transactionType", "TRANSFER");
-        payload.put("accountId", null);
-        payload.put("toAccountId", testAccount.getId());
-        payload.put("amount", 10.0);
+        TransactionRequest payload = new TransactionRequest(
+                null,                    // id
+                null,                    // accountId (missing - should trigger validation)
+                new java.util.Date(),    // date
+                null,                    // name
+                null,                    // comments
+                null,                    // categoryId
+                TransactionType.TRANSFER,// transactionType
+                null,                    // isCountable
+                null,                    // originalCurrency
+                10.0,                    // originalAmount (using amount field)
+                null,                    // exchangeRate
+                null,                    // linkedTransactionId
+                testAccount.getId(),     // toAccountId
+                null                     // fromAccountId
+        );
 
         mockMvc.perform(post("/api/transactions")
                         .header("Authorization", bearerToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(payload)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Transfer requires fromAccountId or accountId"));
+                .andExpect(jsonPath("$.message").value("Failed to create transaction: Transfer requires fromAccountId or accountId"));
     }
 
     @Test
-    public void testCreateTransferMissingToAccountId_fallsBackToRegularTransactionValidation() throws Exception {
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("accountId", testAccount.getId());
-        payload.put("toAccountId", null);
-        payload.put("originalAmount", 10.0);
-        payload.put("originalCurrency", "INR");
+    public void testCreateTransferMissingToAccountId_noFallback() throws Exception {
+        TransactionRequest payload = new TransactionRequest(
+                null,                    // id
+                testAccount.getId(),     // accountId
+                new java.util.Date(),    // date
+                null,                    // name
+                null,                    // comments
+                null,                    // categoryId (missing for regular transaction validation)
+                null,                    // transactionType (missing - should error)
+                null,                    // isCountable
+                "INR",                   // originalCurrency
+                10.0,                    // originalAmount
+                null,                    // exchangeRate
+                null,                    // linkedTransactionId
+                null,                    // toAccountId (null - should fall back to regular transaction)
+                null                     // fromAccountId
+        );
 
         mockMvc.perform(post("/api/transactions")
                         .header("Authorization", bearerToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(payload)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Transaction requires categoryId"));
+                .andExpect(jsonPath("$.message").value("transactionType cannot be null"));
     }
 
     @Test
@@ -1449,30 +1485,40 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
         toAcc.setUserId(testUser.getId());
         toAcc = accountRepository.save(toAcc);
 
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("transactionType", "TRANSFER");
-        payload.put("accountId", testAccount.getId());
-        payload.put("toAccountId", toAcc.getId());
-        payload.put("originalAmount", 0.0);
-        payload.put("originalCurrency", "USD");
+        TransactionRequest payload = new TransactionRequest(
+                null,                    // id
+                testAccount.getId(),     // accountId
+                new java.util.Date(),    // date
+                null,                    // name
+                null,                    // comments
+                null,                    // categoryId
+                TransactionType.TRANSFER,// transactionType
+                null,                    // isCountable
+                "USD",                   // originalCurrency
+                0.0,                     // originalAmount (invalid - should trigger validation)
+                null,                    // exchangeRate
+                null,                    // linkedTransactionId
+                toAcc.getId(),           // toAccountId
+                null                     // fromAccountId
+        );
 
         mockMvc.perform(post("/api/transactions")
                         .header("Authorization", bearerToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(payload)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Original amount must be greater than 0"));
+                .andExpect(jsonPath("$.message").value("Failed to create transaction: originalAmount must be greater than 0"));
     }
 
     @Test
     public void testGetAllExpandTrue_hidesTransferCreditAndMarksTransferTypeForDTO() throws Exception {
-        // Ensure TRANSFER category exists
+        // Ensure the TRANSFER category exists
         Category transfer = new Category();
         transfer.setName("TRANSFER");
         transfer.setUserId(testUser.getId());
         transfer = categoryRepository.save(transfer);
 
-        // Create a transfer pair in the current month for DTO path
+        // Create a transfer pair in the current month for a DTO path
         Transaction debit = new Transaction();
         debit.setTransactionType(TransactionDbType.DEBIT);
         debit.setName("DTO Transfer Out");
@@ -1527,10 +1573,22 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
         Transaction saved = transactionWriteService.saveForUser(testUser.getId(), transaction);
 
         // Update only name and amount
-        Map<String, Object> partialUpdate = new HashMap<>();
-        partialUpdate.put("name", "New Partial Name");
-        partialUpdate.put("originalAmount", 20.00);
-        partialUpdate.put("originalCurrency", "INR");
+        TransactionRequest partialUpdate = new TransactionRequest(
+                null,                    // id
+                null,                    // accountId (keep existing)
+                null,                    // date (keep existing)
+                "New Partial Name",     // name
+                null,                    // comments (keep existing)
+                null,                    // categoryId (keep existing)
+                null,                    // transactionType (keep existing)
+                null,                    // isCountable (keep existing)
+                "INR",                   // originalCurrency
+                20.00,                   // originalAmount
+                null,                    // exchangeRate (keep existing)
+                null,                    // linkedTransactionId
+                null,                    // toAccountId
+                null                     // fromAccountId
+        );
 
         mockMvc.perform(put("/api/transactions/" + saved.getId())
                         .header("Authorization", bearerToken)
@@ -1571,8 +1629,22 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
         Transaction debit = transferPair.debit();
 
         // Update name via partial PUT on the debit transaction
-        Map<String, Object> partialUpdate = new HashMap<>();
-        partialUpdate.put("name", "Updated Transfer Name");
+        TransactionRequest partialUpdate = new TransactionRequest(
+                null,                    // id
+                null,                    // accountId (keep existing)
+                null,                    // date (keep existing)
+                "Updated Transfer Name", // name
+                null,                    // comments (keep existing)
+                null,                    // categoryId (keep existing)
+                null,                    // transactionType (keep existing)
+                null,                    // isCountable (keep existing)
+                null,                    // originalCurrency (keep existing)
+                null,                    // originalAmount (keep existing)
+                null,                    // exchangeRate (keep existing)
+                null,                    // linkedTransactionId
+                null,                    // toAccountId
+                null                     // fromAccountId
+        );
 
         mockMvc.perform(put("/api/transactions/" + debit.getId())
                         .header("Authorization", bearerToken)
@@ -1610,8 +1682,22 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
         transaction.setCategoryId(testCategory.getId());
         Transaction saved = transactionWriteService.saveForUser(testUser.getId(), transaction);
 
-        Map<String, Object> partialUpdate = new HashMap<>();
-        partialUpdate.put("accountId", newAccount.getId());
+        TransactionRequest partialUpdate = new TransactionRequest(
+                null,                    // id
+                newAccount.getId(),      // accountId (change to new account)
+                null,                    // date (keep existing)
+                null,                    // name (keep existing)
+                null,                    // comments (keep existing)
+                null,                    // categoryId (keep existing)
+                null,                    // transactionType (keep existing)
+                null,                    // isCountable (keep existing)
+                null,                    // originalCurrency (keep existing)
+                null,                    // originalAmount (keep existing)
+                null,                    // exchangeRate (keep existing)
+                null,                    // linkedTransactionId
+                null,                    // toAccountId
+                null                     // fromAccountId
+        );
 
         mockMvc.perform(put("/api/transactions/" + saved.getId())
                         .header("Authorization", bearerToken)
@@ -1644,8 +1730,22 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
 
         // 2. Update with new exchange rate (should recalculate amount)
         // New amount should be: 10 * 2.0 = 20.0
-        Map<String, Object> updatePayload = new HashMap<>();
-        updatePayload.put("exchangeRate", 2.0);
+        TransactionRequest updatePayload = new TransactionRequest(
+                null,                    // id
+                null,                    // accountId (keep existing)
+                null,                    // date (keep existing)
+                null,                    // name (keep existing)
+                null,                    // comments (keep existing)
+                null,                    // categoryId (keep existing)
+                null,                    // transactionType (keep existing)
+                null,                    // isCountable (keep existing)
+                null,                    // originalCurrency (keep existing)
+                null,                    // originalAmount (keep existing)
+                2.0,                     // exchangeRate (change to 2.0)
+                null,                    // linkedTransactionId
+                null,                    // toAccountId
+                null                     // fromAccountId
+        );
 
         // We DO NOT send "amount". We expect the backend to recalculate it because we changed exchangeRate.
 
@@ -1660,8 +1760,22 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
 
         // 3. Update with new original amount (should recalculate amount)
         // New amount should be: 20 * 2.0 = 40.0
-        Map<String, Object> updatePayload2 = new HashMap<>();
-        updatePayload2.put("originalAmount", 20.00);
+        TransactionRequest updatePayload2 = new TransactionRequest(
+                null,                    // id
+                null,                    // accountId (keep existing)
+                null,                    // date (keep existing)
+                null,                    // name (keep existing)
+                null,                    // comments (keep existing)
+                null,                    // categoryId (keep existing)
+                null,                    // transactionType (keep existing)
+                null,                    // isCountable (keep existing)
+                null,                    // originalCurrency (keep existing)
+                20.00,                   // originalAmount (change to 20.00)
+                null,                    // exchangeRate (keep existing at 2.0)
+                null,                    // linkedTransactionId
+                null,                    // toAccountId
+                null                     // fromAccountId
+        );
 
         mockMvc.perform(put("/api/transactions/" + saved.getId())
                         .header("Authorization", bearerToken)
@@ -1696,10 +1810,22 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
 
         // 3. Update transaction to use "GBP" and originalAmount 100.
         // Expected amount: 100 * 1.2 = 120.0
-        Map<String, Object> updatePayload = new HashMap<>();
-        updatePayload.put("originalCurrency", "GBP");
-        updatePayload.put("exchangeRate", 120);
-        updatePayload.put("originalAmount", 1);
+        TransactionRequest updatePayload = new TransactionRequest(
+                null,                    // id
+                null,                    // accountId (keep existing)
+                null,                    // date (keep existing)
+                null,                    // name (keep existing)
+                null,                    // comments (keep existing)
+                null,                    // categoryId (keep existing)
+                null,                    // transactionType (keep existing)
+                null,                    // isCountable (keep existing)
+                "GBP",                   // originalCurrency (change to GBP)
+                1.0,                     // originalAmount (change to 1)
+                120.0,                   // exchangeRate (explicitly set to 120.0)
+                null,                    // linkedTransactionId
+                null,                    // toAccountId
+                null                     // fromAccountId
+        );
         // We do NOT send exchangeRate, so it should be looked up from UserCurrency
 
         mockMvc.perform(put("/api/transactions/" + saved.getId())
@@ -1729,9 +1855,22 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
         // 2. Update with currency fields BUT also provide explicit amount.
         // If logic was strict: 10 * 2.0 = 20.0.
         // But we send amount = 99.99.
-        Map<String, Object> updatePayload = new HashMap<>();
-        updatePayload.put("originalAmount", 10.00);
-        updatePayload.put("originalCurrency", "INR");
+        TransactionRequest updatePayload = new TransactionRequest(
+                null,                    // id
+                null,                    // accountId (keep existing)
+                null,                    // date (keep existing)
+                null,                    // name (keep existing)
+                null,                    // comments (keep existing)
+                null,                    // categoryId (keep existing)
+                null,                    // transactionType (keep existing)
+                null,                    // isCountable (keep existing)
+                "INR",                   // originalCurrency
+                10.00,                   // originalAmount
+                null,                    // exchangeRate (keep existing)
+                null,                    // linkedTransactionId
+                null,                    // toAccountId
+                null                     // fromAccountId
+        );
 
         mockMvc.perform(put("/api/transactions/" + saved.getId())
                         .header("Authorization", bearerToken)
@@ -1766,10 +1905,22 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
 
         // 3. Update to GBP (Secondary)
         // Should use the stored exchange rate (1.2)
-        Map<String, Object> updatePayload = new HashMap<>();
-        updatePayload.put("originalCurrency", "GBP");
-        updatePayload.put("exchangeRate", 120);
-        updatePayload.put("originalAmount", 1.00);
+        TransactionRequest updatePayload = new TransactionRequest(
+                null,                    // id
+                null,                    // accountId (keep existing)
+                null,                    // date (keep existing)
+                null,                    // name (keep existing)
+                null,                    // comments (keep existing)
+                null,                    // categoryId (keep existing)
+                TransactionType.DEBIT,                    // transactionType (keep existing)
+                null,                    // isCountable (keep existing)
+                "GBP",                   // originalCurrency (change to GBP)
+                1.00,                    // originalAmount (change to 1.00)
+                120.0,                   // exchangeRate (set to 120.0)
+                null,                    // linkedTransactionId
+                null,                    // toAccountId
+                null                     // fromAccountId
+        );
 
         mockMvc.perform(put("/api/transactions/" + saved.getId())
                         .header("Authorization", bearerToken)
@@ -1804,13 +1955,24 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
         assertEquals(120.00, saved.getAmount(), 0.001);
 
         // 3. Update to Base (INR)
-        // We provide "INR" as originalCurrency.
+        // We provide "INR" as the originalCurrency.
         // The backend should now NORMALIZE to base by setting exchangeRate=1.0 and keeping fields populated.
-        Map<String, Object> updatePayload = new HashMap<>();
-        updatePayload.put("amount", 50.00);
-        updatePayload.put("originalAmount", 50.00);
-        updatePayload.put("originalCurrency", "INR");
-        updatePayload.put("exchangeRate", 1.0);
+        TransactionRequest updatePayload = new TransactionRequest(
+                null,                    // id
+                null,                    // accountId (keep existing)
+                null,                    // date (keep existing)
+                null,                    // name (keep existing)
+                null,                    // comments (keep existing)
+                null,                    // categoryId (keep existing)
+                null,                    // transactionType (keep existing)
+                null,                    // isCountable (keep existing)
+                "INR",                   // originalCurrency (change to INR)
+                50.00,                   // originalAmount (change to 50.00)
+                1.0,                     // exchangeRate (set to 1.0 for base currency)
+                null,                    // linkedTransactionId
+                null,                    // toAccountId
+                null                     // fromAccountId
+        );
 
         mockMvc.perform(put("/api/transactions/" + saved.getId())
                         .header("Authorization", bearerToken)
@@ -1857,9 +2019,22 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
         // We provide originalCurrency="INR" and originalAmount=500.
         // Expectation: Backend detects INR is base currency.
         // Sets amount=500. Populates original* fields with Base context.
-        Map<String, Object> updatePayload = new HashMap<>();
-        updatePayload.put("originalCurrency", "INR");
-        updatePayload.put("originalAmount", 500.00);
+        TransactionRequest updatePayload = new TransactionRequest(
+                null,                    // id
+                null,                    // accountId (keep existing)
+                null,                    // date (keep existing)
+                null,                    // name (keep existing)
+                null,                    // comments (keep existing)
+                null,                    // categoryId (keep existing)
+                null,                    // transactionType (keep existing)
+                null,                    // isCountable (keep existing)
+                "INR",                   // originalCurrency (change to INR)
+                500.00,                  // originalAmount (change to 500.00)
+                null,                    // exchangeRate (auto-set to 1.0 for base currency)
+                null,                    // linkedTransactionId
+                null,                    // toAccountId
+                null                     // fromAccountId
+        );
 
         mockMvc.perform(put("/api/transactions/" + saved.getId())
                         .header("Authorization", bearerToken)
@@ -1904,8 +2079,22 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
         Transaction saved = transactionWriteService.saveForUser(testUser.getId(), tx);
 
         // Update ONLY currency to GBP; expect amount = 200 * 1.2 = 240
-        Map<String, Object> updatePayload = new HashMap<>();
-        updatePayload.put("originalCurrency", "GBP");
+        TransactionRequest updatePayload = new TransactionRequest(
+                null,                    // id
+                null,                    // accountId (keep existing)
+                null,                    // date (keep existing)
+                null,                    // name (keep existing)
+                null,                    // comments (keep existing)
+                null,                    // categoryId (keep existing)
+                null,                    // transactionType (keep existing)
+                null,                    // isCountable (keep existing)
+                "GBP",                   // originalCurrency (change to GBP)
+                null,                    // originalAmount (keep existing)
+                null,                    // exchangeRate (auto-resolve from UserCurrency: 1.2)
+                null,                    // linkedTransactionId
+                null,                    // toAccountId
+                null                     // fromAccountId
+        );
 
         mockMvc.perform(put("/api/transactions/" + saved.getId())
                         .header("Authorization", bearerToken)
@@ -1940,8 +2129,22 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
         Transaction saved = transactionWriteService.saveForUser(testUser.getId(), tx);
 
         // Update ONLY currency to base INR; expect amount = 10 * 1.0 = 10
-        Map<String, Object> updatePayload = new HashMap<>();
-        updatePayload.put("originalCurrency", "INR");
+        TransactionRequest updatePayload = new TransactionRequest(
+                null,                    // id
+                null,                    // accountId (keep existing)
+                null,                    // date (keep existing)
+                null,                    // name (keep existing)
+                null,                    // comments (keep existing)
+                null,                    // categoryId (keep existing)
+                null,                    // transactionType (keep existing)
+                null,                    // isCountable (keep existing)
+                "INR",                   // originalCurrency (change to INR)
+                null,                    // originalAmount (keep existing)
+                null,                    // exchangeRate (auto-set to 1.0 for base currency)
+                null,                    // linkedTransactionId
+                null,                    // toAccountId
+                null                     // fromAccountId
+        );
 
         mockMvc.perform(put("/api/transactions/" + saved.getId())
                         .header("Authorization", bearerToken)
@@ -1986,8 +2189,22 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
         Transaction saved = transactionWriteService.saveForUser(testUser.getId(), tx);
 
         // Update ONLY currency to GBP; expect amount = 1 * 1.2 = 1.2
-        Map<String, Object> updatePayload = new HashMap<>();
-        updatePayload.put("originalCurrency", "GBP");
+        TransactionRequest updatePayload = new TransactionRequest(
+                null,                    // id
+                null,                    // accountId (keep existing)
+                null,                    // date (keep existing)
+                null,                    // name (keep existing)
+                null,                    // comments (keep existing)
+                null,                    // categoryId (keep existing)
+                null,                    // transactionType (keep existing)
+                null,                    // isCountable (keep existing)
+                "GBP",                   // originalCurrency (change to GBP)
+                null,                    // originalAmount (keep existing)
+                null,                    // exchangeRate (auto-resolve from UserCurrency: 1.2)
+                null,                    // linkedTransactionId
+                null,                    // toAccountId
+                null                     // fromAccountId
+        );
 
         mockMvc.perform(put("/api/transactions/" + saved.getId())
                         .header("Authorization", bearerToken)

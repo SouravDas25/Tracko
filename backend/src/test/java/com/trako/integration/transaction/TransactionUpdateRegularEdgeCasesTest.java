@@ -4,6 +4,7 @@ import com.trako.config.TestJwtSecurityConfig;
 import com.trako.entities.*;
 import com.trako.enums.TransactionDbType;
 import com.trako.enums.TransactionType;
+import com.trako.models.request.TransactionRequest;
 import com.trako.integration.BaseIntegrationTest;
 import com.trako.services.transactions.TransactionWriteService;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,8 +18,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -77,9 +76,22 @@ public class TransactionUpdateRegularEdgeCasesTest extends BaseIntegrationTest {
     @Test
     public void updateRegular_invalidCategory_returnsBadRequest() throws Exception {
         Transaction t = createRegular();
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("transactionType", TransactionType.DEBIT);
-        payload.put("categoryId", 999999L); // non-existent
+        TransactionRequest payload = new TransactionRequest(
+                null,                    // id
+                null,                    // accountId
+                null,                    // date
+                null,                    // name
+                null,                    // comments
+                999999L,                 // categoryId (non-existent)
+                TransactionType.DEBIT,   // transactionType
+                null,                    // isCountable
+                null,                    // originalCurrency
+                null,                    // originalAmount
+                null,                    // exchangeRate
+                null,                    // linkedTransactionId
+                null,                    // toAccountId
+                null                     // fromAccountId
+        );
         mockMvc.perform(put("/api/transactions/" + t.getId())
                         .header("Authorization", tokenA)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -98,9 +110,22 @@ public class TransactionUpdateRegularEdgeCasesTest extends BaseIntegrationTest {
         accB.setUserId(userB.getId());
         accB = accountRepository.save(accB);
 
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("transactionType", TransactionType.DEBIT);
-        payload.put("accountId", accB.getId());
+        TransactionRequest payload = new TransactionRequest(
+                null,                    // id
+                accB.getId(),             // accountId (unauthorized)
+                null,                    // date
+                null,                    // name
+                null,                    // comments
+                null,                    // categoryId
+                TransactionType.DEBIT,   // transactionType
+                null,                    // isCountable
+                null,                    // originalCurrency
+                null,                    // originalAmount
+                null,                    // exchangeRate
+                null,                    // linkedTransactionId
+                null,                    // toAccountId
+                null                     // fromAccountId
+        );
         mockMvc.perform(put("/api/transactions/" + t.getId())
                         .header("Authorization", tokenA)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -111,14 +136,22 @@ public class TransactionUpdateRegularEdgeCasesTest extends BaseIntegrationTest {
     @Test
     public void updateRegular_partialFields_success() throws Exception {
         Transaction t = createRegular();
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("transactionType", TransactionType.DEBIT);
-        payload.put("name", "NewName");
-        payload.put("comments", "Cmt");
-        payload.put("date", new Date());
-        payload.put("isCountable", 0);
-        payload.put("accountId", accA2.getId());
-        payload.put("categoryId", catA1.getId());
+        TransactionRequest payload = new TransactionRequest(
+                null,                    // id
+                accA2.getId(),            // accountId
+                new Date(),              // date
+                "NewName",               // name
+                "Cmt",                   // comments
+                catA1.getId(),            // categoryId
+                TransactionType.DEBIT,   // transactionType
+                0,                       // isCountable
+                null,                    // originalCurrency
+                null,                    // originalAmount
+                null,                    // exchangeRate
+                null,                    // linkedTransactionId
+                null,                    // toAccountId
+                null                     // fromAccountId
+        );
 
         mockMvc.perform(put("/api/transactions/" + t.getId())
                         .header("Authorization", tokenA)

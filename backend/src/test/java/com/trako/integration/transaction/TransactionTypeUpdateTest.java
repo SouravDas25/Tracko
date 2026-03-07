@@ -6,6 +6,7 @@ import com.trako.entities.*;
 import com.trako.enums.CategoryType;
 import com.trako.enums.TransactionDbType;
 import com.trako.enums.TransactionType;
+import com.trako.models.request.TransactionRequest;
 import com.trako.integration.BaseIntegrationTest;
 import com.trako.services.transactions.TransactionWriteService;
 import com.trako.services.transactions.TransferService;
@@ -20,9 +21,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -92,10 +91,22 @@ public class TransactionTypeUpdateTest extends BaseIntegrationTest {
         t = transactionWriteService.saveForUser(testUser.getId(), t);
 
         // Update to Income (CREDIT) with corresponding TransactionType
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("transactionType", TransactionType.CREDIT);
-        payload.put("categoryId", categoryIncome.getId());
-        payload.put("name", "Now Income");
+        TransactionRequest payload = new TransactionRequest(
+                null,                    // id
+                null,                    // accountId
+                null,                    // date
+                "Now Income",           // name
+                null,                    // comments
+                categoryIncome.getId(),  // categoryId
+                TransactionType.CREDIT,  // transactionType
+                null,                    // isCountable
+                null,                    // originalCurrency
+                null,                    // originalAmount
+                null,                    // exchangeRate
+                null,                    // linkedTransactionId
+                null,                    // toAccountId
+                null                     // fromAccountId
+        );
 
         mockMvc.perform(put("/api/transactions/" + t.getId())
                         .header("Authorization", bearerToken)
@@ -127,10 +138,22 @@ public class TransactionTypeUpdateTest extends BaseIntegrationTest {
         t = transactionWriteService.saveForUser(testUser.getId(), t);
 
         // Update to Expense (DEBIT) with corresponding TransactionType
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("transactionType", TransactionType.DEBIT);
-        payload.put("categoryId", categoryExpense.getId());
-        payload.put("name", "Now Expense");
+        TransactionRequest payload = new TransactionRequest(
+                null,                    // id
+                null,                    // accountId
+                null,                    // date
+                "Now Expense",          // name
+                null,                    // comments
+                categoryExpense.getId(), // categoryId
+                TransactionType.DEBIT,   // transactionType
+                null,                    // isCountable
+                null,                    // originalCurrency
+                null,                    // originalAmount
+                null,                    // exchangeRate
+                null,                    // linkedTransactionId
+                null,                    // toAccountId
+                null                     // fromAccountId
+        );
 
         mockMvc.perform(put("/api/transactions/" + t.getId())
                         .header("Authorization", bearerToken)
@@ -162,10 +185,22 @@ public class TransactionTypeUpdateTest extends BaseIntegrationTest {
         t = transactionWriteService.saveForUser(testUser.getId(), t);
 
         // Update to Transfer (to Account 2) by providing toAccountId and TransactionType.TRANSFER
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("transactionType", TransactionType.TRANSFER);
-        payload.put("toAccountId", account2.getId());
-        payload.put("name", "Now Transfer");
+        TransactionRequest payload = new TransactionRequest(
+                null,                    // id
+                null,                    // accountId
+                null,                    // date
+                "Now Transfer",         // name
+                null,                    // comments
+                null,                    // categoryId
+                TransactionType.TRANSFER,// transactionType
+                null,                    // isCountable
+                null,                    // originalCurrency
+                null,                    // originalAmount
+                null,                    // exchangeRate
+                null,                    // linkedTransactionId
+                account2.getId(),        // toAccountId
+                null                     // fromAccountId
+        );
 
         mockMvc.perform(put("/api/transactions/" + t.getId())
                         .header("Authorization", bearerToken)
@@ -211,10 +246,22 @@ public class TransactionTypeUpdateTest extends BaseIntegrationTest {
         t = transactionWriteService.saveForUser(testUser.getId(), t);
 
         // Update to Transfer (to Account 2) by providing toAccountId and TransactionType.TRANSFER
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("transactionType", TransactionType.TRANSFER);
-        payload.put("toAccountId", account2.getId());
-        payload.put("name", "Income To Transfer");
+        TransactionRequest payload = new TransactionRequest(
+                null,                    // id
+                null,                    // accountId
+                null,                    // date
+                "Income To Transfer",   // name
+                null,                    // comments
+                null,                    // categoryId
+                TransactionType.TRANSFER,// transactionType
+                null,                    // isCountable
+                null,                    // originalCurrency
+                null,                    // originalAmount
+                null,                    // exchangeRate
+                null,                    // linkedTransactionId
+                account2.getId(),        // toAccountId
+                null                     // fromAccountId
+        );
 
         mockMvc.perform(put("/api/transactions/" + t.getId())
                         .header("Authorization", bearerToken)
@@ -267,11 +314,22 @@ public class TransactionTypeUpdateTest extends BaseIntegrationTest {
         // We might need a flag or specific logic. 
         // For now, let's try to update it as if it's a regular transaction (no toAccountId).
 
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("transactionType", TransactionType.DEBIT);
-        payload.put("categoryId", categoryExpense.getId());
-        payload.put("name", "Converted to Expense");
-        // Explicitly NOT sending toAccountId.
+        TransactionRequest payload = new TransactionRequest(
+                null,                    // id
+                null,                    // accountId
+                null,                    // date
+                "Converted to Expense", // name
+                null,                    // comments
+                categoryExpense.getId(), // categoryId
+                TransactionType.DEBIT,   // transactionType
+                null,                    // isCountable
+                null,                    // originalCurrency
+                null,                    // originalAmount
+                null,                    // exchangeRate
+                null,                    // linkedTransactionId
+                null,                    // toAccountId (explicitly null)
+                null                     // fromAccountId
+        );
 
         mockMvc.perform(put("/api/transactions/" + debitSide.getId())
                         .header("Authorization", bearerToken)
@@ -311,10 +369,22 @@ public class TransactionTypeUpdateTest extends BaseIntegrationTest {
         Transaction creditSide = transferPair.credit();
 
         // Update to Regular Income (CREDIT) on the receiving account
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("transactionType", TransactionType.CREDIT);
-        payload.put("categoryId", categoryIncome.getId());
-        payload.put("name", "Converted to Income");
+        TransactionRequest payload = new TransactionRequest(
+                null,                    // id
+                null,                    // accountId
+                null,                    // date
+                "Converted to Income",  // name
+                null,                    // comments
+                categoryIncome.getId(),  // categoryId
+                TransactionType.CREDIT,  // transactionType
+                null,                    // isCountable
+                null,                    // originalCurrency
+                null,                    // originalAmount
+                null,                    // exchangeRate
+                null,                    // linkedTransactionId
+                null,                    // toAccountId
+                null                     // fromAccountId
+        );
 
         mockMvc.perform(put("/api/transactions/" + creditSide.getId())
                         .header("Authorization", bearerToken)

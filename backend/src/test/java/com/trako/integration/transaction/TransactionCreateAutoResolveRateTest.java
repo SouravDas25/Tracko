@@ -5,6 +5,8 @@ import com.trako.entities.Account;
 import com.trako.entities.Category;
 import com.trako.entities.User;
 import com.trako.entities.UserCurrency;
+import com.trako.enums.TransactionType;
+import com.trako.models.request.TransactionRequest;
 import com.trako.integration.BaseIntegrationTest;
 import com.trako.repositories.UserCurrencyRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,9 +18,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -63,15 +62,22 @@ public class TransactionCreateAutoResolveRateTest extends BaseIntegrationTest {
 
     @Test
     public void createRegular_autoResolvesExchangeRate_whenOmitted() throws Exception {
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("accountId", account.getId());
-        payload.put("categoryId", category.getId());
-        payload.put("transactionType", 1); // DEBIT
-        payload.put("name", "Groceries");
-        payload.put("date", new java.util.Date());
-        payload.put("originalCurrency", "USD");
-        payload.put("originalAmount", 10.0);
-        // No exchangeRate provided -> should auto-resolve to 2.0
+        TransactionRequest payload = new TransactionRequest(
+                null,                    // id
+                account.getId(),          // accountId
+                new java.util.Date(),    // date
+                "Groceries",             // name
+                null,                    // comments
+                category.getId(),         // categoryId
+                TransactionType.DEBIT,   // transactionType
+                null,                    // isCountable
+                "USD",                   // originalCurrency
+                10.0,                    // originalAmount
+                null,                    // exchangeRate (auto-resolve)
+                null,                    // linkedTransactionId
+                null,                    // toAccountId
+                null                     // fromAccountId
+        );
 
         mockMvc.perform(post("/api/transactions")
                         .header("Authorization", bearerToken)

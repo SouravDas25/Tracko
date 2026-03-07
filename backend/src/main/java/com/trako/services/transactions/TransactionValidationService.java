@@ -107,13 +107,10 @@ public class TransactionValidationService {
 
     /**
      * Validates a request to update a regular transaction (stays DEBIT or CREDIT, or switches between them).
-     * Required: transactionType. All other fields are optional (partial update).
+     * transactionType may be null (means "no type change"). All fields are optional (partial update).
      * If originalAmount is provided, it must be > 0.
      */
     public void validateUpdateTransaction(TransactionRequest request) {
-        if (request.transactionType() == null) {
-            throw new BadRequestException("transactionType is required");
-        }
         if (request.originalAmount() != null && request.originalAmount() <= 0) {
             throw new BadRequestException("originalAmount must be greater than 0");
         }
@@ -121,15 +118,16 @@ public class TransactionValidationService {
 
     /**
      * Validates a request to update a transfer (stays a transfer).
-     * Required: transactionType. All other fields are optional (partial update).
+     * transactionType may be null (means "no type change"). All fields are optional (partial update).
      * If originalAmount is provided, it must be > 0.
      */
     public void validateUpdateTransfer(TransactionRequest request) {
-        if (request.transactionType() == null) {
-            throw new BadRequestException("transactionType is required");
-        }
         if (request.originalAmount() != null && request.originalAmount() <= 0) {
             throw new BadRequestException("originalAmount must be greater than 0");
+        }
+        Long resolvedFrom = request.fromAccountId() != null ? request.fromAccountId() : request.accountId();
+        if (resolvedFrom != null && resolvedFrom.equals(request.toAccountId())) {
+            throw new BadRequestException("Source and destination accounts cannot be the same");
         }
     }
 

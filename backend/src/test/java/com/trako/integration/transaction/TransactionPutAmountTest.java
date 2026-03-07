@@ -3,6 +3,8 @@ package com.trako.integration.transaction;
 import com.trako.config.TestJwtSecurityConfig;
 import com.trako.entities.*;
 import com.trako.enums.TransactionDbType;
+import com.trako.enums.TransactionType;
+import com.trako.models.request.TransactionRequest;
 import com.trako.integration.BaseIntegrationTest;
 import com.trako.services.transactions.TransactionWriteService;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,8 +18,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -70,10 +70,22 @@ public class TransactionPutAmountTest extends BaseIntegrationTest {
         t = transactionWriteService.saveForUser(testUser.getId(), t);
 
         // Update providing only originalAmount (no legacy 'amount' support)
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("accountId", testAccount.getId());
-        payload.put("originalAmount", 25.0);
-        // currency/rate omitted -> keep existing (INR, 1.0)
+        TransactionRequest payload = new TransactionRequest(
+                null,                    // id
+                testAccount.getId(),     // accountId
+                null,                    // date
+                null,                    // name
+                null,                    // comments
+                null,                    // categoryId
+                TransactionType.DEBIT,   // transactionType
+                null,                    // isCountable
+                null,                    // originalCurrency (keep existing)
+                25.0,                    // originalAmount
+                null,                    // exchangeRate (keep existing)
+                null,                    // linkedTransactionId
+                null,                    // toAccountId
+                null                     // fromAccountId
+        );
 
         mockMvc.perform(put("/api/transactions/" + t.getId())
                         .header("Authorization", bearerToken)

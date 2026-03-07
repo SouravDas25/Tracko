@@ -4,6 +4,8 @@ import com.trako.config.TestJwtSecurityConfig;
 import com.trako.entities.Account;
 import com.trako.entities.Category;
 import com.trako.entities.User;
+import com.trako.enums.TransactionType;
+import com.trako.models.request.TransactionRequest;
 import com.trako.integration.BaseIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,9 +15,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -56,11 +55,22 @@ public class TransactionCreateValidationTest extends BaseIntegrationTest {
     // Transfer validations
     @Test
     public void createTransfer_missingFromAccount_returnsBadRequest() throws Exception {
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("transactionType", "TRANSFER");
-        payload.put("toAccountId", acc2.getId());
-        payload.put("originalAmount", 10.0);
-        payload.put("originalCurrency", "INR");
+        TransactionRequest payload = new TransactionRequest(
+                null,                    // id
+                null,                    // accountId (missing)
+                new java.util.Date(),    // date
+                null,                    // name
+                null,                    // comments
+                null,                    // categoryId
+                TransactionType.TRANSFER,// transactionType
+                null,                    // isCountable
+                "INR",                   // originalCurrency
+                10.0,                    // originalAmount
+                null,                    // exchangeRate
+                null,                    // linkedTransactionId
+                acc2.getId(),            // toAccountId
+                null                     // fromAccountId
+        );
         mockMvc.perform(post("/api/transactions")
                         .header("Authorization", bearerToken)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -70,11 +80,22 @@ public class TransactionCreateValidationTest extends BaseIntegrationTest {
 
     @Test
     public void createTransfer_missingToAccount_returnsBadRequest() throws Exception {
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("transactionType", "TRANSFER");
-        payload.put("accountId", acc.getId());
-        payload.put("originalAmount", 10.0);
-        payload.put("originalCurrency", "INR");
+        TransactionRequest payload = new TransactionRequest(
+                null,                    // id
+                acc.getId(),              // accountId
+                new java.util.Date(),    // date
+                null,                    // name
+                null,                    // comments
+                null,                    // categoryId
+                TransactionType.TRANSFER,// transactionType
+                null,                    // isCountable
+                "INR",                   // originalCurrency
+                10.0,                    // originalAmount
+                null,                    // exchangeRate
+                null,                    // linkedTransactionId
+                null,                    // toAccountId (missing)
+                null                     // fromAccountId
+        );
         mockMvc.perform(post("/api/transactions")
                         .header("Authorization", bearerToken)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -84,12 +105,22 @@ public class TransactionCreateValidationTest extends BaseIntegrationTest {
 
     @Test
     public void createTransfer_sameAccounts_returnsBadRequest() throws Exception {
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("transactionType", "TRANSFER");
-        payload.put("accountId", acc.getId());
-        payload.put("toAccountId", acc.getId());
-        payload.put("originalAmount", 10.0);
-        payload.put("originalCurrency", "INR");
+        TransactionRequest payload = new TransactionRequest(
+                null,                    // id
+                acc.getId(),              // accountId
+                new java.util.Date(),    // date
+                null,                    // name
+                null,                    // comments
+                null,                    // categoryId
+                TransactionType.TRANSFER,// transactionType
+                null,                    // isCountable
+                "INR",                   // originalCurrency
+                10.0,                    // originalAmount
+                null,                    // exchangeRate
+                null,                    // linkedTransactionId
+                acc.getId(),             // toAccountId (same as accountId)
+                null                     // fromAccountId
+        );
         mockMvc.perform(post("/api/transactions")
                         .header("Authorization", bearerToken)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -99,11 +130,22 @@ public class TransactionCreateValidationTest extends BaseIntegrationTest {
 
     @Test
     public void createTransfer_missingCurrency_returnsBadRequest() throws Exception {
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("transactionType", "TRANSFER");
-        payload.put("accountId", acc.getId());
-        payload.put("toAccountId", acc2.getId());
-        payload.put("originalAmount", 10.0);
+        TransactionRequest payload = new TransactionRequest(
+                null,                    // id
+                acc.getId(),              // accountId
+                new java.util.Date(),    // date
+                null,                    // name
+                null,                    // comments
+                null,                    // categoryId
+                TransactionType.TRANSFER,// transactionType
+                null,                    // isCountable
+                null,                    // originalCurrency (missing)
+                10.0,                    // originalAmount
+                null,                    // exchangeRate
+                null,                    // linkedTransactionId
+                acc2.getId(),            // toAccountId
+                null                     // fromAccountId
+        );
         mockMvc.perform(post("/api/transactions")
                         .header("Authorization", bearerToken)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -113,34 +155,71 @@ public class TransactionCreateValidationTest extends BaseIntegrationTest {
 
     @Test
     public void createTransfer_missingOrNonPositiveAmount_returnsBadRequest() throws Exception {
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("transactionType", "TRANSFER");
-        payload.put("accountId", acc.getId());
-        payload.put("toAccountId", acc2.getId());
-        payload.put("originalCurrency", "INR");
+        TransactionRequest payload = new TransactionRequest(
+                null,                    // id
+                acc.getId(),              // accountId
+                new java.util.Date(),    // date
+                null,                    // name
+                null,                    // comments
+                null,                    // categoryId
+                TransactionType.TRANSFER,// transactionType
+                null,                    // isCountable
+                "INR",                   // originalCurrency
+                null,                    // originalAmount (missing)
+                null,                    // exchangeRate
+                null,                    // linkedTransactionId
+                acc2.getId(),            // toAccountId
+                null                     // fromAccountId
+        );
         // missing amount
         mockMvc.perform(post("/api/transactions")
                         .header("Authorization", bearerToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(payload)))
                 .andExpect(status().isBadRequest());
+        
         // zero amount
-        payload.put("originalAmount", 0.0);
+        TransactionRequest zeroPayload = new TransactionRequest(
+                null,                    // id
+                acc.getId(),              // accountId
+                new java.util.Date(),    // date
+                null,                    // name
+                null,                    // comments
+                null,                    // categoryId
+                TransactionType.TRANSFER,// transactionType
+                null,                    // isCountable
+                "INR",                   // originalCurrency
+                0.0,                     // originalAmount (zero)
+                null,                    // exchangeRate
+                null,                    // linkedTransactionId
+                acc2.getId(),            // toAccountId
+                null                     // fromAccountId
+        );
         mockMvc.perform(post("/api/transactions")
                         .header("Authorization", bearerToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(payload)))
+                        .content(objectMapper.writeValueAsString(zeroPayload)))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
     public void createTransfer_currencyNotConfigured_returnsBadRequest() throws Exception {
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("transactionType", "TRANSFER");
-        payload.put("accountId", acc.getId());
-        payload.put("toAccountId", acc2.getId());
-        payload.put("originalAmount", 10.0);
-        payload.put("originalCurrency", "USD"); // not configured, base currency likely null/different
+        TransactionRequest payload = new TransactionRequest(
+                null,                    // id
+                acc.getId(),              // accountId
+                new java.util.Date(),    // date
+                null,                    // name
+                null,                    // comments
+                null,                    // categoryId
+                TransactionType.TRANSFER,// transactionType
+                null,                    // isCountable
+                "USD",                   // originalCurrency (not configured)
+                10.0,                    // originalAmount
+                null,                    // exchangeRate
+                null,                    // linkedTransactionId
+                acc2.getId(),            // toAccountId
+                null                     // fromAccountId
+        );
         mockMvc.perform(post("/api/transactions")
                         .header("Authorization", bearerToken)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -151,11 +230,22 @@ public class TransactionCreateValidationTest extends BaseIntegrationTest {
     // Regular transaction validations
     @Test
     public void createTransaction_missingCurrency_returnsBadRequest() throws Exception {
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("accountId", acc.getId());
-        payload.put("categoryId", cat.getId());
-        payload.put("transactionType", "DEBIT");
-        payload.put("originalAmount", 10.0);
+        TransactionRequest payload = new TransactionRequest(
+                null,                    // id
+                acc.getId(),              // accountId
+                new java.util.Date(),    // date
+                null,                    // name
+                null,                    // comments
+                cat.getId(),              // categoryId
+                TransactionType.DEBIT,   // transactionType
+                null,                    // isCountable
+                null,                    // originalCurrency (missing)
+                10.0,                    // originalAmount
+                null,                    // exchangeRate
+                null,                    // linkedTransactionId
+                null,                    // toAccountId
+                null                     // fromAccountId
+        );
         mockMvc.perform(post("/api/transactions")
                         .header("Authorization", bearerToken)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -165,23 +255,50 @@ public class TransactionCreateValidationTest extends BaseIntegrationTest {
 
     @Test
     public void createTransaction_missingOrNonPositiveAmount_returnsBadRequest() throws Exception {
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("accountId", acc.getId());
-        payload.put("categoryId", cat.getId());
-        payload.put("transactionType", "DEBIT");
-        payload.put("originalCurrency", "INR");
+        TransactionRequest payload = new TransactionRequest(
+                null,                    // id
+                acc.getId(),              // accountId
+                new java.util.Date(),    // date
+                null,                    // name
+                null,                    // comments
+                cat.getId(),              // categoryId
+                TransactionType.DEBIT,   // transactionType
+                null,                    // isCountable
+                "INR",                   // originalCurrency
+                null,                    // originalAmount (missing)
+                null,                    // exchangeRate
+                null,                    // linkedTransactionId
+                null,                    // toAccountId
+                null                     // fromAccountId
+        );
         // missing amount
         mockMvc.perform(post("/api/transactions")
                         .header("Authorization", bearerToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(payload)))
                 .andExpect(status().isBadRequest());
+        
         // non-positive
-        payload.put("originalAmount", 0.0);
+        TransactionRequest zeroPayload = new TransactionRequest(
+                null,                    // id
+                acc.getId(),              // accountId
+                new java.util.Date(),    // date
+                null,                    // name
+                null,                    // comments
+                cat.getId(),              // categoryId
+                TransactionType.DEBIT,   // transactionType
+                null,                    // isCountable
+                "INR",                   // originalCurrency
+                0.0,                     // originalAmount (zero)
+                null,                    // exchangeRate
+                null,                    // linkedTransactionId
+                null,                    // toAccountId
+                null                     // fromAccountId
+        );
         mockMvc.perform(post("/api/transactions")
                         .header("Authorization", bearerToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(payload)))
+                        .content(objectMapper.writeValueAsString(zeroPayload)))
                 .andExpect(status().isBadRequest());
     }
 }

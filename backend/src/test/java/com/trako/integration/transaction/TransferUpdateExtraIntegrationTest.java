@@ -4,7 +4,9 @@ import com.trako.config.TestJwtSecurityConfig;
 import com.trako.entities.Account;
 import com.trako.entities.Transaction;
 import com.trako.enums.TransactionDbType;
+import com.trako.enums.TransactionType;
 import com.trako.entities.User;
+import com.trako.models.request.TransactionRequest;
 import com.trako.integration.BaseIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,9 +18,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -60,12 +60,22 @@ public class TransferUpdateExtraIntegrationTest extends BaseIntegrationTest {
     @Test
     public void testUpdateTransferChangeToAccount_Success() throws Exception {
         // Create initial transfer acc1 -> acc2
-        Map<String, Object> create = new HashMap<>();
-        create.put("transactionType", "TRANSFER");
-        create.put("accountId", acc1.getId());
-        create.put("toAccountId", acc2.getId());
-        create.put("originalAmount", 100.0);
-        create.put("originalCurrency", "INR");
+        TransactionRequest create = new TransactionRequest(
+                null,                    // id
+                acc1.getId(),            // accountId (source)
+                new java.util.Date(),    // date
+                null,                    // name
+                null,                    // comments
+                null,                    // categoryId
+                TransactionType.TRANSFER,// transactionType
+                null,                    // isCountable
+                "INR",                   // originalCurrency
+                100.0,                   // originalAmount
+                null,                    // exchangeRate (base currency -> 1.0)
+                null,                    // linkedTransactionId
+                acc2.getId(),            // toAccountId
+                null                     // fromAccountId
+        );
 
         mockMvc.perform(post("/api/transactions")
                         .header("Authorization", tokenA)
@@ -79,10 +89,22 @@ public class TransferUpdateExtraIntegrationTest extends BaseIntegrationTest {
         Long creditId = debit.getLinkedTransactionId();
 
         // Update toAccountId to acc3
-        Map<String, Object> update = new HashMap<>();
-        update.put("toAccountId", acc3.getId());
-        update.put("originalAmount", 150.0);
-        update.put("originalCurrency", "INR");
+        TransactionRequest update = new TransactionRequest(
+                null,                    // id
+                null,                    // accountId (keep existing)
+                null,                    // date (keep existing)
+                null,                    // name (keep existing)
+                null,                    // comments (keep existing)
+                null,                    // categoryId (keep existing)
+                TransactionType.TRANSFER,// transactionType
+                null,                    // isCountable (keep existing)
+                "INR",                   // originalCurrency
+                150.0,                   // originalAmount
+                null,                    // exchangeRate (keep existing / auto-resolve)
+                null,                    // linkedTransactionId
+                acc3.getId(),            // toAccountId (change destination)
+                null                     // fromAccountId
+        );
 
         mockMvc.perform(put("/api/transactions/" + debit.getId())
                         .header("Authorization", tokenA)
@@ -121,12 +143,22 @@ public class TransferUpdateExtraIntegrationTest extends BaseIntegrationTest {
                 userB.getPhoneNo(), userB.getPassword(), Collections.emptyList());
         String tokenB = "Bearer " + jwtTokenUtil.generateToken(principalB);
 
-        Map<String, Object> create = new HashMap<>();
-        create.put("transactionType", "TRANSFER");
-        create.put("accountId", b1.getId());
-        create.put("toAccountId", b2.getId());
-        create.put("originalAmount", 50.0);
-        create.put("originalCurrency", "INR");
+        TransactionRequest create = new TransactionRequest(
+                null,                    // id
+                b1.getId(),              // accountId (source)
+                new java.util.Date(),    // date
+                null,                    // name
+                null,                    // comments
+                null,                    // categoryId
+                TransactionType.TRANSFER,// transactionType
+                null,                    // isCountable
+                "INR",                   // originalCurrency
+                50.0,                    // originalAmount
+                null,                    // exchangeRate (base currency -> 1.0)
+                null,                    // linkedTransactionId
+                b2.getId(),              // toAccountId
+                null                     // fromAccountId
+        );
 
         mockMvc.perform(post("/api/transactions")
                         .header("Authorization", tokenB)
@@ -139,9 +171,22 @@ public class TransferUpdateExtraIntegrationTest extends BaseIntegrationTest {
         Transaction bDebit = all.stream().filter(t -> t.getTransactionType() == TransactionDbType.DEBIT).findFirst().orElseThrow();
 
         // Try to update B's transfer with A's token -> 401
-        Map<String, Object> update = new HashMap<>();
-        update.put("originalAmount", 60.0);
-        update.put("originalCurrency", "INR");
+        TransactionRequest update = new TransactionRequest(
+                null,                    // id
+                null,                    // accountId (keep existing)
+                null,                    // date (keep existing)
+                null,                    // name (keep existing)
+                null,                    // comments (keep existing)
+                null,                    // categoryId (keep existing)
+                TransactionType.TRANSFER,// transactionType
+                null,                    // isCountable (keep existing)
+                "INR",                   // originalCurrency
+                60.0,                    // originalAmount
+                null,                    // exchangeRate (keep existing / auto-resolve)
+                null,                    // linkedTransactionId
+                null,                    // toAccountId (keep existing)
+                null                     // fromAccountId
+        );
 
         mockMvc.perform(put("/api/transactions/" + bDebit.getId())
                         .header("Authorization", tokenA)

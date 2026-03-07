@@ -69,13 +69,13 @@ public class TransactionAmountValidationIntegrationTest extends BaseIntegrationT
     @Test
     public void createTransaction_zeroAmount_returnsBadRequest() throws Exception {
         Map<String, Object> payload = new HashMap<>();
+        payload.put("transactionType", TransactionType.DEBIT.name());
+        payload.put("originalAmount", 0.0);
         payload.put("accountId", testAccount.getId());
         payload.put("categoryId", testCategory.getId());
-        payload.put("transactionType", TransactionType.DEBIT.name());
         payload.put("name", "T1");
         payload.put("date", new Date());
         payload.put("originalCurrency", "INR");
-        payload.put("originalAmount", 0.0);
         payload.put("exchangeRate", 1.0);
 
         mockMvc.perform(post("/api/transactions")
@@ -89,12 +89,12 @@ public class TransactionAmountValidationIntegrationTest extends BaseIntegrationT
     public void createTransfer_negativeAmount_returnsBadRequest() throws Exception {
         Map<String, Object> payload = new HashMap<>();
         payload.put("transactionType", "TRANSFER");
+        payload.put("originalAmount", -5.0);
         payload.put("fromAccountId", testAccount.getId());
         payload.put("toAccountId", secondAccount.getId());
         payload.put("name", "TF");
         payload.put("date", new Date());
         payload.put("originalCurrency", "INR");
-        payload.put("originalAmount", -5.0);
         payload.put("exchangeRate", 1.0);
 
         mockMvc.perform(post("/api/transactions")
@@ -119,6 +119,7 @@ public class TransactionAmountValidationIntegrationTest extends BaseIntegrationT
         t = transactionWriteService.saveForUser(testUser.getId(), t);
 
         Map<String, Object> payload = new HashMap<>();
+        payload.put("transactionType", TransactionType.DEBIT);
         payload.put("originalAmount", 0.0);
 
         mockMvc.perform(put("/api/transactions/" + t.getId())
@@ -146,6 +147,7 @@ public class TransactionAmountValidationIntegrationTest extends BaseIntegrationT
         Long anySideId = pair.debit().getId();
 
         Map<String, Object> payload = new HashMap<>();
+        payload.put("transactionType", TransactionType.TRANSFER);
         payload.put("originalAmount", -1.0);
         payload.put("toAccountId", secondAccount.getId());
 

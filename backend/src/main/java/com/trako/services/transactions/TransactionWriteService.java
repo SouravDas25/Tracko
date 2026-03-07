@@ -104,9 +104,6 @@ public class TransactionWriteService {
      */
     @Transactional
     public Transaction updateTransaction(String userId, Long id, TransactionRequest request) {
-        if (request.transactionType() == null) {
-            throw new IllegalArgumentException("transactionType cannot be null");
-        }
         Transaction existing = transactionRepository.findById(id).orElseThrow(
                 () -> new NotFoundException("Transaction not found")
         );
@@ -114,6 +111,15 @@ public class TransactionWriteService {
 
         boolean isExistingTransfer = existing.getLinkedTransactionId() != null;
         TransactionType requestedType = request.transactionType();
+
+        // Null transactionType means "no type change" — resolve from existing
+        if (requestedType == null) {
+            if (isExistingTransfer) {
+                requestedType = TransactionType.TRANSFER;
+            } else {
+                requestedType = TransactionType.fromValue(existing.getTransactionType().getValue());
+            }
+        }
 
         if (isExistingTransfer && requestedType == TransactionType.TRANSFER) {
             // Transfer stays a transfer

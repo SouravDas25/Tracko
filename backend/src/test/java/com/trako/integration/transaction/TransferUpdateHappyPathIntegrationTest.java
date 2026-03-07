@@ -4,6 +4,7 @@ import com.trako.config.TestJwtSecurityConfig;
 import com.trako.entities.Account;
 import com.trako.entities.Transaction;
 import com.trako.enums.TransactionDbType;
+import com.trako.enums.TransactionType;
 import com.trako.entities.User;
 import com.trako.integration.BaseIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
@@ -58,6 +59,7 @@ public class TransferUpdateHappyPathIntegrationTest extends BaseIntegrationTest 
     public void updateTransfer_happyPath_updatesAmountCurrencyDateAndName() throws Exception {
         // Create transfer a1 -> a2 (10.0 INR)
         Map<String, Object> create = new HashMap<>();
+        create.put("transactionType", TransactionType.TRANSFER);
         create.put("accountId", a1.getId());
         create.put("toAccountId", a2.getId());
         create.put("originalAmount", 10.0);
@@ -76,6 +78,7 @@ public class TransferUpdateHappyPathIntegrationTest extends BaseIntegrationTest 
 
         // Update fields
         Map<String, Object> update = new HashMap<>();
+        update.put("transactionType", TransactionType.TRANSFER);
         update.put("originalAmount", 20.0);
         update.put("originalCurrency", "INR");
         update.put("exchangeRate", 1.0);
