@@ -8,6 +8,12 @@ import com.trako.util.Response;
 import com.trako.exceptions.AuthorizationException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -15,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(name = "Recurring Transactions", description = "Schedule and manage recurring transactions")
 @RestController
 @RequestMapping("/api/recurring-transactions")
 @Validated
@@ -26,6 +33,8 @@ public class RecurringTransactionController {
     @Autowired
     private UserService userService;
 
+    @Operation(summary = "List all recurring transactions")
+    @ApiResponse(responseCode = "200", content = @Content(array = @ArraySchema(schema = @Schema(implementation = RecurringTransaction.class))))
     @GetMapping
     public ResponseEntity<?> getAll() {
         try {
@@ -37,6 +46,8 @@ public class RecurringTransactionController {
         }
     }
 
+    @Operation(summary = "Get a recurring transaction by ID")
+    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = RecurringTransaction.class)))
     @GetMapping("/{id}")
     public ResponseEntity<?> getById(@PathVariable @Positive Long id) {
         try {
@@ -56,6 +67,8 @@ public class RecurringTransactionController {
         }
     }
 
+    @Operation(summary = "Create a recurring transaction")
+    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = RecurringTransaction.class)))
     @PostMapping
     public ResponseEntity<?> create(@Valid @RequestBody RecurringTransaction recurringTransaction) {
         try {
@@ -71,6 +84,8 @@ public class RecurringTransactionController {
         }
     }
 
+    @Operation(summary = "Update a recurring transaction")
+    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = RecurringTransaction.class)))
     @PutMapping("/{id}")
     public ResponseEntity<?> update(@PathVariable @Positive Long id, @RequestBody RecurringTransaction updates) {
         try {
@@ -86,6 +101,8 @@ public class RecurringTransactionController {
         }
     }
 
+    @Operation(summary = "Delete a recurring transaction")
+    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(type = "string")))
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable @Positive Long id) {
         try {

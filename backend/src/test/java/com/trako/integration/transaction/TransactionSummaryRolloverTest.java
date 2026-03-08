@@ -121,7 +121,7 @@ public class TransactionSummaryRolloverTest extends BaseIntegrationTest {
         Date end = getMonthEnd(prevYear, prevMonth);
 
         // Pass null for accountIds to get summary for all accounts
-        TransactionSummaryDTO summary = transactionService.getSummary(testUser.getId(), start, end, null);
+        TransactionSummaryDTO summary = transactionService.getSummary(testUser.getId(), start, end, null, null);
 
         assertEquals(1500.0, summary.getTotalIncome(), 0.001, "Total Income should include both accounts");
         assertEquals(300.0, summary.getTotalExpense(), 0.001, "Total Expense should include both accounts");
@@ -162,6 +162,7 @@ public class TransactionSummaryRolloverTest extends BaseIntegrationTest {
         TransactionSummaryDTO prevSummary = transactionService.getSummary(testUser.getId(),
                 getMonthStart(prevYear, prevMonth),
                 getMonthEnd(prevYear, prevMonth),
+                null,
                 null);
         assertEquals(1500.0, prevSummary.getTotalIncome(), 0.001);
 

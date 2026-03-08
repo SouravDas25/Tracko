@@ -16,7 +16,7 @@ class TransactionRepository {
   TransactionRepository({ApiClient? api}) : _api = api ?? ApiClient();
 
   Future<List<TransactionPeriodSummary>> getMonthlySummaries(int year,
-      {List<int>? accountIds}) async {
+      {List<int>? accountIds, int? categoryId}) async {
     final isSingleAccount = accountIds != null && accountIds.length == 1;
     final path = isSingleAccount
         ? "${ApiConfig.accounts}/${accountIds!.first}/summary/monthly"
@@ -28,13 +28,14 @@ class TransactionRepository {
         'year': year,
         if (!isSingleAccount && accountIds != null && accountIds.isNotEmpty)
           'accountIds': accountIds.join(','),
+        if (categoryId != null) 'categoryId': categoryId,
       },
     );
     return res.map((e) => TransactionPeriodSummary.fromJson(e)).toList();
   }
 
   Future<List<TransactionPeriodSummary>> getYearlySummaries(
-      {List<int>? accountIds}) async {
+      {List<int>? accountIds, int? categoryId}) async {
     final isSingleAccount = accountIds != null && accountIds.length == 1;
     final path = isSingleAccount
         ? "${ApiConfig.accounts}/${accountIds!.first}/summary/yearly"
@@ -45,6 +46,7 @@ class TransactionRepository {
       query: {
         if (!isSingleAccount && accountIds != null && accountIds.isNotEmpty)
           'accountIds': accountIds.join(','),
+        if (categoryId != null) 'categoryId': categoryId,
       },
     );
     return res.map((e) => TransactionPeriodSummary.fromJson(e)).toList();
@@ -307,7 +309,7 @@ class TransactionRepository {
 
   // Aggregation methods - backend calculates
   Future<Map<String, dynamic>> getSummary(DateTime startDate, DateTime endDate,
-      {List<int>? accountIds}) async {
+      {List<int>? accountIds, int? categoryId}) async {
     final res = await _api.get<Map<String, dynamic>>(
       "${ApiConfig.transactions}/summary",
       query: {
@@ -315,6 +317,7 @@ class TransactionRepository {
         'endDate': endDate.toIso8601String().split('T').first,
         if (accountIds != null && accountIds.isNotEmpty)
           'accountIds': accountIds.join(','),
+        if (categoryId != null) 'categoryId': categoryId,
       },
     );
     return res;

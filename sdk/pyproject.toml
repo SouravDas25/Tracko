@@ -1,12 +1,12 @@
 [tool.poetry]
 name = "tracko_sdk"
 version = "1.0.0"
-description = "OpenAPI definition"
+description = "Tracko API"
 authors = ["OpenAPI Generator Community <team@openapitools.org>"]
 license = "NoLicense"
 readme = "README.md"
 repository = "https://github.com/GIT_USER_ID/GIT_REPO_ID"
-keywords = ["OpenAPI", "OpenAPI-Generator", "OpenAPI definition"]
+keywords = ["OpenAPI", "OpenAPI-Generator", "Tracko API"]
 include = ["tracko_sdk/py.typed"]
 
 [tool.poetry.dependencies]

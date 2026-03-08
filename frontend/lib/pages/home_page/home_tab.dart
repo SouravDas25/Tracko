@@ -105,8 +105,11 @@ class _HomeTab extends State<HomeTab> with SingleTickerProviderStateMixin {
                   ),
                 ),
               ),
-              child: BottomNavyBar(
-                iconSize: 22,
+              child: MediaQuery(
+                data: MediaQuery.of(context)
+                    .copyWith(textScaler: TextScaler.noScaling),
+                child: BottomNavyBar(
+                iconSize: 20,
                 // Convert current tab index to the compact bottom bar's item index.
                 selectedIndex: (() {
                   final idx = _navTabIndices.indexOf(_selectedIndex);
@@ -125,6 +128,7 @@ class _HomeTab extends State<HomeTab> with SingleTickerProviderStateMixin {
                 },
                 items: navlist,
               ),
+                ),
             ),
       appBar: AppBar(
         leading: IconButton(

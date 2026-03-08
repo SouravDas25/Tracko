@@ -2,7 +2,7 @@ import argparse
 import json
 
 from ..core.config import get_token_from_args_or_config
-from ..core.api import make_api_client, sdk_call
+from ..core.api import make_api_client, sdk_call_unwrapped
 
 import tracko_sdk
 from tracko_sdk.models.account_save_request import AccountSaveRequest
@@ -78,15 +78,15 @@ def _parse_date(date_str: str):
 def cmd_accounts_list(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.AccountControllerApi(api_client)
-        result = sdk_call(lambda: api.get_all6())
+        api = tracko_sdk.AccountsApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.get_all6())
     if result is None:
         return 1
     if args.raw:
         _print_raw(result)
         return 0
-    rows = result.get("result", []) if isinstance(result, dict) else []
-    if isinstance(rows, list):
+    rows = result if isinstance(result, list) else []
+    if rows:
         columns = [("id", "ID"), ("name", "Name"), ("userId", "UserId")]
         print_table(rows, columns, max_widths={"name": 32, "userId": 36}, right_align={"id"})
         return 0
@@ -97,8 +97,8 @@ def cmd_accounts_list(args: argparse.Namespace) -> int:
 def cmd_accounts_balances(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.AccountControllerApi(api_client)
-        result = sdk_call(lambda: api.get_my_account_balances())
+        api = tracko_sdk.AccountsApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.get_my_account_balances())
     if result is None:
         return 1
     _print_raw(result)
@@ -109,8 +109,8 @@ def cmd_accounts_add(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     req = AccountSaveRequest(name=args.name, currency=getattr(args, "currency", None))
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.AccountControllerApi(api_client)
-        result = sdk_call(lambda: api.create7(req))
+        api = tracko_sdk.AccountsApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.create7(req))
     if result is None:
         return 1
     _print_raw(result)
@@ -120,8 +120,8 @@ def cmd_accounts_add(args: argparse.Namespace) -> int:
 def cmd_accounts_get(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.AccountControllerApi(api_client)
-        result = sdk_call(lambda: api.get_by_id4(id=int(args.id)))
+        api = tracko_sdk.AccountsApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.get_by_id4(id=int(args.id)))
     if result is None:
         return 1
     _print_raw(result)
@@ -132,8 +132,8 @@ def cmd_accounts_update(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     req = AccountSaveRequest(name=args.name, currency=getattr(args, "currency", None))
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.AccountControllerApi(api_client)
-        result = sdk_call(lambda: api.update5(id=int(args.id), account_save_request=req))
+        api = tracko_sdk.AccountsApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.update5(id=int(args.id), account_save_request=req))
     if result is None:
         return 1
     _print_raw(result)
@@ -143,8 +143,8 @@ def cmd_accounts_update(args: argparse.Namespace) -> int:
 def cmd_accounts_delete(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.AccountControllerApi(api_client)
-        result = sdk_call(lambda: api.delete7(id=int(args.id)))
+        api = tracko_sdk.AccountsApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.delete7(id=int(args.id)))
     if result is None:
         return 1
     _print_raw(result)
@@ -156,8 +156,8 @@ def cmd_accounts_summary(args: argparse.Namespace) -> int:
     start = _parse_date(args.start_date)
     end = _parse_date(args.end_date)
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.AccountControllerApi(api_client)
-        result = sdk_call(lambda: api.get_account_summary(
+        api = tracko_sdk.AccountsApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.get_account_summary(
             id=int(args.id),
             start_date=start,
             end_date=end,
@@ -174,8 +174,8 @@ def cmd_accounts_transactions(args: argparse.Namespace) -> int:
     start = _parse_date(args.start_date) if args.start_date else None
     end = _parse_date(args.end_date) if args.end_date else None
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.AccountControllerApi(api_client)
-        result = sdk_call(lambda: api.get_account_transactions(
+        api = tracko_sdk.AccountsApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.get_account_transactions(
             id=int(args.id),
             month=args.month,
             year=args.year,

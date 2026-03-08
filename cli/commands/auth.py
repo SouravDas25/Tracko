@@ -39,8 +39,12 @@ def _extract_token(result) -> str | None:
 def cmd_login(args: argparse.Namespace) -> int:
     _, base_url = get_token_from_args_or_config(args)
     with make_api_client(base_url) as api_client:
-        api = tracko_sdk.SessionControllerApi(api_client)
-        result = sdk_call(lambda: api.login(LoginRequest(username=args.username, password=args.password)))
+        api = tracko_sdk.AuthenticationApi(api_client)
+        result = sdk_call(lambda: api.login(LoginRequest(username=args.username, password=args.password)), auth_call=True)
+
+    if result is None:
+        print("Error: Login failed. Check your username and password.", file=__import__("sys").stderr)
+        return 1
 
     if args.raw:
         import json
@@ -58,8 +62,12 @@ def cmd_login(args: argparse.Namespace) -> int:
 def cmd_oauth_token(args: argparse.Namespace) -> int:
     _, base_url = get_token_from_args_or_config(args)
     with make_api_client(base_url) as api_client:
-        api = tracko_sdk.SessionControllerApi(api_client)
-        result = sdk_call(lambda: api.sign_in(AuthicationRequest(phone_no=args.phone_no, password=args.password)))
+        api = tracko_sdk.AuthenticationApi(api_client)
+        result = sdk_call(lambda: api.sign_in(AuthicationRequest(phone_no=args.phone_no, password=args.password)), auth_call=True)
+
+    if result is None:
+        print("Error: Login failed. Check your phone number and password.", file=__import__("sys").stderr)
+        return 1
 
     if args.raw:
         import json

@@ -205,10 +205,11 @@ class TransactionController {
     DateTime begin,
     DateTime end, {
     List<int>? accountIds,
+    int? categoryId,
   }) async {
     final txRepo = sl<TransactionRepository>();
 
-    if (accountIds != null && accountIds.length == 1) {
+    if (accountIds != null && accountIds.length == 1 && categoryId == null) {
       return await txRepo.getAccountSummary(
         accountIds.first,
         begin,
@@ -217,7 +218,8 @@ class TransactionController {
       );
     }
 
-    return await txRepo.getSummary(begin, end, accountIds: accountIds);
+    return await txRepo.getSummary(begin, end,
+        accountIds: accountIds, categoryId: categoryId);
   }
 
   static Future<int> totalTransactionCount({List<int>? accountIds}) async {
@@ -263,7 +265,8 @@ class TransactionController {
       {List<int>? accountIds,
       DateTime? month,
       int page = 0,
-      int size = 20}) async {
+      int size = 20,
+      int? categoryId}) async {
     final txRepo = sl<TransactionRepository>();
     final DateTime start = month ?? SettingUtil.currentMonth;
 
@@ -274,10 +277,13 @@ class TransactionController {
       page: page,
       size: size,
       expand: true,
+      categoryId: categoryId,
     );
 
     return PaginatedTransactions(
-      transactions: response['transactions'],
+      transactions: (response['transactions'] as List<dynamic>)
+          .map((e) => e as Transaction)
+          .toList(),
       hasNext: response['hasNext'],
       hasPrevious: response['hasPrevious'],
       page: response['page'],
@@ -310,15 +316,17 @@ class TransactionController {
   }
 
   static Future<List<TransactionPeriodSummary>> getMonthlySummaries(int year,
-      {List<int>? accountIds}) async {
+      {List<int>? accountIds, int? categoryId}) async {
     final txRepo = sl<TransactionRepository>();
-    return await txRepo.getMonthlySummaries(year, accountIds: accountIds);
+    return await txRepo.getMonthlySummaries(year,
+        accountIds: accountIds, categoryId: categoryId);
   }
 
   static Future<List<TransactionPeriodSummary>> getYearlySummaries(
-      {List<int>? accountIds}) async {
+      {List<int>? accountIds, int? categoryId}) async {
     final txRepo = sl<TransactionRepository>();
-    return await txRepo.getYearlySummaries(accountIds: accountIds);
+    return await txRepo.getYearlySummaries(
+        accountIds: accountIds, categoryId: categoryId);
   }
 
   static _preloadTransactions(Transaction transaction) async {

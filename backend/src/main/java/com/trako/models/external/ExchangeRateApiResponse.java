@@ -1,5 +1,6 @@
 package com.trako.models.external;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.Map;
 
 /**
@@ -9,7 +10,10 @@ import java.util.Map;
 public class ExchangeRateApiResponse {
 
     private String baseCode;
+    @JsonDeserialize(contentAs = Double.class)
     private Map<String, Double> rates;
+
+    public ExchangeRateApiResponse() {}
 
     public ExchangeRateApiResponse(String baseCode, Map<String, Double> rates) {
         this.baseCode = baseCode;

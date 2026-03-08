@@ -319,7 +319,7 @@ public class TransactionServiceIntegrationTest extends BaseIntegrationTest {
         Date start = monthStart(2026, 2);
         Date end = monthStart(2026, 3);
 
-        TransactionSummaryDTO summary = transactionService.getSummaryWithRollover(testUser.getId(), start, end, null);
+        TransactionSummaryDTO summary = transactionService.getSummaryWithRollover(testUser.getId(), start, end, null, null);
 
         assertEquals(500.0, summary.getTotalIncome(), 0.01);
         assertEquals(200.0, summary.getTotalExpense(), 0.01);
@@ -412,7 +412,8 @@ public class TransactionServiceIntegrationTest extends BaseIntegrationTest {
                 testUser.getId(),
                 start,
                 end,
-                List.of(testAccount.getId())
+                List.of(testAccount.getId()),
+                null
         );
         assertEquals(100.0, summary.getTotalIncome(), 0.01);
     }
@@ -435,6 +436,7 @@ public class TransactionServiceIntegrationTest extends BaseIntegrationTest {
                 testUser.getId(),
                 null,
                 monthStart(2026, 3),
+                null,
                 null
         );
 
@@ -444,8 +446,8 @@ public class TransactionServiceIntegrationTest extends BaseIntegrationTest {
 
     @Test
     public void testGetSummary_fullMonthFalseWhenStartDateNullOrEndDateNull() {
-        TransactionSummaryDTO s1 = transactionService.getSummary(testUser.getId(), null, monthStart(2026, 3), null);
-        TransactionSummaryDTO s2 = transactionService.getSummary(testUser.getId(), monthStart(2026, 2), null, null);
+        TransactionSummaryDTO s1 = transactionService.getSummary(testUser.getId(), null, monthStart(2026, 3), null, null);
+        TransactionSummaryDTO s2 = transactionService.getSummary(testUser.getId(), monthStart(2026, 2), null, null, null);
         assertNotNull(s1);
         assertNotNull(s2);
     }

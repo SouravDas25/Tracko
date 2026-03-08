@@ -5,10 +5,11 @@ import json
 import sys
 
 from ..core.config import get_token_from_args_or_config
-from ..core.api import make_api_client, sdk_call
+from ..core.api import make_api_client, sdk_call, sdk_call_unwrapped
 
 import tracko_sdk
 from tracko_sdk.models.transaction_request import TransactionRequest
+from tracko_sdk.models.transactions_page_dto import TransactionsPageDTO
 from ..utils.formatting import print_table
 from ..utils.lookups import get_id_name_map
 
@@ -142,12 +143,10 @@ def _parse_date(date_str: str | None) -> datetime.datetime:
 
 
 def _get_user_base_currency(api_client) -> str:
-    user_api = tracko_sdk.UserControllerApi(api_client)
-    result = sdk_call(lambda: user_api.me())
+    user_api = tracko_sdk.UsersApi(api_client)
+    result = sdk_call_unwrapped(lambda: user_api.me())
     if result and isinstance(result, dict):
-        data = result.get("result") if "result" in result else result
-        if isinstance(data, dict):
-            return data.get("baseCurrency", "INR")
+        return result.get("baseCurrency", "INR")
     return "INR"
 
 
@@ -207,27 +206,6 @@ def _parse_tx_datetime(v) -> datetime.datetime | None:
 # Commands
 # ---------------------------------------------------------------------------
 
-def _get_transactions_page(base_url: str, token: str | None, month: int, year: int, page: int, size: int) -> dict | None:
-    """Fetch transactions page using raw rest client to handle backend's result wrapper."""
-    import urllib.parse
-    params = urllib.parse.urlencode({"month": month, "year": year, "page": page, "size": size})
-    url = base_url.rstrip("/") + "/api/transactions?" + params
-    headers = {"Accept": "application/json"}
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
-    with make_api_client(base_url, token) as api_client:
-        try:
-            resp = api_client.rest_client.request("GET", url, headers=headers)
-            resp.read()
-            payload = json.loads(resp.data) if resp.data else {}
-        except Exception as e:
-            print(f"Error: {e}", file=sys.stderr)
-            return None
-    # Backend wraps in {"result": {...TransactionsPageDTO...}}
-    inner = payload.get("result") if isinstance(payload, dict) else payload
-    return inner if isinstance(inner, dict) else payload
-
-
 def cmd_transactions_list(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     now = datetime.datetime.now()
@@ -236,37 +214,51 @@ def cmd_transactions_list(args: argparse.Namespace) -> int:
     page = args.page if args.page is not None else 0
     size = args.size if args.size is not None else 500
 
-    result = _get_transactions_page(base_url, token, month, year, page, size)
-    if result is None:
+    with make_api_client(base_url, token) as api_client:
+        api = tracko_sdk.TransactionsApi(api_client)
+        result_dict = sdk_call_unwrapped(lambda: api.get_all1(month=month, year=year, page=page, size=size, expand=True))
+
+    if result_dict is None:
+        return 1
+    if not isinstance(result_dict, dict):
+        print("Error: Unexpected response format.", file=sys.stderr)
         return 1
 
     if args.raw:
-        _print_raw(result)
+        _print_raw(result_dict)
         return 0
 
-    txs = result.get("transactions") if isinstance(result, dict) else None
-    if not isinstance(txs, list):
-        _print_raw(result)
+    page_dto = TransactionsPageDTO.from_dict(result_dict)
+    if page_dto is None or page_dto.transactions is None:
+        _print_raw(result_dict)
         return 0
 
-    print(f"Month={result.get('month', month)} "
-          f"Year={result.get('year', year)} "
-          f"Page={result.get('page', page)} "
-          f"Total={result.get('totalElements', '?')}")
+    print(f"Month={page_dto.month or month} "
+          f"Year={page_dto.year or year} "
+          f"Page={page_dto.page or page} "
+          f"Total={page_dto.total_elements or '?'}")
 
-    accounts = get_id_name_map(base_url, token, "/api/accounts")
-    categories = get_id_name_map(base_url, token, "/api/categories")
+    if not page_dto.transactions:
+        print("No transactions found.")
+        return 0
 
-    for tx in txs:
-        if not isinstance(tx, dict):
-            continue
-        aid = tx.get("accountId")
-        cid = tx.get("categoryId")
-        tx["accountName"] = accounts.get(int(aid), "") if aid is not None else ""
-        tx["categoryName"] = categories.get(int(cid), "") if cid is not None else ""
-        dt = _parse_tx_datetime(tx.get("date"))
-        tx["date"] = dt.date().isoformat() if dt else ""
-        tx["time"] = dt.strftime("%H:%M:%S") if dt else ""
+    rows = []
+    for tx in page_dto.transactions:
+        dt = _parse_tx_datetime(tx.var_date)
+        rows.append({
+            "id": tx.id,
+            "date": dt.date().isoformat() if dt else "",
+            "time": dt.strftime("%H:%M:%S") if dt else "",
+            "name": tx.name,
+            "transactionType": tx.transaction_type,
+            "amount": tx.amount,
+            "accountId": tx.account_id,
+            "accountName": tx.account.name if tx.account else "",
+            "categoryId": tx.category_id,
+            "categoryName": tx.category.name if tx.category else "",
+            "isCountable": tx.is_countable,
+            "comments": tx.comments,
+        })
 
     columns = [
         ("id", "ID"), ("date", "Date"), ("time", "Time"), ("name", "Name"),
@@ -276,7 +268,7 @@ def cmd_transactions_list(args: argparse.Namespace) -> int:
         ("isCountable", "Cnt"), ("comments", "Comments"),
     ]
     print_table(
-        txs, columns,
+        rows, columns,
         max_widths={"date": 10, "time": 8, "name": 24, "comments": 28, "accountName": 18, "categoryName": 18},
         right_align={"id", "amount", "accountId", "categoryId"},
         formatters={"transactionType": _fmt_type},
@@ -287,8 +279,8 @@ def cmd_transactions_list(args: argparse.Namespace) -> int:
 def cmd_transactions_get(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.TransactionControllerApi(api_client)
-        result = sdk_call(lambda: api.get_by_id(id=int(args.id)))
+        api = tracko_sdk.TransactionsApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.get_by_id(id=int(args.id)))
     if result is None:
         return 1
     _print_raw(result)
@@ -348,8 +340,8 @@ def cmd_transactions_add(args: argparse.Namespace) -> int:
             exchangeRate=float(args.exchange_rate) if getattr(args, "exchange_rate", None) is not None else None,
         )
 
-        api = tracko_sdk.TransactionControllerApi(api_client)
-        result = sdk_call(lambda: api.create1(req))
+        api = tracko_sdk.TransactionsApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.create1(req))
 
     if result is None:
         return 1
@@ -400,8 +392,8 @@ def cmd_transactions_update(args: argparse.Namespace) -> int:
     req = TransactionRequest(**kwargs)
 
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.TransactionControllerApi(api_client)
-        result = sdk_call(lambda: api.update(id=tx_id, transaction_request=req))
+        api = tracko_sdk.TransactionsApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.update(id=tx_id, transaction_request=req))
 
     if result is None:
         return 1
@@ -412,8 +404,8 @@ def cmd_transactions_update(args: argparse.Namespace) -> int:
 def cmd_transactions_delete(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.TransactionControllerApi(api_client)
-        result = sdk_call(lambda: api.delete1(id=int(args.id)))
+        api = tracko_sdk.TransactionsApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.delete1(id=int(args.id)))
     if result is None:
         return 1
     _print_raw(result)
@@ -427,8 +419,8 @@ def cmd_transactions_summary(args: argparse.Namespace) -> int:
     end = _parse_date(args.end_date or f"{now.year}-12-31")
 
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.TransactionControllerApi(api_client)
-        result = sdk_call(lambda: api.get_my_summary(
+        api = tracko_sdk.TransactionsApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.get_my_summary(
             start_date=start,
             end_date=end,
             account_ids=getattr(args, "account_ids", None),
@@ -444,8 +436,8 @@ def cmd_transactions_summary(args: argparse.Namespace) -> int:
 def cmd_transactions_total_income(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.TransactionControllerApi(api_client)
-        result = sdk_call(lambda: api.get_my_total_income(
+        api = tracko_sdk.TransactionsApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.get_my_total_income(
             start_date=_parse_date(args.start_date),
             end_date=_parse_date(args.end_date),
         ))
@@ -458,8 +450,8 @@ def cmd_transactions_total_income(args: argparse.Namespace) -> int:
 def cmd_transactions_total_expense(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.TransactionControllerApi(api_client)
-        result = sdk_call(lambda: api.get_my_total_expense(
+        api = tracko_sdk.TransactionsApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.get_my_total_expense(
             start_date=_parse_date(args.start_date),
             end_date=_parse_date(args.end_date),
         ))
@@ -484,8 +476,8 @@ def cmd_transfers_create(args: argparse.Namespace) -> int:
             comments=args.comments,
             isCountable=0,
         )
-        api = tracko_sdk.TransactionControllerApi(api_client)
-        result = sdk_call(lambda: api.create1(req))
+        api = tracko_sdk.TransactionsApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.create1(req))
 
     if result is None:
         return 1
@@ -508,7 +500,7 @@ def cmd_transactions_import_csv(args: argparse.Namespace) -> int:
 
     with make_api_client(base_url, token) as api_client:
         currency = _get_user_base_currency(api_client)
-        api = tracko_sdk.TransactionControllerApi(api_client)
+        api = tracko_sdk.TransactionsApi(api_client)
 
         for idx, row in enumerate(rows, start=2):
             try:
@@ -547,7 +539,7 @@ def cmd_transactions_import_csv(args: argparse.Namespace) -> int:
                     originalAmount=amount,
                     originalCurrency=currency,
                 )
-                result = sdk_call(lambda: api.create1(req))
+                result = sdk_call_unwrapped(lambda: api.create1(req))
                 if result is not None:
                     success_count += 1
                     print(f"Row {idx}: Added {desc} ({amount})")

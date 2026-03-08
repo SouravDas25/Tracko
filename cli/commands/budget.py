@@ -3,7 +3,7 @@ import datetime
 import json
 
 from ..core.config import get_token_from_args_or_config
-from ..core.api import make_api_client, sdk_call
+from ..core.api import make_api_client, sdk_call_unwrapped
 
 import tracko_sdk
 from tracko_sdk.models.budget_allocation_request_dto import BudgetAllocationRequestDTO
@@ -54,8 +54,8 @@ def cmd_budget_view(args: argparse.Namespace) -> int:
     month = args.month if args.month is not None else month
     year = args.year if args.year is not None else year
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.BudgetControllerApi(api_client)
-        result = sdk_call(lambda: api.get_budget(month=month, year=year))
+        api = tracko_sdk.BudgetApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.get_budget(month=month, year=year))
     if result is None:
         return 1
     _print_raw(result)
@@ -74,8 +74,8 @@ def cmd_budget_allocate(args: argparse.Namespace) -> int:
         year=year,
     )
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.BudgetControllerApi(api_client)
-        result = sdk_call(lambda: api.allocate_funds(req))
+        api = tracko_sdk.BudgetApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.allocate_funds(req))
     if result is None:
         return 1
     _print_raw(result)
@@ -88,8 +88,8 @@ def cmd_budget_available(args: argparse.Namespace) -> int:
     month = args.month if args.month is not None else month
     year = args.year if args.year is not None else year
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.BudgetControllerApi(api_client)
-        result = sdk_call(lambda: api.get_available_to_assign(month=month, year=year))
+        api = tracko_sdk.BudgetApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.get_available_to_assign(month=month, year=year))
     if result is None:
         return 1
     _print_raw(result)
@@ -99,8 +99,8 @@ def cmd_budget_available(args: argparse.Namespace) -> int:
 def cmd_budget_current(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.BudgetControllerApi(api_client)
-        result = sdk_call(lambda: api.get_current_budget())
+        api = tracko_sdk.BudgetApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.get_current_budget())
     if result is None:
         return 1
     _print_raw(result)

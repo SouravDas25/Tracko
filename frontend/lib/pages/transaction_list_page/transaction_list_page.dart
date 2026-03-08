@@ -5,6 +5,12 @@ import 'package:tracko/pages/transaction_list_page/monthly_summary_view.dart';
 import 'package:tracko/pages/transaction_list_page/yearly_summary_view.dart';
 import 'package:tracko/pages/stats_page/stats_page.dart';
 
+/// The main container page for the transaction list.
+/// It uses a [TabController] to switch between three levels of granularity:
+/// 1. Daily: Detailed transactions for a specific month ([DailyTransactionView]).
+/// 2. Monthly: Aggregated summaries for each month in a specific year ([MonthlySummaryView]).
+/// 3. Yearly: Aggregated summaries for all years ([YearlySummaryView]).
+/// It handles routing between these tabs when a user drills down from a year -> month -> day.
 class TransactionListPage extends StatefulWidget {
   final List<int>? initialAccountIds;
   final bool embedded;

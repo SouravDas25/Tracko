@@ -10,6 +10,17 @@ import 'package:tracko/pages/stats_page/components/stats_line_chart.dart';
 import 'package:tracko/pages/stats_page/components/stats_pie_chart.dart';
 import 'package:tracko/pages/stats_page/controllers/stats_controller.dart';
 
+/// The main Statistics dashboard page.
+///
+/// This page displays an overview of the user's financial statistics over a selected
+/// date range (e.g., month, year, or custom range). It includes:
+/// - A filter section to toggle between income/expense and select accounts.
+/// - A line chart showing the trend of expenses/income over time.
+/// - A pie chart showing the breakdown of expenses/income by category.
+/// - A list of categories with their respective total amounts and progress bars.
+///
+/// Tapping on a category in the list navigates to the [CategoryTransactionsPage]
+/// for a detailed view of that category's transactions.
 class StatsPage extends StatefulWidget {
   final DateTime? initialDate;
   final StatsKind? initialKind;
@@ -75,6 +86,7 @@ class _StatsPageState extends State<StatsPage> {
           range: _controller.range.name,
           transactionType: txType,
           accountId: _controller.selectedAccount?.id,
+          accountName: _controller.selectedAccount?.name,
         ),
       ),
     );

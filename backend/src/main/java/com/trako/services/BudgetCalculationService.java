@@ -57,7 +57,7 @@ public class BudgetCalculationService {
 
         // We use getSummaryWithRollover to get the Opening Balance (rolloverNet) which is the account balance before this month.
         // Net Total before this month = (Total Income < Month) - (Total Expense < Month)
-        TransactionSummaryDTO summary = transactionService.getSummaryWithRollover(userId, startDate, endDate, null);
+        TransactionSummaryDTO summary = transactionService.getSummaryWithRollover(userId, startDate, endDate, null, null);
 
         Double totalIncome = summary.getTotalIncome(); // Income in this month
         Double openingBalance = summary.getRolloverNet(); // Balance at start of month
@@ -252,7 +252,7 @@ public class BudgetCalculationService {
         Date startDate = getStartDate(month, year);
         Date endDate = getEndDate(month, year);
 
-        TransactionSummaryDTO summary = transactionService.getSummaryWithRollover(userId, startDate, endDate, null);
+        TransactionSummaryDTO summary = transactionService.getSummaryWithRollover(userId, startDate, endDate, null, null);
 
         Double totalIncome = summary.getTotalIncome();
         Double openingBalance = summary.getRolloverNet();

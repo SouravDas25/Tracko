@@ -163,11 +163,13 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             "FROM Transaction t " +
             "WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId) " +
             "AND t.isCountable = 1 " +
+            "AND (:categoryId IS NULL OR t.categoryId = :categoryId) " +
             "AND t.date >= :startDate AND t.date < :endDate")
     Object[] sumCountableTotalsForUserInRange(
             @Param("userId") String userId,
             @Param("startDate") Date startDate,
-            @Param("endDate") Date endDate
+            @Param("endDate") Date endDate,
+            @Param("categoryId") Long categoryId
     );
 
     @Query("SELECT " +
@@ -180,12 +182,14 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             "FROM Transaction t " +
             "WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId AND a.id IN :accountIds) " +
             "AND t.isCountable = 1 " +
+            "AND (:categoryId IS NULL OR t.categoryId = :categoryId) " +
             "AND t.date >= :startDate AND t.date < :endDate")
     Object[] sumCountableTotalsForUserInRangeAndAccounts(
             @Param("userId") String userId,
             @Param("accountIds") List<Long> accountIds,
             @Param("startDate") Date startDate,
-            @Param("endDate") Date endDate
+            @Param("endDate") Date endDate,
+            @Param("categoryId") Long categoryId
     );
 
     @Query("SELECT COALESCE(SUM(CASE WHEN t.transactionType = com.trako.enums.TransactionDbType.CREDIT THEN t.amount " +
@@ -194,10 +198,12 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             "FROM Transaction t " +
             "WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId) " +
             "AND t.isCountable = 1 " +
+            "AND (:categoryId IS NULL OR t.categoryId = :categoryId) " +
             "AND t.date < :startDate")
     Double sumNetBeforeDateForUser(
             @Param("userId") String userId,
-            @Param("startDate") Date startDate
+            @Param("startDate") Date startDate,
+            @Param("categoryId") Long categoryId
     );
 
     @Query("SELECT COALESCE(SUM(CASE WHEN t.transactionType = com.trako.enums.TransactionDbType.CREDIT THEN t.amount " +
@@ -206,11 +212,13 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             "FROM Transaction t " +
             "WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId AND a.id IN :accountIds) " +
             "AND t.isCountable = 1 " +
+            "AND (:categoryId IS NULL OR t.categoryId = :categoryId) " +
             "AND t.date < :startDate")
     Double sumNetBeforeDateForUserAndAccounts(
             @Param("userId") String userId,
             @Param("accountIds") List<Long> accountIds,
-            @Param("startDate") Date startDate
+            @Param("startDate") Date startDate,
+            @Param("categoryId") Long categoryId
     );
 
     List<Transaction> findByAccountId(Long accountId);
@@ -236,11 +244,13 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             "WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId) " +
             "AND t.isCountable = 1 " +
             "AND YEAR(t.date) = :year " +
+            "AND (:categoryId IS NULL OR t.categoryId = :categoryId) " +
             "GROUP BY YEAR(t.date), MONTH(t.date) " +
             "ORDER BY y DESC, m DESC")
     List<Object[]> findMonthlySummariesForUserAndYear(
             @Param("userId") String userId,
-            @Param("year") int year
+            @Param("year") int year,
+            @Param("categoryId") Long categoryId
     );
 
     @Query("SELECT YEAR(t.date) as y, " +
@@ -253,10 +263,12 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             "FROM Transaction t " +
             "WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId) " +
             "AND t.isCountable = 1 " +
+            "AND (:categoryId IS NULL OR t.categoryId = :categoryId) " +
             "GROUP BY YEAR(t.date) " +
             "ORDER BY y DESC")
     List<Object[]> findYearlySummariesForUser(
-            @Param("userId") String userId
+            @Param("userId") String userId,
+            @Param("categoryId") Long categoryId
     );
 
     @Query("SELECT YEAR(t.date) as y, MONTH(t.date) as m, " +
@@ -270,12 +282,14 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             "WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId AND a.id IN :accountIds) " +
             "AND t.isCountable = 1 " +
             "AND YEAR(t.date) = :year " +
+            "AND (:categoryId IS NULL OR t.categoryId = :categoryId) " +
             "GROUP BY YEAR(t.date), MONTH(t.date) " +
             "ORDER BY y DESC, m DESC")
     List<Object[]> findMonthlySummariesForUserAndYearAndAccounts(
             @Param("userId") String userId,
             @Param("year") int year,
-            @Param("accountIds") List<Long> accountIds
+            @Param("accountIds") List<Long> accountIds,
+            @Param("categoryId") Long categoryId
     );
 
     @Query("SELECT YEAR(t.date) as y, " +
@@ -288,11 +302,13 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             "FROM Transaction t " +
             "WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId AND a.id IN :accountIds) " +
             "AND t.isCountable = 1 " +
+            "AND (:categoryId IS NULL OR t.categoryId = :categoryId) " +
             "GROUP BY YEAR(t.date) " +
             "ORDER BY y DESC")
     List<Object[]> findYearlySummariesForUserAndAccounts(
             @Param("userId") String userId,
-            @Param("accountIds") List<Long> accountIds
+            @Param("accountIds") List<Long> accountIds,
+            @Param("categoryId") Long categoryId
     );
 
     @Query("SELECT t.date, SUM(t.amount) " +

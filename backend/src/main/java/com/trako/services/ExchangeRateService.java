@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class ExchangeRateService {
@@ -42,7 +43,9 @@ public class ExchangeRateService {
         String resolvedBase = (base instanceof String) ? (String) base : baseCurrency;
 
         @SuppressWarnings("unchecked")
-        Map<String, Double> rates = (Map<String, Double>) body.get("rates");
+        Map<String, Object> rawRates = (Map<String, Object>) body.get("rates");
+        Map<String, Double> rates = rawRates == null ? null : rawRates.entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, e -> ((Number) e.getValue()).doubleValue()));
 
         if (rates == null || rates.isEmpty()) {
             throw new NotFoundException("No exchange rates available for base currency: " + resolvedBase);

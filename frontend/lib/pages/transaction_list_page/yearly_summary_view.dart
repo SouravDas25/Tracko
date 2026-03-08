@@ -5,13 +5,20 @@ import 'package:tracko/controllers/TransactionController.dart';
 import 'package:tracko/models/transaction_period_summary.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 
+/// A view that displays a list of aggregated transaction summaries for all active years.
+///
+/// It includes:
+/// - A scrollable, pull-to-refresh list of yearly summaries.
+/// - Tapping on a year navigates the user to the `MonthlySummaryView` for that specific year.
 class YearlySummaryView extends StatefulWidget {
   final List<int>? accountIds;
+  final int? categoryId;
   final Function(int year) onYearSelected;
 
   const YearlySummaryView({
     Key? key,
     this.accountIds,
+    this.categoryId,
     required this.onYearSelected,
   }) : super(key: key);
 
@@ -31,7 +38,9 @@ class _YearlySummaryViewState extends RefreshableState<YearlySummaryView> {
       if (mounted) setState(() => _isLoading = true);
 
       final summaries = await TransactionController.getYearlySummaries(
-          accountIds: widget.accountIds);
+        accountIds: widget.accountIds,
+        categoryId: widget.categoryId,
+      );
 
       if (mounted) {
         setState(() {

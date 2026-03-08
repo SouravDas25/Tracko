@@ -191,7 +191,7 @@ public class TransactionService {
     }
 
     public TransactionSummaryDTO getSummary(String userId, Date startDate, Date endDate) {
-        return getSummary(userId, startDate, endDate, null);
+        return getSummary(userId, startDate, endDate, null, null);
     }
 
     /**
@@ -205,11 +205,12 @@ public class TransactionService {
      * @param startDate  range start (inclusive)
      * @param endDate    range end (exclusive)
      * @param accountIds optional account filter
+     * @param categoryId optional category filter
      * @return summary DTO including rollover fields
      */
-    public TransactionSummaryDTO getSummaryWithRollover(String userId, Date startDate, Date endDate, List<Long> accountIds) {
+    public TransactionSummaryDTO getSummaryWithRollover(String userId, Date startDate, Date endDate, List<Long> accountIds, Long categoryId) {
         // Summary for the requested range (month fast-path when possible).
-        TransactionSummaryDTO base = getSummary(userId, startDate, endDate, accountIds);
+        TransactionSummaryDTO base = getSummary(userId, startDate, endDate, accountIds, categoryId);
 
         YearMonthKey ym = toYearMonthKey(startDate);
         if (ym == null) {
@@ -220,9 +221,9 @@ public class TransactionService {
         Double rolloverNet;
         // Rollover is defined as the sum of net totals strictly before the start month.
         if (accountIds == null || accountIds.isEmpty()) {
-            rolloverNet = transactionRepository.sumNetBeforeDateForUser(userId, monthStart);
+            rolloverNet = transactionRepository.sumNetBeforeDateForUser(userId, monthStart, categoryId);
         } else {
-            rolloverNet = transactionRepository.sumNetBeforeDateForUserAndAccounts(userId, accountIds, monthStart);
+            rolloverNet = transactionRepository.sumNetBeforeDateForUserAndAccounts(userId, accountIds, monthStart, categoryId);
         }
 
         double withRollover = safe(base.getNetTotal()) + safe(rolloverNet);
@@ -251,7 +252,7 @@ public class TransactionService {
      * @param accountIds optional account filter
      * @return summary DTO
      */
-    public TransactionSummaryDTO getSummary(String userId, Date startDate, Date endDate, List<Long> accountIds) {
+    public TransactionSummaryDTO getSummary(String userId, Date startDate, Date endDate, List<Long> accountIds, Long categoryId) {
         YearMonthKey ym = toYearMonthKey(startDate);
         boolean fullMonth = isFullMonthRange(startDate, endDate);
 
@@ -259,9 +260,9 @@ public class TransactionService {
             // Fast-path: aggregate countable transactions directly for full calendar months.
             Object[] row;
             if (accountIds == null || accountIds.isEmpty()) {
-                row = transactionRepository.sumCountableTotalsForUserInRange(userId, startDate, endDate);
+                row = transactionRepository.sumCountableTotalsForUserInRange(userId, startDate, endDate, categoryId);
             } else {
-                row = transactionRepository.sumCountableTotalsForUserInRangeAndAccounts(userId, accountIds, startDate, endDate);
+                row = transactionRepository.sumCountableTotalsForUserInRangeAndAccounts(userId, accountIds, startDate, endDate, categoryId);
             }
             return summaryFromAggregateRow(row);
         }
@@ -269,10 +270,18 @@ public class TransactionService {
         // Fallback for arbitrary date ranges (preserve old behavior): scan raw transactions
         // since account_month_summary is only maintained at month granularity.
         List<Transaction> transactions;
-        if (accountIds == null || accountIds.isEmpty()) {
-            transactions = transactionRepository.findByUserIdAndDateBetween(userId, startDate, endDate);
+        if (categoryId != null && categoryId > 0) {
+            if (accountIds == null || accountIds.isEmpty()) {
+                transactions = transactionRepository.findByUserIdAndCategoryIdAndDateBetween(userId, categoryId, startDate, endDate);
+            } else {
+                transactions = transactionRepository.findByUserIdAndCategoryIdAndDateBetweenAndAccountIds(userId, categoryId, startDate, endDate, accountIds);
+            }
         } else {
-            transactions = transactionRepository.findByUserIdAndDateBetweenAndAccountIds(userId, startDate, endDate, accountIds);
+            if (accountIds == null || accountIds.isEmpty()) {
+                transactions = transactionRepository.findByUserIdAndDateBetween(userId, startDate, endDate);
+            } else {
+                transactions = transactionRepository.findByUserIdAndDateBetweenAndAccountIds(userId, startDate, endDate, accountIds);
+            }
         }
 
         double totalIncome = 0.0;
@@ -295,7 +304,7 @@ public class TransactionService {
     }
 
     public TransactionSummaryDTO getAccountSummary(String userId, Long accountId, Date startDate, Date endDate) {
-        TransactionSummaryDTO base = getSummary(userId, startDate, endDate, Collections.singletonList(accountId));
+        TransactionSummaryDTO base = getSummary(userId, startDate, endDate, Collections.singletonList(accountId), null);
         Double transferDelta = transactionRepository.sumTransferDeltaForAccountInRange(userId, accountId, startDate, endDate);
         double net = safe(base.getNetTotal()) + safe(transferDelta);
         return new TransactionSummaryDTO(
@@ -318,7 +327,8 @@ public class TransactionService {
         Double rolloverNet = transactionRepository.sumNetBeforeDateForUserAndAccounts(
                 userId,
                 Collections.singletonList(accountId),
-                monthStart
+                monthStart,
+                null
         );
 
         double withRollover = safe(base.getNetTotal()) + safe(rolloverNet);
@@ -414,12 +424,12 @@ public class TransactionService {
                 .sum();
     }
 
-    public List<TransactionPeriodSummaryDTO> getMonthlySummaries(String userId, int year, List<Long> accountIds) {
+    public List<TransactionPeriodSummaryDTO> getMonthlySummaries(String userId, int year, List<Long> accountIds, Long categoryId) {
         List<Object[]> rows;
         if (accountIds == null || accountIds.isEmpty()) {
-            rows = transactionRepository.findMonthlySummariesForUserAndYear(userId, year);
+            rows = transactionRepository.findMonthlySummariesForUserAndYear(userId, year, categoryId);
         } else {
-            rows = transactionRepository.findMonthlySummariesForUserAndYearAndAccounts(userId, year, accountIds);
+            rows = transactionRepository.findMonthlySummariesForUserAndYearAndAccounts(userId, year, accountIds, categoryId);
         }
 
         return rows.stream().map(row -> {
@@ -434,12 +444,12 @@ public class TransactionService {
         }).collect(Collectors.toList());
     }
 
-    public List<TransactionPeriodSummaryDTO> getYearlySummaries(String userId, List<Long> accountIds) {
+    public List<TransactionPeriodSummaryDTO> getYearlySummaries(String userId, List<Long> accountIds, Long categoryId) {
         List<Object[]> rows;
         if (accountIds == null || accountIds.isEmpty()) {
-            rows = transactionRepository.findYearlySummariesForUser(userId);
+            rows = transactionRepository.findYearlySummariesForUser(userId, categoryId);
         } else {
-            rows = transactionRepository.findYearlySummariesForUserAndAccounts(userId, accountIds);
+            rows = transactionRepository.findYearlySummariesForUserAndAccounts(userId, accountIds, categoryId);
         }
 
         return rows.stream().map(row -> {

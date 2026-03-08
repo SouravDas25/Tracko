@@ -7,9 +7,16 @@ import 'package:tracko/models/transaction_period_summary.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:intl/intl.dart';
 
+/// A view that displays a list of aggregated transaction summaries for each month in a specific year.
+///
+/// It includes:
+/// - A sticky year navigation header for switching years.
+/// - A scrollable, pull-to-refresh list of monthly summaries.
+/// - Tapping on a month navigates the user to the `DailyTransactionView` for that specific month.
 class MonthlySummaryView extends StatefulWidget {
   final int year;
   final List<int>? accountIds;
+  final int? categoryId;
   final Function(int year, int month) onMonthSelected;
   final Function(int year) onYearChanged;
 
@@ -17,6 +24,7 @@ class MonthlySummaryView extends StatefulWidget {
     Key? key,
     required this.year,
     this.accountIds,
+    this.categoryId,
     required this.onMonthSelected,
     required this.onYearChanged,
   }) : super(key: key);
@@ -52,11 +60,13 @@ class _MonthlySummaryViewState extends RefreshableState<MonthlySummaryView> {
     try {
       if (mounted) setState(() => _isLoading = true);
       AppLog.d(
-          '[MonthlySummaryView] refreshing for year=$_selectedYear accountIds=${widget.accountIds}');
+          '[MonthlySummaryView] refreshing for year=$_selectedYear accountIds=${widget.accountIds} categoryId=${widget.categoryId}');
 
       final summaries = await TransactionController.getMonthlySummaries(
-          _selectedYear,
-          accountIds: widget.accountIds);
+        _selectedYear,
+        accountIds: widget.accountIds,
+        categoryId: widget.categoryId,
+      );
 
       AppLog.d('[MonthlySummaryView] loaded ${summaries.length} summaries');
 

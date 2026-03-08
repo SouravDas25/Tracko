@@ -4,6 +4,15 @@ import 'package:tracko/Utils/WidgetUtil.dart';
 import 'package:tracko/pages/stats_page/controllers/stats_controller.dart';
 import 'package:tracko/Utils/ChartUtil.dart';
 
+/// A UI component that renders a list of categories along with their aggregate statistics.
+///
+/// For each category, it displays:
+/// - A color-coded avatar based on the category name.
+/// - The category name and total amount spent/earned.
+/// - A progress bar representing the percentage of the total amount.
+///
+/// It handles its own loading and error states and delegates tap events back
+/// to the parent widget via [onCategoryTap].
 class StatsCategoryList extends StatelessWidget {
   final bool loading;
   final String? error;

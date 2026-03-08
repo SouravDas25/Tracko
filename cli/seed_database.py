@@ -60,7 +60,7 @@ def wait_for_api(base_url: str, max_attempts: int = 30) -> bool:
     for attempt in range(max_attempts):
         try:
             with make_api_client(base_url) as api_client:
-                api = tracko_sdk.HealthControllerApi(api_client)
+                api = tracko_sdk.HealthApi(api_client)
                 result = api.health()
             if result is not None:
                 log("API is ready!")
@@ -76,7 +76,7 @@ def wait_for_api(base_url: str, max_attempts: int = 30) -> bool:
 def login_existing_user(base_url: str) -> str | None:
     log("Logging in with existing user credentials...")
     with make_api_client(base_url) as api_client:
-        api = tracko_sdk.SessionControllerApi(api_client)
+        api = tracko_sdk.AuthenticationApi(api_client)
         result = sdk_call(lambda: api.login(LoginRequest(username="user@example.com", password="password")))
     if result is None:
         log("Login failed")
@@ -109,7 +109,7 @@ def create_accounts(base_url: str, token: str) -> list:
     existing_norm = {str(k).strip().casefold(): v for k, v in existing.items()}
     account_ids = []
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.AccountControllerApi(api_client)
+        api = tracko_sdk.AccountsApi(api_client)
         for name in names:
             norm = name.strip().casefold()
             if norm in existing_norm:
@@ -135,7 +135,7 @@ def create_categories(base_url: str, token: str) -> list:
     existing_norm = {str(k).strip().casefold(): v for k, v in existing.items()}
     category_ids = []
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.CategoryControllerApi(api_client)
+        api = tracko_sdk.CategoriesApi(api_client)
         for name in names:
             norm = name.strip().casefold()
             if norm in existing_norm:
@@ -162,7 +162,7 @@ def create_contacts(base_url: str, token: str) -> list:
     existing = get_existing_resources_map(base_url, token, "/api/contacts")
     contact_ids = []
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.ContactControllerApi(api_client)
+        api = tracko_sdk.ContactsApi(api_client)
         for c in contacts:
             if c["name"] in existing:
                 cid = existing[c["name"]]
@@ -242,7 +242,7 @@ def create_transactions(base_url: str, token: str, account_ids: list, category_i
     log(f"Generated {len(transactions)} transactions, sending...")
     created_count = 0
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.TransactionControllerApi(api_client)
+        api = tracko_sdk.TransactionsApi(api_client)
         for tx_type, name, amount, dt, acct_id, cat_id in transactions:
             req = TransactionRequest(
                 transactionType=tx_type,
@@ -283,7 +283,7 @@ def create_transfers(base_url: str, token: str, account_ids: list, base_currency
 
     created_count = 0
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.TransactionControllerApi(api_client)
+        api = tracko_sdk.TransactionsApi(api_client)
         for name, from_id, to_id, amount, days_ago in transfers:
             req = TransactionRequest(
                 transactionType="1",
@@ -325,7 +325,7 @@ def create_budget_allocations(base_url: str, token: str, category_ids: list) -> 
 
     created_count = 0
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.BudgetControllerApi(api_client)
+        api = tracko_sdk.BudgetApi(api_client)
         for cat_id, amount, name in allocations:
             req = BudgetAllocationRequestDTO(
                 category_id=int(cat_id),
@@ -351,7 +351,7 @@ def create_currencies(base_url: str, token: str) -> int:
     ]
     created_count = 0
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.UserCurrencyControllerApi(api_client)
+        api = tracko_sdk.UserCurrenciesApi(api_client)
         for code, rate in currencies:
             req = UserCurrencyRequest(currency_code=code, exchange_rate=rate)
             result = sdk_call(lambda r=req: api.save(r))
@@ -366,7 +366,7 @@ def create_currencies(base_url: str, token: str) -> int:
 
 def get_current_user_details(base_url: str, token: str) -> dict | None:
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.UserControllerApi(api_client)
+        api = tracko_sdk.UsersApi(api_client)
         result = sdk_call(lambda: api.me())
     if result is None:
         return None
@@ -385,7 +385,7 @@ def create_sample_splits(base_url: str, token: str, account_ids: list, category_
 
     now = datetime.datetime.now(tz=datetime.timezone.utc)
     with make_api_client(base_url, token) as api_client:
-        tx_api = tracko_sdk.TransactionControllerApi(api_client)
+        tx_api = tracko_sdk.TransactionsApi(api_client)
         req = TransactionRequest(
             transactionType="1",
             name="Group Dinner",
@@ -403,7 +403,7 @@ def create_sample_splits(base_url: str, token: str, account_ids: list, category_
             log("No transaction ID returned, skipping splits")
             return 0
 
-        user_api = tracko_sdk.UserControllerApi(api_client)
+        user_api = tracko_sdk.UsersApi(api_client)
         me_result = sdk_call(lambda: user_api.me())
         user_id = None
         if me_result:
@@ -414,7 +414,7 @@ def create_sample_splits(base_url: str, token: str, account_ids: list, category_
             log("Failed to get current user ID, skipping splits")
             return 0
 
-        split_api = tracko_sdk.SplitControllerApi(api_client)
+        split_api = tracko_sdk.SplitsApi(api_client)
         split_count = 0
         for i, amount in enumerate([100.0, 75.0, 125.0]):
             split_req = Split(
