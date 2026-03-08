@@ -115,6 +115,7 @@ class _SmartTransactionListState extends State<SmartTransactionList> {
       if (mounted) {
         setState(() => _isLoading = false);
         _refreshController.refreshCompleted();
+        if (!_hasMore) _refreshController.loadNoData();
       }
       AppLog.d('[SmartTransactionList] refresh success');
     } catch (e, stack) {
@@ -125,10 +126,16 @@ class _SmartTransactionListState extends State<SmartTransactionList> {
   }
 
   Future<void> _onLoading() async {
+    if (_isLoadingMore) {
+      // Already loading via scroll — don't leave the pull-up footer stuck
+      _refreshController.loadComplete();
+      return;
+    }
     if (!_hasMore) {
       _refreshController.loadNoData();
       return;
     }
+    _isLoadingMore = true;
     try {
       AppLog.d('[SmartTransactionList] loading more data...');
       await _loadData(isRefresh: false);
@@ -141,6 +148,8 @@ class _SmartTransactionListState extends State<SmartTransactionList> {
     } catch (e, stack) {
       AppLog.d('[SmartTransactionList] load more error: $e\n$stack');
       _refreshController.loadFailed();
+    } finally {
+      _isLoadingMore = false;
     }
   }
 
@@ -266,6 +275,7 @@ class _SmartTransactionListState extends State<SmartTransactionList> {
       onRefresh: refresh,
       onLoading: _onLoading,
       child: CustomScrollView(
+        controller: _scrollController,
         slivers: [
           if (widget.viewMode == TransactionViewMode.monthlyNavigation)
             SliverPersistentHeader(
