@@ -45,6 +45,21 @@ class _StatsLineChartState extends State<StatsLineChart> {
   double _spacingAtPinchStart = _kPointSpacing;
 
   @override
+  void didUpdateWidget(covariant StatsLineChart oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.series != oldWidget.series && widget.series.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToEnd());
+    }
+  }
+
+  void _scrollToEnd() {
+    if (_scrollCtrl.hasClients &&
+        _scrollCtrl.position.maxScrollExtent > 0) {
+      _scrollCtrl.jumpTo(_scrollCtrl.position.maxScrollExtent);
+    }
+  }
+
+  @override
   void dispose() {
     _scrollCtrl.dispose();
     super.dispose();
@@ -155,7 +170,10 @@ class _StatsLineChartState extends State<StatsLineChart> {
             // Store for use in _applyZoomDelta (post-frame to avoid
             // setState during build).
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) setState(() => _availableWidth = availableWidth);
+              if (mounted) {
+                setState(() => _availableWidth = availableWidth);
+                _scrollToEnd();
+              }
             });
           }
           final minRequired = series.length * _pointSpacing;
@@ -222,15 +240,6 @@ class _StatsLineChartState extends State<StatsLineChart> {
                   sideTitles: SideTitles(
                     showTitles: true,
                     reservedSize: 64,
-                    getTitlesWidget: (value, meta) => const SizedBox.shrink(),
-                  ),
-                ),
-                topTitles:
-                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                leftTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    reservedSize: 64,
                     interval: leftInterval,
                     getTitlesWidget: (value, meta) {
                       return SideTitleWidget(
@@ -245,6 +254,11 @@ class _StatsLineChartState extends State<StatsLineChart> {
                       );
                     },
                   ),
+                ),
+                topTitles:
+                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                leftTitles: const AxisTitles(
+                  sideTitles: SideTitles(showTitles: false, reservedSize: 0),
                 ),
                 bottomTitles: AxisTitles(
                   sideTitles: SideTitles(
