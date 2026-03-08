@@ -95,13 +95,15 @@ class TransactionTile extends StatelessWidget {
             child: InkWell(
               borderRadius: BorderRadius.circular(16),
               onTap: () async {
-                await Navigator.of(context).push(MaterialPageRoute(
+                final saved = await Navigator.of(context).push(MaterialPageRoute(
                     builder: (context) =>
                         AddItemPage(transaction: transaction)));
-                try {
-                  (parent as dynamic).refresh();
-                } catch (e) {
-                  print("Parent refresh failed: $e");
+                if (saved == true) {
+                  try {
+                    (parent as dynamic).refresh();
+                  } catch (e) {
+                    print("Parent refresh failed: $e");
+                  }
                 }
               },
               child: Padding(

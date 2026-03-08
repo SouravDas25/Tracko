@@ -174,7 +174,7 @@ public class AccountController {
         }
 
         int resolvedYear = (year == null) ? Calendar.getInstance().get(Calendar.YEAR) : year;
-        List<TransactionPeriodSummaryDTO> summaries = transactionService.getMonthlySummaries(currentUserId, resolvedYear, List.of(id));
+        List<TransactionPeriodSummaryDTO> summaries = transactionService.getMonthlySummaries(currentUserId, resolvedYear, List.of(id), null);
         return Response.ok(summaries);
     }
 
@@ -200,7 +200,7 @@ public class AccountController {
             return Response.unauthorized();
         }
 
-        List<TransactionPeriodSummaryDTO> summaries = transactionService.getYearlySummaries(currentUserId, List.of(id));
+        List<TransactionPeriodSummaryDTO> summaries = transactionService.getYearlySummaries(currentUserId, List.of(id), null);
         return Response.ok(summaries);
     }
 

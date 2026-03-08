@@ -176,13 +176,24 @@ public class TransactionController {
             if (expand) {
                 Page<TransactionDetailDTO> dtoPage;
                 if (categoryId != null && categoryId > 0) {
-                    dtoPage = transactionService.findWithDetailsByUserIdAndCategoryIdAndDateBetween(
-                            currentUserId,
-                            categoryId,
-                            start,
-                            end,
-                            pageable
-                    );
+                    if (ids.isEmpty()) {
+                        dtoPage = transactionService.findWithDetailsByUserIdAndCategoryIdAndDateBetween(
+                                currentUserId,
+                                categoryId,
+                                start,
+                                end,
+                                pageable
+                        );
+                    } else {
+                        dtoPage = transactionService.findWithDetailsByUserIdAndCategoryIdAndDateBetweenAndAccountIds(
+                                currentUserId,
+                                categoryId,
+                                start,
+                                end,
+                                ids,
+                                pageable
+                        );
+                    }
                 } else {
                     dtoPage = transactionService.findWithDetailsByUserIdAndDateBetween(
                             currentUserId,
@@ -213,13 +224,24 @@ public class TransactionController {
 
             Page<Transaction> transactionPage;
             if (categoryId != null && categoryId > 0) {
-                transactionPage = transactionService.findByUserIdAndCategoryIdAndDateBetween(
-                        currentUserId,
-                        categoryId,
-                        start,
-                        end,
-                        pageable
-                );
+                if (ids.isEmpty()) {
+                    transactionPage = transactionService.findByUserIdAndCategoryIdAndDateBetween(
+                            currentUserId,
+                            categoryId,
+                            start,
+                            end,
+                            pageable
+                    );
+                } else {
+                    transactionPage = transactionService.findByUserIdAndCategoryIdAndDateBetweenAndAccountIds(
+                            currentUserId,
+                            categoryId,
+                            start,
+                            end,
+                            ids,
+                            pageable
+                    );
+                }
             } else if (ids.isEmpty()) {
                 transactionPage = transactionService.findByUserIdAndDateBetween(
                         currentUserId,
@@ -333,15 +355,16 @@ public class TransactionController {
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate,
             @RequestParam(required = false) String accountIds,
-            @RequestParam(required = false, defaultValue = "true") boolean includeRollover) {
+            @RequestParam(required = false, defaultValue = "true") boolean includeRollover,
+            @RequestParam(required = false) Long categoryId) {
         try {
             String currentUserId = userService.loggedInUser().getId();
             List<Long> ids = com.trako.util.CommonUtil.parseAccountIds(accountIds);
             TransactionSummaryDTO summary;
             if (includeRollover) {
-                summary = transactionService.getSummaryWithRollover(currentUserId, startDate, endDate, ids);
+                summary = transactionService.getSummaryWithRollover(currentUserId, startDate, endDate, ids, categoryId);
             } else {
-                summary = transactionService.getSummary(currentUserId, startDate, endDate, ids);
+                summary = transactionService.getSummary(currentUserId, startDate, endDate, ids, categoryId);
             }
             return Response.ok(summary);
         } catch (UserNotLoggedInException e) {
@@ -489,7 +512,8 @@ public class TransactionController {
     @GetMapping("/summary/monthly")
     public ResponseEntity<?> getMonthlySummaries(
             @RequestParam(required = false) Integer year,
-            @RequestParam(required = false) String accountIds) {
+            @RequestParam(required = false) String accountIds,
+            @RequestParam(required = false) Long categoryId) {
         try {
             String currentUserId = userService.loggedInUser().getId();
             List<Long> ids = com.trako.util.CommonUtil.parseAccountIds(accountIds);
@@ -497,7 +521,7 @@ public class TransactionController {
             // Default to current year if not provided
             int resolvedYear = (year == null) ? Calendar.getInstance().get(Calendar.YEAR) : year;
 
-            List<TransactionPeriodSummaryDTO> summaries = transactionService.getMonthlySummaries(currentUserId, resolvedYear, ids);
+            List<TransactionPeriodSummaryDTO> summaries = transactionService.getMonthlySummaries(currentUserId, resolvedYear, ids, categoryId);
             return Response.ok(summaries);
         } catch (UserNotLoggedInException e) {
             return Response.unauthorized();
@@ -512,12 +536,13 @@ public class TransactionController {
     @ApiResponse(responseCode = "200", content = @Content(array = @ArraySchema(schema = @Schema(implementation = TransactionPeriodSummaryDTO.class))))
     @GetMapping("/summary/yearly")
     public ResponseEntity<?> getYearlySummaries(
-            @RequestParam(required = false) String accountIds) {
+            @RequestParam(required = false) String accountIds,
+            @RequestParam(required = false) Long categoryId) {
         try {
             String currentUserId = userService.loggedInUser().getId();
             List<Long> ids = com.trako.util.CommonUtil.parseAccountIds(accountIds);
 
-            List<TransactionPeriodSummaryDTO> summaries = transactionService.getYearlySummaries(currentUserId, ids);
+            List<TransactionPeriodSummaryDTO> summaries = transactionService.getYearlySummaries(currentUserId, ids, categoryId);
             return Response.ok(summaries);
         } catch (UserNotLoggedInException e) {
             return Response.unauthorized();
