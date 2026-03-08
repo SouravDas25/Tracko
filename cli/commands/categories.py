@@ -2,7 +2,7 @@ import argparse
 import json
 
 from ..core.config import get_token_from_args_or_config
-from ..core.api import make_api_client, sdk_call
+from ..core.api import make_api_client, sdk_call_unwrapped
 
 import tracko_sdk
 from tracko_sdk.models.category_save_request import CategorySaveRequest
@@ -48,15 +48,15 @@ def setup_parser(subparsers):
 def cmd_categories_list(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.CategoryControllerApi(api_client)
-        result = sdk_call(lambda: api.get_all5())
+        api = tracko_sdk.CategoriesApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.get_all5())
     if result is None:
         return 1
     if args.raw:
         _print_raw(result)
         return 0
-    rows = result.get("result", []) if isinstance(result, dict) else []
-    if isinstance(rows, list):
+    rows = result if isinstance(result, list) else []
+    if rows:
         columns = [("id", "ID"), ("name", "Name"), ("userId", "UserId")]
         print_table(rows, columns, max_widths={"name": 32, "userId": 36}, right_align={"id"})
         return 0
@@ -68,8 +68,8 @@ def cmd_categories_add(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     req = CategorySaveRequest(name=args.name)
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.CategoryControllerApi(api_client)
-        result = sdk_call(lambda: api.create6(req))
+        api = tracko_sdk.CategoriesApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.create6(req))
     if result is None:
         return 1
     _print_raw(result)
@@ -79,8 +79,8 @@ def cmd_categories_add(args: argparse.Namespace) -> int:
 def cmd_categories_get(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.CategoryControllerApi(api_client)
-        result = sdk_call(lambda: api.get_by_id3(id=int(args.id)))
+        api = tracko_sdk.CategoriesApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.get_by_id3(id=int(args.id)))
     if result is None:
         return 1
     _print_raw(result)
@@ -92,8 +92,8 @@ def cmd_categories_update(args: argparse.Namespace) -> int:
     category_type = str(args.category_type) if getattr(args, "category_type", None) is not None else None
     req = CategorySaveRequest(name=args.name, category_type=category_type)
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.CategoryControllerApi(api_client)
-        result = sdk_call(lambda: api.update4(id=int(args.id), category_save_request=req))
+        api = tracko_sdk.CategoriesApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.update4(id=int(args.id), category_save_request=req))
     if result is None:
         return 1
     _print_raw(result)
@@ -103,8 +103,8 @@ def cmd_categories_update(args: argparse.Namespace) -> int:
 def cmd_categories_delete(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.CategoryControllerApi(api_client)
-        result = sdk_call(lambda: api.delete6(id=int(args.id)))
+        api = tracko_sdk.CategoriesApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.delete6(id=int(args.id)))
     if result is None:
         return 1
     _print_raw(result)

@@ -8,6 +8,11 @@ import com.trako.services.BudgetCalculationService;
 import com.trako.services.UserService;
 import com.trako.util.Response;
 import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +21,7 @@ import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 
+@Tag(name = "Budget", description = "Zero-based budgeting — allocate and track spending by category")
 @RestController
 @RequestMapping("/api/budget")
 public class BudgetController {
@@ -26,6 +32,8 @@ public class BudgetController {
     @Autowired
     private UserService userService;
 
+    @Operation(summary = "Get budget details for a month/year")
+    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = BudgetResponseDTO.class)))
     @GetMapping
     public ResponseEntity<?> getBudget(
             @RequestParam(required = false) Integer month,
@@ -61,11 +69,15 @@ public class BudgetController {
         }
     }
 
+    @Operation(summary = "Get budget for the current month")
+    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = BudgetResponseDTO.class)))
     @GetMapping("/current")
     public ResponseEntity<?> getCurrentBudget() {
         return getBudget(null, null, null, true, null, "asc");
     }
 
+    @Operation(summary = "Allocate funds to a category for a month")
+    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = BudgetCategoryDTO.class)))
     @PostMapping("/allocate")
     public ResponseEntity<?> allocateFunds(@Valid @RequestBody BudgetAllocationRequestDTO request) {
         try {
@@ -79,6 +91,8 @@ public class BudgetController {
         }
     }
 
+    @Operation(summary = "Get the amount available to assign for a month")
+    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(type = "number", format = "double")))
     @GetMapping("/available")
     public ResponseEntity<?> getAvailableToAssign(
             @RequestParam(required = false) Integer month,

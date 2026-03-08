@@ -2,7 +2,7 @@ import argparse
 import json
 
 from ..core.config import get_token_from_args_or_config
-from ..core.api import make_api_client, sdk_call
+from ..core.api import make_api_client, sdk_call_unwrapped
 
 import tracko_sdk
 from tracko_sdk.models.json_store import JsonStore
@@ -52,8 +52,8 @@ def setup_parser(subparsers):
 def cmd_exchange_rates_get(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.ExchangeRateControllerApi(api_client)
-        result = sdk_call(lambda: api.get_rates(base_currency=str(args.base_currency)))
+        api = tracko_sdk.ExchangeRatesApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.get_rates(base_currency=str(args.base_currency)))
     if result is None:
         return 1
     _print_raw(result)
@@ -63,8 +63,8 @@ def cmd_exchange_rates_get(args: argparse.Namespace) -> int:
 def cmd_json_store_list(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.JsonStoreControllerApi(api_client)
-        result = sdk_call(lambda: api.get_all4())
+        api = tracko_sdk.JSONStoreApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.get_all4())
     if result is None:
         return 1
     _print_raw(result)
@@ -74,8 +74,8 @@ def cmd_json_store_list(args: argparse.Namespace) -> int:
 def cmd_json_store_get(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.JsonStoreControllerApi(api_client)
-        result = sdk_call(lambda: api.get_by_name(name=args.name))
+        api = tracko_sdk.JSONStoreApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.get_by_name(name=args.name))
     if result is None:
         return 1
     _print_raw(result)
@@ -86,8 +86,8 @@ def cmd_json_store_create(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     req = JsonStore(name=args.name, value=args.value)
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.JsonStoreControllerApi(api_client)
-        result = sdk_call(lambda: api.create4(req))
+        api = tracko_sdk.JSONStoreApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.create4(req))
     if result is None:
         return 1
     _print_raw(result)
@@ -98,8 +98,8 @@ def cmd_json_store_update(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     req = JsonStore(name=args.name, value=args.value)
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.JsonStoreControllerApi(api_client)
-        result = sdk_call(lambda: api.update2(name=args.name, json_store=req))
+        api = tracko_sdk.JSONStoreApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.update2(name=args.name, json_store=req))
     if result is None:
         return 1
     _print_raw(result)
@@ -109,8 +109,8 @@ def cmd_json_store_update(args: argparse.Namespace) -> int:
 def cmd_json_store_delete(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.JsonStoreControllerApi(api_client)
-        result = sdk_call(lambda: api.delete4(name=args.name))
+        api = tracko_sdk.JSONStoreApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.delete4(name=args.name))
     if result is None:
         return 1
     _print_raw(result)

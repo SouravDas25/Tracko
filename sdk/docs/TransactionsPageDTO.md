@@ -13,7 +13,7 @@ Name | Type | Description | Notes
 **total_pages** | **int** |  | [optional] 
 **has_next** | **bool** |  | [optional] 
 **has_previous** | **bool** |  | [optional] 
-**transactions** | **List[object]** |  | [optional] 
+**transactions** | [**List[TransactionDetailDTO]**](TransactionDetailDTO.md) |  | [optional] 
 
 ## Example
 

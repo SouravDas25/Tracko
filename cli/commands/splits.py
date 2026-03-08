@@ -2,7 +2,7 @@ import argparse
 import json
 
 from ..core.config import get_token_from_args_or_config
-from ..core.api import make_api_client, sdk_call
+from ..core.api import make_api_client, sdk_call_unwrapped
 
 import tracko_sdk
 from tracko_sdk.models.split import Split
@@ -78,8 +78,8 @@ def _render_splits(result, raw: bool) -> int:
     if raw:
         _print_raw(result)
         return 0
-    rows = result.get("result", []) if isinstance(result, dict) else []
-    if isinstance(rows, list):
+    rows = result if isinstance(result, list) else []
+    if rows:
         columns = [
             ("id", "ID"), ("transactionId", "TxnID"), ("userId", "UserId"),
             ("contactId", "ContactId"), ("amount", "Amount"),
@@ -94,48 +94,48 @@ def _render_splits(result, raw: bool) -> int:
 def cmd_splits_list(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.SplitControllerApi(api_client)
-        result = sdk_call(lambda: api.get_all2())
+        api = tracko_sdk.SplitsApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.get_all2())
     return _render_splits(result, args.raw)
 
 
 def cmd_splits_for_transaction(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.SplitControllerApi(api_client)
-        result = sdk_call(lambda: api.get_by_transaction_id(transaction_id=int(args.transaction_id)))
+        api = tracko_sdk.SplitsApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.get_by_transaction_id(transaction_id=int(args.transaction_id)))
     return _render_splits(result, args.raw)
 
 
 def cmd_splits_for_user(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.SplitControllerApi(api_client)
-        result = sdk_call(lambda: api.get_by_user_id(user_id=args.user_id))
+        api = tracko_sdk.SplitsApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.get_by_user_id(user_id=args.user_id))
     return _render_splits(result, args.raw)
 
 
 def cmd_splits_unsettled(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.SplitControllerApi(api_client)
-        result = sdk_call(lambda: api.get_my_unsettled(user_id=args.user_id))
+        api = tracko_sdk.SplitsApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.get_my_unsettled(user_id=args.user_id))
     return _render_splits(result, args.raw)
 
 
 def cmd_splits_for_contact(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.SplitControllerApi(api_client)
-        result = sdk_call(lambda: api.get_by_contact_id(contact_id=int(args.contact_id)))
+        api = tracko_sdk.SplitsApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.get_by_contact_id(contact_id=int(args.contact_id)))
     return _render_splits(result, args.raw)
 
 
 def cmd_splits_unsettled_contact(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.SplitControllerApi(api_client)
-        result = sdk_call(lambda: api.get_unsettled_by_contact_id(contact_id=int(args.contact_id)))
+        api = tracko_sdk.SplitsApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.get_unsettled_by_contact_id(contact_id=int(args.contact_id)))
     return _render_splits(result, args.raw)
 
 
@@ -155,8 +155,8 @@ def cmd_splits_create(args: argparse.Namespace) -> int:
         is_settled=is_settled,
     )
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.SplitControllerApi(api_client)
-        result = sdk_call(lambda: api.create2(req))
+        api = tracko_sdk.SplitsApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.create2(req))
     if result is None:
         return 1
     _print_raw(result)
@@ -166,8 +166,8 @@ def cmd_splits_create(args: argparse.Namespace) -> int:
 def cmd_splits_get(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.SplitControllerApi(api_client)
-        result = sdk_call(lambda: api.get_by_id1(id=int(args.id)))
+        api = tracko_sdk.SplitsApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.get_by_id1(id=int(args.id)))
     if result is None:
         return 1
     _print_raw(result)
@@ -177,8 +177,8 @@ def cmd_splits_get(args: argparse.Namespace) -> int:
 def cmd_splits_settle(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.SplitControllerApi(api_client)
-        result = sdk_call(lambda: api.settle(id=int(args.id)))
+        api = tracko_sdk.SplitsApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.settle(id=int(args.id)))
     if result is None:
         return 1
     _print_raw(result)
@@ -188,8 +188,8 @@ def cmd_splits_settle(args: argparse.Namespace) -> int:
 def cmd_splits_unsettle(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.SplitControllerApi(api_client)
-        result = sdk_call(lambda: api.unsettle(id=int(args.id)))
+        api = tracko_sdk.SplitsApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.unsettle(id=int(args.id)))
     if result is None:
         return 1
     _print_raw(result)
@@ -199,8 +199,8 @@ def cmd_splits_unsettle(args: argparse.Namespace) -> int:
 def cmd_splits_delete(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.SplitControllerApi(api_client)
-        result = sdk_call(lambda: api.delete2(id=int(args.id)))
+        api = tracko_sdk.SplitsApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.delete2(id=int(args.id)))
     if result is None:
         return 1
     _print_raw(result)

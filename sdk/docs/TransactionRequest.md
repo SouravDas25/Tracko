@@ -19,8 +19,8 @@ Name | Type | Description | Notes
 **linked_transaction_id** | **int** |  | [optional] 
 **to_account_id** | **int** |  | [optional] 
 **from_account_id** | **int** |  | [optional] 
-**transfer** | **bool** |  | [optional] 
 **source_account_id** | **int** |  | [optional] 
+**transfer** | **bool** |  | [optional] 
 
 ## Example
 

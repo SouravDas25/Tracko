@@ -19,6 +19,11 @@ import com.trako.services.transactions.TransactionService;
 import com.trako.services.transactions.TransactionWriteService;
 import com.trako.util.Response;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import org.slf4j.Logger;
@@ -39,6 +44,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Tag(name = "Transactions", description = "Create, read, update and delete transactions and transfers")
 @RestController
 @RequestMapping("/api/transactions")
 @Validated
@@ -127,17 +133,8 @@ public class TransactionController {
      * Transfer credit-side entries are hidden, and transfer transactions are labeled as type=TRANSFER in response.
      */
     @Operation(summary = "List transactions with optional filters")
+    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = TransactionsPageDTO.class)))
     @GetMapping
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(
-            responseCode = "200",
-            description = "OK",
-            content = @io.swagger.v3.oas.annotations.media.Content(
-                    mediaType = "application/json",
-                    schema = @io.swagger.v3.oas.annotations.media.Schema(
-                            implementation = com.trako.dtos.TransactionsPageDTO.class
-                    )
-            )
-    )
     public ResponseEntity<?> getAll(
             @RequestParam(required = false) Integer month,
             @RequestParam(required = false) Integer year,
@@ -291,6 +288,7 @@ public class TransactionController {
      * Returns total income for the currently authenticated user within the provided date range (inclusive).
      */
     @Operation(summary = "Get total income in a date range")
+    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(type = "number", format = "double")))
     @GetMapping("/total-income")
     public ResponseEntity<?> getMyTotalIncome(
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
@@ -309,6 +307,7 @@ public class TransactionController {
      * Returns total expense for the currently authenticated user within the provided date range (inclusive).
      */
     @Operation(summary = "Get total expense in a date range")
+    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(type = "number", format = "double")))
     @GetMapping("/total-expense")
     public ResponseEntity<?> getMyTotalExpense(
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
@@ -328,6 +327,7 @@ public class TransactionController {
      * If accountIds are provided (comma-separated), the summary is limited to those accounts.
      */
     @Operation(summary = "Get income/expense summary in a date range")
+    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = TransactionSummaryDTO.class)))
     @GetMapping("/summary")
     public ResponseEntity<?> getMySummary(
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
@@ -355,6 +355,7 @@ public class TransactionController {
      * (ownership verified through the transaction's account).
      */
     @Operation(summary = "Get a transaction by ID")
+    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = Transaction.class)))
     @GetMapping("/{id}")
     public ResponseEntity<?> getById(@PathVariable @Positive Long id) {
         try {
@@ -384,6 +385,7 @@ public class TransactionController {
      * <p>Validates that accounts and categories exist and are owned by the current user before saving.
      */
     @Operation(summary = "Create a transaction or transfer")
+    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = Transaction.class)))
     @PostMapping
     public ResponseEntity<?> create(@Valid @RequestBody TransactionRequest request) {
         try {
@@ -422,6 +424,7 @@ public class TransactionController {
      * <p>Delegates all writing logic to TransactionWriteService.
      */
     @Operation(summary = "Update a transaction or transfer")
+    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = Transaction.class)))
     @PutMapping("/{id}")
     public ResponseEntity<?> update(@PathVariable @Positive Long id, @Valid @RequestBody TransactionRequest request) {
         try {
@@ -453,6 +456,7 @@ public class TransactionController {
      * If the transaction is part of a transfer (has linkedTransactionId), both sides are deleted atomically.
      */
     @Operation(summary = "Delete a transaction or transfer")
+    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(type = "string")))
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable @Positive Long id) {
         try {
@@ -481,6 +485,7 @@ public class TransactionController {
      * Returns a list of summaries grouped by month for a specific year.
      */
     @Operation(summary = "Monthly summaries for a year")
+    @ApiResponse(responseCode = "200", content = @Content(array = @ArraySchema(schema = @Schema(implementation = TransactionPeriodSummaryDTO.class))))
     @GetMapping("/summary/monthly")
     public ResponseEntity<?> getMonthlySummaries(
             @RequestParam(required = false) Integer year,
@@ -504,6 +509,7 @@ public class TransactionController {
      * Returns a list of summaries grouped by year.
      */
     @Operation(summary = "Yearly summaries")
+    @ApiResponse(responseCode = "200", content = @Content(array = @ArraySchema(schema = @Schema(implementation = TransactionPeriodSummaryDTO.class))))
     @GetMapping("/summary/yearly")
     public ResponseEntity<?> getYearlySummaries(
             @RequestParam(required = false) String accountIds) {

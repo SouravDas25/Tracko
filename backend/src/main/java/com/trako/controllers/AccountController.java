@@ -12,6 +12,13 @@ import com.trako.services.transactions.TransactionService;
 import com.trako.util.Response;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
+import com.trako.dtos.TransactionsPageDTO;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -26,6 +33,7 @@ import java.util.*;
 
 import static com.trako.util.Response.notFound;
 
+@Tag(name = "Accounts", description = "Manage user accounts")
 @RestController
 @RequestMapping("/api/accounts")
 @Validated
@@ -68,6 +76,8 @@ public class AccountController {
         return calendar.getTime();
     }
 
+    @Operation(summary = "List all accounts for the current user")
+    @ApiResponse(responseCode = "200", content = @Content(array = @ArraySchema(schema = @Schema(implementation = Account.class))))
     @GetMapping
     public ResponseEntity<?> getAll() {
         String currentUserId = userService.loggedInUser().getId();
@@ -75,6 +85,8 @@ public class AccountController {
         return Response.ok(accounts);
     }
 
+    @Operation(summary = "Get balances for all accounts (derived from transactions)")
+    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(type = "object", description = "Map of accountId to balance")))
     @GetMapping("/balances")
     public ResponseEntity<?> getMyAccountBalances() {
         String currentUserId = userService.loggedInUser().getId();
@@ -97,6 +109,8 @@ public class AccountController {
         return Response.ok(balances);
     }
 
+    @Operation(summary = "Get an account by ID")
+    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = Account.class)))
     @GetMapping("/{id}")
     public ResponseEntity<?> getById(@PathVariable @Positive Long id) {
         String currentUserId = userService.loggedInUser().getId();
@@ -114,6 +128,8 @@ public class AccountController {
         return Response.ok(account);
     }
 
+    @Operation(summary = "Get income/expense summary for an account in a date range")
+    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = TransactionSummaryDTO.class)))
     @GetMapping("/{id}/summary")
     public ResponseEntity<?> getAccountSummary(
             @PathVariable @Positive Long id,
@@ -142,6 +158,8 @@ public class AccountController {
      * GET /api/accounts/{id}/summary/monthly
      * Returns monthly summaries for a specific account.
      */
+    @Operation(summary = "Get monthly summaries for an account")
+    @ApiResponse(responseCode = "200", content = @Content(array = @ArraySchema(schema = @Schema(implementation = TransactionPeriodSummaryDTO.class))))
     @GetMapping("/{id}/summary/monthly")
     public ResponseEntity<?> getAccountMonthlySummaries(
             @PathVariable @Positive Long id,
@@ -164,6 +182,8 @@ public class AccountController {
      * GET /api/accounts/{id}/summary/yearly
      * Returns yearly summaries for a specific account.
      */
+    @Operation(summary = "Get yearly summaries for an account")
+    @ApiResponse(responseCode = "200", content = @Content(array = @ArraySchema(schema = @Schema(implementation = TransactionPeriodSummaryDTO.class))))
     @GetMapping("/{id}/summary/yearly")
     public ResponseEntity<?> getAccountYearlySummaries(@PathVariable Long id) {
         // note: validated via annotation below
@@ -184,6 +204,8 @@ public class AccountController {
         return Response.ok(summaries);
     }
 
+    @Operation(summary = "List transactions for an account with optional filters")
+    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = TransactionsPageDTO.class)))
     @GetMapping("/{id}/transactions")
     public ResponseEntity<?> getAccountTransactions(
             @PathVariable @Positive Long id,
@@ -301,6 +323,8 @@ public class AccountController {
         return Response.ok(payload);
     }
 
+    @Operation(summary = "Create a new account")
+    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = Account.class)))
     @PostMapping
     public ResponseEntity<?> create(@Valid @RequestBody AccountSaveRequest request) {
         Account account = new Account();
@@ -314,6 +338,8 @@ public class AccountController {
         return Response.ok(saved, "Account created successfully");
     }
 
+    @Operation(summary = "Update an account")
+    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = Account.class)))
     @PutMapping("/{id}")
     public ResponseEntity<?> update(@PathVariable @Positive Long id, @Valid @RequestBody AccountSaveRequest request) {
         String currentUserId = userService.loggedInUser().getId();
@@ -334,6 +360,8 @@ public class AccountController {
         return Response.ok(updated, "Account updated successfully");
     }
 
+    @Operation(summary = "Delete an account")
+    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(type = "string")))
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable @Positive Long id) {
         String currentUserId = userService.loggedInUser().getId();

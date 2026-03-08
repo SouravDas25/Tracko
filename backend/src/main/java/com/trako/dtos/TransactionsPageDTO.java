@@ -1,5 +1,8 @@
 package com.trako.dtos;
 
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import java.util.List;
 
 public class TransactionsPageDTO {
@@ -11,7 +14,8 @@ public class TransactionsPageDTO {
     private Integer totalPages;
     private Boolean hasNext;
     private Boolean hasPrevious;
-    private List<?> transactions;
+    @ArraySchema(schema = @Schema(implementation = TransactionDetailDTO.class))
+    private List<Object> transactions;
 
     public Integer getMonth() {
         return month;
@@ -77,11 +81,11 @@ public class TransactionsPageDTO {
         this.hasPrevious = hasPrevious;
     }
 
-    public List<?> getTransactions() {
+    public List<Object> getTransactions() {
         return transactions;
     }
 
     public void setTransactions(List<?> transactions) {
-        this.transactions = transactions;
+        this.transactions = (List<Object>) transactions;
     }
 }

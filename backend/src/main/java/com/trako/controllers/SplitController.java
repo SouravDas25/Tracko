@@ -9,6 +9,12 @@ import com.trako.services.UserService;
 import com.trako.util.Response;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -34,6 +40,7 @@ import java.util.List;
  *   <li><b>Unsettlement:</b> If a settlement was marked in error, it can be reversed.</li>
  * </ul>
  */
+@Tag(name = "Splits", description = "Split expenses among contacts and track settlements")
 @RestController
 @RequestMapping("/api/splits")
 @Validated
@@ -51,6 +58,8 @@ public class SplitController {
     @Autowired
     private ContactRepository contactRepository;
 
+    @Operation(summary = "List all splits for the current user")
+    @ApiResponse(responseCode = "200", content = @Content(array = @ArraySchema(schema = @Schema(implementation = Split.class))))
     @GetMapping
     public ResponseEntity<?> getAll() {
         String currentUserId = userService.loggedInUser().getId();
@@ -58,6 +67,8 @@ public class SplitController {
         return Response.ok(splits);
     }
 
+    @Operation(summary = "List all splits for a contact")
+    @ApiResponse(responseCode = "200", content = @Content(array = @ArraySchema(schema = @Schema(implementation = Split.class))))
     @GetMapping("/contact/{contactId}")
     public ResponseEntity<?> getByContactId(@PathVariable Long contactId) {
         return getByContactIdValidated(contactId);
@@ -73,6 +84,8 @@ public class SplitController {
         return Response.ok(splits);
     }
 
+    @Operation(summary = "List unsettled splits for a contact")
+    @ApiResponse(responseCode = "200", content = @Content(array = @ArraySchema(schema = @Schema(implementation = Split.class))))
     @GetMapping("/contact/{contactId}/unsettled")
     public ResponseEntity<?> getUnsettledByContactId(@PathVariable Long contactId) {
         return getUnsettledByContactIdValidated(contactId);
@@ -88,6 +101,8 @@ public class SplitController {
         return Response.ok(splits);
     }
 
+    @Operation(summary = "Get a split by ID")
+    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = Split.class)))
     @GetMapping("/{id}")
     public ResponseEntity<?> getById(@PathVariable @Positive Long id) {
         String currentUserId = userService.loggedInUser().getId();
@@ -104,6 +119,8 @@ public class SplitController {
         return Response.ok(split);
     }
 
+    @Operation(summary = "List splits for a transaction")
+    @ApiResponse(responseCode = "200", content = @Content(array = @ArraySchema(schema = @Schema(implementation = Split.class))))
     @GetMapping("/transaction/{transactionId}")
     public ResponseEntity<?> getByTransactionId(@PathVariable @Positive Long transactionId) {
         String currentUserId = userService.loggedInUser().getId();
@@ -122,6 +139,8 @@ public class SplitController {
         return Response.ok(splits);
     }
 
+    @Operation(summary = "List all unsettled splits for the current user")
+    @ApiResponse(responseCode = "200", content = @Content(array = @ArraySchema(schema = @Schema(implementation = Split.class))))
     @GetMapping("/unsettled")
     public ResponseEntity<?> getMyUnsettled() {
         String currentUserId = userService.loggedInUser().getId();
@@ -129,6 +148,8 @@ public class SplitController {
         return Response.ok(splits);
     }
 
+    @Operation(summary = "Create a split for a transaction")
+    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = Split.class)))
     @PostMapping
     public ResponseEntity<?> create(@Valid @RequestBody Split split) {
         String currentUserId = userService.loggedInUser().getId();
@@ -155,6 +176,8 @@ public class SplitController {
         return Response.ok(saved, "Split created successfully");
     }
 
+    @Operation(summary = "Mark a split as settled")
+    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(type = "string")))
     @PatchMapping("/settle/{splitId}")
     public ResponseEntity<?> settle(@PathVariable @Positive Long splitId) {
         String currentUserId = userService.loggedInUser().getId();
@@ -172,6 +195,8 @@ public class SplitController {
         return Response.ok("Split settled successfully");
     }
 
+    @Operation(summary = "Reverse a settlement on a split")
+    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(type = "string")))
     @PatchMapping("/unsettle/{splitId}")
     public ResponseEntity<?> unsettle(@PathVariable @Positive Long splitId) {
         String currentUserId = userService.loggedInUser().getId();
@@ -189,6 +214,8 @@ public class SplitController {
         return Response.ok("Split unsettled successfully");
     }
 
+    @Operation(summary = "Delete a split")
+    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(type = "string")))
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable @Positive Long id) {
         String currentUserId = userService.loggedInUser().getId();

@@ -2,7 +2,7 @@ import argparse
 import json
 
 from ..core.config import get_token_from_args_or_config
-from ..core.api import make_api_client, sdk_call
+from ..core.api import make_api_client, sdk_call_unwrapped
 
 import tracko_sdk
 from tracko_sdk.models.user_save_request import UserSaveRequest
@@ -48,8 +48,8 @@ def setup_parser(subparsers):
 def cmd_users_list(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.UserControllerApi(api_client)
-        result = sdk_call(lambda: api.show())
+        api = tracko_sdk.UsersApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.show())
     if result is None:
         return 1
     _print_raw(result)
@@ -59,8 +59,8 @@ def cmd_users_list(args: argparse.Namespace) -> int:
 def cmd_users_me(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.UserControllerApi(api_client)
-        result = sdk_call(lambda: api.me())
+        api = tracko_sdk.UsersApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.me())
     if result is None:
         return 1
     _print_raw(result)
@@ -70,8 +70,8 @@ def cmd_users_me(args: argparse.Namespace) -> int:
 def cmd_users_get(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.UserControllerApi(api_client)
-        result = sdk_call(lambda: api.show1(id=args.id))
+        api = tracko_sdk.UsersApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.show1(id=args.id))
     if result is None:
         return 1
     _print_raw(result)
@@ -81,8 +81,8 @@ def cmd_users_get(args: argparse.Namespace) -> int:
 def cmd_users_find_phone(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.UserControllerApi(api_client)
-        result = sdk_call(lambda: api.show_by_phone(phone_no=str(args.phone_no)))
+        api = tracko_sdk.UsersApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.show_by_phone(phone_no=str(args.phone_no)))
     if result is None:
         return 1
     _print_raw(result)
@@ -101,8 +101,8 @@ def cmd_users_upsert(args: argparse.Namespace) -> int:
         is_shadow=1 if args.shadow else (0 if args.shadow is False else None),
     )
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.UserControllerApi(api_client)
-        result = sdk_call(lambda: api.create(req))
+        api = tracko_sdk.UsersApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.create(req))
     if result is None:
         return 1
     _print_raw(result)

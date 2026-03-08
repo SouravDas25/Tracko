@@ -2,7 +2,7 @@ import argparse
 import json
 
 from ..core.config import get_token_from_args_or_config
-from ..core.api import make_api_client, sdk_call
+from ..core.api import make_api_client, sdk_call_unwrapped
 
 import tracko_sdk
 from tracko_sdk.models.contact_save_request import ContactSaveRequest
@@ -51,15 +51,15 @@ def setup_parser(subparsers):
 def cmd_contacts_list(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.ContactControllerApi(api_client)
-        result = sdk_call(lambda: api.list_mine())
+        api = tracko_sdk.ContactsApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.list_mine())
     if result is None:
         return 1
     if args.raw:
         _print_raw(result)
         return 0
-    rows = result.get("result", []) if isinstance(result, dict) else []
-    if isinstance(rows, list):
+    rows = result if isinstance(result, list) else []
+    if rows:
         columns = [("id", "ID"), ("name", "Name"), ("phoneNo", "Phone"), ("email", "Email")]
         print_table(rows, columns, max_widths={"name": 28, "phoneNo": 18, "email": 36}, right_align={"id"})
         return 0
@@ -71,8 +71,8 @@ def cmd_contacts_add(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     req = ContactSaveRequest(name=args.name, phone_no=args.phone, email=args.email)
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.ContactControllerApi(api_client)
-        result = sdk_call(lambda: api.create5(req))
+        api = tracko_sdk.ContactsApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.create5(req))
     if result is None:
         return 1
     _print_raw(result)
@@ -82,8 +82,8 @@ def cmd_contacts_add(args: argparse.Namespace) -> int:
 def cmd_contacts_get(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.ContactControllerApi(api_client)
-        result = sdk_call(lambda: api.get_one(id=int(args.id)))
+        api = tracko_sdk.ContactsApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.get_one(id=int(args.id)))
     if result is None:
         return 1
     _print_raw(result)
@@ -94,8 +94,8 @@ def cmd_contacts_update(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     req = ContactSaveRequest(name=args.name, phone_no=args.phone, email=args.email)
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.ContactControllerApi(api_client)
-        result = sdk_call(lambda: api.update3(id=int(args.id), contact_save_request=req))
+        api = tracko_sdk.ContactsApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.update3(id=int(args.id), contact_save_request=req))
     if result is None:
         return 1
     _print_raw(result)
@@ -105,8 +105,8 @@ def cmd_contacts_update(args: argparse.Namespace) -> int:
 def cmd_contacts_delete(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.ContactControllerApi(api_client)
-        result = sdk_call(lambda: api.delete5(id=int(args.id)))
+        api = tracko_sdk.ContactsApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.delete5(id=int(args.id)))
     if result is None:
         return 1
     _print_raw(result)

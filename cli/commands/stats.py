@@ -2,7 +2,7 @@ import argparse
 import json
 
 from ..core.config import get_token_from_args_or_config
-from ..core.api import make_api_client, sdk_call
+from ..core.api import make_api_client, sdk_call_unwrapped
 
 import tracko_sdk
 
@@ -51,8 +51,8 @@ def cmd_stats_summary(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     var_date = _parse_date(args.date)
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.StatsControllerApi(api_client)
-        result = sdk_call(lambda: api.get_stats(
+        api = tracko_sdk.StatisticsApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.get_stats(
             range=args.range,
             transaction_type=str(args.transaction_type),
             var_date=var_date,
@@ -67,8 +67,8 @@ def cmd_stats_category_summary(args: argparse.Namespace) -> int:
     token, base_url = get_token_from_args_or_config(args)
     var_date = _parse_date(args.date)
     with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.StatsControllerApi(api_client)
-        result = sdk_call(lambda: api.get_category_stats(
+        api = tracko_sdk.StatisticsApi(api_client)
+        result = sdk_call_unwrapped(lambda: api.get_category_stats(
             range=args.range,
             transaction_type=str(args.transaction_type),
             category_id=int(args.category_id),

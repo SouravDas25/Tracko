@@ -8,6 +8,12 @@ import com.trako.services.UserService;
 import com.trako.util.Response;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -15,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(name = "Contacts", description = "Manage contacts for expense splitting")
 @RestController
 @RequestMapping("/api/contacts")
 @Validated
@@ -26,6 +33,8 @@ public class ContactController {
     @Autowired
     private UserService userService;
 
+    @Operation(summary = "List all contacts for the current user")
+    @ApiResponse(responseCode = "200", content = @Content(array = @ArraySchema(schema = @Schema(implementation = Contact.class))))
     @GetMapping
     public ResponseEntity<?> listMine() {
         try {
@@ -37,6 +46,8 @@ public class ContactController {
         }
     }
 
+    @Operation(summary = "Get a contact by ID")
+    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = Contact.class)))
     @GetMapping("/{id}")
     public ResponseEntity<?> getOne(@PathVariable @Positive Long id) {
         try {
@@ -51,6 +62,8 @@ public class ContactController {
         }
     }
 
+    @Operation(summary = "Create a new contact")
+    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = Contact.class)))
     @PostMapping
     public ResponseEntity<?> create(@Valid @RequestBody ContactSaveRequest request) {
         try {
@@ -67,6 +80,8 @@ public class ContactController {
         }
     }
 
+    @Operation(summary = "Update a contact")
+    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = Contact.class)))
     @PutMapping("/{id}")
     public ResponseEntity<?> update(@PathVariable @Positive Long id, @Valid @RequestBody ContactSaveRequest request) {
         try {
@@ -87,6 +102,8 @@ public class ContactController {
         }
     }
 
+    @Operation(summary = "Delete a contact")
+    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(type = "string")))
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable @Positive Long id) {
         try {

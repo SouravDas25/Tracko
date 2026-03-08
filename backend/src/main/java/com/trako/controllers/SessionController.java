@@ -6,6 +6,12 @@ import com.trako.models.responses.JwtResponse;
 import com.trako.services.UserService;
 import com.trako.util.JwtTokenUtil;
 import com.trako.util.Response;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +28,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+@Tag(name = "Authentication", description = "Obtain a JWT token")
 @RestController
 public class SessionController {
 
@@ -42,6 +49,9 @@ public class SessionController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Operation(summary = "Sign in with phone number and password")
+    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = JwtResponse.class)))
+    @SecurityRequirements
     @PostMapping("/api/oauth/token")
     public ResponseEntity<?> signIn(@Valid @RequestBody AuthicationRequest authicationRequest) {
 
@@ -54,6 +64,9 @@ public class SessionController {
         return ResponseEntity.ok(new JwtResponse(jwtToken));
     }
 
+    @Operation(summary = "Log in with username and password")
+    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = JwtResponse.class)))
+    @SecurityRequirements
     @PostMapping("/api/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest) {
         try {
