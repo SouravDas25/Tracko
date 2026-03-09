@@ -23,44 +23,58 @@ def test_transaction_list_success(runner, mock_config, sample_transaction):
             assert result.exit_code == 0 or "transactions" in result.stdout.lower()
 
 
-def test_transaction_add_success(runner, mock_config, sample_transaction):
-    """Test adding a new transaction."""
+def test_transaction_add_expense_success(runner, mock_config, sample_transaction):
+    """Test adding a new expense."""
     with patch('cli.commands.transaction.get_active_profile_config', return_value=mock_config["profiles"]["test"]):
         with patch('cli.commands.transaction.sdk_call_unwrapped') as mock_sdk:
             mock_sdk.return_value = sample_transaction
             
             result = runner.invoke(app, [
-                "transaction", "add",
+                "transaction", "add-expense",
                 "--name", "Lunch",
                 "--amount", "50.0",
-                "--type", "expense",
                 "--account-id", "1",
-                "--category-id", "1",
-                "--date", "2026-03-09"
+                "--category-id", "1"
             ])
             
-            # Just verify no crash
-            assert "error" not in result.stdout.lower() or result.exit_code == 0
+            assert result.exit_code == 0
 
 
-def test_transaction_transfer_with_confirmation(runner, mock_config):
+def test_transaction_add_income_success(runner, mock_config, sample_transaction):
+    """Test adding a new income."""
+    with patch('cli.commands.transaction.get_active_profile_config', return_value=mock_config["profiles"]["test"]):
+        with patch('cli.commands.transaction.sdk_call_unwrapped') as mock_sdk:
+            mock_sdk.return_value = sample_transaction
+            
+            result = runner.invoke(app, [
+                "transaction", "add-income",
+                "--name", "Salary",
+                "--amount", "5000.0",
+                "--account-id", "1",
+                "--category-id", "2"
+            ])
+            
+            print(f"Exit code: {result.exit_code}")
+            print(f"Output: {result.stdout}")
+            if result.exception:
+                print(f"Exception: {result.exception}")
+            assert result.exit_code == 0
+
+
+def test_transaction_add_transfer_success(runner, mock_config):
     """Test creating a transfer between accounts."""
     with patch('cli.commands.transaction.get_active_profile_config', return_value=mock_config["profiles"]["test"]):
         with patch('cli.commands.transaction.sdk_call_unwrapped') as mock_sdk:
-            with patch('cli.utils.prompts.Confirm.ask', return_value=True):
-                mock_sdk.return_value = {"message": "Transfer created"}
-                
-                result = runner.invoke(app, [
-                    "transaction", "transfer",
-                    "--from-account-id", "1",
-                    "--to-account-id", "2",
-                    "--amount", "100.0",
-                    "--description", "Test transfer",
-                    "--date", "2026-03-09"
-                ])
-                
-                # Just verify command completes
-                assert "error" not in result.stdout.lower() or result.exit_code == 0
+            mock_sdk.return_value = {"message": "Transfer created"}
+            
+            result = runner.invoke(app, [
+                "transaction", "add-transfer",
+                "--from-account-id", "1",
+                "--to-account-id", "2",
+                "--amount", "100.0"
+            ])
+            
+            assert result.exit_code == 0
 
 
 def test_transaction_list_empty(runner, mock_config):
@@ -79,17 +93,16 @@ def test_transaction_list_empty(runner, mock_config):
             assert "No transactions found" in result.stdout
 
 
-def test_transaction_add_success(runner, mock_config, sample_transaction):
-    """Test adding a new transaction."""
+def test_transaction_add_expense_with_date(runner, mock_config, sample_transaction):
+    """Test adding a new expense with date."""
     with patch('cli.commands.transaction.get_active_profile_config', return_value=mock_config["profiles"]["test"]):
         with patch('cli.commands.transaction.sdk_call_unwrapped') as mock_sdk:
             mock_sdk.return_value = sample_transaction
             
             result = runner.invoke(app, [
-                "transaction", "add",
+                "transaction", "add-expense",
                 "--name", "Lunch",
                 "--amount", "50.0",
-                "--type", "expense",
                 "--account-id", "1",
                 "--category-id", "1",
                 "--date", "2026-03-09"
@@ -133,21 +146,20 @@ def test_transaction_summary(runner, mock_config):
             assert "3000" in result.stdout
 
 
-def test_transaction_transfer_with_confirmation(runner, mock_config):
-    """Test creating a transfer between accounts."""
+def test_transaction_add_transfer_with_details(runner, mock_config):
+    """Test creating a transfer between accounts with details."""
     with patch('cli.commands.transaction.get_active_profile_config', return_value=mock_config["profiles"]["test"]):
         with patch('cli.commands.transaction.sdk_call_unwrapped') as mock_sdk:
-            with patch('cli.utils.prompts.Confirm.ask', return_value=True):
-                mock_sdk.return_value = {"message": "Transfer created"}
-                
-                result = runner.invoke(app, [
-                    "transaction", "transfer",
-                    "--from-account-id", "1",
-                    "--to-account-id", "2",
-                    "--amount", "100.0",
-                    "--description", "Test transfer",
-                    "--date", "2026-03-09"
-                ])
-                
-                assert result.exit_code == 0
-                assert "transfer" in result.stdout.lower()
+            mock_sdk.return_value = {"message": "Transfer created"}
+            
+            result = runner.invoke(app, [
+                "transaction", "add-transfer",
+                "--from-account-id", "1",
+                "--to-account-id", "2",
+                "--amount", "100.0",
+                "--name", "Test transfer",
+                "--date", "2026-03-09"
+            ])
+            
+            assert result.exit_code == 0
+            assert "transfer" in result.stdout.lower()

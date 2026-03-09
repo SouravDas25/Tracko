@@ -83,8 +83,8 @@ def test_account_delete_with_confirmation(runner, mock_config):
 def test_account_delete_cancelled(runner, mock_config):
     """Test cancelling account deletion."""
     with patch('cli.commands.account.get_active_profile_config', return_value=mock_config["profiles"]["test"]):
-        with patch('cli.utils.prompts.Confirm.ask', return_value=False):
+        with patch('cli.commands.account.confirm', return_value=False):
             result = runner.invoke(app, ["account", "delete", "1"])
             
-            # When cancelled, should exit cleanly without calling API
-            assert result.exit_code == 0
+            assert result.exit_code == 1
+            assert "Cancelled" in result.stdout

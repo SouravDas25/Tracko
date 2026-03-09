@@ -20,10 +20,12 @@ app = typer.Typer(help="Transaction management")
 def _parse_type(type_str: str) -> str:
     """Map type to API enum."""
     if type_str.lower() in {"expense", "debit", "dr", "d"}:
-        return "EXPENSE"
+        return "1"
     if type_str.lower() in {"income", "credit", "cr", "c"}:
-        return "INCOME"
-    return type_str.upper()
+        return "2"
+    if type_str.lower() in {"transfer", "tr", "t"}:
+        return "3"
+    return type_str
 
 
 @app.command()
@@ -83,41 +85,37 @@ def list(
 
 
 @app.command()
-def add(
-    account_id: Optional[int] = typer.Option(None, "--account-id", help="Account ID"),
-    category_id: Optional[int] = typer.Option(None, "--category-id", help="Category ID"),
+def add_expense(
+    account_id: int = typer.Option(..., "--account-id", help="Account ID"),
+    category_id: int = typer.Option(..., "--category-id", help="Category ID"),
     amount: float = typer.Option(..., "--amount", "-a", help="Amount"),
-    type: str = typer.Option(..., "--type", "-t", help="Type (income/expense)"),
-    name: str = typer.Option(..., "--name", "-n", help="Transaction name"),
+    name: str = typer.Option(..., "--name", "-n", help="Expense name"),
     comments: Optional[str] = typer.Option(None, "--comments", "-c", help="Comments"),
     date: Optional[str] = typer.Option(None, "--date", help="Date (YYYY-MM-DD)"),
     currency: Optional[str] = typer.Option(None, "--currency", help="Currency code"),
     exchange_rate: Optional[float] = typer.Option(None, "--exchange-rate", help="Exchange rate"),
-    countable: Optional[bool] = typer.Option(None, "--countable/--not-countable", help="Is countable"),
     raw: bool = typer.Option(False, "--raw", help="Output raw JSON"),
 ):
-    """Create a new transaction."""
+    """Create a new expense."""
     config = get_active_profile_config()
     token, base_url = config.get("token"), config.get("base_url", "http://localhost:8080")
     
     try:
         txn_date = datetime.strptime(date, "%Y-%m-%d") if date else datetime.now()
-        txn_type = _parse_type(type)
         
         req = TransactionRequest(
             account_id=account_id,
             category_id=category_id,
             amount=amount,
-            transaction_type=txn_type,
+            transaction_type="1",
             name=name,
             comments=comments,
             date=txn_date,
             original_currency=currency,
-            exchange_rate=exchange_rate,
-            is_countable=countable
+            exchange_rate=exchange_rate
         )
         
-        with spinner(f"Creating transaction '{name}'..."):
+        with spinner(f"Creating expense '{name}'..."):
             with make_api_client(base_url, token) as api_client:
                 api = tracko_sdk.TransactionsApi(api_client)
                 result = sdk_call_unwrapped(lambda: api.create1(req))
@@ -128,10 +126,108 @@ def add(
         if raw:
             print_json(result)
         else:
-            print_success(f"Transaction '{name}' created successfully")
+            print_success(f"Expense '{name}' created successfully")
             print_json(result)
     except Exception as e:
-        print_error(f"Failed to create transaction: {e}")
+        print_error(f"Failed to create expense: {e}")
+        raise typer.Exit(1)
+
+
+@app.command()
+def add_income(
+    account_id: int = typer.Option(..., "--account-id", help="Account ID"),
+    category_id: int = typer.Option(..., "--category-id", help="Category ID"),
+    amount: float = typer.Option(..., "--amount", "-a", help="Amount"),
+    name: str = typer.Option(..., "--name", "-n", help="Income name"),
+    comments: Optional[str] = typer.Option(None, "--comments", "-c", help="Comments"),
+    date: Optional[str] = typer.Option(None, "--date", help="Date (YYYY-MM-DD)"),
+    currency: Optional[str] = typer.Option(None, "--currency", help="Currency code"),
+    exchange_rate: Optional[float] = typer.Option(None, "--exchange-rate", help="Exchange rate"),
+    raw: bool = typer.Option(False, "--raw", help="Output raw JSON"),
+):
+    """Create a new income."""
+    config = get_active_profile_config()
+    token, base_url = config.get("token"), config.get("base_url", "http://localhost:8080")
+    
+    try:
+        txn_date = datetime.strptime(date, "%Y-%m-%d") if date else datetime.now()
+        
+        req = TransactionRequest(
+            account_id=account_id,
+            category_id=category_id,
+            amount=amount,
+            transaction_type="2",
+            name=name,
+            comments=comments,
+            date=txn_date,
+            original_currency=currency,
+            exchange_rate=exchange_rate
+        )
+        
+        with spinner(f"Creating income '{name}'..."):
+            with make_api_client(base_url, token) as api_client:
+                api = tracko_sdk.TransactionsApi(api_client)
+                result = sdk_call_unwrapped(lambda: api.create1(req))
+        
+        if result is None:
+            raise typer.Exit(1)
+        
+        if raw:
+            print_json(result)
+        else:
+            print_success(f"Income '{name}' created successfully")
+            print_json(result)
+    except Exception as e:
+        print_error(f"Failed to create income: {e}")
+        raise typer.Exit(1)
+
+
+@app.command()
+def add_transfer(
+    from_account_id: int = typer.Option(..., "--from-account-id", help="Source account ID"),
+    to_account_id: int = typer.Option(..., "--to-account-id", help="Destination account ID"),
+    amount: float = typer.Option(..., "--amount", "-a", help="Transfer amount"),
+    name: Optional[str] = typer.Option(None, "--name", "-n", help="Transfer description"),
+    comments: Optional[str] = typer.Option(None, "--comments", "-c", help="Comments"),
+    date: Optional[str] = typer.Option(None, "--date", help="Date (YYYY-MM-DD)"),
+    raw: bool = typer.Option(False, "--raw", help="Output raw JSON"),
+):
+    """Create a transfer between accounts."""
+    if from_account_id == to_account_id:
+        print_error("Source and destination accounts must be different")
+        raise typer.Exit(1)
+    
+    config = get_active_profile_config()
+    token, base_url = config.get("token"), config.get("base_url", "http://localhost:8080")
+    
+    try:
+        txn_date = datetime.strptime(date, "%Y-%m-%d") if date else datetime.now()
+        
+        req = TransactionRequest(
+            account_id=from_account_id,
+            to_account_id=to_account_id,
+            amount=amount,
+            transaction_type="3",
+            name=name or f"Transfer to account {to_account_id}",
+            comments=comments,
+            date=txn_date
+        )
+        
+        with spinner(f"Creating transfer..."):
+            with make_api_client(base_url, token) as api_client:
+                api = tracko_sdk.TransactionsApi(api_client)
+                result = sdk_call_unwrapped(lambda: api.create1(req))
+        
+        if result is None:
+            raise typer.Exit(1)
+        
+        if raw:
+            print_json(result)
+        else:
+            print_success(f"Transfer of {amount} created successfully")
+            print_json(result)
+    except Exception as e:
+        print_error(f"Failed to create transfer: {e}")
         raise typer.Exit(1)
 
 
@@ -160,32 +256,30 @@ def get(
 
 
 @app.command()
-def update(
+def update_expense(
     id: int = typer.Argument(..., help="Transaction ID"),
     account_id: Optional[int] = typer.Option(None, "--account-id", help="Account ID"),
     category_id: Optional[int] = typer.Option(None, "--category-id", help="Category ID"),
     amount: Optional[float] = typer.Option(None, "--amount", "-a", help="Amount"),
-    type: Optional[str] = typer.Option(None, "--type", "-t", help="Type (income/expense)"),
-    name: Optional[str] = typer.Option(None, "--name", "-n", help="Transaction name"),
+    name: Optional[str] = typer.Option(None, "--name", "-n", help="Expense name"),
     comments: Optional[str] = typer.Option(None, "--comments", "-c", help="Comments"),
     date: Optional[str] = typer.Option(None, "--date", help="Date (YYYY-MM-DD)"),
     currency: Optional[str] = typer.Option(None, "--currency", help="Currency code"),
     exchange_rate: Optional[float] = typer.Option(None, "--exchange-rate", help="Exchange rate"),
     raw: bool = typer.Option(False, "--raw", help="Output raw JSON"),
 ):
-    """Update a transaction."""
+    """Update an expense."""
     config = get_active_profile_config()
     token, base_url = config.get("token"), config.get("base_url", "http://localhost:8080")
     
     try:
         txn_date = datetime.strptime(date, "%Y-%m-%d") if date else None
-        txn_type = _parse_type(type) if type else None
         
         req = TransactionRequest(
             account_id=account_id,
             category_id=category_id,
             amount=amount,
-            transaction_type=txn_type,
+            transaction_type="1",
             name=name,
             comments=comments,
             date=txn_date,
@@ -193,7 +287,7 @@ def update(
             exchange_rate=exchange_rate
         )
         
-        with spinner(f"Updating transaction {id}..."):
+        with spinner(f"Updating expense {id}..."):
             with make_api_client(base_url, token) as api_client:
                 api = tracko_sdk.TransactionsApi(api_client)
                 result = sdk_call_unwrapped(lambda: api.update(id=id, transaction_request=req))
@@ -204,10 +298,106 @@ def update(
         if raw:
             print_json(result)
         else:
-            print_success(f"Transaction {id} updated successfully")
+            print_success(f"Expense {id} updated successfully")
             print_json(result)
     except Exception as e:
-        print_error(f"Failed to update transaction: {e}")
+        print_error(f"Failed to update expense: {e}")
+        raise typer.Exit(1)
+
+
+@app.command()
+def update_income(
+    id: int = typer.Argument(..., help="Transaction ID"),
+    account_id: Optional[int] = typer.Option(None, "--account-id", help="Account ID"),
+    category_id: Optional[int] = typer.Option(None, "--category-id", help="Category ID"),
+    amount: Optional[float] = typer.Option(None, "--amount", "-a", help="Amount"),
+    name: Optional[str] = typer.Option(None, "--name", "-n", help="Income name"),
+    comments: Optional[str] = typer.Option(None, "--comments", "-c", help="Comments"),
+    date: Optional[str] = typer.Option(None, "--date", help="Date (YYYY-MM-DD)"),
+    currency: Optional[str] = typer.Option(None, "--currency", help="Currency code"),
+    exchange_rate: Optional[float] = typer.Option(None, "--exchange-rate", help="Exchange rate"),
+    raw: bool = typer.Option(False, "--raw", help="Output raw JSON"),
+):
+    """Update an income."""
+    config = get_active_profile_config()
+    token, base_url = config.get("token"), config.get("base_url", "http://localhost:8080")
+    
+    try:
+        txn_date = datetime.strptime(date, "%Y-%m-%d") if date else None
+        
+        req = TransactionRequest(
+            account_id=account_id,
+            category_id=category_id,
+            amount=amount,
+            transaction_type="2",
+            name=name,
+            comments=comments,
+            date=txn_date,
+            original_currency=currency,
+            exchange_rate=exchange_rate
+        )
+        
+        with spinner(f"Updating income {id}..."):
+            with make_api_client(base_url, token) as api_client:
+                api = tracko_sdk.TransactionsApi(api_client)
+                result = sdk_call_unwrapped(lambda: api.update(id=id, transaction_request=req))
+        
+        if result is None:
+            raise typer.Exit(1)
+        
+        if raw:
+            print_json(result)
+        else:
+            print_success(f"Income {id} updated successfully")
+            print_json(result)
+    except Exception as e:
+        print_error(f"Failed to update income: {e}")
+        raise typer.Exit(1)
+
+
+@app.command()
+def update_transfer(
+    id: int = typer.Argument(..., help="Transaction ID"),
+    from_account_id: Optional[int] = typer.Option(None, "--from-account-id", help="Source account ID"),
+    to_account_id: Optional[int] = typer.Option(None, "--to-account-id", help="Destination account ID"),
+    amount: Optional[float] = typer.Option(None, "--amount", "-a", help="Transfer amount"),
+    name: Optional[str] = typer.Option(None, "--name", "-n", help="Transfer description"),
+    comments: Optional[str] = typer.Option(None, "--comments", "-c", help="Comments"),
+    date: Optional[str] = typer.Option(None, "--date", help="Date (YYYY-MM-DD)"),
+    raw: bool = typer.Option(False, "--raw", help="Output raw JSON"),
+):
+    """Update a transfer."""
+    config = get_active_profile_config()
+    token, base_url = config.get("token"), config.get("base_url", "http://localhost:8080")
+    
+    try:
+        txn_date = datetime.strptime(date, "%Y-%m-%d") if date else None
+        
+        req = TransactionRequest(
+            account_id=from_account_id,
+            to_account_id=to_account_id,
+            amount=amount,
+            transaction_type="3",
+            name=name,
+            comments=comments,
+            date=txn_date
+        )
+        
+        with spinner(f"Updating transfer {id}..."):
+            with make_api_client(base_url, token) as api_client:
+                api = tracko_sdk.TransactionsApi(api_client)
+                result = sdk_call_unwrapped(lambda: api.update(id=id, transaction_request=req))
+        
+        if result is None:
+            raise typer.Exit(1)
+        
+        if raw:
+            print_json(result)
+        else:
+            print_success(f"Transfer {id} updated successfully")
+            print_json(result)
+    except Exception as e:
+        print_error(f"Failed to update transfer: {e}")
         raise typer.Exit(1)
 
 
@@ -374,54 +564,4 @@ def import_csv(
         raise typer.Exit(1)
 
 
-@app.command()
-def transfer(
-    from_account_id: int = typer.Option(..., "--from-account-id", help="Source account ID"),
-    to_account_id: int = typer.Option(..., "--to-account-id", help="Destination account ID"),
-    amount: float = typer.Option(..., "--amount", "-a", help="Transfer amount"),
-    name: Optional[str] = typer.Option(None, "--name", "-n", help="Transfer description"),
-    comments: Optional[str] = typer.Option(None, "--comments", "-c", help="Comments"),
-    date: Optional[str] = typer.Option(None, "--date", help="Date (YYYY-MM-DD)"),
-    raw: bool = typer.Option(False, "--raw", help="Output raw JSON"),
-):
-    """Create a transfer between accounts."""
-    if from_account_id == to_account_id:
-        print_error("Source and destination accounts must be different")
-        raise typer.Exit(1)
-    
-    if not confirm(f"Transfer {amount} from account {from_account_id} to {to_account_id}?", default=True):
-        print_error("Cancelled")
-        raise typer.Exit(1)
-    
-    config = get_active_profile_config()
-    token, base_url = config.get("token"), config.get("base_url", "http://localhost:8080")
-    
-    try:
-        txn_date = datetime.strptime(date, "%Y-%m-%d") if date else datetime.now()
-        
-        req = TransactionRequest(
-            account_id=from_account_id,
-            to_account_id=to_account_id,
-            amount=amount,
-            transaction_type="TRANSFER",
-            name=name or f"Transfer to account {to_account_id}",
-            comments=comments,
-            date=txn_date
-        )
-        
-        with spinner(f"Creating transfer..."):
-            with make_api_client(base_url, token) as api_client:
-                api = tracko_sdk.TransactionsApi(api_client)
-                result = sdk_call_unwrapped(lambda: api.create1(req))
-        
-        if result is None:
-            raise typer.Exit(1)
-        
-        if raw:
-            print_json(result)
-        else:
-            print_success(f"Transfer of {amount} created successfully")
-            print_json(result)
-    except Exception as e:
-        print_error(f"Failed to create transfer: {e}")
-        raise typer.Exit(1)
+
