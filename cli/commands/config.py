@@ -1,93 +1,93 @@
-import argparse
-import sys
+"""Configuration management commands."""
+import typer
+from rich.table import Table
+
 from ..core.config import (
     load_config,
-    save_config,
     get_active_profile_name,
     set_active_profile,
     update_profile,
     list_profiles,
-    get_active_profile_config,
-    DEFAULT_BASE_URL
 )
-
-def setup_parser(subparsers):
-    sp = subparsers.add_parser("config", help="Manage CLI configuration and profiles")
-    sp_sub = sp.add_subparsers(dest="config_cmd", required=True)
-
-    # list
-    sp_list = sp_sub.add_parser("list", help="List all profiles")
-    sp_list.set_defaults(func=cmd_list)
-
-    # use (set active)
-    sp_use = sp_sub.add_parser("use", help="Set the active profile")
-    sp_use.add_argument("profile", help="Name of the profile to activate")
-    sp_use.set_defaults(func=cmd_use)
-
-    # set (update current or specific profile)
-    sp_set = sp_sub.add_parser("set", help="Set configuration for a profile")
-    sp_set.add_argument("--profile", help="Profile to update (defaults to active)")
-    sp_set.add_argument("--base-url", help="Set base URL for the profile")
-    sp_set.set_defaults(func=cmd_set)
-
-    # show (show current config)
-    sp_show = sp_sub.add_parser("show", help="Show configuration for current or specific profile")
-    sp_show.add_argument("--profile", help="Profile to show (defaults to active)")
-    sp_show.set_defaults(func=cmd_show)
+from ..core.output import console, create_table, print_success, print_info
+from ..utils.prompts import confirm
 
 
-def cmd_list(args: argparse.Namespace) -> int:
+app = typer.Typer(help="Configuration management")
+
+
+@app.command()
+def list():
+    """List all configuration profiles."""
     data = list_profiles()
     active = data["active"]
     profiles = data["profiles"]
     
-    print("Available profiles:")
+    table = create_table(title="Configuration Profiles")
+    table.add_column("Profile", style="cyan")
+    table.add_column("Active", justify="center")
+    
     for p in profiles:
-        prefix = "* " if p == active else "  "
-        print(f"{prefix}{p}")
-    return 0
+        is_active = "✓" if p == active else ""
+        table.add_row(p, is_active)
+    
+    console.print(table)
 
 
-def cmd_use(args: argparse.Namespace) -> int:
-    set_active_profile(args.profile)
-    print(f"Active profile set to '{args.profile}'")
-    return 0
+@app.command()
+def use(
+    profile: str = typer.Argument(..., help="Profile name to activate"),
+):
+    """Set the active profile."""
+    if confirm(f"Switch to profile '{profile}'?", default=True):
+        set_active_profile(profile)
+        print_success(f"Active profile set to '{profile}'")
 
 
-def cmd_set(args: argparse.Namespace) -> int:
-    profile = args.profile or get_active_profile_name()
+@app.command()
+def set(
+    base_url: str = typer.Option(None, "--base-url", help="Set base URL"),
+    profile: str = typer.Option(None, "--profile", help="Profile to update (defaults to active)"),
+):
+    """Set configuration values for a profile."""
+    profile_name = profile or get_active_profile_name()
     updates = {}
     
-    if args.base_url:
-        updates["base_url"] = args.base_url
-        
-    if not updates:
-        print("No updates provided. Use --base-url to update configuration.")
-        return 1
-        
-    update_profile(profile, updates)
-    print(f"Updated profile '{profile}': {updates}")
-    return 0
-
-
-def cmd_show(args: argparse.Namespace) -> int:
-    profile_name = args.profile or get_active_profile_name()
+    if base_url:
+        updates["base_url"] = base_url
     
-    # We can't use get_active_profile_config directly if we want a specific profile
-    # so we load config manually
+    if not updates:
+        print_info("No updates provided. Use --base-url to update configuration.")
+        raise typer.Exit(1)
+    
+    update_profile(profile_name, updates)
+    print_success(f"Updated profile '{profile_name}': {updates}")
+
+
+@app.command()
+def show(
+    profile: str = typer.Option(None, "--profile", help="Profile to show (defaults to active)"),
+):
+    """Show configuration for a profile."""
+    profile_name = profile or get_active_profile_name()
+    
     cfg = load_config()
     profiles = cfg.get("profiles", {})
     
     if profile_name not in profiles:
-        print(f"Profile '{profile_name}' not found.")
-        return 1
-        
+        console.print(f"[red]Profile '{profile_name}' not found.[/red]")
+        raise typer.Exit(1)
+    
     profile_data = profiles[profile_name]
-    print(f"Configuration for profile '{profile_name}':")
+    
+    table = create_table(title=f"Profile: {profile_name}")
+    table.add_column("Setting", style="cyan")
+    table.add_column("Value", style="green")
+    
     for k, v in profile_data.items():
         # Mask token for security
         if k == "token" and v:
             v = v[:10] + "..." + v[-5:]
-        print(f"  {k}: {v}")
-        
-    return 0
+        table.add_row(k, str(v))
+    
+    console.print(table)

@@ -1,89 +1,65 @@
-import argparse
+"""Authentication commands."""
+import typer
 
 from ..core.config import (
     config_path,
-    get_token_from_args_or_config,
+    get_active_profile_config,
     get_active_profile_name,
     update_profile,
 )
 from ..core.api import make_api_client, sdk_call
+from ..core.output import print_success, print_error, spinner
+from ..utils.prompts import prompt
 
 import tracko_sdk
 from tracko_sdk.models.login_request import LoginRequest
-from tracko_sdk.models.authication_request import AuthicationRequest
 
 
-def setup_parser(subparsers):
-    sp_login = subparsers.add_parser("login", help="Login via /api/login")
-    sp_login.add_argument("--username", required=True)
-    sp_login.add_argument("--password", required=True)
-    sp_login.set_defaults(func=cmd_login)
-
-    sp_oauth = subparsers.add_parser("oauth-token", help="Login via /api/oauth/token")
-    sp_oauth.add_argument("--phone-no", required=True)
-    sp_oauth.add_argument("--password", required=True)
-    sp_oauth.set_defaults(func=cmd_oauth_token)
-
-    sp_logout = subparsers.add_parser("logout", help="Clear saved token")
-    sp_logout.set_defaults(func=cmd_logout)
+app = typer.Typer(help="Authentication commands")
 
 
-def _extract_token(result) -> str | None:
-    if result is None:
-        return None
-    if isinstance(result, dict):
-        return result.get("token")
-    return getattr(result, "token", None)
+@app.command()
+def login(
+    username: str = typer.Option(..., "--username", "-u", prompt=True, help="Username or email"),
+):
+    """Login to Tracko API."""
+    password = prompt("Password", password=True)
+    
+    config = get_active_profile_config()
+    base_url = config.get("base_url", "http://localhost:8080")
+    
+    try:
+        with spinner("Logging in..."):
+            with make_api_client(base_url) as api_client:
+                api = tracko_sdk.AuthenticationApi(api_client)
+                result = sdk_call(
+                    lambda: api.login(LoginRequest(username=username, password=password)),
+                    auth_call=True
+                )
+        
+        if result is None:
+            print_error("Login failed. Check your credentials.")
+            raise typer.Exit(1)
+        
+        token = result.get("token") if isinstance(result, dict) else getattr(result, "token", None)
+        
+        if token:
+            active_profile = get_active_profile_name()
+            update_profile(active_profile, {"base_url": base_url, "token": token})
+            print_success(f"Logged in successfully as {username}")
+            print_success(f"Token saved to profile '{active_profile}' in {config_path()}")
+        else:
+            print_error("Login failed: No token received")
+            raise typer.Exit(1)
+    
+    except Exception as e:
+        print_error(f"Login failed: {e}")
+        raise typer.Exit(1)
 
 
-def cmd_login(args: argparse.Namespace) -> int:
-    _, base_url = get_token_from_args_or_config(args)
-    with make_api_client(base_url) as api_client:
-        api = tracko_sdk.AuthenticationApi(api_client)
-        result = sdk_call(lambda: api.login(LoginRequest(username=args.username, password=args.password)), auth_call=True)
-
-    if result is None:
-        print("Error: Login failed. Check your username and password.", file=__import__("sys").stderr)
-        return 1
-
-    if args.raw:
-        import json
-        print(json.dumps(result if isinstance(result, dict) else vars(result) if hasattr(result, '__dict__') else str(result), default=str))
-
-    token = _extract_token(result)
-    if token:
-        active_profile = get_active_profile_name()
-        update_profile(active_profile, {"base_url": base_url, "token": token})
-        print(f"Saved token to profile '{active_profile}' in {config_path()}")
-        return 0
-    return 1
-
-
-def cmd_oauth_token(args: argparse.Namespace) -> int:
-    _, base_url = get_token_from_args_or_config(args)
-    with make_api_client(base_url) as api_client:
-        api = tracko_sdk.AuthenticationApi(api_client)
-        result = sdk_call(lambda: api.sign_in(AuthicationRequest(phone_no=args.phone_no, password=args.password)), auth_call=True)
-
-    if result is None:
-        print("Error: Login failed. Check your phone number and password.", file=__import__("sys").stderr)
-        return 1
-
-    if args.raw:
-        import json
-        print(json.dumps(result if isinstance(result, dict) else str(result), default=str))
-
-    token = _extract_token(result)
-    if token:
-        active_profile = get_active_profile_name()
-        update_profile(active_profile, {"base_url": base_url, "token": token})
-        print(f"Saved token to profile '{active_profile}' in {config_path()}")
-        return 0
-    return 1
-
-
-def cmd_logout(args: argparse.Namespace) -> int:
+@app.command()
+def logout():
+    """Logout and clear saved token."""
     active_profile = get_active_profile_name()
     update_profile(active_profile, {"token": None})
-    print(f"Logged out from profile '{active_profile}' (token removed)")
-    return 0
+    print_success(f"Logged out from profile '{active_profile}'")
