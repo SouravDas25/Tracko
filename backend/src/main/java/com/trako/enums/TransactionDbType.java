@@ -17,6 +17,15 @@ public enum TransactionDbType {
         this.value = value;
     }
 
+    /**
+     * Maps a {@link TransactionType} to the corresponding {@code TransactionDbType}.
+     * TRANSFER falls back to DEBIT (stats are typically expense or income).
+     */
+    public static TransactionDbType from(TransactionType type) {
+        if (type == TransactionType.CREDIT) return CREDIT;
+        return DEBIT;
+    }
+
     @JsonCreator
     public static TransactionDbType fromValue(int value) {
         return Arrays.stream(TransactionDbType.values())

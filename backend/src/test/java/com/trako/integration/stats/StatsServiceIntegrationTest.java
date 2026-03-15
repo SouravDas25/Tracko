@@ -8,6 +8,7 @@ import com.trako.enums.TransactionType;
 import com.trako.integration.BaseIntegrationTest;
 import com.trako.services.StatsService;
 import com.trako.services.transactions.TransactionWriteService;
+import com.trako.util.DateUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -267,10 +268,10 @@ public class StatsServiceIntegrationTest extends BaseIntegrationTest {
 
     @Test
     public void filterCategoryAndMonthLabelUnreachableBranchesAreCoveredViaReflection() throws Exception {
-        Method monthLabel = StatsService.class.getDeclaredMethod("monthLabel", int.class);
+        Method monthLabel = DateUtil.class.getDeclaredMethod("monthLabel", int.class);
         monthLabel.setAccessible(true);
 
-        String unknown = (String) monthLabel.invoke(statsService, 13);
+        String unknown = (String) monthLabel.invoke(null, 13);
         assertEquals("", unknown);
     }
 
