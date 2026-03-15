@@ -117,7 +117,7 @@ public class BudgetCalculationService {
 
                 // Filter for expense transactions (type 1)
                 actual = transactions.stream()
-                        .filter(t -> t.getIsCountable() == 1 && t.getTransactionType() == TransactionDbType.DEBIT)
+                        .filter(t -> t.getIsCountable() != null && t.getIsCountable() == 1 && t.getTransactionType() == TransactionDbType.DEBIT)
                         .mapToDouble(Transaction::getAmount)
                         .sum();
 
@@ -227,7 +227,7 @@ public class BudgetCalculationService {
         List<Transaction> transactions = transactionRepository.findByUserIdAndCategoryIdAndDateBetween(
                 userId, category.getId(), startDate, endDate);
         Double actual = transactions.stream()
-                .filter(t -> t.getIsCountable() == 1 && t.getTransactionType() == TransactionDbType.DEBIT)
+                .filter(t -> t.getIsCountable() != null && t.getIsCountable() == 1 && t.getTransactionType() == TransactionDbType.DEBIT)
                 .mapToDouble(Transaction::getAmount)
                 .sum();
 

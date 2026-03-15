@@ -1,6 +1,5 @@
 package com.trako.integration.transaction;
 
-import com.trako.config.TestJwtSecurityConfig;
 import com.trako.entities.Account;
 import com.trako.entities.Category;
 import com.trako.entities.User;
@@ -14,7 +13,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,7 +26,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import(TestJwtSecurityConfig.class)
 @Transactional
 public class TransactionCreateValidationTest extends BaseIntegrationTest {
 
@@ -73,7 +70,6 @@ public class TransactionCreateValidationTest extends BaseIntegrationTest {
                 null,                    // comments
                 null,                    // categoryId
                 TransactionType.TRANSFER,// transactionType
-                null,                    // isCountable
                 "INR",                   // originalCurrency
                 10.0,                    // originalAmount
                 null,                    // exchangeRate
@@ -98,7 +94,6 @@ public class TransactionCreateValidationTest extends BaseIntegrationTest {
                 null,                    // comments
                 null,                    // categoryId
                 TransactionType.TRANSFER,// transactionType
-                null,                    // isCountable
                 "INR",                   // originalCurrency
                 10.0,                    // originalAmount
                 null,                    // exchangeRate
@@ -123,7 +118,6 @@ public class TransactionCreateValidationTest extends BaseIntegrationTest {
                 null,                    // comments
                 null,                    // categoryId
                 TransactionType.TRANSFER,// transactionType
-                null,                    // isCountable
                 "INR",                   // originalCurrency
                 10.0,                    // originalAmount
                 null,                    // exchangeRate
@@ -148,7 +142,6 @@ public class TransactionCreateValidationTest extends BaseIntegrationTest {
                 null,                    // comments
                 null,                    // categoryId
                 TransactionType.TRANSFER,// transactionType
-                null,                    // isCountable
                 null,                    // originalCurrency (missing)
                 10.0,                    // originalAmount
                 null,                    // exchangeRate
@@ -168,7 +161,7 @@ public class TransactionCreateValidationTest extends BaseIntegrationTest {
         // missing amount
         TransactionRequest payload = new TransactionRequest(
                 null, acc.getId(), new Date(), null, null, null,
-                TransactionType.TRANSFER, null, "INR", null, null, null, acc2.getId(), null
+                TransactionType.TRANSFER, "INR", null, null, null, acc2.getId(), null
         );
         mockMvc.perform(post("/api/transactions")
                         .header("Authorization", bearerToken)
@@ -179,7 +172,7 @@ public class TransactionCreateValidationTest extends BaseIntegrationTest {
         // zero amount
         TransactionRequest zeroPayload = new TransactionRequest(
                 null, acc.getId(), new Date(), null, null, null,
-                TransactionType.TRANSFER, null, "INR", 0.0, null, null, acc2.getId(), null
+                TransactionType.TRANSFER, "INR", 0.0, null, null, acc2.getId(), null
         );
         mockMvc.perform(post("/api/transactions")
                         .header("Authorization", bearerToken)
@@ -190,7 +183,7 @@ public class TransactionCreateValidationTest extends BaseIntegrationTest {
         // negative amount
         TransactionRequest negativePayload = new TransactionRequest(
                 null, acc.getId(), new Date(), null, null, null,
-                TransactionType.TRANSFER, null, "INR", -5.0, null, null, acc2.getId(), null
+                TransactionType.TRANSFER, "INR", -5.0, null, null, acc2.getId(), null
         );
         mockMvc.perform(post("/api/transactions")
                         .header("Authorization", bearerToken)
@@ -209,7 +202,6 @@ public class TransactionCreateValidationTest extends BaseIntegrationTest {
                 null,                    // comments
                 null,                    // categoryId
                 TransactionType.TRANSFER,// transactionType
-                null,                    // isCountable
                 "USD",                   // originalCurrency (not configured)
                 10.0,                    // originalAmount
                 null,                    // exchangeRate
@@ -236,7 +228,6 @@ public class TransactionCreateValidationTest extends BaseIntegrationTest {
                 null,                    // comments
                 cat.getId(),             // categoryId
                 TransactionType.DEBIT,   // transactionType
-                null,                    // isCountable
                 null,                    // originalCurrency (missing)
                 10.0,                    // originalAmount
                 null,                    // exchangeRate
@@ -256,7 +247,7 @@ public class TransactionCreateValidationTest extends BaseIntegrationTest {
         // missing amount
         TransactionRequest payload = new TransactionRequest(
                 null, acc.getId(), new Date(), null, null, cat.getId(),
-                TransactionType.DEBIT, null, "INR", null, null, null, null, null
+                TransactionType.DEBIT, "INR", null, null, null, null, null
         );
         mockMvc.perform(post("/api/transactions")
                         .header("Authorization", bearerToken)
@@ -267,7 +258,7 @@ public class TransactionCreateValidationTest extends BaseIntegrationTest {
         // zero amount
         TransactionRequest zeroPayload = new TransactionRequest(
                 null, acc.getId(), new Date(), null, null, cat.getId(),
-                TransactionType.DEBIT, null, "INR", 0.0, null, null, null, null
+                TransactionType.DEBIT, "INR", 0.0, null, null, null, null
         );
         mockMvc.perform(post("/api/transactions")
                         .header("Authorization", bearerToken)
@@ -293,7 +284,6 @@ public class TransactionCreateValidationTest extends BaseIntegrationTest {
                 null,                    // comments
                 cat.getId(),             // categoryId
                 TransactionType.DEBIT,   // transactionType
-                null,                    // isCountable
                 "USD",                   // originalCurrency
                 10.0,                    // originalAmount
                 null,                    // exchangeRate (omitted — should auto-resolve to 2.0)

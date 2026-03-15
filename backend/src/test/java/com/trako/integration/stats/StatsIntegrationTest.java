@@ -1,6 +1,5 @@
 package com.trako.integration.stats;
 
-import com.trako.config.TestJwtSecurityConfig;
 import com.trako.dtos.CategoryStatDTO;
 import com.trako.dtos.CategoryStatsResponseDTO;
 import com.trako.dtos.StatsPointDTO;
@@ -13,7 +12,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.Date;
@@ -29,7 +27,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import(TestJwtSecurityConfig.class)
 public class StatsIntegrationTest extends BaseIntegrationTest {
 
     @MockBean

@@ -13,7 +13,6 @@ class Routes {
     '/transfer': (BuildContext context) {
       final t = Transaction.defaultObject();
       t.transactionType = TransactionType.TRANSFER;
-      t.isCountable = 0;
       return AddItemPage(transaction: t);
     },
   };

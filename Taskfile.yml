@@ -15,29 +15,30 @@ tasks:
       - echo "Tracko - Expense Manager"
       - echo ""
       - echo "Available tasks:"
-      - echo "  task start     # Start Flutter UI and Java Backend"
-      - echo "  task flutter   # Start Flutter UI only"
-      - echo "  task backend   # Start Java Backend only (detached)"
-      - echo "  task stop      # Stop all services"
-      - echo "  task clean     # Clean build artifacts"
-      - echo "  task test      # Run tests"
-      - echo "  task install   # Install dependencies"
-      - echo "  task release:apk # Generate release APK for Android"
+      - echo "  task start          # Start Flutter UI and Java Backend"
+      - echo "  task start:flutter  # Start Flutter UI only"
+      - echo "  task start:backend  # Start Java Backend only (detached)"
+      - echo "  task stop           # Stop all services"
+      - echo "  task build          # Build production artifacts"
+      - echo "  task clean          # Clean build artifacts"
+      - echo "  task test           # Run tests"
+      - echo "  task install        # Install dependencies"
+      - echo "  task release:apk    # Generate release APK for Android"
 
   # Start both services (backend detached, flutter in foreground)
   start:
     desc: Start Flutter UI and Java Backend
-    deps: [backend, flutter]
+    deps: [start:backend, start:flutter]
 
   # Start Flutter UI only
-  flutter:
+  start:flutter:
     desc: Start Flutter UI (Chrome)
     dir: "{{.FRONTEND_DIR}}"
     cmds:
       - cmd: flutter run -d chrome
 
   # Start Java Backend only (detached to avoid interactive prompts on Windows)
-  backend:
+  start:backend:
     desc: Start Java Backend (Spring Boot, dev profile)
     dir: "{{.BACKEND_DIR}}"
     cmds:
@@ -64,6 +65,23 @@ tasks:
       - cmd: bash -lc "pkill -f 'flutter run' || true; pkill -f 'mvn spring-boot:run' || true"
         platforms: [linux, darwin]
 
+  # Build production artifacts
+  build:
+    desc: Build Flutter and Backend for production
+    deps: [build:flutter, build:backend]
+
+  build:flutter:
+    desc: Build Flutter web app for production
+    dir: "{{.FRONTEND_DIR}}"
+    cmds:
+      - cmd: flutter build web --release
+
+  build:backend:
+    desc: Build Backend JAR with Maven (runs tests)
+    dir: "{{.BACKEND_DIR}}"
+    cmds:
+      - cmd: mvn clean install
+
   # Clean build artifacts
   clean:
     desc: Clean build artifacts
@@ -76,8 +94,8 @@ tasks:
 
   # Run tests
   test:
-    desc: Run tests (Flutter and Backend)
-    deps: [test:backend, test:flutter]
+    desc: Run tests (Flutter, Backend, and CLI)
+    deps: [test:backend, test:flutter, test:cli]
 
   test:backend:
     desc: Run Backend tests (Maven verify)
@@ -90,8 +108,12 @@ tasks:
     dir: "{{.FRONTEND_DIR}}"
     cmds:
       - cmd: flutter test
-        
-      
+
+  test:cli:
+    desc: Run CLI tests
+    dir: cli
+    cmds:
+      - cmd: python3 run_cli_test.py
 
   # Install dependencies
   install:

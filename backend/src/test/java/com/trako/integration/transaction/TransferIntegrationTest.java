@@ -1,6 +1,5 @@
 package com.trako.integration.transaction;
 
-import com.trako.config.TestJwtSecurityConfig;
 import com.trako.entities.*;
 import com.trako.enums.TransactionDbType;
 import com.trako.enums.TransactionType;
@@ -10,7 +9,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MvcResult;
@@ -38,7 +36,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import(TestJwtSecurityConfig.class)
 @Transactional
 public class TransferIntegrationTest extends BaseIntegrationTest {
 
@@ -92,7 +89,6 @@ public class TransferIntegrationTest extends BaseIntegrationTest {
                 "Integration test via API", // comments
                 null,                    // categoryId
                 TransactionType.TRANSFER,// transactionType
-                null,                    // isCountable
                 "INR",                   // originalCurrency
                 500.0,                   // originalAmount
                 null,                    // exchangeRate
@@ -173,7 +169,6 @@ public class TransferIntegrationTest extends BaseIntegrationTest {
                 null,                    // comments
                 null,                    // categoryId
                 TransactionType.TRANSFER,// transactionType
-                null,                    // isCountable
                 "INR",                   // originalCurrency
                 500.0,                   // originalAmount
                 null,                    // exchangeRate
@@ -213,7 +208,6 @@ public class TransferIntegrationTest extends BaseIntegrationTest {
                 null,                    // comments
                 null,                    // categoryId
                 TransactionType.TRANSFER,// transactionType
-                null,                    // isCountable
                 "INR",                   // originalCurrency
                 500.0,                   // originalAmount
                 null,                    // exchangeRate
@@ -253,7 +247,6 @@ public class TransferIntegrationTest extends BaseIntegrationTest {
                 null,                    // comments
                 null,                    // categoryId
                 TransactionType.TRANSFER,// transactionType
-                null,                    // isCountable
                 "INR",                   // originalCurrency
                 750.0,                   // originalAmount
                 null,                    // exchangeRate
@@ -313,7 +306,6 @@ public class TransferIntegrationTest extends BaseIntegrationTest {
                 null,                    // comments
                 null,                    // categoryId
                 TransactionType.TRANSFER,// transactionType
-                null,                    // isCountable
                 "USD",                   // originalCurrency
                 1000.0,                  // originalAmount
                 1.0,                     // exchangeRate
@@ -406,7 +398,6 @@ public class TransferIntegrationTest extends BaseIntegrationTest {
                     null,                    // comments
                     null,                    // categoryId
                     TransactionType.TRANSFER,// transactionType
-                    null,                    // isCountable
                     "INR",                   // originalCurrency
                     100.0 * i,               // originalAmount
                     null,                    // exchangeRate
@@ -470,7 +461,6 @@ public class TransferIntegrationTest extends BaseIntegrationTest {
                 null,                    // comments
                 null,                    // categoryId
                 TransactionType.TRANSFER,// transactionType
-                null,                    // isCountable
                 "INR",                   // originalCurrency
                 300.0,                   // originalAmount
                 null,                    // exchangeRate
@@ -507,7 +497,6 @@ public class TransferIntegrationTest extends BaseIntegrationTest {
                 null,                    // comments
                 null,                    // categoryId
                 TransactionType.TRANSFER,// transactionType
-                null,                    // isCountable
                 "INR",                   // originalCurrency
                 500.0,                   // originalAmount
                 null,                    // exchangeRate
@@ -538,7 +527,6 @@ public class TransferIntegrationTest extends BaseIntegrationTest {
                 null,                    // comments
                 null,                    // categoryId
                 TransactionType.TRANSFER,// transactionType
-                null,                    // isCountable
                 "INR",                   // originalCurrency
                 300.0,                   // originalAmount
                 null,                    // exchangeRate
@@ -577,7 +565,6 @@ public class TransferIntegrationTest extends BaseIntegrationTest {
                 null,                    // comments
                 null,                    // categoryId
                 TransactionType.TRANSFER,// transactionType
-                null,                    // isCountable
                 "INR",                   // originalCurrency
                 100.0,                   // originalAmount
                 null,                    // exchangeRate
@@ -602,7 +589,6 @@ public class TransferIntegrationTest extends BaseIntegrationTest {
                 null,                    // comments
                 null,                    // categoryId
                 TransactionType.TRANSFER,// transactionType
-                null,                    // isCountable
                 "INR",                   // originalCurrency
                 200.0,                   // originalAmount
                 null,                    // exchangeRate
@@ -627,7 +613,6 @@ public class TransferIntegrationTest extends BaseIntegrationTest {
                 null,                    // comments
                 null,                    // categoryId
                 TransactionType.TRANSFER,// transactionType
-                null,                    // isCountable
                 "INR",                   // originalCurrency
                 300.0,                   // originalAmount
                 null,                    // exchangeRate
@@ -670,7 +655,6 @@ public class TransferIntegrationTest extends BaseIntegrationTest {
                 "Full lifecycle test",   // comments
                 null,                    // categoryId
                 TransactionType.TRANSFER,// transactionType
-                null,                    // isCountable
                 "INR",                   // originalCurrency
                 1500.0,                  // originalAmount
                 null,                    // exchangeRate
@@ -730,7 +714,6 @@ public class TransferIntegrationTest extends BaseIntegrationTest {
                 null,                    // comments
                 null,                    // categoryId
                 TransactionType.TRANSFER,// transactionType
-                null,                    // isCountable
                 "INR",                   // originalCurrency
                 500.0,                   // originalAmount
                 null,                    // exchangeRate
@@ -765,7 +748,6 @@ public class TransferIntegrationTest extends BaseIntegrationTest {
                 debit.getComments(),     // comments
                 null,                    // categoryId
                 TransactionType.TRANSFER,// transactionType
-                debit.getIsCountable(),  // isCountable
                 debit.getOriginalCurrency(), // originalCurrency
                 1000.0,                  // originalAmount (new)
                 null,                    // exchangeRate (keep existing)
@@ -808,7 +790,6 @@ public class TransferIntegrationTest extends BaseIntegrationTest {
                 "Initial Comments",      // comments
                 null,                    // categoryId
                 TransactionType.TRANSFER,// transactionType
-                null,                    // isCountable
                 "INR",                   // originalCurrency
                 750.0,                   // originalAmount
                 null,                    // exchangeRate
@@ -842,7 +823,6 @@ public class TransferIntegrationTest extends BaseIntegrationTest {
                 "Updated Comments",      // comments
                 null,                    // categoryId
                 TransactionType.TRANSFER,// transactionType
-                debit.getIsCountable(),  // isCountable
                 null,                    // originalCurrency
                 null,                    // originalAmount
                 null,                    // exchangeRate
@@ -889,7 +869,6 @@ public class TransferIntegrationTest extends BaseIntegrationTest {
                 null,                    // comments
                 null,                    // categoryId
                 TransactionType.TRANSFER,// transactionType
-                null,                    // isCountable
                 "USD",                   // originalCurrency
                 300.0,                   // originalAmount
                 1.0,                     // exchangeRate
@@ -920,7 +899,6 @@ public class TransferIntegrationTest extends BaseIntegrationTest {
                 null,                    // comments (keep existing)
                 null,                    // categoryId (keep existing)
                 null,                    // transactionType (keep existing)
-                credit.getIsCountable(), // isCountable (keep same)
                 "USD",                   // originalCurrency
                 600.0,                   // originalAmount (change to 600.0)
                 1.0,                     // exchangeRate
@@ -970,7 +948,6 @@ public class TransferIntegrationTest extends BaseIntegrationTest {
                 null,                    // comments
                 null,                    // categoryId
                 TransactionType.TRANSFER,// transactionType
-                null,                    // isCountable
                 "USD",                   // originalCurrency
                 400.0,                   // originalAmount
                 1.0,                     // exchangeRate
@@ -1001,7 +978,6 @@ public class TransferIntegrationTest extends BaseIntegrationTest {
                 null,                    // comments (keep existing)
                 null,                    // categoryId (keep existing)
                 null,                    // transactionType (keep existing)
-                debit.getIsCountable(),   // isCountable (keep same)
                 null,                    // originalCurrency (keep existing)
                 null,                    // originalAmount (keep existing)
                 null,                    // exchangeRate (keep existing)
@@ -1046,7 +1022,6 @@ public class TransferIntegrationTest extends BaseIntegrationTest {
                 null,                    // comments
                 null,                    // categoryId
                 TransactionType.TRANSFER,// transactionType
-                null,                    // isCountable
                 "USD",                   // originalCurrency
                 500.0,                   // originalAmount
                 1.0,                     // exchangeRate
@@ -1076,7 +1051,6 @@ public class TransferIntegrationTest extends BaseIntegrationTest {
                 null,                    // comments
                 null,                    // categoryId
                 null,                    // transactionType (keep existing)
-                0,                       // isCountable
                 null,                    // originalCurrency (keep existing)
                 null,                    // originalAmount (keep existing)
                 null,                    // exchangeRate (keep existing)
@@ -1097,7 +1071,6 @@ public class TransferIntegrationTest extends BaseIntegrationTest {
                 null,                    // comments (keep existing)
                 null,                    // categoryId (keep existing)
                 null,                    // transactionType (keep existing)
-                credit.getIsCountable(),  // isCountable (keep same)
                 credit.getOriginalCurrency(), // originalCurrency (keep same)
                 credit.getOriginalAmount(),   // originalAmount (keep same)
                 credit.getExchangeRate(),     // exchangeRate (keep same)
@@ -1152,7 +1125,6 @@ public class TransferIntegrationTest extends BaseIntegrationTest {
                 null,                    // comments (keep existing)
                 regular.getCategoryId(),  // categoryId (required for regular transactions)
                 TransactionType.DEBIT,   // transactionType (from regular.getTransactionType())
-                1,                       // isCountable
                 "INR",                   // originalCurrency
                 200.0,                   // originalAmount (change to 200.0)
                 1.0,                     // exchangeRate
@@ -1196,7 +1168,6 @@ public class TransferIntegrationTest extends BaseIntegrationTest {
                 "Initial Comments",      // comments
                 null,                    // categoryId
                 TransactionType.TRANSFER,// transactionType
-                null,                    // isCountable
                 "INR",                   // originalCurrency
                 750.0,                   // originalAmount
                 null,                    // exchangeRate
@@ -1228,7 +1199,6 @@ public class TransferIntegrationTest extends BaseIntegrationTest {
                     null,                    // comments
                     null,                    // categoryId
                     TransactionType.TRANSFER,// transactionType
-                    debit.getIsCountable(),  // isCountable
                     "USD",                   // originalCurrency
                     100.0 * i,               // originalAmount
                     1.0,                     // exchangeRate
@@ -1274,7 +1244,6 @@ public class TransferIntegrationTest extends BaseIntegrationTest {
                 "CRUD lifecycle test",  // comments
                 null,                    // categoryId
                 TransactionType.TRANSFER,// transactionType
-                null,                    // isCountable
                 "USD",                   // originalCurrency
                 100.0,                   // originalAmount
                 83.5,                    // exchangeRate
@@ -1306,7 +1275,6 @@ public class TransferIntegrationTest extends BaseIntegrationTest {
                 null,                    // comments
                 null,                    // categoryId
                 TransactionType.TRANSFER,// transactionType
-                debit.getIsCountable(),  // isCountable
                 "USD",                   // originalCurrency
                 2000.0,                  // originalAmount
                 1.0,                     // exchangeRate

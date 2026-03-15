@@ -68,12 +68,12 @@ public class GlobalStartupSeeder implements ApplicationRunner {
         seedUsers();
         seedJsonStore();
 
-        if (isDevProfileActive()) {
-            log.info("GlobalStartupSeeder: dev profile detected, seeding accounts/categories");
+        if (isDevProfileActive() || isTestProfileActive()) {
+            log.info("GlobalStartupSeeder: dev/test profile detected, seeding accounts/categories");
             seedAccounts();
             seedCategories();
         } else {
-            log.info("GlobalStartupSeeder: dev profile NOT detected, skipping accounts/categories");
+            log.info("GlobalStartupSeeder: dev/test profile NOT detected, skipping accounts/categories");
         }
 
         log.info("GlobalStartupSeeder: finished");
@@ -84,6 +84,14 @@ public class GlobalStartupSeeder implements ApplicationRunner {
             // Important: spring.profiles.default=dev does not populate getActiveProfiles().
             // acceptsProfiles handles both active and default profiles.
             return environment.acceptsProfiles(Profiles.of("dev"));
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private boolean isTestProfileActive() {
+        try {
+            return environment.acceptsProfiles(Profiles.of("test"));
         } catch (Exception e) {
             return false;
         }

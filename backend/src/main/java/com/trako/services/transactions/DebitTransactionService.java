@@ -35,7 +35,7 @@ public class DebitTransactionService {
         transaction.setDate(request.date());
         transaction.setName(request.name());
         transaction.setComments(request.comments());
-        transaction.setIsCountable(request.isCountable());
+        transaction.setIsCountable(1); // Regular transactions are always countable
         transaction.setOriginalAmount(request.originalAmount());
         transaction.setOriginalCurrency(request.originalCurrency());
         transaction.setExchangeRate(exchangeRate);
@@ -79,7 +79,6 @@ public class DebitTransactionService {
         if (request.name() != null) existing.setName(request.name());
         if (request.comments() != null) existing.setComments(request.comments());
         if (request.date() != null) existing.setDate(request.date());
-        if (request.isCountable() != null) existing.setIsCountable(request.isCountable());
 
         return saveForUser(userId, existing);
     }

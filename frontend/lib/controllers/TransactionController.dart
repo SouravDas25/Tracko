@@ -75,10 +75,6 @@ class TransactionController {
           await TransactionController.saveSplitsInTransaction(transaction);
     }
 
-    transaction.amount = saved.amount;
-    // Update transaction with countable status
-    transaction.isCountable = isUserCountable ? 1 : 0;
-    saved = await txRepo.update(transaction.id!, transaction);
     transaction.id = saved.id;
     return true;
   }

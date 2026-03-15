@@ -229,7 +229,6 @@ public class RecurringTransactionService {
                     "Recurring Transaction: " + rt.getFrequency(),  // comments
                     rt.getCategoryId(),                             // categoryId
                     txType,                                         // transactionType
-                    1,                                              // isCountable
                     rt.getOriginalCurrency(),                       // originalCurrency
                     rt.getOriginalAmount(),                         // originalAmount
                     rt.getExchangeRate(),                           // exchangeRate

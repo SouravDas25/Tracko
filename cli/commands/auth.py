@@ -21,9 +21,11 @@ app = typer.Typer(help="Authentication commands")
 @app.command()
 def login(
     username: str = typer.Option(..., "--username", "-u", prompt=True, help="Username or email"),
+    password: str = typer.Option(None, "--password", "-p", help="Password (prompted if not provided)"),
 ):
     """Login to Tracko API."""
-    password = prompt("Password", password=True)
+    if not password:
+        password = prompt("Password", password=True)
     
     config = get_active_profile_config()
     base_url = config.get("base_url", "http://localhost:8080")

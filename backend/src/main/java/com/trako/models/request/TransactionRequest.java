@@ -22,7 +22,6 @@ public record TransactionRequest(
         // Regular transaction fields
         Long categoryId,
         TransactionType transactionType,  // 1=DEBIT, 2=CREDIT
-        Integer isCountable,
         String originalCurrency,
         Double originalAmount,
         Double exchangeRate,

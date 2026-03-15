@@ -4,9 +4,6 @@ from typer.testing import CliRunner
 from unittest.mock import Mock, patch
 import json
 
-from cli.main import app
-
-
 @pytest.fixture
 def runner():
     """Provide a Typer CLI test runner."""
@@ -15,13 +12,21 @@ def runner():
 
 @pytest.fixture
 def mock_config():
-    """Mock configuration with test profile."""
+    """Load real token from 'test' profile saved by run_cli_test.py."""
+    import json, os
+    config_file = os.path.join(os.getcwd(), ".tracko-cli.json")
+    if os.path.exists(config_file):
+        with open(config_file) as f:
+            cfg = json.load(f)
+        token = cfg.get("profiles", {}).get("test", {}).get("token", "")
+    else:
+        token = ""
     return {
         "active_profile": "test",
         "profiles": {
             "test": {
                 "base_url": "http://localhost:8080",
-                "token": "test-token-123"
+                "token": token
             }
         }
     }
@@ -32,8 +37,8 @@ def mock_api_client():
     """Mock API client for testing."""
     with patch('cli.core.api.make_api_client') as mock:
         client = Mock()
-        mock.return_value.__enter__ = Mock(return_value=client)
-        mock.return_value.__exit__ = Mock(return_value=False)
+        mock.return_value.__enter__.return_value = client
+        mock.return_value.__exit__.return_value = None
         yield client
 
 
@@ -54,8 +59,7 @@ def sample_category():
     return {
         "id": 1,
         "name": "Food",
-        "categoryType": "EXPENSE",
-        "userId": "test-user-id"
+        "categoryType": "EXPENSE"
     }
 
 
@@ -65,9 +69,9 @@ def sample_transaction():
     return {
         "id": 1,
         "name": "Lunch",
-        "amount": 50.0,
+        "amount": 25.50,
         "transactionType": "EXPENSE",
-        "date": "2026-03-09T12:00:00Z",
+        "date": "2024-01-15T12:00:00Z",
         "accountId": 1,
         "categoryId": 1
     }
@@ -79,6 +83,6 @@ def sample_contact():
     return {
         "id": 1,
         "name": "John Doe",
-        "phoneNo": "1234567890",
+        "phone": "1234567890",
         "email": "john@example.com"
     }

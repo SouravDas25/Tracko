@@ -1,10 +1,8 @@
 package com.trako.integration;
 
-import com.trako.config.TestJwtSecurityConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
 import static org.hamcrest.Matchers.isEmptyOrNullString;
@@ -16,7 +14,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import(TestJwtSecurityConfig.class)
 public class HealthIntegrationTest extends BaseIntegrationTest {
 
     @Test

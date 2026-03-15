@@ -289,7 +289,7 @@ public class TransactionService {
         int count = 0;
 
         for (Transaction t : transactions) {
-            if (t.getIsCountable() == 1) {
+            if (t.getIsCountable() != null && t.getIsCountable() == 1) {
                 count++;
                 if (t.getTransactionType() == TransactionDbType.CREDIT) {
                     totalIncome += t.getAmount();
@@ -411,7 +411,7 @@ public class TransactionService {
     public Double getTotalIncome(String userId, Date startDate, Date endDate) {
         List<Transaction> transactions = transactionRepository.findByUserIdAndDateBetween(userId, startDate, endDate);
         return transactions.stream()
-                .filter(t -> t.getIsCountable() == 1 && t.getTransactionType() == TransactionDbType.CREDIT) // CREDIT = income
+                .filter(t -> t.getIsCountable() != null && t.getIsCountable() == 1 && t.getTransactionType() == TransactionDbType.CREDIT) // CREDIT = income
                 .mapToDouble(Transaction::getAmount)
                 .sum();
     }
@@ -419,7 +419,7 @@ public class TransactionService {
     public Double getTotalExpense(String userId, Date startDate, Date endDate) {
         List<Transaction> transactions = transactionRepository.findByUserIdAndDateBetween(userId, startDate, endDate);
         return transactions.stream()
-                .filter(t -> t.getIsCountable() == 1 && t.getTransactionType() == TransactionDbType.DEBIT) // DEBIT = expense
+                .filter(t -> t.getIsCountable() != null && t.getIsCountable() == 1 && t.getTransactionType() == TransactionDbType.DEBIT) // DEBIT = expense
                 .mapToDouble(Transaction::getAmount)
                 .sum();
     }
