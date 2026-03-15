@@ -12,15 +12,14 @@ Name | Type | Description | Notes
 **comments** | **str** |  | [optional] 
 **category_id** | **int** |  | [optional] 
 **transaction_type** | **str** |  | [optional] 
-**is_countable** | **int** |  | [optional] 
 **original_currency** | **str** |  | [optional] 
 **original_amount** | **float** |  | [optional] 
 **exchange_rate** | **float** |  | [optional] 
 **linked_transaction_id** | **int** |  | [optional] 
 **to_account_id** | **int** |  | [optional] 
 **from_account_id** | **int** |  | [optional] 
-**source_account_id** | **int** |  | [optional] 
 **transfer** | **bool** |  | [optional] 
+**source_account_id** | **int** |  | [optional] 
 
 ## Example
 

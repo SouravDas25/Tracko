@@ -9,7 +9,7 @@ Method | HTTP request | Description
 
 
 # **get_category_stats**
-> StatsResponseDTO get_category_stats(range, transaction_type, category_id, account_id=account_id, var_date=var_date, start_date=start_date, end_date=end_date)
+> GetStats200Response get_category_stats(range, transaction_type, category_id, account_id=account_id, var_date=var_date, start_date=start_date, end_date=end_date)
 
 Get stats for a specific category by range
 
@@ -19,7 +19,7 @@ Get stats for a specific category by range
 
 ```python
 import tracko_sdk
-from tracko_sdk.models.stats_response_dto import StatsResponseDTO
+from tracko_sdk.models.get_stats200_response import GetStats200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -77,7 +77,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**StatsResponseDTO**](StatsResponseDTO.md)
+[**GetStats200Response**](GetStats200Response.md)
 
 ### Authorization
 
@@ -86,7 +86,7 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 
@@ -97,7 +97,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **get_stats**
-> StatsResponseDTO get_stats(range, transaction_type, account_id=account_id, var_date=var_date, start_date=start_date, end_date=end_date)
+> GetStats200Response get_stats(range, transaction_type, account_id=account_id, var_date=var_date, start_date=start_date, end_date=end_date)
 
 Get aggregated stats by range (weekly/monthly/yearly/custom)
 
@@ -107,7 +107,7 @@ Get aggregated stats by range (weekly/monthly/yearly/custom)
 
 ```python
 import tracko_sdk
-from tracko_sdk.models.stats_response_dto import StatsResponseDTO
+from tracko_sdk.models.get_stats200_response import GetStats200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -163,7 +163,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**StatsResponseDTO**](StatsResponseDTO.md)
+[**GetStats200Response**](GetStats200Response.md)
 
 ### Authorization
 
@@ -172,7 +172,7 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 

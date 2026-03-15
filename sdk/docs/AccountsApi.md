@@ -17,7 +17,7 @@ Method | HTTP request | Description
 
 
 # **create7**
-> Account create7(account_save_request)
+> GetById4200Response create7(account_save_request)
 
 Create a new account
 
@@ -27,8 +27,8 @@ Create a new account
 
 ```python
 import tracko_sdk
-from tracko_sdk.models.account import Account
 from tracko_sdk.models.account_save_request import AccountSaveRequest
+from tracko_sdk.models.get_by_id4200_response import GetById4200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -74,7 +74,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**Account**](Account.md)
+[**GetById4200Response**](GetById4200Response.md)
 
 ### Authorization
 
@@ -83,7 +83,7 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: application/json
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 
@@ -94,7 +94,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **delete7**
-> str delete7(id)
+> Delete1200Response delete7(id)
 
 Delete an account
 
@@ -104,6 +104,7 @@ Delete an account
 
 ```python
 import tracko_sdk
+from tracko_sdk.models.delete1200_response import Delete1200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -149,7 +150,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-**str**
+[**Delete1200Response**](Delete1200Response.md)
 
 ### Authorization
 
@@ -158,7 +159,7 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 
@@ -169,7 +170,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **get_account_monthly_summaries**
-> List[TransactionPeriodSummaryDTO] get_account_monthly_summaries(id, year=year)
+> GetYearlySummaries200Response get_account_monthly_summaries(id, year=year)
 
 Get monthly summaries for an account
 
@@ -179,7 +180,7 @@ Get monthly summaries for an account
 
 ```python
 import tracko_sdk
-from tracko_sdk.models.transaction_period_summary_dto import TransactionPeriodSummaryDTO
+from tracko_sdk.models.get_yearly_summaries200_response import GetYearlySummaries200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -227,7 +228,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**List[TransactionPeriodSummaryDTO]**](TransactionPeriodSummaryDTO.md)
+[**GetYearlySummaries200Response**](GetYearlySummaries200Response.md)
 
 ### Authorization
 
@@ -236,7 +237,7 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 
@@ -247,7 +248,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **get_account_summary**
-> TransactionSummaryDTO get_account_summary(id, start_date, end_date, include_rollover=include_rollover)
+> GetMySummary200Response get_account_summary(id, start_date, end_date, include_rollover=include_rollover)
 
 Get income/expense summary for an account in a date range
 
@@ -257,7 +258,7 @@ Get income/expense summary for an account in a date range
 
 ```python
 import tracko_sdk
-from tracko_sdk.models.transaction_summary_dto import TransactionSummaryDTO
+from tracko_sdk.models.get_my_summary200_response import GetMySummary200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -309,7 +310,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**TransactionSummaryDTO**](TransactionSummaryDTO.md)
+[**GetMySummary200Response**](GetMySummary200Response.md)
 
 ### Authorization
 
@@ -318,7 +319,7 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 
@@ -329,7 +330,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **get_account_transactions**
-> TransactionsPageDTO get_account_transactions(id, month=month, year=year, start_date=start_date, end_date=end_date, category_id=category_id, page=page, size=size, expand=expand)
+> GetAll1200Response get_account_transactions(id, month=month, year=year, start_date=start_date, end_date=end_date, category_id=category_id, page=page, size=size, expand=expand)
 
 List transactions for an account with optional filters
 
@@ -339,7 +340,7 @@ List transactions for an account with optional filters
 
 ```python
 import tracko_sdk
-from tracko_sdk.models.transactions_page_dto import TransactionsPageDTO
+from tracko_sdk.models.get_all1200_response import GetAll1200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -401,7 +402,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**TransactionsPageDTO**](TransactionsPageDTO.md)
+[**GetAll1200Response**](GetAll1200Response.md)
 
 ### Authorization
 
@@ -410,7 +411,7 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 
@@ -421,7 +422,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **get_account_yearly_summaries**
-> List[TransactionPeriodSummaryDTO] get_account_yearly_summaries(id)
+> GetYearlySummaries200Response get_account_yearly_summaries(id)
 
 Get yearly summaries for an account
 
@@ -431,7 +432,7 @@ Get yearly summaries for an account
 
 ```python
 import tracko_sdk
-from tracko_sdk.models.transaction_period_summary_dto import TransactionPeriodSummaryDTO
+from tracko_sdk.models.get_yearly_summaries200_response import GetYearlySummaries200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -477,7 +478,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**List[TransactionPeriodSummaryDTO]**](TransactionPeriodSummaryDTO.md)
+[**GetYearlySummaries200Response**](GetYearlySummaries200Response.md)
 
 ### Authorization
 
@@ -486,7 +487,7 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 
@@ -497,7 +498,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **get_all6**
-> List[Account] get_all6()
+> GetAll6200Response get_all6()
 
 List all accounts for the current user
 
@@ -507,7 +508,7 @@ List all accounts for the current user
 
 ```python
 import tracko_sdk
-from tracko_sdk.models.account import Account
+from tracko_sdk.models.get_all6200_response import GetAll6200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -549,7 +550,7 @@ This endpoint does not need any parameter.
 
 ### Return type
 
-[**List[Account]**](Account.md)
+[**GetAll6200Response**](GetAll6200Response.md)
 
 ### Authorization
 
@@ -558,7 +559,7 @@ This endpoint does not need any parameter.
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 
@@ -569,7 +570,7 @@ This endpoint does not need any parameter.
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **get_by_id4**
-> Account get_by_id4(id)
+> GetById4200Response get_by_id4(id)
 
 Get an account by ID
 
@@ -579,7 +580,7 @@ Get an account by ID
 
 ```python
 import tracko_sdk
-from tracko_sdk.models.account import Account
+from tracko_sdk.models.get_by_id4200_response import GetById4200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -625,7 +626,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**Account**](Account.md)
+[**GetById4200Response**](GetById4200Response.md)
 
 ### Authorization
 
@@ -634,7 +635,7 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 
@@ -645,7 +646,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **get_my_account_balances**
-> object get_my_account_balances()
+> GetMyAccountBalances200Response get_my_account_balances()
 
 Get balances for all accounts (derived from transactions)
 
@@ -655,6 +656,7 @@ Get balances for all accounts (derived from transactions)
 
 ```python
 import tracko_sdk
+from tracko_sdk.models.get_my_account_balances200_response import GetMyAccountBalances200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -696,7 +698,7 @@ This endpoint does not need any parameter.
 
 ### Return type
 
-**object**
+[**GetMyAccountBalances200Response**](GetMyAccountBalances200Response.md)
 
 ### Authorization
 
@@ -705,7 +707,7 @@ This endpoint does not need any parameter.
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 
@@ -716,7 +718,7 @@ This endpoint does not need any parameter.
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **update5**
-> Account update5(id, account_save_request)
+> GetById4200Response update5(id, account_save_request)
 
 Update an account
 
@@ -726,8 +728,8 @@ Update an account
 
 ```python
 import tracko_sdk
-from tracko_sdk.models.account import Account
 from tracko_sdk.models.account_save_request import AccountSaveRequest
+from tracko_sdk.models.get_by_id4200_response import GetById4200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -775,7 +777,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**Account**](Account.md)
+[**GetById4200Response**](GetById4200Response.md)
 
 ### Authorization
 
@@ -784,7 +786,7 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: application/json
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 

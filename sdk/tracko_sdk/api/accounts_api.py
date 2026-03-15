@@ -19,11 +19,14 @@ from typing_extensions import Annotated
 from datetime import datetime
 from pydantic import StrictBool, StrictInt
 from typing import Optional
-from tracko_sdk.models.account import Account
 from tracko_sdk.models.account_save_request import AccountSaveRequest
-from tracko_sdk.models.transaction_period_summary_dto import TransactionPeriodSummaryDTO
-from tracko_sdk.models.transaction_summary_dto import TransactionSummaryDTO
-from tracko_sdk.models.transactions_page_dto import TransactionsPageDTO
+from tracko_sdk.models.delete1200_response import Delete1200Response
+from tracko_sdk.models.get_all1200_response import GetAll1200Response
+from tracko_sdk.models.get_all6200_response import GetAll6200Response
+from tracko_sdk.models.get_by_id4200_response import GetById4200Response
+from tracko_sdk.models.get_my_account_balances200_response import GetMyAccountBalances200Response
+from tracko_sdk.models.get_my_summary200_response import GetMySummary200Response
+from tracko_sdk.models.get_yearly_summaries200_response import GetYearlySummaries200Response
 
 from tracko_sdk.api_client import ApiClient, RequestSerialized
 from tracko_sdk.api_response import ApiResponse
@@ -59,7 +62,7 @@ class AccountsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> Account:
+    ) -> GetById4200Response:
         """Create a new account
 
 
@@ -96,7 +99,7 @@ class AccountsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Account",
+            '200': "GetById4200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -125,7 +128,7 @@ class AccountsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[Account]:
+    ) -> ApiResponse[GetById4200Response]:
         """Create a new account
 
 
@@ -162,7 +165,7 @@ class AccountsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Account",
+            '200': "GetById4200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -228,7 +231,7 @@ class AccountsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Account",
+            '200': "GetById4200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -270,7 +273,7 @@ class AccountsApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -327,7 +330,7 @@ class AccountsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> str:
+    ) -> Delete1200Response:
         """Delete an account
 
 
@@ -364,7 +367,7 @@ class AccountsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "str",
+            '200': "Delete1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -393,7 +396,7 @@ class AccountsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[str]:
+    ) -> ApiResponse[Delete1200Response]:
         """Delete an account
 
 
@@ -430,7 +433,7 @@ class AccountsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "str",
+            '200': "Delete1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -496,7 +499,7 @@ class AccountsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "str",
+            '200': "Delete1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -538,7 +541,7 @@ class AccountsApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -583,7 +586,7 @@ class AccountsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> List[TransactionPeriodSummaryDTO]:
+    ) -> GetYearlySummaries200Response:
         """Get monthly summaries for an account
 
 
@@ -623,7 +626,7 @@ class AccountsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[TransactionPeriodSummaryDTO]",
+            '200': "GetYearlySummaries200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -653,7 +656,7 @@ class AccountsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[List[TransactionPeriodSummaryDTO]]:
+    ) -> ApiResponse[GetYearlySummaries200Response]:
         """Get monthly summaries for an account
 
 
@@ -693,7 +696,7 @@ class AccountsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[TransactionPeriodSummaryDTO]",
+            '200': "GetYearlySummaries200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -763,7 +766,7 @@ class AccountsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[TransactionPeriodSummaryDTO]",
+            '200': "GetYearlySummaries200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -810,7 +813,7 @@ class AccountsApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -857,7 +860,7 @@ class AccountsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> TransactionSummaryDTO:
+    ) -> GetMySummary200Response:
         """Get income/expense summary for an account in a date range
 
 
@@ -903,7 +906,7 @@ class AccountsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "TransactionSummaryDTO",
+            '200': "GetMySummary200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -935,7 +938,7 @@ class AccountsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[TransactionSummaryDTO]:
+    ) -> ApiResponse[GetMySummary200Response]:
         """Get income/expense summary for an account in a date range
 
 
@@ -981,7 +984,7 @@ class AccountsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "TransactionSummaryDTO",
+            '200': "GetMySummary200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1059,7 +1062,7 @@ class AccountsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "TransactionSummaryDTO",
+            '200': "GetMySummary200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1134,7 +1137,7 @@ class AccountsApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -1186,7 +1189,7 @@ class AccountsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> TransactionsPageDTO:
+    ) -> GetAll1200Response:
         """List transactions for an account with optional filters
 
 
@@ -1247,7 +1250,7 @@ class AccountsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "TransactionsPageDTO",
+            '200': "GetAll1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1284,7 +1287,7 @@ class AccountsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[TransactionsPageDTO]:
+    ) -> ApiResponse[GetAll1200Response]:
         """List transactions for an account with optional filters
 
 
@@ -1345,7 +1348,7 @@ class AccountsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "TransactionsPageDTO",
+            '200': "GetAll1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1443,7 +1446,7 @@ class AccountsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "TransactionsPageDTO",
+            '200': "GetAll1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1543,7 +1546,7 @@ class AccountsApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -1587,7 +1590,7 @@ class AccountsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> List[TransactionPeriodSummaryDTO]:
+    ) -> GetYearlySummaries200Response:
         """Get yearly summaries for an account
 
 
@@ -1624,7 +1627,7 @@ class AccountsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[TransactionPeriodSummaryDTO]",
+            '200': "GetYearlySummaries200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1653,7 +1656,7 @@ class AccountsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[List[TransactionPeriodSummaryDTO]]:
+    ) -> ApiResponse[GetYearlySummaries200Response]:
         """Get yearly summaries for an account
 
 
@@ -1690,7 +1693,7 @@ class AccountsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[TransactionPeriodSummaryDTO]",
+            '200': "GetYearlySummaries200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1756,7 +1759,7 @@ class AccountsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[TransactionPeriodSummaryDTO]",
+            '200': "GetYearlySummaries200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1798,7 +1801,7 @@ class AccountsApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -1841,7 +1844,7 @@ class AccountsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> List[Account]:
+    ) -> GetAll6200Response:
         """List all accounts for the current user
 
 
@@ -1875,7 +1878,7 @@ class AccountsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[Account]",
+            '200': "GetAll6200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1903,7 +1906,7 @@ class AccountsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[List[Account]]:
+    ) -> ApiResponse[GetAll6200Response]:
         """List all accounts for the current user
 
 
@@ -1937,7 +1940,7 @@ class AccountsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[Account]",
+            '200': "GetAll6200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1999,7 +2002,7 @@ class AccountsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[Account]",
+            '200': "GetAll6200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -2038,7 +2041,7 @@ class AccountsApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -2082,7 +2085,7 @@ class AccountsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> Account:
+    ) -> GetById4200Response:
         """Get an account by ID
 
 
@@ -2119,7 +2122,7 @@ class AccountsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Account",
+            '200': "GetById4200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -2148,7 +2151,7 @@ class AccountsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[Account]:
+    ) -> ApiResponse[GetById4200Response]:
         """Get an account by ID
 
 
@@ -2185,7 +2188,7 @@ class AccountsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Account",
+            '200': "GetById4200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -2251,7 +2254,7 @@ class AccountsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Account",
+            '200': "GetById4200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -2293,7 +2296,7 @@ class AccountsApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -2336,7 +2339,7 @@ class AccountsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> object:
+    ) -> GetMyAccountBalances200Response:
         """Get balances for all accounts (derived from transactions)
 
 
@@ -2370,7 +2373,7 @@ class AccountsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
+            '200': "GetMyAccountBalances200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -2398,7 +2401,7 @@ class AccountsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[object]:
+    ) -> ApiResponse[GetMyAccountBalances200Response]:
         """Get balances for all accounts (derived from transactions)
 
 
@@ -2432,7 +2435,7 @@ class AccountsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
+            '200': "GetMyAccountBalances200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -2494,7 +2497,7 @@ class AccountsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
+            '200': "GetMyAccountBalances200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -2533,7 +2536,7 @@ class AccountsApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -2578,7 +2581,7 @@ class AccountsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> Account:
+    ) -> GetById4200Response:
         """Update an account
 
 
@@ -2618,7 +2621,7 @@ class AccountsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Account",
+            '200': "GetById4200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -2648,7 +2651,7 @@ class AccountsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[Account]:
+    ) -> ApiResponse[GetById4200Response]:
         """Update an account
 
 
@@ -2688,7 +2691,7 @@ class AccountsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Account",
+            '200': "GetById4200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -2758,7 +2761,7 @@ class AccountsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Account",
+            '200': "GetById4200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -2803,7 +2806,7 @@ class AccountsApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 

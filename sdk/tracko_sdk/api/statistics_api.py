@@ -19,7 +19,7 @@ from typing_extensions import Annotated
 from datetime import datetime
 from pydantic import StrictInt, StrictStr, field_validator
 from typing import Optional
-from tracko_sdk.models.stats_response_dto import StatsResponseDTO
+from tracko_sdk.models.get_stats200_response import GetStats200Response
 
 from tracko_sdk.api_client import ApiClient, RequestSerialized
 from tracko_sdk.api_response import ApiResponse
@@ -61,7 +61,7 @@ class StatisticsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> StatsResponseDTO:
+    ) -> GetStats200Response:
         """Get stats for a specific category by range
 
 
@@ -116,7 +116,7 @@ class StatisticsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "StatsResponseDTO",
+            '200': "GetStats200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -151,7 +151,7 @@ class StatisticsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[StatsResponseDTO]:
+    ) -> ApiResponse[GetStats200Response]:
         """Get stats for a specific category by range
 
 
@@ -206,7 +206,7 @@ class StatisticsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "StatsResponseDTO",
+            '200': "GetStats200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -296,7 +296,7 @@ class StatisticsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "StatsResponseDTO",
+            '200': "GetStats200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -397,7 +397,7 @@ class StatisticsApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -446,7 +446,7 @@ class StatisticsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> StatsResponseDTO:
+    ) -> GetStats200Response:
         """Get aggregated stats by range (weekly/monthly/yearly/custom)
 
 
@@ -498,7 +498,7 @@ class StatisticsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "StatsResponseDTO",
+            '200': "GetStats200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -532,7 +532,7 @@ class StatisticsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[StatsResponseDTO]:
+    ) -> ApiResponse[GetStats200Response]:
         """Get aggregated stats by range (weekly/monthly/yearly/custom)
 
 
@@ -584,7 +584,7 @@ class StatisticsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "StatsResponseDTO",
+            '200': "GetStats200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -670,7 +670,7 @@ class StatisticsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "StatsResponseDTO",
+            '200': "GetStats200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -766,7 +766,7 @@ class StatisticsApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 

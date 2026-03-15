@@ -18,9 +18,10 @@ from typing_extensions import Annotated
 
 from pydantic import StrictBool, StrictInt, StrictStr
 from typing import Optional
+from tracko_sdk.models.allocate_funds200_response import AllocateFunds200Response
 from tracko_sdk.models.budget_allocation_request_dto import BudgetAllocationRequestDTO
-from tracko_sdk.models.budget_category_dto import BudgetCategoryDTO
-from tracko_sdk.models.budget_response_dto import BudgetResponseDTO
+from tracko_sdk.models.get_budget200_response import GetBudget200Response
+from tracko_sdk.models.get_my_total_income200_response import GetMyTotalIncome200Response
 
 from tracko_sdk.api_client import ApiClient, RequestSerialized
 from tracko_sdk.api_response import ApiResponse
@@ -56,7 +57,7 @@ class BudgetApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> BudgetCategoryDTO:
+    ) -> AllocateFunds200Response:
         """Allocate funds to a category for a month
 
 
@@ -93,7 +94,7 @@ class BudgetApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "BudgetCategoryDTO",
+            '200': "AllocateFunds200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -122,7 +123,7 @@ class BudgetApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[BudgetCategoryDTO]:
+    ) -> ApiResponse[AllocateFunds200Response]:
         """Allocate funds to a category for a month
 
 
@@ -159,7 +160,7 @@ class BudgetApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "BudgetCategoryDTO",
+            '200': "AllocateFunds200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -225,7 +226,7 @@ class BudgetApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "BudgetCategoryDTO",
+            '200': "AllocateFunds200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -267,7 +268,7 @@ class BudgetApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -325,7 +326,7 @@ class BudgetApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> float:
+    ) -> GetMyTotalIncome200Response:
         """Get the amount available to assign for a month
 
 
@@ -365,7 +366,7 @@ class BudgetApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "float",
+            '200': "GetMyTotalIncome200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -395,7 +396,7 @@ class BudgetApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[float]:
+    ) -> ApiResponse[GetMyTotalIncome200Response]:
         """Get the amount available to assign for a month
 
 
@@ -435,7 +436,7 @@ class BudgetApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "float",
+            '200': "GetMyTotalIncome200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -505,7 +506,7 @@ class BudgetApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "float",
+            '200': "GetMyTotalIncome200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -554,7 +555,7 @@ class BudgetApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -603,7 +604,7 @@ class BudgetApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> BudgetResponseDTO:
+    ) -> GetBudget200Response:
         """Get budget details for a month/year
 
 
@@ -655,7 +656,7 @@ class BudgetApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "BudgetResponseDTO",
+            '200': "GetBudget200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -689,7 +690,7 @@ class BudgetApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[BudgetResponseDTO]:
+    ) -> ApiResponse[GetBudget200Response]:
         """Get budget details for a month/year
 
 
@@ -741,7 +742,7 @@ class BudgetApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "BudgetResponseDTO",
+            '200': "GetBudget200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -827,7 +828,7 @@ class BudgetApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "BudgetResponseDTO",
+            '200': "GetBudget200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -896,7 +897,7 @@ class BudgetApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -939,7 +940,7 @@ class BudgetApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> BudgetResponseDTO:
+    ) -> GetBudget200Response:
         """Get budget for the current month
 
 
@@ -973,7 +974,7 @@ class BudgetApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "BudgetResponseDTO",
+            '200': "GetBudget200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1001,7 +1002,7 @@ class BudgetApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[BudgetResponseDTO]:
+    ) -> ApiResponse[GetBudget200Response]:
         """Get budget for the current month
 
 
@@ -1035,7 +1036,7 @@ class BudgetApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "BudgetResponseDTO",
+            '200': "GetBudget200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1097,7 +1098,7 @@ class BudgetApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "BudgetResponseDTO",
+            '200': "GetBudget200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1136,7 +1137,7 @@ class BudgetApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 

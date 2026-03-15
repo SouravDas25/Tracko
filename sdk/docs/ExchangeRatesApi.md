@@ -8,7 +8,7 @@ Method | HTTP request | Description
 
 
 # **get_rates**
-> ExchangeRateApiResponse get_rates(base_currency)
+> GetRates200Response get_rates(base_currency)
 
 Get exchange rates for a base currency (e.g. USD)
 
@@ -18,7 +18,7 @@ Get exchange rates for a base currency (e.g. USD)
 
 ```python
 import tracko_sdk
-from tracko_sdk.models.exchange_rate_api_response import ExchangeRateApiResponse
+from tracko_sdk.models.get_rates200_response import GetRates200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -64,7 +64,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**ExchangeRateApiResponse**](ExchangeRateApiResponse.md)
+[**GetRates200Response**](GetRates200Response.md)
 
 ### Authorization
 
@@ -73,7 +73,7 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 

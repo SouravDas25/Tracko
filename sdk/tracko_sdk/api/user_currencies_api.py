@@ -18,7 +18,8 @@ from typing_extensions import Annotated
 
 from pydantic import Field, StrictStr, field_validator
 from typing_extensions import Annotated
-from tracko_sdk.models.user_currency import UserCurrency
+from tracko_sdk.models.delete1200_response import Delete1200Response
+from tracko_sdk.models.get_all200_response import GetAll200Response
 from tracko_sdk.models.user_currency_request import UserCurrencyRequest
 
 from tracko_sdk.api_client import ApiClient, RequestSerialized
@@ -55,7 +56,7 @@ class UserCurrenciesApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> str:
+    ) -> Delete1200Response:
         """Remove a currency from the current user
 
 
@@ -92,7 +93,7 @@ class UserCurrenciesApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "str",
+            '200': "Delete1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -121,7 +122,7 @@ class UserCurrenciesApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[str]:
+    ) -> ApiResponse[Delete1200Response]:
         """Remove a currency from the current user
 
 
@@ -158,7 +159,7 @@ class UserCurrenciesApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "str",
+            '200': "Delete1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -224,7 +225,7 @@ class UserCurrenciesApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "str",
+            '200': "Delete1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -266,7 +267,7 @@ class UserCurrenciesApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -309,7 +310,7 @@ class UserCurrenciesApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> List[UserCurrency]:
+    ) -> GetAll200Response:
         """List currencies configured for the current user
 
 
@@ -343,7 +344,7 @@ class UserCurrenciesApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[UserCurrency]",
+            '200': "GetAll200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -371,7 +372,7 @@ class UserCurrenciesApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[List[UserCurrency]]:
+    ) -> ApiResponse[GetAll200Response]:
         """List currencies configured for the current user
 
 
@@ -405,7 +406,7 @@ class UserCurrenciesApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[UserCurrency]",
+            '200': "GetAll200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -467,7 +468,7 @@ class UserCurrenciesApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[UserCurrency]",
+            '200': "GetAll200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -506,7 +507,7 @@ class UserCurrenciesApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -550,7 +551,7 @@ class UserCurrenciesApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> str:
+    ) -> Delete1200Response:
         """Add or update a currency with a manual exchange rate
 
 
@@ -587,7 +588,7 @@ class UserCurrenciesApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "str",
+            '200': "Delete1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -616,7 +617,7 @@ class UserCurrenciesApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[str]:
+    ) -> ApiResponse[Delete1200Response]:
         """Add or update a currency with a manual exchange rate
 
 
@@ -653,7 +654,7 @@ class UserCurrenciesApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "str",
+            '200': "Delete1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -719,7 +720,7 @@ class UserCurrenciesApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "str",
+            '200': "Delete1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -761,7 +762,7 @@ class UserCurrenciesApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -818,7 +819,7 @@ class UserCurrenciesApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> str:
+    ) -> Delete1200Response:
         """Add a currency with an automatically fetched exchange rate
 
 
@@ -855,7 +856,7 @@ class UserCurrenciesApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "str",
+            '200': "Delete1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -884,7 +885,7 @@ class UserCurrenciesApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[str]:
+    ) -> ApiResponse[Delete1200Response]:
         """Add a currency with an automatically fetched exchange rate
 
 
@@ -921,7 +922,7 @@ class UserCurrenciesApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "str",
+            '200': "Delete1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -987,7 +988,7 @@ class UserCurrenciesApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "str",
+            '200': "Delete1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1031,7 +1032,7 @@ class UserCurrenciesApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 

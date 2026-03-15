@@ -18,6 +18,11 @@ from typing_extensions import Annotated
 
 from pydantic import Field
 from typing_extensions import Annotated
+from tracko_sdk.models.create200_response import Create200Response
+from tracko_sdk.models.delete1200_response import Delete1200Response
+from tracko_sdk.models.me200_response import Me200Response
+from tracko_sdk.models.show_by_phone200_response import ShowByPhone200Response
+from tracko_sdk.models.update_profile200_response import UpdateProfile200Response
 from tracko_sdk.models.user_profile_update_request import UserProfileUpdateRequest
 from tracko_sdk.models.user_save_request import UserSaveRequest
 
@@ -55,7 +60,7 @@ class UsersApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> object:
+    ) -> Create200Response:
         """Create a new user (admin only)
 
 
@@ -92,7 +97,7 @@ class UsersApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
+            '200': "Create200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -121,7 +126,7 @@ class UsersApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[object]:
+    ) -> ApiResponse[Create200Response]:
         """Create a new user (admin only)
 
 
@@ -158,7 +163,7 @@ class UsersApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
+            '200': "Create200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -224,7 +229,7 @@ class UsersApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
+            '200': "Create200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -266,7 +271,7 @@ class UsersApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -322,7 +327,7 @@ class UsersApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> object:
+    ) -> Me200Response:
         """Get the current user's profile
 
 
@@ -356,7 +361,7 @@ class UsersApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
+            '200': "Me200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -384,7 +389,7 @@ class UsersApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[object]:
+    ) -> ApiResponse[Me200Response]:
         """Get the current user's profile
 
 
@@ -418,7 +423,7 @@ class UsersApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
+            '200': "Me200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -480,7 +485,7 @@ class UsersApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
+            '200': "Me200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -519,7 +524,7 @@ class UsersApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -562,7 +567,7 @@ class UsersApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> object:
+    ) -> Delete1200Response:
         """Reset all user data (accounts, categories, transactions)
 
 
@@ -596,7 +601,7 @@ class UsersApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
+            '200': "Delete1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -624,7 +629,7 @@ class UsersApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[object]:
+    ) -> ApiResponse[Delete1200Response]:
         """Reset all user data (accounts, categories, transactions)
 
 
@@ -658,7 +663,7 @@ class UsersApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
+            '200': "Delete1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -720,7 +725,7 @@ class UsersApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
+            '200': "Delete1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -759,7 +764,7 @@ class UsersApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -802,7 +807,7 @@ class UsersApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> object:
+    ) -> Delete1200Response:
         """Reset only transactions for the current user
 
 
@@ -836,7 +841,7 @@ class UsersApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
+            '200': "Delete1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -864,7 +869,7 @@ class UsersApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[object]:
+    ) -> ApiResponse[Delete1200Response]:
         """Reset only transactions for the current user
 
 
@@ -898,7 +903,7 @@ class UsersApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
+            '200': "Delete1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -960,7 +965,7 @@ class UsersApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
+            '200': "Delete1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -999,7 +1004,7 @@ class UsersApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -1042,7 +1047,7 @@ class UsersApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> object:
+    ) -> ShowByPhone200Response:
         """List users (admin) or get a user by ID
 
 
@@ -1076,7 +1081,7 @@ class UsersApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
+            '200': "ShowByPhone200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1104,7 +1109,7 @@ class UsersApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[object]:
+    ) -> ApiResponse[ShowByPhone200Response]:
         """List users (admin) or get a user by ID
 
 
@@ -1138,7 +1143,7 @@ class UsersApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
+            '200': "ShowByPhone200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1200,7 +1205,7 @@ class UsersApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
+            '200': "ShowByPhone200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1239,7 +1244,7 @@ class UsersApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -1283,7 +1288,7 @@ class UsersApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> object:
+    ) -> ShowByPhone200Response:
         """List users (admin) or get a user by ID
 
 
@@ -1320,7 +1325,7 @@ class UsersApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
+            '200': "ShowByPhone200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1349,7 +1354,7 @@ class UsersApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[object]:
+    ) -> ApiResponse[ShowByPhone200Response]:
         """List users (admin) or get a user by ID
 
 
@@ -1386,7 +1391,7 @@ class UsersApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
+            '200': "ShowByPhone200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1452,7 +1457,7 @@ class UsersApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
+            '200': "ShowByPhone200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1494,7 +1499,7 @@ class UsersApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -1538,7 +1543,7 @@ class UsersApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> object:
+    ) -> ShowByPhone200Response:
         """Look up a user by phone number
 
 
@@ -1575,7 +1580,7 @@ class UsersApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
+            '200': "ShowByPhone200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1604,7 +1609,7 @@ class UsersApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[object]:
+    ) -> ApiResponse[ShowByPhone200Response]:
         """Look up a user by phone number
 
 
@@ -1641,7 +1646,7 @@ class UsersApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
+            '200': "ShowByPhone200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1707,7 +1712,7 @@ class UsersApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
+            '200': "ShowByPhone200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1751,7 +1756,7 @@ class UsersApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -1795,7 +1800,7 @@ class UsersApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> object:
+    ) -> UpdateProfile200Response:
         """Update the current user's profile
 
 
@@ -1832,7 +1837,7 @@ class UsersApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
+            '200': "UpdateProfile200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1861,7 +1866,7 @@ class UsersApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[object]:
+    ) -> ApiResponse[UpdateProfile200Response]:
         """Update the current user's profile
 
 
@@ -1898,7 +1903,7 @@ class UsersApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
+            '200': "UpdateProfile200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1964,7 +1969,7 @@ class UsersApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
+            '200': "UpdateProfile200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -2006,7 +2011,7 @@ class UsersApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 

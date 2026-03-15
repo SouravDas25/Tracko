@@ -17,8 +17,10 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from typing_extensions import Annotated
 
 from pydantic import StrictInt
-from tracko_sdk.models.category import Category
 from tracko_sdk.models.category_save_request import CategorySaveRequest
+from tracko_sdk.models.delete1200_response import Delete1200Response
+from tracko_sdk.models.get_all5200_response import GetAll5200Response
+from tracko_sdk.models.get_by_id3200_response import GetById3200Response
 
 from tracko_sdk.api_client import ApiClient, RequestSerialized
 from tracko_sdk.api_response import ApiResponse
@@ -54,7 +56,7 @@ class CategoriesApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> Category:
+    ) -> GetById3200Response:
         """Create a new category
 
 
@@ -91,7 +93,7 @@ class CategoriesApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Category",
+            '200': "GetById3200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -120,7 +122,7 @@ class CategoriesApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[Category]:
+    ) -> ApiResponse[GetById3200Response]:
         """Create a new category
 
 
@@ -157,7 +159,7 @@ class CategoriesApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Category",
+            '200': "GetById3200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -223,7 +225,7 @@ class CategoriesApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Category",
+            '200': "GetById3200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -265,7 +267,7 @@ class CategoriesApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -322,7 +324,7 @@ class CategoriesApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> str:
+    ) -> Delete1200Response:
         """Delete a category
 
 
@@ -359,7 +361,7 @@ class CategoriesApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "str",
+            '200': "Delete1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -388,7 +390,7 @@ class CategoriesApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[str]:
+    ) -> ApiResponse[Delete1200Response]:
         """Delete a category
 
 
@@ -425,7 +427,7 @@ class CategoriesApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "str",
+            '200': "Delete1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -491,7 +493,7 @@ class CategoriesApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "str",
+            '200': "Delete1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -533,7 +535,7 @@ class CategoriesApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -576,7 +578,7 @@ class CategoriesApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> List[Category]:
+    ) -> GetAll5200Response:
         """List all categories for the current user
 
 
@@ -610,7 +612,7 @@ class CategoriesApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[Category]",
+            '200': "GetAll5200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -638,7 +640,7 @@ class CategoriesApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[List[Category]]:
+    ) -> ApiResponse[GetAll5200Response]:
         """List all categories for the current user
 
 
@@ -672,7 +674,7 @@ class CategoriesApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[Category]",
+            '200': "GetAll5200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -734,7 +736,7 @@ class CategoriesApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[Category]",
+            '200': "GetAll5200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -773,7 +775,7 @@ class CategoriesApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -817,7 +819,7 @@ class CategoriesApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> Category:
+    ) -> GetById3200Response:
         """Get a category by ID
 
 
@@ -854,7 +856,7 @@ class CategoriesApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Category",
+            '200': "GetById3200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -883,7 +885,7 @@ class CategoriesApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[Category]:
+    ) -> ApiResponse[GetById3200Response]:
         """Get a category by ID
 
 
@@ -920,7 +922,7 @@ class CategoriesApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Category",
+            '200': "GetById3200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -986,7 +988,7 @@ class CategoriesApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Category",
+            '200': "GetById3200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1028,7 +1030,7 @@ class CategoriesApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -1073,7 +1075,7 @@ class CategoriesApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> Category:
+    ) -> GetById3200Response:
         """Update a category
 
 
@@ -1113,7 +1115,7 @@ class CategoriesApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Category",
+            '200': "GetById3200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1143,7 +1145,7 @@ class CategoriesApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[Category]:
+    ) -> ApiResponse[GetById3200Response]:
         """Update a category
 
 
@@ -1183,7 +1185,7 @@ class CategoriesApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Category",
+            '200': "GetById3200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1253,7 +1255,7 @@ class CategoriesApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Category",
+            '200': "GetById3200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1298,7 +1300,7 @@ class CategoriesApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 

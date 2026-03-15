@@ -19,11 +19,13 @@ from typing_extensions import Annotated
 from datetime import datetime
 from pydantic import StrictBool, StrictInt, StrictStr
 from typing import Optional
-from tracko_sdk.models.transaction import Transaction
-from tracko_sdk.models.transaction_period_summary_dto import TransactionPeriodSummaryDTO
+from tracko_sdk.models.delete1200_response import Delete1200Response
+from tracko_sdk.models.get_all1200_response import GetAll1200Response
+from tracko_sdk.models.get_by_id200_response import GetById200Response
+from tracko_sdk.models.get_my_summary200_response import GetMySummary200Response
+from tracko_sdk.models.get_my_total_income200_response import GetMyTotalIncome200Response
+from tracko_sdk.models.get_yearly_summaries200_response import GetYearlySummaries200Response
 from tracko_sdk.models.transaction_request import TransactionRequest
-from tracko_sdk.models.transaction_summary_dto import TransactionSummaryDTO
-from tracko_sdk.models.transactions_page_dto import TransactionsPageDTO
 
 from tracko_sdk.api_client import ApiClient, RequestSerialized
 from tracko_sdk.api_response import ApiResponse
@@ -59,7 +61,7 @@ class TransactionsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> Transaction:
+    ) -> GetById200Response:
         """Create a transaction or transfer
 
 
@@ -96,7 +98,7 @@ class TransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Transaction",
+            '200': "GetById200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -125,7 +127,7 @@ class TransactionsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[Transaction]:
+    ) -> ApiResponse[GetById200Response]:
         """Create a transaction or transfer
 
 
@@ -162,7 +164,7 @@ class TransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Transaction",
+            '200': "GetById200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -228,7 +230,7 @@ class TransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Transaction",
+            '200': "GetById200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -270,7 +272,7 @@ class TransactionsApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -327,7 +329,7 @@ class TransactionsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> str:
+    ) -> Delete1200Response:
         """Delete a transaction or transfer
 
 
@@ -364,7 +366,7 @@ class TransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "str",
+            '200': "Delete1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -393,7 +395,7 @@ class TransactionsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[str]:
+    ) -> ApiResponse[Delete1200Response]:
         """Delete a transaction or transfer
 
 
@@ -430,7 +432,7 @@ class TransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "str",
+            '200': "Delete1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -496,7 +498,7 @@ class TransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "str",
+            '200': "Delete1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -538,7 +540,7 @@ class TransactionsApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -590,7 +592,7 @@ class TransactionsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> TransactionsPageDTO:
+    ) -> GetAll1200Response:
         """List transactions with optional filters
 
 
@@ -651,7 +653,7 @@ class TransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "TransactionsPageDTO",
+            '200': "GetAll1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -688,7 +690,7 @@ class TransactionsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[TransactionsPageDTO]:
+    ) -> ApiResponse[GetAll1200Response]:
         """List transactions with optional filters
 
 
@@ -749,7 +751,7 @@ class TransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "TransactionsPageDTO",
+            '200': "GetAll1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -847,7 +849,7 @@ class TransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "TransactionsPageDTO",
+            '200': "GetAll1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -949,7 +951,7 @@ class TransactionsApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -993,7 +995,7 @@ class TransactionsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> Transaction:
+    ) -> GetById200Response:
         """Get a transaction by ID
 
 
@@ -1030,7 +1032,7 @@ class TransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Transaction",
+            '200': "GetById200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1059,7 +1061,7 @@ class TransactionsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[Transaction]:
+    ) -> ApiResponse[GetById200Response]:
         """Get a transaction by ID
 
 
@@ -1096,7 +1098,7 @@ class TransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Transaction",
+            '200': "GetById200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1162,7 +1164,7 @@ class TransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Transaction",
+            '200': "GetById200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1204,7 +1206,7 @@ class TransactionsApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -1237,6 +1239,7 @@ class TransactionsApi:
         self,
         year: Optional[StrictInt] = None,
         account_ids: Optional[StrictStr] = None,
+        category_id: Optional[StrictInt] = None,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -1249,7 +1252,7 @@ class TransactionsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> List[TransactionPeriodSummaryDTO]:
+    ) -> GetYearlySummaries200Response:
         """Monthly summaries for a year
 
 
@@ -1257,6 +1260,8 @@ class TransactionsApi:
         :type year: int
         :param account_ids:
         :type account_ids: str
+        :param category_id:
+        :type category_id: int
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -1282,6 +1287,7 @@ class TransactionsApi:
         _param = self._get_monthly_summaries_serialize(
             year=year,
             account_ids=account_ids,
+            category_id=category_id,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -1289,7 +1295,7 @@ class TransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[TransactionPeriodSummaryDTO]",
+            '200': "GetYearlySummaries200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1307,6 +1313,7 @@ class TransactionsApi:
         self,
         year: Optional[StrictInt] = None,
         account_ids: Optional[StrictStr] = None,
+        category_id: Optional[StrictInt] = None,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -1319,7 +1326,7 @@ class TransactionsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[List[TransactionPeriodSummaryDTO]]:
+    ) -> ApiResponse[GetYearlySummaries200Response]:
         """Monthly summaries for a year
 
 
@@ -1327,6 +1334,8 @@ class TransactionsApi:
         :type year: int
         :param account_ids:
         :type account_ids: str
+        :param category_id:
+        :type category_id: int
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -1352,6 +1361,7 @@ class TransactionsApi:
         _param = self._get_monthly_summaries_serialize(
             year=year,
             account_ids=account_ids,
+            category_id=category_id,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -1359,7 +1369,7 @@ class TransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[TransactionPeriodSummaryDTO]",
+            '200': "GetYearlySummaries200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1377,6 +1387,7 @@ class TransactionsApi:
         self,
         year: Optional[StrictInt] = None,
         account_ids: Optional[StrictStr] = None,
+        category_id: Optional[StrictInt] = None,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -1397,6 +1408,8 @@ class TransactionsApi:
         :type year: int
         :param account_ids:
         :type account_ids: str
+        :param category_id:
+        :type category_id: int
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -1422,6 +1435,7 @@ class TransactionsApi:
         _param = self._get_monthly_summaries_serialize(
             year=year,
             account_ids=account_ids,
+            category_id=category_id,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -1429,7 +1443,7 @@ class TransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[TransactionPeriodSummaryDTO]",
+            '200': "GetYearlySummaries200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1442,6 +1456,7 @@ class TransactionsApi:
         self,
         year,
         account_ids,
+        category_id,
         _request_auth,
         _content_type,
         _headers,
@@ -1470,6 +1485,10 @@ class TransactionsApi:
             
             _query_params.append(('accountIds', account_ids))
             
+        if category_id is not None:
+            
+            _query_params.append(('categoryId', category_id))
+            
         # process the header parameters
         # process the form parameters
         # process the body parameter
@@ -1478,7 +1497,7 @@ class TransactionsApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -1513,6 +1532,7 @@ class TransactionsApi:
         end_date: datetime,
         account_ids: Optional[StrictStr] = None,
         include_rollover: Optional[StrictBool] = None,
+        category_id: Optional[StrictInt] = None,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -1525,7 +1545,7 @@ class TransactionsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> TransactionSummaryDTO:
+    ) -> GetMySummary200Response:
         """Get income/expense summary in a date range
 
 
@@ -1537,6 +1557,8 @@ class TransactionsApi:
         :type account_ids: str
         :param include_rollover:
         :type include_rollover: bool
+        :param category_id:
+        :type category_id: int
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -1564,6 +1586,7 @@ class TransactionsApi:
             end_date=end_date,
             account_ids=account_ids,
             include_rollover=include_rollover,
+            category_id=category_id,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -1571,7 +1594,7 @@ class TransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "TransactionSummaryDTO",
+            '200': "GetMySummary200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1591,6 +1614,7 @@ class TransactionsApi:
         end_date: datetime,
         account_ids: Optional[StrictStr] = None,
         include_rollover: Optional[StrictBool] = None,
+        category_id: Optional[StrictInt] = None,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -1603,7 +1627,7 @@ class TransactionsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[TransactionSummaryDTO]:
+    ) -> ApiResponse[GetMySummary200Response]:
         """Get income/expense summary in a date range
 
 
@@ -1615,6 +1639,8 @@ class TransactionsApi:
         :type account_ids: str
         :param include_rollover:
         :type include_rollover: bool
+        :param category_id:
+        :type category_id: int
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -1642,6 +1668,7 @@ class TransactionsApi:
             end_date=end_date,
             account_ids=account_ids,
             include_rollover=include_rollover,
+            category_id=category_id,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -1649,7 +1676,7 @@ class TransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "TransactionSummaryDTO",
+            '200': "GetMySummary200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1669,6 +1696,7 @@ class TransactionsApi:
         end_date: datetime,
         account_ids: Optional[StrictStr] = None,
         include_rollover: Optional[StrictBool] = None,
+        category_id: Optional[StrictInt] = None,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -1693,6 +1721,8 @@ class TransactionsApi:
         :type account_ids: str
         :param include_rollover:
         :type include_rollover: bool
+        :param category_id:
+        :type category_id: int
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -1720,6 +1750,7 @@ class TransactionsApi:
             end_date=end_date,
             account_ids=account_ids,
             include_rollover=include_rollover,
+            category_id=category_id,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -1727,7 +1758,7 @@ class TransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "TransactionSummaryDTO",
+            '200': "GetMySummary200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1742,6 +1773,7 @@ class TransactionsApi:
         end_date,
         account_ids,
         include_rollover,
+        category_id,
         _request_auth,
         _content_type,
         _headers,
@@ -1796,6 +1828,10 @@ class TransactionsApi:
             
             _query_params.append(('includeRollover', include_rollover))
             
+        if category_id is not None:
+            
+            _query_params.append(('categoryId', category_id))
+            
         # process the header parameters
         # process the form parameters
         # process the body parameter
@@ -1804,7 +1840,7 @@ class TransactionsApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -1849,7 +1885,7 @@ class TransactionsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> float:
+    ) -> GetMyTotalIncome200Response:
         """Get total expense in a date range
 
 
@@ -1889,7 +1925,7 @@ class TransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "float",
+            '200': "GetMyTotalIncome200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1919,7 +1955,7 @@ class TransactionsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[float]:
+    ) -> ApiResponse[GetMyTotalIncome200Response]:
         """Get total expense in a date range
 
 
@@ -1959,7 +1995,7 @@ class TransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "float",
+            '200': "GetMyTotalIncome200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -2029,7 +2065,7 @@ class TransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "float",
+            '200': "GetMyTotalIncome200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -2096,7 +2132,7 @@ class TransactionsApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -2141,7 +2177,7 @@ class TransactionsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> float:
+    ) -> GetMyTotalIncome200Response:
         """Get total income in a date range
 
 
@@ -2181,7 +2217,7 @@ class TransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "float",
+            '200': "GetMyTotalIncome200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -2211,7 +2247,7 @@ class TransactionsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[float]:
+    ) -> ApiResponse[GetMyTotalIncome200Response]:
         """Get total income in a date range
 
 
@@ -2251,7 +2287,7 @@ class TransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "float",
+            '200': "GetMyTotalIncome200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -2321,7 +2357,7 @@ class TransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "float",
+            '200': "GetMyTotalIncome200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -2388,7 +2424,7 @@ class TransactionsApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -2420,6 +2456,7 @@ class TransactionsApi:
     def get_yearly_summaries(
         self,
         account_ids: Optional[StrictStr] = None,
+        category_id: Optional[StrictInt] = None,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -2432,12 +2469,14 @@ class TransactionsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> List[TransactionPeriodSummaryDTO]:
+    ) -> GetYearlySummaries200Response:
         """Yearly summaries
 
 
         :param account_ids:
         :type account_ids: str
+        :param category_id:
+        :type category_id: int
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -2462,6 +2501,7 @@ class TransactionsApi:
 
         _param = self._get_yearly_summaries_serialize(
             account_ids=account_ids,
+            category_id=category_id,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -2469,7 +2509,7 @@ class TransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[TransactionPeriodSummaryDTO]",
+            '200': "GetYearlySummaries200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -2486,6 +2526,7 @@ class TransactionsApi:
     def get_yearly_summaries_with_http_info(
         self,
         account_ids: Optional[StrictStr] = None,
+        category_id: Optional[StrictInt] = None,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -2498,12 +2539,14 @@ class TransactionsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[List[TransactionPeriodSummaryDTO]]:
+    ) -> ApiResponse[GetYearlySummaries200Response]:
         """Yearly summaries
 
 
         :param account_ids:
         :type account_ids: str
+        :param category_id:
+        :type category_id: int
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -2528,6 +2571,7 @@ class TransactionsApi:
 
         _param = self._get_yearly_summaries_serialize(
             account_ids=account_ids,
+            category_id=category_id,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -2535,7 +2579,7 @@ class TransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[TransactionPeriodSummaryDTO]",
+            '200': "GetYearlySummaries200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -2552,6 +2596,7 @@ class TransactionsApi:
     def get_yearly_summaries_without_preload_content(
         self,
         account_ids: Optional[StrictStr] = None,
+        category_id: Optional[StrictInt] = None,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -2570,6 +2615,8 @@ class TransactionsApi:
 
         :param account_ids:
         :type account_ids: str
+        :param category_id:
+        :type category_id: int
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -2594,6 +2641,7 @@ class TransactionsApi:
 
         _param = self._get_yearly_summaries_serialize(
             account_ids=account_ids,
+            category_id=category_id,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -2601,7 +2649,7 @@ class TransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[TransactionPeriodSummaryDTO]",
+            '200': "GetYearlySummaries200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -2613,6 +2661,7 @@ class TransactionsApi:
     def _get_yearly_summaries_serialize(
         self,
         account_ids,
+        category_id,
         _request_auth,
         _content_type,
         _headers,
@@ -2637,6 +2686,10 @@ class TransactionsApi:
             
             _query_params.append(('accountIds', account_ids))
             
+        if category_id is not None:
+            
+            _query_params.append(('categoryId', category_id))
+            
         # process the header parameters
         # process the form parameters
         # process the body parameter
@@ -2645,7 +2698,7 @@ class TransactionsApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -2690,7 +2743,7 @@ class TransactionsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> Transaction:
+    ) -> GetById200Response:
         """Update a transaction or transfer
 
 
@@ -2730,7 +2783,7 @@ class TransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Transaction",
+            '200': "GetById200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -2760,7 +2813,7 @@ class TransactionsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[Transaction]:
+    ) -> ApiResponse[GetById200Response]:
         """Update a transaction or transfer
 
 
@@ -2800,7 +2853,7 @@ class TransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Transaction",
+            '200': "GetById200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -2870,7 +2923,7 @@ class TransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Transaction",
+            '200': "GetById200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -2915,7 +2968,7 @@ class TransactionsApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 

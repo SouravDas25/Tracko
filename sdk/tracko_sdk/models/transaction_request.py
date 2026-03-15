@@ -34,16 +34,15 @@ class TransactionRequest(BaseModel):
     comments: Optional[StrictStr] = None
     category_id: Optional[StrictInt] = Field(default=None, alias="categoryId")
     transaction_type: Optional[StrictStr] = Field(default=None, alias="transactionType")
-    is_countable: Optional[StrictInt] = Field(default=None, alias="isCountable")
     original_currency: Optional[StrictStr] = Field(default=None, alias="originalCurrency")
     original_amount: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, alias="originalAmount")
     exchange_rate: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, alias="exchangeRate")
     linked_transaction_id: Optional[StrictInt] = Field(default=None, alias="linkedTransactionId")
     to_account_id: Optional[StrictInt] = Field(default=None, alias="toAccountId")
     from_account_id: Optional[StrictInt] = Field(default=None, alias="fromAccountId")
-    source_account_id: Optional[StrictInt] = Field(default=None, alias="sourceAccountId")
     transfer: Optional[StrictBool] = None
-    __properties: ClassVar[List[str]] = ["id", "accountId", "date", "name", "comments", "categoryId", "transactionType", "isCountable", "originalCurrency", "originalAmount", "exchangeRate", "linkedTransactionId", "toAccountId", "fromAccountId", "sourceAccountId", "transfer"]
+    source_account_id: Optional[StrictInt] = Field(default=None, alias="sourceAccountId")
+    __properties: ClassVar[List[str]] = ["id", "accountId", "date", "name", "comments", "categoryId", "transactionType", "originalCurrency", "originalAmount", "exchangeRate", "linkedTransactionId", "toAccountId", "fromAccountId", "transfer", "sourceAccountId"]
 
     @field_validator('transaction_type')
     def transaction_type_validate_enum(cls, value):
@@ -113,15 +112,14 @@ class TransactionRequest(BaseModel):
             "comments": obj.get("comments"),
             "categoryId": obj.get("categoryId"),
             "transactionType": obj.get("transactionType"),
-            "isCountable": obj.get("isCountable"),
             "originalCurrency": obj.get("originalCurrency"),
             "originalAmount": obj.get("originalAmount"),
             "exchangeRate": obj.get("exchangeRate"),
             "linkedTransactionId": obj.get("linkedTransactionId"),
             "toAccountId": obj.get("toAccountId"),
             "fromAccountId": obj.get("fromAccountId"),
-            "sourceAccountId": obj.get("sourceAccountId"),
-            "transfer": obj.get("transfer")
+            "transfer": obj.get("transfer"),
+            "sourceAccountId": obj.get("sourceAccountId")
         })
         return _obj
 
