@@ -1,15 +1,18 @@
 """Account management commands."""
+import sys
+
 import typer
 from typing import Optional
 from datetime import datetime
+from tracko_sdk.models.account_save_request import AccountSaveRequest
+from tracko_sdk.rest import ApiException
+from urllib3.exceptions import MaxRetryError, NewConnectionError
 
-from ..core.config import get_active_profile_config
-from ..core.api import make_api_client, sdk_call_unwrapped
+from ..core.api import get_config_for_api, get_api_client, unwrap_envelope, handle_api_error
 from ..core.output import console, create_table, print_json, print_success, print_error, spinner
 from ..utils.prompts import confirm
 
 import tracko_sdk
-from tracko_sdk.models.account_save_request import AccountSaveRequest
 
 
 app = typer.Typer(help="Account management")
@@ -18,62 +21,55 @@ app = typer.Typer(help="Account management")
 @app.command()
 def list(raw: bool = typer.Option(False, "--raw", help="Output raw JSON")):
     """List all accounts."""
-    config = get_active_profile_config()
-    token, base_url = config.get("token"), config.get("base_url", "http://localhost:8080")
-    
+    base_url, token = get_config_for_api()
+
     try:
         with spinner("Fetching accounts..."):
-            with make_api_client(base_url, token) as api_client:
-                api = tracko_sdk.AccountsApi(api_client)
-                result = sdk_call_unwrapped(lambda: api.get_all6())
-        
-        if result is None:
-            raise typer.Exit(1)
-        
+            with get_api_client(base_url, token) as client:
+                accounts = unwrap_envelope(tracko_sdk.AccountsApi(client).get_all6()) or []
+
         if raw:
-            print_json(result)
+            print_json([acc.model_dump(by_alias=True) for acc in accounts])
+        elif accounts:
+            table = create_table(title="Accounts")
+            table.add_column("ID", justify="right", style="cyan")
+            table.add_column("Name", style="green")
+            table.add_column("Currency", style="yellow")
+
+            for acc in accounts:
+                table.add_row(
+                    str(acc.id),
+                    str(acc.name),
+                    str(acc.currency or ""),
+                )
+            console.print(table)
         else:
-            accounts = result if result else []
-            if accounts:
-                table = create_table(title="Accounts")
-                table.add_column("ID", justify="right", style="cyan")
-                table.add_column("Name", style="green")
-                table.add_column("Currency", style="yellow")
-                
-                for acc in accounts:
-                    acc_dict = acc.to_dict() if hasattr(acc, "to_dict") else acc
-                    table.add_row(
-                        str(acc_dict.get("id", "")),
-                        str(acc_dict.get("name", "")),
-                        str(acc_dict.get("currency", ""))
-                    )
-                console.print(table)
-            else:
-                print_error("No accounts found")
-    except Exception as e:
-        print_error(f"Failed to list accounts: {e}")
-        raise typer.Exit(1)
+            print_error("No accounts found")
+
+    except ApiException as e:
+        handle_api_error(e)
+    except (ConnectionError, MaxRetryError, NewConnectionError, OSError):
+        print_error("Could not connect to API. Is the server running?")
+        sys.exit(1)
 
 
 @app.command()
 def balances(raw: bool = typer.Option(False, "--raw", help="Output raw JSON")):
     """Get account balances."""
-    config = get_active_profile_config()
-    token, base_url = config.get("token"), config.get("base_url", "http://localhost:8080")
-    
+    base_url, token = get_config_for_api()
+
     try:
         with spinner("Fetching balances..."):
-            with make_api_client(base_url, token) as api_client:
-                api = tracko_sdk.AccountsApi(api_client)
-                result = sdk_call_unwrapped(lambda: api.get_my_account_balances())
-        
-        if result is None:
-            raise typer.Exit(1)
-        
+            with get_api_client(base_url, token) as client:
+                result = unwrap_envelope(tracko_sdk.AccountsApi(client).get_my_account_balances())
+
         print_json(result)
-    except Exception as e:
-        print_error(f"Failed to get balances: {e}")
-        raise typer.Exit(1)
+
+    except ApiException as e:
+        handle_api_error(e)
+    except (ConnectionError, MaxRetryError, NewConnectionError, OSError):
+        print_error("Could not connect to API. Is the server running?")
+        sys.exit(1)
 
 
 @app.command()
@@ -83,27 +79,25 @@ def add(
     raw: bool = typer.Option(False, "--raw", help="Output raw JSON"),
 ):
     """Create a new account."""
-    config = get_active_profile_config()
-    token, base_url = config.get("token"), config.get("base_url", "http://localhost:8080")
-    
+    base_url, token = get_config_for_api()
+
     try:
         req = AccountSaveRequest(name=name, currency=currency)
         with spinner(f"Creating account '{name}'..."):
-            with make_api_client(base_url, token) as api_client:
-                api = tracko_sdk.AccountsApi(api_client)
-                result = sdk_call_unwrapped(lambda: api.create7(req))
-        
-        if result is None:
-            raise typer.Exit(1)
-        
+            with get_api_client(base_url, token) as client:
+                result = unwrap_envelope(tracko_sdk.AccountsApi(client).create7(req))
+
         if raw:
             print_json(result)
         else:
             print_success(f"Account '{name}' created successfully")
             print_json(result)
-    except Exception as e:
-        print_error(f"Failed to create account: {e}")
-        raise typer.Exit(1)
+
+    except ApiException as e:
+        handle_api_error(e)
+    except (ConnectionError, MaxRetryError, NewConnectionError, OSError):
+        print_error("Could not connect to API. Is the server running?")
+        sys.exit(1)
 
 
 @app.command()
@@ -112,22 +106,20 @@ def get(
     raw: bool = typer.Option(False, "--raw", help="Output raw JSON"),
 ):
     """Get account by ID."""
-    config = get_active_profile_config()
-    token, base_url = config.get("token"), config.get("base_url", "http://localhost:8080")
-    
+    base_url, token = get_config_for_api()
+
     try:
         with spinner(f"Fetching account {id}..."):
-            with make_api_client(base_url, token) as api_client:
-                api = tracko_sdk.AccountsApi(api_client)
-                result = sdk_call_unwrapped(lambda: api.get_by_id4(id=id))
-        
-        if result is None:
-            raise typer.Exit(1)
-        
+            with get_api_client(base_url, token) as client:
+                result = unwrap_envelope(tracko_sdk.AccountsApi(client).get_by_id4(id=id))
+
         print_json(result)
-    except Exception as e:
-        print_error(f"Failed to get account: {e}")
-        raise typer.Exit(1)
+
+    except ApiException as e:
+        handle_api_error(e)
+    except (ConnectionError, MaxRetryError, NewConnectionError, OSError):
+        print_error("Could not connect to API. Is the server running?")
+        sys.exit(1)
 
 
 @app.command()
@@ -138,27 +130,25 @@ def update(
     raw: bool = typer.Option(False, "--raw", help="Output raw JSON"),
 ):
     """Update an account."""
-    config = get_active_profile_config()
-    token, base_url = config.get("token"), config.get("base_url", "http://localhost:8080")
-    
+    base_url, token = get_config_for_api()
+
     try:
         req = AccountSaveRequest(name=name, currency=currency)
         with spinner(f"Updating account {id}..."):
-            with make_api_client(base_url, token) as api_client:
-                api = tracko_sdk.AccountsApi(api_client)
-                result = sdk_call_unwrapped(lambda: api.update5(id=id, account_save_request=req))
-        
-        if result is None:
-            raise typer.Exit(1)
-        
+            with get_api_client(base_url, token) as client:
+                result = unwrap_envelope(tracko_sdk.AccountsApi(client).update5(id=id, account_save_request=req))
+
         if raw:
             print_json(result)
         else:
             print_success(f"Account {id} updated successfully")
             print_json(result)
-    except Exception as e:
-        print_error(f"Failed to update account: {e}")
-        raise typer.Exit(1)
+
+    except ApiException as e:
+        handle_api_error(e)
+    except (ConnectionError, MaxRetryError, NewConnectionError, OSError):
+        print_error("Could not connect to API. Is the server running?")
+        sys.exit(1)
 
 
 @app.command()
@@ -169,20 +159,21 @@ def delete(
     if not confirm(f"Delete account {id}?", default=False):
         print_error("Cancelled")
         raise typer.Exit(1)
-    
-    config = get_active_profile_config()
-    token, base_url = config.get("token"), config.get("base_url", "http://localhost:8080")
-    
+
+    base_url, token = get_config_for_api()
+
     try:
         with spinner(f"Deleting account {id}..."):
-            with make_api_client(base_url, token) as api_client:
-                api = tracko_sdk.AccountsApi(api_client)
-                result = sdk_call_unwrapped(lambda: api.delete7(id=id))
-        
+            with get_api_client(base_url, token) as client:
+                unwrap_envelope(tracko_sdk.AccountsApi(client).delete7(id=id))
+
         print_success(f"Account {id} deleted successfully")
-    except Exception as e:
-        print_error(f"Failed to delete account: {e}")
-        raise typer.Exit(1)
+
+    except ApiException as e:
+        handle_api_error(e)
+    except (ConnectionError, MaxRetryError, NewConnectionError, OSError):
+        print_error("Could not connect to API. Is the server running?")
+        sys.exit(1)
 
 
 @app.command()
@@ -194,30 +185,28 @@ def summary(
     raw: bool = typer.Option(False, "--raw", help="Output raw JSON"),
 ):
     """Get account summary."""
-    config = get_active_profile_config()
-    token, base_url = config.get("token"), config.get("base_url", "http://localhost:8080")
-    
+    base_url, token = get_config_for_api()
+
     try:
         start = datetime.strptime(start_date, "%Y-%m-%d")
         end = datetime.strptime(end_date, "%Y-%m-%d")
-        
+
         with spinner(f"Fetching summary for account {id}..."):
-            with make_api_client(base_url, token) as api_client:
-                api = tracko_sdk.AccountsApi(api_client)
-                result = sdk_call_unwrapped(lambda: api.get_account_summary(
+            with get_api_client(base_url, token) as client:
+                result = unwrap_envelope(tracko_sdk.AccountsApi(client).get_account_summary(
                     id=id,
                     start_date=start,
                     end_date=end,
                     include_rollover=include_rollover if include_rollover else None,
                 ))
-        
-        if result is None:
-            raise typer.Exit(1)
-        
+
         print_json(result)
-    except Exception as e:
-        print_error(f"Failed to get summary: {e}")
-        raise typer.Exit(1)
+
+    except ApiException as e:
+        handle_api_error(e)
+    except (ConnectionError, MaxRetryError, NewConnectionError, OSError):
+        print_error("Could not connect to API. Is the server running?")
+        sys.exit(1)
 
 
 @app.command()
@@ -234,17 +223,15 @@ def transactions(
     raw: bool = typer.Option(False, "--raw", help="Output raw JSON"),
 ):
     """Get account transactions."""
-    config = get_active_profile_config()
-    token, base_url = config.get("token"), config.get("base_url", "http://localhost:8080")
-    
+    base_url, token = get_config_for_api()
+
     try:
         start = datetime.strptime(start_date, "%Y-%m-%d") if start_date else None
         end = datetime.strptime(end_date, "%Y-%m-%d") if end_date else None
-        
+
         with spinner(f"Fetching transactions for account {id}..."):
-            with make_api_client(base_url, token) as api_client:
-                api = tracko_sdk.AccountsApi(api_client)
-                result = sdk_call_unwrapped(lambda: api.get_account_transactions(
+            with get_api_client(base_url, token) as client:
+                result = unwrap_envelope(tracko_sdk.AccountsApi(client).get_account_transactions(
                     id=id,
                     month=month,
                     year=year,
@@ -255,11 +242,11 @@ def transactions(
                     size=size,
                     expand=expand if expand else None,
                 ))
-        
-        if result is None:
-            raise typer.Exit(1)
-        
+
         print_json(result)
-    except Exception as e:
-        print_error(f"Failed to get transactions: {e}")
-        raise typer.Exit(1)
+
+    except ApiException as e:
+        handle_api_error(e)
+    except (ConnectionError, MaxRetryError, NewConnectionError, OSError):
+        print_error("Could not connect to API. Is the server running?")
+        sys.exit(1)

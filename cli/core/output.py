@@ -23,8 +23,8 @@ ICONS = {
 
 def print_json(data: Any) -> None:
     """Print data as formatted JSON."""
-    if hasattr(data, "to_dict"):
-        console.print_json(json.dumps(data.to_dict(), default=str))
+    if hasattr(data, "model_dump"):
+        console.print_json(json.dumps(data.model_dump(by_alias=True), default=str))
     else:
         console.print_json(json.dumps(data, default=str))
 

@@ -1,6 +1,7 @@
 import json
 import os
 import sys
+from contextlib import contextmanager
 
 # Add the generated SDK to the path so it can be imported without installation.
 _SDK_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "sdk"))
@@ -10,69 +11,81 @@ if _SDK_PATH not in sys.path:
 import tracko_sdk
 from tracko_sdk.rest import ApiException
 
-from .config import load_config, save_config, config_path
+from .config import load_config, save_config, get_active_profile_config, get_active_profile_name
+from .output import print_error
 
 
-class _RawApiClient(tracko_sdk.ApiClient):
-    """ApiClient subclass that skips typed deserialization.
-
-    The backend wraps every response in {"result": T, "message": "..."} which
-    breaks the SDK's Pydantic-based deserialization.  This subclass returns the
-    raw parsed JSON (dict/list) so callers can unwrap "result" themselves.
-    """
-
-    def deserialize(self, response_text, response_type):
-        try:
-            return json.loads(response_text)
-        except (json.JSONDecodeError, TypeError):
-            return response_text
+def get_config_for_api(require_token: bool = True) -> tuple[str, str | None]:
+    """Read base_url and token from the active profile. Exits if token is missing and required."""
+    config = get_active_profile_config()
+    base_url = config.get("base_url", "http://localhost:8080")
+    token = config.get("token")
+    if require_token and not token:
+        print_error("Not authenticated. Please run 'tracko login' first.")
+        sys.exit(1)
+    return base_url, token
 
 
-def make_api_client(base_url: str, token: str | None = None) -> tracko_sdk.ApiClient:
-    """Return a configured SDK ApiClient for the given base URL and bearer token."""
-    configuration = tracko_sdk.Configuration(host=base_url.rstrip("/"))
-    if token:
-        configuration.access_token = token
-    return _RawApiClient(configuration)
+@contextmanager
+def get_api_client(base_url: str, token: str | None = None):
+    """Context manager that yields a configured SDK ApiClient."""
+    config = tracko_sdk.Configuration(host=base_url.rstrip("/"))
+    config.access_token = token
+    with tracko_sdk.ApiClient(config) as client:
+        yield client
 
 
-def sdk_call_unwrapped(fn, auth_call=False):
-    """Like sdk_call but unwraps the backend's {\"result\": T} envelope before returning."""
-    result = sdk_call(fn, auth_call=auth_call)
-    if isinstance(result, dict) and "result" in result:
-        return result["result"]
-    return result
+def unwrap_envelope(response):
+    """Extract .result from SDK envelope wrappers, pass through non-envelope responses."""
+    if hasattr(response, 'result'):
+        return response.result
+    return response
 
 
-def sdk_call(fn, auth_call=False):
-    """Execute an SDK API call with centralised error handling.
-
-    Returns the API result on success (as a raw dict/list thanks to _RawApiClient).
-    Exits on 401 (clears saved token) or connection failure, unless auth_call=True
-    in which case a 401 is treated as a normal API error (wrong credentials).
-    Returns None on other API errors.
-    """
-    try:
-        return fn()
-    except ApiException as e:
-        if e.status == 401 and not auth_call:
-            print("Error: Unauthorized (401). Your token has expired or is invalid.", file=sys.stderr)
-            cfg = load_config()
-            cfg.get("profiles", {}).get(
-                cfg.get("active_profile", "default"), {}
-            ).pop("token", None)
+def handle_api_error(e: ApiException, auth_call: bool = False) -> None:
+    """Print an appropriate error message for an ApiException and exit."""
+    if e.status == 401 and not auth_call:
+        print_error("Unauthorized: Your token has expired or is invalid.")
+        profile_name = get_active_profile_name()
+        cfg = load_config()
+        if "profiles" in cfg and profile_name in cfg["profiles"]:
+            cfg["profiles"][profile_name].pop("token", None)
             save_config(cfg)
-            print(f"Removed expired token from {config_path()}", file=sys.stderr)
-            print("Please run `python -m cli login` again.", file=sys.stderr)
-            sys.exit(1)
-        print(f"API error {e.status}: {e.reason}", file=sys.stderr)
-        if e.body:
-            print(e.body, file=sys.stderr)
-        return None
-    except Exception as e:
-        msg = str(e)
-        if any(k in msg for k in ("Connection refused", "Failed to establish", "URLError", "MaxRetryError")):
-            print("Error: Could not connect to API.", file=sys.stderr)
-            sys.exit(1)
-        print(f"Error: {e}", file=sys.stderr)
-        return None
+        print_error("Token cleared. Please run 'tracko login' again.")
+        sys.exit(1)
+
+    if e.status == 401 and auth_call:
+        print_error("Invalid credentials.")
+        sys.exit(1)
+
+    if e.status == 400:
+        print_error("Bad request: Invalid input.")
+        _print_body_message(e.body)
+        sys.exit(1)
+
+    if e.status == 404:
+        print_error("Not found: The requested resource does not exist.")
+        sys.exit(1)
+
+    if e.status >= 500:
+        print_error(f"Server error ({e.status}).")
+        _print_body_message(e.body)
+        sys.exit(1)
+
+    print_error(f"API error ({e.status}): {e.reason}")
+    sys.exit(1)
+
+
+def _print_body_message(body: str | None) -> None:
+    """Extract and print the 'message' field from a JSON response body."""
+    if not body:
+        return
+    try:
+        msg = json.loads(body).get("message")
+        if msg:
+            print_error(f"Details: {msg}")
+    except (json.JSONDecodeError, TypeError):
+        print_error(f"Details: {body}")
+
+
+

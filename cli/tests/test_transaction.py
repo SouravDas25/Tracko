@@ -8,12 +8,6 @@ from cli.main import app
 def test_transaction_list_success(runner, mock_config, sample_transaction):
     """Test listing transactions successfully."""
     result = runner.invoke(app, ["transaction", "list", "--month", "3", "--year", "2026"])
-    
-    print(f"Exit code: {result.exit_code}")
-    print(f"Output: {result.stdout}")
-    if result.exception:
-        print(f"Exception: {result.exception}")
-    
     assert result.exit_code == 0
     assert "transactions" in result.stdout.lower() or "No transactions found" in result.stdout
 
@@ -21,7 +15,6 @@ def test_transaction_list_success(runner, mock_config, sample_transaction):
 def test_transaction_list_empty(runner, mock_config):
     """Test listing transactions when none exist."""
     result = runner.invoke(app, ["transaction", "list", "--month", "3", "--year", "2026"])
-    
     assert result.exit_code == 0
     assert "No transactions found" in result.stdout or "transactions" in result.stdout.lower()
 
@@ -29,7 +22,6 @@ def test_transaction_list_empty(runner, mock_config):
 def test_transaction_list_raw(runner, mock_config):
     """Test listing transactions with raw JSON output."""
     result = runner.invoke(app, ["transaction", "list", "--month", "3", "--year", "2026", "--raw"])
-    
     assert result.exit_code == 0
 
 
@@ -43,11 +35,6 @@ def test_transaction_add_expense_success(runner, mock_config):
         "--category-name", "FOOD",
         "--currency", "INR"
     ])
-    
-    if result.exit_code != 0:
-        print(f"Output: {result.output}")
-        if result.exception:
-            import traceback; traceback.print_exception(type(result.exception), result.exception, result.exception.__traceback__)
     assert result.exit_code == 0
     assert "created" in result.stdout.lower() or "expense" in result.stdout.lower()
 
@@ -62,30 +49,24 @@ def test_transaction_add_income_success(runner, mock_config):
         "--category-name", "INCOME",
         "--currency", "INR"
     ])
-    
-    if result.exit_code != 0:
-        print(f"Output: {result.output}")
-        if result.exception:
-            import traceback; traceback.print_exception(type(result.exception), result.exception, result.exception.__traceback__)
     assert result.exit_code == 0
     assert "created" in result.stdout.lower() or "income" in result.stdout.lower()
 
 
 def test_transaction_add_transfer_success(runner, mock_config):
     """Test creating a transfer between accounts."""
+    # Create a second account for the transfer
+    runner.invoke(app, [
+        "account", "add", "--name", "TransferTarget", "--currency", "INR"
+    ])
     result = runner.invoke(app, [
         "transaction", "add-transfer",
         "--from-account-name", "Cash",
-        "--to-account-name", "Cash",
+        "--to-account-name", "TransferTarget",
         "--amount", "100.0",
         "--name", "Test transfer",
         "--currency", "INR"
     ])
-    
-    if result.exit_code != 0:
-        print(f"Output: {result.output}")
-        if result.exception:
-            import traceback; traceback.print_exception(type(result.exception), result.exception, result.exception.__traceback__)
     assert result.exit_code == 0
     assert "transfer" in result.stdout.lower()
 
@@ -103,5 +84,4 @@ def test_transaction_summary(runner, mock_config):
         "--start-date", "2026-01-01",
         "--end-date", "2026-12-31"
     ])
-    
     assert result.exit_code == 0

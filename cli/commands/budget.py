@@ -1,15 +1,18 @@
 """Budget management commands."""
+import sys
+
 import typer
 from typing import Optional
 from datetime import datetime
-from rich.progress import BarColumn
 
-from ..core.config import get_active_profile_config
-from ..core.api import make_api_client, sdk_call_unwrapped
+from tracko_sdk.models.budget_allocation_request_dto import BudgetAllocationRequestDTO
+from tracko_sdk.rest import ApiException
+from urllib3.exceptions import MaxRetryError, NewConnectionError
+
+from ..core.api import get_config_for_api, get_api_client, unwrap_envelope, handle_api_error
 from ..core.output import console, create_table, print_json, print_success, print_error, spinner
 
 import tracko_sdk
-from tracko_sdk.models.budget_allocation_request_dto import BudgetAllocationRequestDTO
 
 
 app = typer.Typer(help="Budget management")
@@ -22,35 +25,31 @@ def view(
     raw: bool = typer.Option(False, "--raw", help="Output raw JSON"),
 ):
     """View budget for a specific month."""
-    config = get_active_profile_config()
-    token, base_url = config.get("token"), config.get("base_url", "http://localhost:8080")
-    
+    base_url, token = get_config_for_api()
+
     # Default to current month/year
     now = datetime.now()
     month = month or now.month
     year = year or now.year
-    
+
     try:
         with spinner(f"Fetching budget for {month}/{year}..."):
-            with make_api_client(base_url, token) as api_client:
-                api = tracko_sdk.BudgetApi(api_client)
-                result = sdk_call_unwrapped(lambda: api.get_budget(month=month, year=year))
-        
+            with get_api_client(base_url, token) as client:
+                result = unwrap_envelope(tracko_sdk.BudgetApi(client).get_budget(month=month, year=year))
+
         if result is None:
             raise typer.Exit(1)
-        
+
         if raw:
             print_json(result)
         else:
-            budget_dict = result.to_dict() if hasattr(result, "to_dict") else result
-            
             console.print(f"\n[bold cyan]Budget for {month}/{year}[/bold cyan]")
-            console.print(f"Total Budget: [green]{budget_dict.get('totalBudget', 0):.2f}[/green]")
-            console.print(f"Total Income: [green]{budget_dict.get('totalIncome', 0):.2f}[/green]")
-            console.print(f"Total Spent: [red]{budget_dict.get('totalSpent', 0):.2f}[/red]")
-            console.print(f"Available to Assign: [yellow]{budget_dict.get('availableToAssign', 0):.2f}[/yellow]")
-            
-            categories = budget_dict.get('categories', [])
+            console.print(f"Total Budget: [green]{result.total_budget or 0:.2f}[/green]")
+            console.print(f"Total Income: [green]{result.total_income or 0:.2f}[/green]")
+            console.print(f"Total Spent: [red]{result.total_spent or 0:.2f}[/red]")
+            console.print(f"Available to Assign: [yellow]{result.available_to_assign or 0:.2f}[/yellow]")
+
+            categories = result.categories or []
             if categories:
                 table = create_table(title="Category Allocations")
                 table.add_column("Category", style="cyan")
@@ -58,46 +57,49 @@ def view(
                 table.add_column("Spent", justify="right", style="red")
                 table.add_column("Remaining", justify="right", style="yellow")
                 table.add_column("Usage", style="magenta")
-                
+
                 for cat in categories:
-                    allocated = cat.get('allocatedAmount', 0)
-                    spent = cat.get('actualSpent', 0)
-                    remaining = cat.get('remainingBalance', 0)
+                    allocated = cat.allocated_amount or 0
+                    spent = cat.actual_spent or 0
+                    remaining = cat.remaining_balance or 0
                     usage_pct = (spent / allocated * 100) if allocated > 0 else 0
-                    
+
                     table.add_row(
-                        cat.get('categoryName', ''),
+                        cat.category_name or '',
                         f"{allocated:.2f}",
                         f"{spent:.2f}",
                         f"{remaining:.2f}",
                         f"{usage_pct:.1f}%"
                     )
                 console.print(table)
-    except Exception as e:
-        print_error(f"Failed to view budget: {e}")
-        raise typer.Exit(1)
+
+    except ApiException as e:
+        handle_api_error(e)
+    except (ConnectionError, MaxRetryError, NewConnectionError, OSError):
+        print_error("Could not connect to API. Is the server running?")
+        sys.exit(1)
 
 
 @app.command()
 def current(raw: bool = typer.Option(False, "--raw", help="Output raw JSON")):
     """View current month's budget."""
-    now = datetime.now()
-    config = get_active_profile_config()
-    token, base_url = config.get("token"), config.get("base_url", "http://localhost:8080")
-    
+    base_url, token = get_config_for_api()
+
     try:
         with spinner("Fetching current budget..."):
-            with make_api_client(base_url, token) as api_client:
-                api = tracko_sdk.BudgetApi(api_client)
-                result = sdk_call_unwrapped(lambda: api.get_current_budget())
-        
+            with get_api_client(base_url, token) as client:
+                result = unwrap_envelope(tracko_sdk.BudgetApi(client).get_current_budget())
+
         if result is None:
             raise typer.Exit(1)
-        
+
         print_json(result)
-    except Exception as e:
-        print_error(f"Failed to get current budget: {e}")
-        raise typer.Exit(1)
+
+    except ApiException as e:
+        handle_api_error(e)
+    except (ConnectionError, MaxRetryError, NewConnectionError, OSError):
+        print_error("Could not connect to API. Is the server running?")
+        sys.exit(1)
 
 
 @app.command()
@@ -109,14 +111,13 @@ def allocate(
     raw: bool = typer.Option(False, "--raw", help="Output raw JSON"),
 ):
     """Allocate budget to a category."""
-    config = get_active_profile_config()
-    token, base_url = config.get("token"), config.get("base_url", "http://localhost:8080")
-    
+    base_url, token = get_config_for_api()
+
     # Default to current month/year
     now = datetime.now()
     month = month or now.month
     year = year or now.year
-    
+
     try:
         req = BudgetAllocationRequestDTO(
             category_id=category_id,
@@ -124,23 +125,25 @@ def allocate(
             month=month,
             year=year
         )
-        
+
         with spinner(f"Allocating {amount} to category {category_id}..."):
-            with make_api_client(base_url, token) as api_client:
-                api = tracko_sdk.BudgetApi(api_client)
-                result = sdk_call_unwrapped(lambda: api.allocate_funds(req))
-        
+            with get_api_client(base_url, token) as client:
+                result = unwrap_envelope(tracko_sdk.BudgetApi(client).allocate_funds(req))
+
         if result is None:
             raise typer.Exit(1)
-        
+
         if raw:
             print_json(result)
         else:
             print_success(f"Allocated {amount} to category {category_id} for {month}/{year}")
             print_json(result)
-    except Exception as e:
-        print_error(f"Failed to allocate budget: {e}")
-        raise typer.Exit(1)
+
+    except ApiException as e:
+        handle_api_error(e)
+    except (ConnectionError, MaxRetryError, NewConnectionError, OSError):
+        print_error("Could not connect to API. Is the server running?")
+        sys.exit(1)
 
 
 @app.command()
@@ -150,24 +153,25 @@ def available(
     raw: bool = typer.Option(False, "--raw", help="Output raw JSON"),
 ):
     """Get available amount to assign."""
-    config = get_active_profile_config()
-    token, base_url = config.get("token"), config.get("base_url", "http://localhost:8080")
-    
+    base_url, token = get_config_for_api()
+
     # Default to current month/year
     now = datetime.now()
     month = month or now.month
     year = year or now.year
-    
+
     try:
         with spinner(f"Fetching available amount for {month}/{year}..."):
-            with make_api_client(base_url, token) as api_client:
-                api = tracko_sdk.BudgetApi(api_client)
-                result = sdk_call_unwrapped(lambda: api.get_available_to_assign(month=month, year=year))
-        
+            with get_api_client(base_url, token) as client:
+                result = unwrap_envelope(tracko_sdk.BudgetApi(client).get_available_to_assign(month=month, year=year))
+
         if result is None:
             raise typer.Exit(1)
-        
+
         print_json(result)
-    except Exception as e:
-        print_error(f"Failed to get available amount: {e}")
-        raise typer.Exit(1)
+
+    except ApiException as e:
+        handle_api_error(e)
+    except (ConnectionError, MaxRetryError, NewConnectionError, OSError):
+        print_error("Could not connect to API. Is the server running?")
+        sys.exit(1)

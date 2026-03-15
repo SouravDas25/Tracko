@@ -1,13 +1,25 @@
 """Test configuration and fixtures for CLI tests."""
 import pytest
 from typer.testing import CliRunner
-from unittest.mock import Mock, patch
 import json
 
 @pytest.fixture
 def runner():
-    """Provide a Typer CLI test runner."""
-    return CliRunner()
+    """Provide a Typer CLI test runner that prints output for every invocation."""
+    _runner = CliRunner()
+    _original_invoke = _runner.invoke
+
+    def _verbose_invoke(*args, **kwargs):
+        result = _original_invoke(*args, **kwargs)
+        print(f"Exit code: {result.exit_code}")
+        print(f"Output: {result.output}")
+        if result.exception:
+            import traceback
+            traceback.print_exception(type(result.exception), result.exception, result.exception.__traceback__)
+        return result
+
+    _runner.invoke = _verbose_invoke
+    return _runner
 
 
 @pytest.fixture
@@ -30,16 +42,6 @@ def mock_config():
             }
         }
     }
-
-
-@pytest.fixture
-def mock_api_client():
-    """Mock API client for testing."""
-    with patch('cli.core.api.make_api_client') as mock:
-        client = Mock()
-        mock.return_value.__enter__.return_value = client
-        mock.return_value.__exit__.return_value = None
-        yield client
 
 
 @pytest.fixture

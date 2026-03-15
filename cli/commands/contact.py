@@ -1,14 +1,17 @@
 """Contact management commands."""
+import sys
+
 import typer
 from typing import Optional
+from tracko_sdk.models.contact_save_request import ContactSaveRequest
+from tracko_sdk.rest import ApiException
+from urllib3.exceptions import MaxRetryError, NewConnectionError
 
-from ..core.config import get_active_profile_config
-from ..core.api import make_api_client, sdk_call_unwrapped
+from ..core.api import get_config_for_api, get_api_client, unwrap_envelope, handle_api_error
 from ..core.output import console, create_table, print_json, print_success, print_error, spinner
 from ..utils.prompts import confirm
 
 import tracko_sdk
-from tracko_sdk.models.contact_save_request import ContactSaveRequest
 
 
 app = typer.Typer(help="Contact management")
@@ -17,43 +20,38 @@ app = typer.Typer(help="Contact management")
 @app.command()
 def list(raw: bool = typer.Option(False, "--raw", help="Output raw JSON")):
     """List all contacts."""
-    config = get_active_profile_config()
-    token, base_url = config.get("token"), config.get("base_url", "http://localhost:8080")
-    
+    base_url, token = get_config_for_api()
+
     try:
         with spinner("Fetching contacts..."):
-            with make_api_client(base_url, token) as api_client:
-                api = tracko_sdk.ContactsApi(api_client)
-                result = sdk_call_unwrapped(lambda: api.list_mine())
-        
-        if result is None:
-            raise typer.Exit(1)
-        
+            with get_api_client(base_url, token) as client:
+                contacts = unwrap_envelope(tracko_sdk.ContactsApi(client).list_mine()) or []
+
         if raw:
-            print_json(result)
+            print_json([c.model_dump(by_alias=True) for c in contacts])
+        elif contacts:
+            table = create_table(title="Contacts")
+            table.add_column("ID", justify="right", style="cyan")
+            table.add_column("Name", style="green")
+            table.add_column("Phone", style="yellow")
+            table.add_column("Email", style="blue")
+
+            for contact in contacts:
+                table.add_row(
+                    str(contact.id),
+                    str(contact.name),
+                    str(contact.phone_no or ""),
+                    str(contact.email or ""),
+                )
+            console.print(table)
         else:
-            contacts = result if result else []
-            if contacts:
-                table = create_table(title="Contacts")
-                table.add_column("ID", justify="right", style="cyan")
-                table.add_column("Name", style="green")
-                table.add_column("Phone", style="yellow")
-                table.add_column("Email", style="blue")
-                
-                for contact in contacts:
-                    contact_dict = contact.to_dict() if hasattr(contact, "to_dict") else contact
-                    table.add_row(
-                        str(contact_dict.get("id", "")),
-                        str(contact_dict.get("name", "")),
-                        str(contact_dict.get("phoneNo", "")),
-                        str(contact_dict.get("email", ""))
-                    )
-                console.print(table)
-            else:
-                print_error("No contacts found")
-    except Exception as e:
-        print_error(f"Failed to list contacts: {e}")
-        raise typer.Exit(1)
+            print_error("No contacts found")
+
+    except ApiException as e:
+        handle_api_error(e)
+    except (ConnectionError, MaxRetryError, NewConnectionError, OSError):
+        print_error("Could not connect to API. Is the server running?")
+        sys.exit(1)
 
 
 @app.command()
@@ -64,27 +62,25 @@ def add(
     raw: bool = typer.Option(False, "--raw", help="Output raw JSON"),
 ):
     """Create a new contact."""
-    config = get_active_profile_config()
-    token, base_url = config.get("token"), config.get("base_url", "http://localhost:8080")
-    
+    base_url, token = get_config_for_api()
+
     try:
         req = ContactSaveRequest(name=name, phone_no=phone, email=email)
         with spinner(f"Creating contact '{name}'..."):
-            with make_api_client(base_url, token) as api_client:
-                api = tracko_sdk.ContactsApi(api_client)
-                result = sdk_call_unwrapped(lambda: api.create5(req))
-        
-        if result is None:
-            raise typer.Exit(1)
-        
+            with get_api_client(base_url, token) as client:
+                result = unwrap_envelope(tracko_sdk.ContactsApi(client).create5(req))
+
         if raw:
             print_json(result)
         else:
             print_success(f"Contact '{name}' created successfully")
             print_json(result)
-    except Exception as e:
-        print_error(f"Failed to create contact: {e}")
-        raise typer.Exit(1)
+
+    except ApiException as e:
+        handle_api_error(e)
+    except (ConnectionError, MaxRetryError, NewConnectionError, OSError):
+        print_error("Could not connect to API. Is the server running?")
+        sys.exit(1)
 
 
 @app.command()
@@ -93,22 +89,20 @@ def get(
     raw: bool = typer.Option(False, "--raw", help="Output raw JSON"),
 ):
     """Get contact by ID."""
-    config = get_active_profile_config()
-    token, base_url = config.get("token"), config.get("base_url", "http://localhost:8080")
-    
+    base_url, token = get_config_for_api()
+
     try:
         with spinner(f"Fetching contact {id}..."):
-            with make_api_client(base_url, token) as api_client:
-                api = tracko_sdk.ContactsApi(api_client)
-                result = sdk_call_unwrapped(lambda: api.get_one(id=id))
-        
-        if result is None:
-            raise typer.Exit(1)
-        
+            with get_api_client(base_url, token) as client:
+                result = unwrap_envelope(tracko_sdk.ContactsApi(client).get_one(id=id))
+
         print_json(result)
-    except Exception as e:
-        print_error(f"Failed to get contact: {e}")
-        raise typer.Exit(1)
+
+    except ApiException as e:
+        handle_api_error(e)
+    except (ConnectionError, MaxRetryError, NewConnectionError, OSError):
+        print_error("Could not connect to API. Is the server running?")
+        sys.exit(1)
 
 
 @app.command()
@@ -120,27 +114,25 @@ def update(
     raw: bool = typer.Option(False, "--raw", help="Output raw JSON"),
 ):
     """Update a contact."""
-    config = get_active_profile_config()
-    token, base_url = config.get("token"), config.get("base_url", "http://localhost:8080")
-    
+    base_url, token = get_config_for_api()
+
     try:
         req = ContactSaveRequest(name=name, phone_no=phone, email=email)
         with spinner(f"Updating contact {id}..."):
-            with make_api_client(base_url, token) as api_client:
-                api = tracko_sdk.ContactsApi(api_client)
-                result = sdk_call_unwrapped(lambda: api.update3(id=id, contact_save_request=req))
-        
-        if result is None:
-            raise typer.Exit(1)
-        
+            with get_api_client(base_url, token) as client:
+                result = unwrap_envelope(tracko_sdk.ContactsApi(client).update3(id=id, contact_save_request=req))
+
         if raw:
             print_json(result)
         else:
             print_success(f"Contact {id} updated successfully")
             print_json(result)
-    except Exception as e:
-        print_error(f"Failed to update contact: {e}")
-        raise typer.Exit(1)
+
+    except ApiException as e:
+        handle_api_error(e)
+    except (ConnectionError, MaxRetryError, NewConnectionError, OSError):
+        print_error("Could not connect to API. Is the server running?")
+        sys.exit(1)
 
 
 @app.command()
@@ -151,17 +143,18 @@ def delete(
     if not confirm(f"Delete contact {id}?", default=False):
         print_error("Cancelled")
         raise typer.Exit(1)
-    
-    config = get_active_profile_config()
-    token, base_url = config.get("token"), config.get("base_url", "http://localhost:8080")
-    
+
+    base_url, token = get_config_for_api()
+
     try:
         with spinner(f"Deleting contact {id}..."):
-            with make_api_client(base_url, token) as api_client:
-                api = tracko_sdk.ContactsApi(api_client)
-                result = sdk_call_unwrapped(lambda: api.delete5(id=id))
-        
+            with get_api_client(base_url, token) as client:
+                unwrap_envelope(tracko_sdk.ContactsApi(client).delete5(id=id))
+
         print_success(f"Contact {id} deleted successfully")
-    except Exception as e:
-        print_error(f"Failed to delete contact: {e}")
-        raise typer.Exit(1)
+
+    except ApiException as e:
+        handle_api_error(e)
+    except (ConnectionError, MaxRetryError, NewConnectionError, OSError):
+        print_error("Could not connect to API. Is the server running?")
+        sys.exit(1)

@@ -88,7 +88,7 @@ def run_tests():
     env["TRACKO_PROFILE"] = "test"  # Set profile for tests
     
     result = subprocess.run(
-        [sys.executable, "-m", "pytest", "cli/tests/test_transaction.py", "-v"],
+        [sys.executable, "-m", "pytest", "cli/tests", "-v"],
         cwd=project_root,
         encoding="utf-8",
         env=env
