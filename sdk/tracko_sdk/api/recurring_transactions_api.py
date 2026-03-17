@@ -17,6 +17,9 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from typing_extensions import Annotated
 
 from pydantic import StrictInt
+from tracko_sdk.models.delete1200_response import Delete1200Response
+from tracko_sdk.models.get_all3200_response import GetAll3200Response
+from tracko_sdk.models.get_by_id2200_response import GetById2200Response
 from tracko_sdk.models.recurring_transaction import RecurringTransaction
 
 from tracko_sdk.api_client import ApiClient, RequestSerialized
@@ -53,7 +56,7 @@ class RecurringTransactionsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RecurringTransaction:
+    ) -> GetById2200Response:
         """Create a recurring transaction
 
 
@@ -90,7 +93,7 @@ class RecurringTransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "RecurringTransaction",
+            '200': "GetById2200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -119,7 +122,7 @@ class RecurringTransactionsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[RecurringTransaction]:
+    ) -> ApiResponse[GetById2200Response]:
         """Create a recurring transaction
 
 
@@ -156,7 +159,7 @@ class RecurringTransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "RecurringTransaction",
+            '200': "GetById2200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -222,7 +225,7 @@ class RecurringTransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "RecurringTransaction",
+            '200': "GetById2200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -264,7 +267,7 @@ class RecurringTransactionsApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -321,7 +324,7 @@ class RecurringTransactionsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> str:
+    ) -> Delete1200Response:
         """Delete a recurring transaction
 
 
@@ -358,7 +361,7 @@ class RecurringTransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "str",
+            '200': "Delete1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -387,7 +390,7 @@ class RecurringTransactionsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[str]:
+    ) -> ApiResponse[Delete1200Response]:
         """Delete a recurring transaction
 
 
@@ -424,7 +427,7 @@ class RecurringTransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "str",
+            '200': "Delete1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -490,7 +493,7 @@ class RecurringTransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "str",
+            '200': "Delete1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -532,7 +535,7 @@ class RecurringTransactionsApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -575,7 +578,7 @@ class RecurringTransactionsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> List[RecurringTransaction]:
+    ) -> GetAll3200Response:
         """List all recurring transactions
 
 
@@ -609,7 +612,7 @@ class RecurringTransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[RecurringTransaction]",
+            '200': "GetAll3200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -637,7 +640,7 @@ class RecurringTransactionsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[List[RecurringTransaction]]:
+    ) -> ApiResponse[GetAll3200Response]:
         """List all recurring transactions
 
 
@@ -671,7 +674,7 @@ class RecurringTransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[RecurringTransaction]",
+            '200': "GetAll3200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -733,7 +736,7 @@ class RecurringTransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[RecurringTransaction]",
+            '200': "GetAll3200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -772,7 +775,7 @@ class RecurringTransactionsApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -816,7 +819,7 @@ class RecurringTransactionsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RecurringTransaction:
+    ) -> GetById2200Response:
         """Get a recurring transaction by ID
 
 
@@ -853,7 +856,7 @@ class RecurringTransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "RecurringTransaction",
+            '200': "GetById2200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -882,7 +885,7 @@ class RecurringTransactionsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[RecurringTransaction]:
+    ) -> ApiResponse[GetById2200Response]:
         """Get a recurring transaction by ID
 
 
@@ -919,7 +922,7 @@ class RecurringTransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "RecurringTransaction",
+            '200': "GetById2200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -985,7 +988,7 @@ class RecurringTransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "RecurringTransaction",
+            '200': "GetById2200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1027,7 +1030,7 @@ class RecurringTransactionsApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -1072,7 +1075,7 @@ class RecurringTransactionsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RecurringTransaction:
+    ) -> GetById2200Response:
         """Update a recurring transaction
 
 
@@ -1112,7 +1115,7 @@ class RecurringTransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "RecurringTransaction",
+            '200': "GetById2200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1142,7 +1145,7 @@ class RecurringTransactionsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[RecurringTransaction]:
+    ) -> ApiResponse[GetById2200Response]:
         """Update a recurring transaction
 
 
@@ -1182,7 +1185,7 @@ class RecurringTransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "RecurringTransaction",
+            '200': "GetById2200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1252,7 +1255,7 @@ class RecurringTransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "RecurringTransaction",
+            '200': "GetById2200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1297,7 +1300,7 @@ class RecurringTransactionsApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 

@@ -1,6 +1,5 @@
 package com.trako.integration.transaction;
 
-import com.trako.config.TestJwtSecurityConfig;
 import com.trako.dtos.TransactionSummaryDTO;
 import com.trako.entities.*;
 import com.trako.enums.CategoryType;
@@ -13,7 +12,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -30,7 +28,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @ActiveProfiles("test")
-@Import(TestJwtSecurityConfig.class)
 @Transactional
 public class TransactionServiceIntegrationTest extends BaseIntegrationTest {
 

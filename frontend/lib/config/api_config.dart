@@ -73,6 +73,7 @@ class ApiConfig {
   static const String jsonStore = '/api/json-store';
   static const String users = '/api/user';
   static const String userCurrencies = '/api/user-currencies';
+  static const String analytics = '/api/analytics';
   static const String exchangeRates = '/api/exchange-rates';
   static const String recurringTransactions = '/api/recurring-transactions';
   static const String health = '/api/health';

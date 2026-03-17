@@ -92,6 +92,7 @@ class _TransactionListPageState extends State<TransactionListPage>
         ),
         Expanded(
           child: TabBarView(
+            physics: const NeverScrollableScrollPhysics(),
             controller: _tabController,
             children: [
               DailyTransactionView(

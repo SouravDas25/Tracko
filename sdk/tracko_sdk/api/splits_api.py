@@ -17,6 +17,9 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from typing_extensions import Annotated
 
 from pydantic import StrictInt
+from tracko_sdk.models.create2200_response import Create2200Response
+from tracko_sdk.models.delete1200_response import Delete1200Response
+from tracko_sdk.models.get_all2200_response import GetAll2200Response
 from tracko_sdk.models.split import Split
 
 from tracko_sdk.api_client import ApiClient, RequestSerialized
@@ -53,7 +56,7 @@ class SplitsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> Split:
+    ) -> Create2200Response:
         """Create a split for a transaction
 
 
@@ -90,7 +93,7 @@ class SplitsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Split",
+            '200': "Create2200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -119,7 +122,7 @@ class SplitsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[Split]:
+    ) -> ApiResponse[Create2200Response]:
         """Create a split for a transaction
 
 
@@ -156,7 +159,7 @@ class SplitsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Split",
+            '200': "Create2200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -222,7 +225,7 @@ class SplitsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Split",
+            '200': "Create2200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -264,7 +267,7 @@ class SplitsApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -321,7 +324,7 @@ class SplitsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> str:
+    ) -> Delete1200Response:
         """Delete a split
 
 
@@ -358,7 +361,7 @@ class SplitsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "str",
+            '200': "Delete1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -387,7 +390,7 @@ class SplitsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[str]:
+    ) -> ApiResponse[Delete1200Response]:
         """Delete a split
 
 
@@ -424,7 +427,7 @@ class SplitsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "str",
+            '200': "Delete1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -490,7 +493,7 @@ class SplitsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "str",
+            '200': "Delete1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -532,7 +535,7 @@ class SplitsApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -575,7 +578,7 @@ class SplitsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> List[Split]:
+    ) -> GetAll2200Response:
         """List all splits for the current user
 
 
@@ -609,7 +612,7 @@ class SplitsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[Split]",
+            '200': "GetAll2200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -637,7 +640,7 @@ class SplitsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[List[Split]]:
+    ) -> ApiResponse[GetAll2200Response]:
         """List all splits for the current user
 
 
@@ -671,7 +674,7 @@ class SplitsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[Split]",
+            '200': "GetAll2200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -733,7 +736,7 @@ class SplitsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[Split]",
+            '200': "GetAll2200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -772,7 +775,7 @@ class SplitsApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -816,7 +819,7 @@ class SplitsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> List[Split]:
+    ) -> GetAll2200Response:
         """List all splits for a contact
 
 
@@ -853,7 +856,7 @@ class SplitsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[Split]",
+            '200': "GetAll2200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -882,7 +885,7 @@ class SplitsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[List[Split]]:
+    ) -> ApiResponse[GetAll2200Response]:
         """List all splits for a contact
 
 
@@ -919,7 +922,7 @@ class SplitsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[Split]",
+            '200': "GetAll2200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -985,7 +988,7 @@ class SplitsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[Split]",
+            '200': "GetAll2200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1027,7 +1030,7 @@ class SplitsApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -1071,7 +1074,7 @@ class SplitsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> Split:
+    ) -> Create2200Response:
         """Get a split by ID
 
 
@@ -1108,7 +1111,7 @@ class SplitsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Split",
+            '200': "Create2200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1137,7 +1140,7 @@ class SplitsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[Split]:
+    ) -> ApiResponse[Create2200Response]:
         """Get a split by ID
 
 
@@ -1174,7 +1177,7 @@ class SplitsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Split",
+            '200': "Create2200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1240,7 +1243,7 @@ class SplitsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Split",
+            '200': "Create2200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1282,7 +1285,7 @@ class SplitsApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -1326,7 +1329,7 @@ class SplitsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> List[Split]:
+    ) -> GetAll2200Response:
         """List splits for a transaction
 
 
@@ -1363,7 +1366,7 @@ class SplitsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[Split]",
+            '200': "GetAll2200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1392,7 +1395,7 @@ class SplitsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[List[Split]]:
+    ) -> ApiResponse[GetAll2200Response]:
         """List splits for a transaction
 
 
@@ -1429,7 +1432,7 @@ class SplitsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[Split]",
+            '200': "GetAll2200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1495,7 +1498,7 @@ class SplitsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[Split]",
+            '200': "GetAll2200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1537,7 +1540,7 @@ class SplitsApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -1580,7 +1583,7 @@ class SplitsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> List[Split]:
+    ) -> GetAll2200Response:
         """List all unsettled splits for the current user
 
 
@@ -1614,7 +1617,7 @@ class SplitsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[Split]",
+            '200': "GetAll2200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1642,7 +1645,7 @@ class SplitsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[List[Split]]:
+    ) -> ApiResponse[GetAll2200Response]:
         """List all unsettled splits for the current user
 
 
@@ -1676,7 +1679,7 @@ class SplitsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[Split]",
+            '200': "GetAll2200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1738,7 +1741,7 @@ class SplitsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[Split]",
+            '200': "GetAll2200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1777,7 +1780,7 @@ class SplitsApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -1821,7 +1824,7 @@ class SplitsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> List[Split]:
+    ) -> GetAll2200Response:
         """List unsettled splits for a contact
 
 
@@ -1858,7 +1861,7 @@ class SplitsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[Split]",
+            '200': "GetAll2200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1887,7 +1890,7 @@ class SplitsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[List[Split]]:
+    ) -> ApiResponse[GetAll2200Response]:
         """List unsettled splits for a contact
 
 
@@ -1924,7 +1927,7 @@ class SplitsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[Split]",
+            '200': "GetAll2200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1990,7 +1993,7 @@ class SplitsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[Split]",
+            '200': "GetAll2200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -2032,7 +2035,7 @@ class SplitsApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -2076,7 +2079,7 @@ class SplitsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> str:
+    ) -> Delete1200Response:
         """Mark a split as settled
 
 
@@ -2113,7 +2116,7 @@ class SplitsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "str",
+            '200': "Delete1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -2142,7 +2145,7 @@ class SplitsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[str]:
+    ) -> ApiResponse[Delete1200Response]:
         """Mark a split as settled
 
 
@@ -2179,7 +2182,7 @@ class SplitsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "str",
+            '200': "Delete1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -2245,7 +2248,7 @@ class SplitsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "str",
+            '200': "Delete1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -2287,7 +2290,7 @@ class SplitsApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -2331,7 +2334,7 @@ class SplitsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> str:
+    ) -> Delete1200Response:
         """Reverse a settlement on a split
 
 
@@ -2368,7 +2371,7 @@ class SplitsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "str",
+            '200': "Delete1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -2397,7 +2400,7 @@ class SplitsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[str]:
+    ) -> ApiResponse[Delete1200Response]:
         """Reverse a settlement on a split
 
 
@@ -2434,7 +2437,7 @@ class SplitsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "str",
+            '200': "Delete1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -2500,7 +2503,7 @@ class SplitsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "str",
+            '200': "Delete1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -2542,7 +2545,7 @@ class SplitsApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 

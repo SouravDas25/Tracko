@@ -1,6 +1,5 @@
 package com.trako.integration.exchange;
 
-import com.trako.config.TestJwtSecurityConfig;
 import com.trako.exceptions.NotFoundException;
 import com.trako.integration.BaseIntegrationTest;
 import com.trako.models.external.ExchangeRateApiResponse;
@@ -10,7 +9,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -25,7 +23,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import(TestJwtSecurityConfig.class)
 public class ExchangeRateIntegrationTest extends BaseIntegrationTest {
 
     @MockBean

@@ -11,7 +11,7 @@ Method | HTTP request | Description
 
 
 # **allocate_funds**
-> BudgetCategoryDTO allocate_funds(budget_allocation_request_dto)
+> AllocateFunds200Response allocate_funds(budget_allocation_request_dto)
 
 Allocate funds to a category for a month
 
@@ -21,8 +21,8 @@ Allocate funds to a category for a month
 
 ```python
 import tracko_sdk
+from tracko_sdk.models.allocate_funds200_response import AllocateFunds200Response
 from tracko_sdk.models.budget_allocation_request_dto import BudgetAllocationRequestDTO
-from tracko_sdk.models.budget_category_dto import BudgetCategoryDTO
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -68,7 +68,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**BudgetCategoryDTO**](BudgetCategoryDTO.md)
+[**AllocateFunds200Response**](AllocateFunds200Response.md)
 
 ### Authorization
 
@@ -77,7 +77,7 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: application/json
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 
@@ -88,7 +88,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **get_available_to_assign**
-> float get_available_to_assign(month=month, year=year)
+> GetMyTotalIncome200Response get_available_to_assign(month=month, year=year)
 
 Get the amount available to assign for a month
 
@@ -98,6 +98,7 @@ Get the amount available to assign for a month
 
 ```python
 import tracko_sdk
+from tracko_sdk.models.get_my_total_income200_response import GetMyTotalIncome200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -145,7 +146,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-**float**
+[**GetMyTotalIncome200Response**](GetMyTotalIncome200Response.md)
 
 ### Authorization
 
@@ -154,7 +155,7 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 
@@ -165,7 +166,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **get_budget**
-> BudgetResponseDTO get_budget(month=month, year=year, category_id=category_id, include_actual=include_actual, sort_by=sort_by, sort_order=sort_order)
+> GetBudget200Response get_budget(month=month, year=year, category_id=category_id, include_actual=include_actual, sort_by=sort_by, sort_order=sort_order)
 
 Get budget details for a month/year
 
@@ -175,7 +176,7 @@ Get budget details for a month/year
 
 ```python
 import tracko_sdk
-from tracko_sdk.models.budget_response_dto import BudgetResponseDTO
+from tracko_sdk.models.get_budget200_response import GetBudget200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -231,7 +232,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**BudgetResponseDTO**](BudgetResponseDTO.md)
+[**GetBudget200Response**](GetBudget200Response.md)
 
 ### Authorization
 
@@ -240,7 +241,7 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 
@@ -251,7 +252,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **get_current_budget**
-> BudgetResponseDTO get_current_budget()
+> GetBudget200Response get_current_budget()
 
 Get budget for the current month
 
@@ -261,7 +262,7 @@ Get budget for the current month
 
 ```python
 import tracko_sdk
-from tracko_sdk.models.budget_response_dto import BudgetResponseDTO
+from tracko_sdk.models.get_budget200_response import GetBudget200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -303,7 +304,7 @@ This endpoint does not need any parameter.
 
 ### Return type
 
-[**BudgetResponseDTO**](BudgetResponseDTO.md)
+[**GetBudget200Response**](GetBudget200Response.md)
 
 ### Authorization
 
@@ -312,7 +313,7 @@ This endpoint does not need any parameter.
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 

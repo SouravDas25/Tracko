@@ -250,7 +250,6 @@ def create_transactions(base_url: str, token: str, account_ids: list, category_i
                 date=dt,
                 accountId=int(acct_id),
                 categoryId=int(cat_id),
-                isCountable=1,
                 originalAmount=amount,
                 originalCurrency=base_currency,
             )
@@ -291,8 +290,6 @@ def create_transfers(base_url: str, token: str, account_ids: list, base_currency
                 accountId=int(from_id),
                 toAccountId=int(to_id),
                 originalAmount=amount,
-                originalCurrency=base_currency,
-                isCountable=0,
                 date=now - datetime.timedelta(days=days_ago),
             )
             result = sdk_call(lambda r=req: api.create1(r))
@@ -391,9 +388,6 @@ def create_sample_splits(base_url: str, token: str, account_ids: list, category_
             name="Group Dinner",
             comments="Dinner with friends - to be split",
             date=now - datetime.timedelta(days=5),
-            accountId=int(valid_accounts[0]),
-            categoryId=int(valid_cats[0]),
-            isCountable=1,
             originalAmount=300.0,
             originalCurrency=base_currency,
         )

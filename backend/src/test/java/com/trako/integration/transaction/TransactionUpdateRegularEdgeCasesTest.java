@@ -1,6 +1,5 @@
 package com.trako.integration.transaction;
 
-import com.trako.config.TestJwtSecurityConfig;
 import com.trako.dtos.TransferResult;
 import com.trako.entities.*;
 import com.trako.enums.TransactionDbType;
@@ -14,7 +13,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,7 +27,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import(TestJwtSecurityConfig.class)
 @Transactional
 public class TransactionUpdateRegularEdgeCasesTest extends BaseIntegrationTest {
 
@@ -87,7 +84,7 @@ public class TransactionUpdateRegularEdgeCasesTest extends BaseIntegrationTest {
         TransactionRequest payload = new TransactionRequest(
                 null, null, null, null, null,
                 999999L,                 // categoryId (non-existent)
-                TransactionType.DEBIT, null, null, null, null, null, null, null
+                TransactionType.DEBIT, null, null, null, null, null, null
         );
         mockMvc.perform(put("/api/transactions/" + t.getId())
                         .header("Authorization", tokenA)
@@ -101,7 +98,7 @@ public class TransactionUpdateRegularEdgeCasesTest extends BaseIntegrationTest {
         Transaction t = createRegular();
         TransactionRequest payload = new TransactionRequest(
                 null, null, null, null, null, null,
-                TransactionType.DEBIT, null, null, 0.0, null, null, null, null
+                TransactionType.DEBIT, null, 0.0, null, null, null, null
         );
         mockMvc.perform(put("/api/transactions/" + t.getId())
                         .header("Authorization", tokenA)
@@ -117,7 +114,7 @@ public class TransactionUpdateRegularEdgeCasesTest extends BaseIntegrationTest {
         );
         TransactionRequest payload = new TransactionRequest(
                 null, null, null, null, null, null,
-                TransactionType.TRANSFER, null, null, -1.0, null, null, null, null
+                TransactionType.TRANSFER, null, -1.0, null, null, null, null
         );
         mockMvc.perform(put("/api/transactions/" + pair.debit().getId())
                         .header("Authorization", tokenA)
@@ -141,7 +138,7 @@ public class TransactionUpdateRegularEdgeCasesTest extends BaseIntegrationTest {
         TransactionRequest payload = new TransactionRequest(
                 null,
                 accB.getId(),            // accountId (belongs to userB)
-                null, null, null, null, TransactionType.DEBIT, null, null, null, null, null, null, null
+                null, null, null, null, TransactionType.DEBIT, null, null, null, null, null, null
         );
         mockMvc.perform(put("/api/transactions/" + t.getId())
                         .header("Authorization", tokenA)
@@ -176,7 +173,7 @@ public class TransactionUpdateRegularEdgeCasesTest extends BaseIntegrationTest {
 
         TransactionRequest payload = new TransactionRequest(
                 null, null, null, "Hack", null, null,
-                TransactionType.DEBIT, null, null, null, null, null, null, null
+                TransactionType.DEBIT, null, null, null, null, null, null
         );
         mockMvc.perform(put("/api/transactions/" + otherTx.getId())
                         .header("Authorization", tokenA)
@@ -192,7 +189,7 @@ public class TransactionUpdateRegularEdgeCasesTest extends BaseIntegrationTest {
         Transaction t = createRegular();
         TransactionRequest payload = new TransactionRequest(
                 null, accA2.getId(), new Date(), "NewName", "Cmt", catA1.getId(),
-                TransactionType.DEBIT, 0, null, null, null, null, null, null
+                TransactionType.DEBIT, null, null, null, null, null, null
         );
 
         mockMvc.perform(put("/api/transactions/" + t.getId())
@@ -204,7 +201,6 @@ public class TransactionUpdateRegularEdgeCasesTest extends BaseIntegrationTest {
         Transaction updated = transactionRepository.findById(t.getId()).orElseThrow();
         assertThat(updated.getName()).isEqualTo("NewName");
         assertThat(updated.getComments()).isEqualTo("Cmt");
-        assertThat(updated.getIsCountable()).isEqualTo(0);
         assertThat(updated.getAccountId()).isEqualTo(accA2.getId());
     }
 
@@ -213,7 +209,7 @@ public class TransactionUpdateRegularEdgeCasesTest extends BaseIntegrationTest {
         Transaction t = createRegular();
         TransactionRequest payload = new TransactionRequest(
                 null, accA1.getId(), null, null, null, null,
-                TransactionType.DEBIT, null, null, 25.0, null, null, null, null
+                TransactionType.DEBIT, null, 25.0, null, null, null, null
         );
 
         mockMvc.perform(put("/api/transactions/" + t.getId())

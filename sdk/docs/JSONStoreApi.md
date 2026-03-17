@@ -12,7 +12,7 @@ Method | HTTP request | Description
 
 
 # **create4**
-> JsonStore create4(json_store)
+> GetByName200Response create4(json_store)
 
 Create a JSON store entry
 
@@ -22,6 +22,7 @@ Create a JSON store entry
 
 ```python
 import tracko_sdk
+from tracko_sdk.models.get_by_name200_response import GetByName200Response
 from tracko_sdk.models.json_store import JsonStore
 from tracko_sdk.rest import ApiException
 from pprint import pprint
@@ -68,7 +69,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**JsonStore**](JsonStore.md)
+[**GetByName200Response**](GetByName200Response.md)
 
 ### Authorization
 
@@ -77,7 +78,7 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: application/json
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 
@@ -88,7 +89,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **delete4**
-> str delete4(name)
+> Delete1200Response delete4(name)
 
 Delete a JSON store entry by name
 
@@ -98,6 +99,7 @@ Delete a JSON store entry by name
 
 ```python
 import tracko_sdk
+from tracko_sdk.models.delete1200_response import Delete1200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -143,7 +145,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-**str**
+[**Delete1200Response**](Delete1200Response.md)
 
 ### Authorization
 
@@ -152,7 +154,7 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 
@@ -163,7 +165,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **get_all4**
-> List[JsonStore] get_all4()
+> GetAll4200Response get_all4()
 
 List all JSON store entries
 
@@ -173,7 +175,7 @@ List all JSON store entries
 
 ```python
 import tracko_sdk
-from tracko_sdk.models.json_store import JsonStore
+from tracko_sdk.models.get_all4200_response import GetAll4200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -215,7 +217,7 @@ This endpoint does not need any parameter.
 
 ### Return type
 
-[**List[JsonStore]**](JsonStore.md)
+[**GetAll4200Response**](GetAll4200Response.md)
 
 ### Authorization
 
@@ -224,7 +226,7 @@ This endpoint does not need any parameter.
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 
@@ -235,7 +237,7 @@ This endpoint does not need any parameter.
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **get_by_name**
-> JsonStore get_by_name(name)
+> GetByName200Response get_by_name(name)
 
 Get a JSON store entry by name
 
@@ -245,7 +247,7 @@ Get a JSON store entry by name
 
 ```python
 import tracko_sdk
-from tracko_sdk.models.json_store import JsonStore
+from tracko_sdk.models.get_by_name200_response import GetByName200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -291,7 +293,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**JsonStore**](JsonStore.md)
+[**GetByName200Response**](GetByName200Response.md)
 
 ### Authorization
 
@@ -300,7 +302,7 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 
@@ -311,7 +313,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **update2**
-> JsonStore update2(name, json_store)
+> GetByName200Response update2(name, json_store)
 
 Update a JSON store entry by name
 
@@ -321,6 +323,7 @@ Update a JSON store entry by name
 
 ```python
 import tracko_sdk
+from tracko_sdk.models.get_by_name200_response import GetByName200Response
 from tracko_sdk.models.json_store import JsonStore
 from tracko_sdk.rest import ApiException
 from pprint import pprint
@@ -369,7 +372,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**JsonStore**](JsonStore.md)
+[**GetByName200Response**](GetByName200Response.md)
 
 ### Authorization
 
@@ -378,7 +381,7 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: application/json
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 

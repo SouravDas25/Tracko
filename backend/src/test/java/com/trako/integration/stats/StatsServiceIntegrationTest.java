@@ -1,6 +1,5 @@
 package com.trako.integration.stats;
 
-import com.trako.config.TestJwtSecurityConfig;
 import com.trako.dtos.StatsResponseDTO;
 import com.trako.entities.*;
 import com.trako.enums.CategoryType;
@@ -9,11 +8,11 @@ import com.trako.enums.TransactionType;
 import com.trako.integration.BaseIntegrationTest;
 import com.trako.services.StatsService;
 import com.trako.services.transactions.TransactionWriteService;
+import com.trako.util.DateUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,7 +24,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @ActiveProfiles("test")
-@Import(TestJwtSecurityConfig.class)
 @Transactional
 public class StatsServiceIntegrationTest extends BaseIntegrationTest {
 
@@ -270,10 +268,10 @@ public class StatsServiceIntegrationTest extends BaseIntegrationTest {
 
     @Test
     public void filterCategoryAndMonthLabelUnreachableBranchesAreCoveredViaReflection() throws Exception {
-        Method monthLabel = StatsService.class.getDeclaredMethod("monthLabel", int.class);
+        Method monthLabel = DateUtil.class.getDeclaredMethod("monthLabel", int.class);
         monthLabel.setAccessible(true);
 
-        String unknown = (String) monthLabel.invoke(statsService, 13);
+        String unknown = (String) monthLabel.invoke(null, 13);
         assertEquals("", unknown);
     }
 

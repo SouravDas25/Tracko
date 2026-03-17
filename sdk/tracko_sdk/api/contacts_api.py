@@ -17,8 +17,10 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from typing_extensions import Annotated
 
 from pydantic import StrictInt
-from tracko_sdk.models.contact import Contact
 from tracko_sdk.models.contact_save_request import ContactSaveRequest
+from tracko_sdk.models.delete1200_response import Delete1200Response
+from tracko_sdk.models.get_one200_response import GetOne200Response
+from tracko_sdk.models.list_mine200_response import ListMine200Response
 
 from tracko_sdk.api_client import ApiClient, RequestSerialized
 from tracko_sdk.api_response import ApiResponse
@@ -54,7 +56,7 @@ class ContactsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> Contact:
+    ) -> GetOne200Response:
         """Create a new contact
 
 
@@ -91,7 +93,7 @@ class ContactsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Contact",
+            '200': "GetOne200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -120,7 +122,7 @@ class ContactsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[Contact]:
+    ) -> ApiResponse[GetOne200Response]:
         """Create a new contact
 
 
@@ -157,7 +159,7 @@ class ContactsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Contact",
+            '200': "GetOne200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -223,7 +225,7 @@ class ContactsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Contact",
+            '200': "GetOne200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -265,7 +267,7 @@ class ContactsApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -322,7 +324,7 @@ class ContactsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> str:
+    ) -> Delete1200Response:
         """Delete a contact
 
 
@@ -359,7 +361,7 @@ class ContactsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "str",
+            '200': "Delete1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -388,7 +390,7 @@ class ContactsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[str]:
+    ) -> ApiResponse[Delete1200Response]:
         """Delete a contact
 
 
@@ -425,7 +427,7 @@ class ContactsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "str",
+            '200': "Delete1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -491,7 +493,7 @@ class ContactsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "str",
+            '200': "Delete1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -533,7 +535,7 @@ class ContactsApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -577,7 +579,7 @@ class ContactsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> Contact:
+    ) -> GetOne200Response:
         """Get a contact by ID
 
 
@@ -614,7 +616,7 @@ class ContactsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Contact",
+            '200': "GetOne200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -643,7 +645,7 @@ class ContactsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[Contact]:
+    ) -> ApiResponse[GetOne200Response]:
         """Get a contact by ID
 
 
@@ -680,7 +682,7 @@ class ContactsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Contact",
+            '200': "GetOne200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -746,7 +748,7 @@ class ContactsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Contact",
+            '200': "GetOne200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -788,7 +790,7 @@ class ContactsApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -831,7 +833,7 @@ class ContactsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> List[Contact]:
+    ) -> ListMine200Response:
         """List all contacts for the current user
 
 
@@ -865,7 +867,7 @@ class ContactsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[Contact]",
+            '200': "ListMine200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -893,7 +895,7 @@ class ContactsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[List[Contact]]:
+    ) -> ApiResponse[ListMine200Response]:
         """List all contacts for the current user
 
 
@@ -927,7 +929,7 @@ class ContactsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[Contact]",
+            '200': "ListMine200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -989,7 +991,7 @@ class ContactsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[Contact]",
+            '200': "ListMine200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1028,7 +1030,7 @@ class ContactsApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -1073,7 +1075,7 @@ class ContactsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> Contact:
+    ) -> GetOne200Response:
         """Update a contact
 
 
@@ -1113,7 +1115,7 @@ class ContactsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Contact",
+            '200': "GetOne200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1143,7 +1145,7 @@ class ContactsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[Contact]:
+    ) -> ApiResponse[GetOne200Response]:
         """Update a contact
 
 
@@ -1183,7 +1185,7 @@ class ContactsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Contact",
+            '200': "GetOne200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1253,7 +1255,7 @@ class ContactsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Contact",
+            '200': "GetOne200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1298,7 +1300,7 @@ class ContactsApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 

@@ -17,7 +17,7 @@ Method | HTTP request | Description
 
 
 # **create2**
-> Split create2(split)
+> Create2200Response create2(split)
 
 Create a split for a transaction
 
@@ -27,6 +27,7 @@ Create a split for a transaction
 
 ```python
 import tracko_sdk
+from tracko_sdk.models.create2200_response import Create2200Response
 from tracko_sdk.models.split import Split
 from tracko_sdk.rest import ApiException
 from pprint import pprint
@@ -73,7 +74,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**Split**](Split.md)
+[**Create2200Response**](Create2200Response.md)
 
 ### Authorization
 
@@ -82,7 +83,7 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: application/json
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 
@@ -93,7 +94,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **delete2**
-> str delete2(id)
+> Delete1200Response delete2(id)
 
 Delete a split
 
@@ -103,6 +104,7 @@ Delete a split
 
 ```python
 import tracko_sdk
+from tracko_sdk.models.delete1200_response import Delete1200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -148,7 +150,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-**str**
+[**Delete1200Response**](Delete1200Response.md)
 
 ### Authorization
 
@@ -157,7 +159,7 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 
@@ -168,7 +170,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **get_all2**
-> List[Split] get_all2()
+> GetAll2200Response get_all2()
 
 List all splits for the current user
 
@@ -178,7 +180,7 @@ List all splits for the current user
 
 ```python
 import tracko_sdk
-from tracko_sdk.models.split import Split
+from tracko_sdk.models.get_all2200_response import GetAll2200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -220,7 +222,7 @@ This endpoint does not need any parameter.
 
 ### Return type
 
-[**List[Split]**](Split.md)
+[**GetAll2200Response**](GetAll2200Response.md)
 
 ### Authorization
 
@@ -229,7 +231,7 @@ This endpoint does not need any parameter.
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 
@@ -240,7 +242,7 @@ This endpoint does not need any parameter.
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **get_by_contact_id**
-> List[Split] get_by_contact_id(contact_id)
+> GetAll2200Response get_by_contact_id(contact_id)
 
 List all splits for a contact
 
@@ -250,7 +252,7 @@ List all splits for a contact
 
 ```python
 import tracko_sdk
-from tracko_sdk.models.split import Split
+from tracko_sdk.models.get_all2200_response import GetAll2200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -296,7 +298,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**List[Split]**](Split.md)
+[**GetAll2200Response**](GetAll2200Response.md)
 
 ### Authorization
 
@@ -305,7 +307,7 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 
@@ -316,7 +318,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **get_by_id1**
-> Split get_by_id1(id)
+> Create2200Response get_by_id1(id)
 
 Get a split by ID
 
@@ -326,7 +328,7 @@ Get a split by ID
 
 ```python
 import tracko_sdk
-from tracko_sdk.models.split import Split
+from tracko_sdk.models.create2200_response import Create2200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -372,7 +374,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**Split**](Split.md)
+[**Create2200Response**](Create2200Response.md)
 
 ### Authorization
 
@@ -381,7 +383,7 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 
@@ -392,7 +394,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **get_by_transaction_id**
-> List[Split] get_by_transaction_id(transaction_id)
+> GetAll2200Response get_by_transaction_id(transaction_id)
 
 List splits for a transaction
 
@@ -402,7 +404,7 @@ List splits for a transaction
 
 ```python
 import tracko_sdk
-from tracko_sdk.models.split import Split
+from tracko_sdk.models.get_all2200_response import GetAll2200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -448,7 +450,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**List[Split]**](Split.md)
+[**GetAll2200Response**](GetAll2200Response.md)
 
 ### Authorization
 
@@ -457,7 +459,7 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 
@@ -468,7 +470,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **get_my_unsettled**
-> List[Split] get_my_unsettled()
+> GetAll2200Response get_my_unsettled()
 
 List all unsettled splits for the current user
 
@@ -478,7 +480,7 @@ List all unsettled splits for the current user
 
 ```python
 import tracko_sdk
-from tracko_sdk.models.split import Split
+from tracko_sdk.models.get_all2200_response import GetAll2200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -520,7 +522,7 @@ This endpoint does not need any parameter.
 
 ### Return type
 
-[**List[Split]**](Split.md)
+[**GetAll2200Response**](GetAll2200Response.md)
 
 ### Authorization
 
@@ -529,7 +531,7 @@ This endpoint does not need any parameter.
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 
@@ -540,7 +542,7 @@ This endpoint does not need any parameter.
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **get_unsettled_by_contact_id**
-> List[Split] get_unsettled_by_contact_id(contact_id)
+> GetAll2200Response get_unsettled_by_contact_id(contact_id)
 
 List unsettled splits for a contact
 
@@ -550,7 +552,7 @@ List unsettled splits for a contact
 
 ```python
 import tracko_sdk
-from tracko_sdk.models.split import Split
+from tracko_sdk.models.get_all2200_response import GetAll2200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -596,7 +598,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**List[Split]**](Split.md)
+[**GetAll2200Response**](GetAll2200Response.md)
 
 ### Authorization
 
@@ -605,7 +607,7 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 
@@ -616,7 +618,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **settle**
-> str settle(split_id)
+> Delete1200Response settle(split_id)
 
 Mark a split as settled
 
@@ -626,6 +628,7 @@ Mark a split as settled
 
 ```python
 import tracko_sdk
+from tracko_sdk.models.delete1200_response import Delete1200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -671,7 +674,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-**str**
+[**Delete1200Response**](Delete1200Response.md)
 
 ### Authorization
 
@@ -680,7 +683,7 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 
@@ -691,7 +694,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **unsettle**
-> str unsettle(split_id)
+> Delete1200Response unsettle(split_id)
 
 Reverse a settlement on a split
 
@@ -701,6 +704,7 @@ Reverse a settlement on a split
 
 ```python
 import tracko_sdk
+from tracko_sdk.models.delete1200_response import Delete1200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -746,7 +750,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-**str**
+[**Delete1200Response**](Delete1200Response.md)
 
 ### Authorization
 
@@ -755,7 +759,7 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 

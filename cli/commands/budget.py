@@ -1,107 +1,177 @@
-import argparse
-import datetime
-import json
+"""Budget management commands."""
+import sys
 
-from ..core.config import get_token_from_args_or_config
-from ..core.api import make_api_client, sdk_call_unwrapped
+import typer
+from typing import Optional
+from datetime import datetime
+
+from tracko_sdk.models.budget_allocation_request_dto import BudgetAllocationRequestDTO
+from tracko_sdk.rest import ApiException
+from urllib3.exceptions import MaxRetryError, NewConnectionError
+
+from ..core.api import get_config_for_api, get_api_client, unwrap_envelope, handle_api_error
+from ..core.output import console, create_table, print_json, print_success, print_error, spinner
 
 import tracko_sdk
-from tracko_sdk.models.budget_allocation_request_dto import BudgetAllocationRequestDTO
 
 
-def _print_raw(data) -> None:
-    if data is None:
-        print("null")
-        return
-    if hasattr(data, "to_dict"):
-        print(json.dumps(data.to_dict(), indent=2, default=str))
-    else:
-        print(json.dumps(data, indent=2, default=str))
+app = typer.Typer(help="Budget management")
 
 
-def setup_parser(subparsers):
-    sp = subparsers.add_parser("budget")
-    sub = sp.add_subparsers(dest="budget_cmd", required=True)
+@app.command()
+def view(
+    month: Optional[int] = typer.Option(None, "--month", help="Month (1-12)"),
+    year: Optional[int] = typer.Option(None, "--year", help="Year"),
+    raw: bool = typer.Option(False, "--raw", help="Output raw JSON"),
+):
+    """View budget for a specific month."""
+    base_url, token = get_config_for_api()
 
-    sp2 = sub.add_parser("view")
-    sp2.add_argument("--month", type=int)
-    sp2.add_argument("--year", type=int)
-    sp2.set_defaults(func=cmd_budget_view)
+    # Default to current month/year
+    now = datetime.now()
+    month = month or now.month
+    year = year or now.year
 
-    sp2 = sub.add_parser("allocate")
-    sp2.add_argument("--category-id", required=True, type=int)
-    sp2.add_argument("--amount", required=True, type=float)
-    sp2.add_argument("--month", type=int)
-    sp2.add_argument("--year", type=int)
-    sp2.set_defaults(func=cmd_budget_allocate)
+    try:
+        with spinner(f"Fetching budget for {month}/{year}..."):
+            with get_api_client(base_url, token) as client:
+                result = unwrap_envelope(tracko_sdk.BudgetApi(client).get_budget(month=month, year=year))
 
-    sp2 = sub.add_parser("available")
-    sp2.add_argument("--month", type=int)
-    sp2.add_argument("--year", type=int)
-    sp2.set_defaults(func=cmd_budget_available)
+        if result is None:
+            raise typer.Exit(1)
 
-    sub.add_parser("current").set_defaults(func=cmd_budget_current)
+        if raw:
+            print_json(result)
+        else:
+            console.print(f"\n[bold cyan]Budget for {month}/{year}[/bold cyan]")
+            console.print(f"Total Budget: [green]{result.total_budget or 0:.2f}[/green]")
+            console.print(f"Total Income: [green]{result.total_income or 0:.2f}[/green]")
+            console.print(f"Total Spent: [red]{result.total_spent or 0:.2f}[/red]")
+            console.print(f"Available to Assign: [yellow]{result.available_to_assign or 0:.2f}[/yellow]")
 
+            categories = result.categories or []
+            if categories:
+                table = create_table(title="Category Allocations")
+                table.add_column("Category", style="cyan")
+                table.add_column("Allocated", justify="right", style="green")
+                table.add_column("Spent", justify="right", style="red")
+                table.add_column("Remaining", justify="right", style="yellow")
+                table.add_column("Usage", style="magenta")
 
-def _now_month_year():
-    now = datetime.datetime.now()
-    return now.month, now.year
+                for cat in categories:
+                    allocated = cat.allocated_amount or 0
+                    spent = cat.actual_spent or 0
+                    remaining = cat.remaining_balance or 0
+                    usage_pct = (spent / allocated * 100) if allocated > 0 else 0
 
+                    table.add_row(
+                        cat.category_name or '',
+                        f"{allocated:.2f}",
+                        f"{spent:.2f}",
+                        f"{remaining:.2f}",
+                        f"{usage_pct:.1f}%"
+                    )
+                console.print(table)
 
-def cmd_budget_view(args: argparse.Namespace) -> int:
-    token, base_url = get_token_from_args_or_config(args)
-    month, year = _now_month_year()
-    month = args.month if args.month is not None else month
-    year = args.year if args.year is not None else year
-    with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.BudgetApi(api_client)
-        result = sdk_call_unwrapped(lambda: api.get_budget(month=month, year=year))
-    if result is None:
-        return 1
-    _print_raw(result)
-    return 0
-
-
-def cmd_budget_allocate(args: argparse.Namespace) -> int:
-    token, base_url = get_token_from_args_or_config(args)
-    month, year = _now_month_year()
-    month = args.month if args.month is not None else month
-    year = args.year if args.year is not None else year
-    req = BudgetAllocationRequestDTO(
-        category_id=int(args.category_id),
-        amount=float(args.amount),
-        month=month,
-        year=year,
-    )
-    with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.BudgetApi(api_client)
-        result = sdk_call_unwrapped(lambda: api.allocate_funds(req))
-    if result is None:
-        return 1
-    _print_raw(result)
-    return 0
-
-
-def cmd_budget_available(args: argparse.Namespace) -> int:
-    token, base_url = get_token_from_args_or_config(args)
-    month, year = _now_month_year()
-    month = args.month if args.month is not None else month
-    year = args.year if args.year is not None else year
-    with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.BudgetApi(api_client)
-        result = sdk_call_unwrapped(lambda: api.get_available_to_assign(month=month, year=year))
-    if result is None:
-        return 1
-    _print_raw(result)
-    return 0
+    except ApiException as e:
+        handle_api_error(e)
+    except (ConnectionError, MaxRetryError, NewConnectionError, OSError):
+        print_error("Could not connect to API. Is the server running?")
+        sys.exit(1)
 
 
-def cmd_budget_current(args: argparse.Namespace) -> int:
-    token, base_url = get_token_from_args_or_config(args)
-    with make_api_client(base_url, token) as api_client:
-        api = tracko_sdk.BudgetApi(api_client)
-        result = sdk_call_unwrapped(lambda: api.get_current_budget())
-    if result is None:
-        return 1
-    _print_raw(result)
-    return 0
+@app.command()
+def current(raw: bool = typer.Option(False, "--raw", help="Output raw JSON")):
+    """View current month's budget."""
+    base_url, token = get_config_for_api()
+
+    try:
+        with spinner("Fetching current budget..."):
+            with get_api_client(base_url, token) as client:
+                result = unwrap_envelope(tracko_sdk.BudgetApi(client).get_current_budget())
+
+        if result is None:
+            raise typer.Exit(1)
+
+        print_json(result)
+
+    except ApiException as e:
+        handle_api_error(e)
+    except (ConnectionError, MaxRetryError, NewConnectionError, OSError):
+        print_error("Could not connect to API. Is the server running?")
+        sys.exit(1)
+
+
+@app.command()
+def allocate(
+    category_id: int = typer.Option(..., "--category-id", help="Category ID"),
+    amount: float = typer.Option(..., "--amount", "-a", help="Amount to allocate"),
+    month: Optional[int] = typer.Option(None, "--month", help="Month (1-12)"),
+    year: Optional[int] = typer.Option(None, "--year", help="Year"),
+    raw: bool = typer.Option(False, "--raw", help="Output raw JSON"),
+):
+    """Allocate budget to a category."""
+    base_url, token = get_config_for_api()
+
+    # Default to current month/year
+    now = datetime.now()
+    month = month or now.month
+    year = year or now.year
+
+    try:
+        req = BudgetAllocationRequestDTO(
+            category_id=category_id,
+            amount=amount,
+            month=month,
+            year=year
+        )
+
+        with spinner(f"Allocating {amount} to category {category_id}..."):
+            with get_api_client(base_url, token) as client:
+                result = unwrap_envelope(tracko_sdk.BudgetApi(client).allocate_funds(req))
+
+        if result is None:
+            raise typer.Exit(1)
+
+        if raw:
+            print_json(result)
+        else:
+            print_success(f"Allocated {amount} to category {category_id} for {month}/{year}")
+            print_json(result)
+
+    except ApiException as e:
+        handle_api_error(e)
+    except (ConnectionError, MaxRetryError, NewConnectionError, OSError):
+        print_error("Could not connect to API. Is the server running?")
+        sys.exit(1)
+
+
+@app.command()
+def available(
+    month: Optional[int] = typer.Option(None, "--month", help="Month (1-12)"),
+    year: Optional[int] = typer.Option(None, "--year", help="Year"),
+    raw: bool = typer.Option(False, "--raw", help="Output raw JSON"),
+):
+    """Get available amount to assign."""
+    base_url, token = get_config_for_api()
+
+    # Default to current month/year
+    now = datetime.now()
+    month = month or now.month
+    year = year or now.year
+
+    try:
+        with spinner(f"Fetching available amount for {month}/{year}..."):
+            with get_api_client(base_url, token) as client:
+                result = unwrap_envelope(tracko_sdk.BudgetApi(client).get_available_to_assign(month=month, year=year))
+
+        if result is None:
+            raise typer.Exit(1)
+
+        print_json(result)
+
+    except ApiException as e:
+        handle_api_error(e)
+    except (ConnectionError, MaxRetryError, NewConnectionError, OSError):
+        print_error("Could not connect to API. Is the server running?")
+        sys.exit(1)

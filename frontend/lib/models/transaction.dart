@@ -13,10 +13,9 @@ class Transaction {
   String comments = '';
   DateTime date = DateTime.now();
   double amount = 0.0;
-  int isCountable = 1;
   int accountId = 0;
   int categoryId = 0;
-
+  int isCountable = 1; // read-only, set by backend
   // Transfer Support
   int? toAccountId;
   int? fromAccountId;

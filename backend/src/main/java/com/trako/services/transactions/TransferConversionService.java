@@ -129,11 +129,7 @@ public class TransferConversionService {
         if (request.name() != null) {
             existing.setName(request.name());
         }
-        if (request.isCountable() != null) {
-            existing.setIsCountable(request.isCountable());
-        } else {
-            existing.setIsCountable(1);
-        }
+        existing.setIsCountable(1); // Converting back to regular transaction
 
         Transaction saved = saveTransaction(userId, existing);
         deleteTransaction(userId, linkedId);

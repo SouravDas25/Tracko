@@ -12,7 +12,7 @@ Method | HTTP request | Description
 
 
 # **create5**
-> Contact create5(contact_save_request)
+> GetOne200Response create5(contact_save_request)
 
 Create a new contact
 
@@ -22,8 +22,8 @@ Create a new contact
 
 ```python
 import tracko_sdk
-from tracko_sdk.models.contact import Contact
 from tracko_sdk.models.contact_save_request import ContactSaveRequest
+from tracko_sdk.models.get_one200_response import GetOne200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -69,7 +69,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**Contact**](Contact.md)
+[**GetOne200Response**](GetOne200Response.md)
 
 ### Authorization
 
@@ -78,7 +78,7 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: application/json
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 
@@ -89,7 +89,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **delete5**
-> str delete5(id)
+> Delete1200Response delete5(id)
 
 Delete a contact
 
@@ -99,6 +99,7 @@ Delete a contact
 
 ```python
 import tracko_sdk
+from tracko_sdk.models.delete1200_response import Delete1200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -144,7 +145,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-**str**
+[**Delete1200Response**](Delete1200Response.md)
 
 ### Authorization
 
@@ -153,7 +154,7 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 
@@ -164,7 +165,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **get_one**
-> Contact get_one(id)
+> GetOne200Response get_one(id)
 
 Get a contact by ID
 
@@ -174,7 +175,7 @@ Get a contact by ID
 
 ```python
 import tracko_sdk
-from tracko_sdk.models.contact import Contact
+from tracko_sdk.models.get_one200_response import GetOne200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -220,7 +221,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**Contact**](Contact.md)
+[**GetOne200Response**](GetOne200Response.md)
 
 ### Authorization
 
@@ -229,7 +230,7 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 
@@ -240,7 +241,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **list_mine**
-> List[Contact] list_mine()
+> ListMine200Response list_mine()
 
 List all contacts for the current user
 
@@ -250,7 +251,7 @@ List all contacts for the current user
 
 ```python
 import tracko_sdk
-from tracko_sdk.models.contact import Contact
+from tracko_sdk.models.list_mine200_response import ListMine200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -292,7 +293,7 @@ This endpoint does not need any parameter.
 
 ### Return type
 
-[**List[Contact]**](Contact.md)
+[**ListMine200Response**](ListMine200Response.md)
 
 ### Authorization
 
@@ -301,7 +302,7 @@ This endpoint does not need any parameter.
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 
@@ -312,7 +313,7 @@ This endpoint does not need any parameter.
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **update3**
-> Contact update3(id, contact_save_request)
+> GetOne200Response update3(id, contact_save_request)
 
 Update a contact
 
@@ -322,8 +323,8 @@ Update a contact
 
 ```python
 import tracko_sdk
-from tracko_sdk.models.contact import Contact
 from tracko_sdk.models.contact_save_request import ContactSaveRequest
+from tracko_sdk.models.get_one200_response import GetOne200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -371,7 +372,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**Contact**](Contact.md)
+[**GetOne200Response**](GetOne200Response.md)
 
 ### Authorization
 
@@ -380,7 +381,7 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: application/json
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 

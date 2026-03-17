@@ -18,7 +18,7 @@ from typing_extensions import Annotated
 
 from pydantic import Field, field_validator
 from typing_extensions import Annotated
-from tracko_sdk.models.exchange_rate_api_response import ExchangeRateApiResponse
+from tracko_sdk.models.get_rates200_response import GetRates200Response
 
 from tracko_sdk.api_client import ApiClient, RequestSerialized
 from tracko_sdk.api_response import ApiResponse
@@ -54,7 +54,7 @@ class ExchangeRatesApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ExchangeRateApiResponse:
+    ) -> GetRates200Response:
         """Get exchange rates for a base currency (e.g. USD)
 
 
@@ -91,7 +91,7 @@ class ExchangeRatesApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "ExchangeRateApiResponse",
+            '200': "GetRates200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -120,7 +120,7 @@ class ExchangeRatesApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[ExchangeRateApiResponse]:
+    ) -> ApiResponse[GetRates200Response]:
         """Get exchange rates for a base currency (e.g. USD)
 
 
@@ -157,7 +157,7 @@ class ExchangeRatesApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "ExchangeRateApiResponse",
+            '200': "GetRates200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -223,7 +223,7 @@ class ExchangeRatesApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "ExchangeRateApiResponse",
+            '200': "GetRates200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -265,7 +265,7 @@ class ExchangeRatesApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 

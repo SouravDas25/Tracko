@@ -268,7 +268,7 @@ class _SmartTransactionListState extends State<SmartTransactionList> {
 
   @override
   Widget build(BuildContext context) {
-    return SmartRefresher(
+    final body = SmartRefresher(
       controller: _refreshController,
       enablePullDown: true,
       enablePullUp: true,
@@ -321,6 +321,19 @@ class _SmartTransactionListState extends State<SmartTransactionList> {
         ],
       ),
     );
+
+    if (widget.viewMode == TransactionViewMode.monthlyNavigation) {
+      return GestureDetector(
+        onHorizontalDragEnd: (details) {
+          final v = details.primaryVelocity;
+          if (v == null) return;
+          if (v < -300) _goToMonth(1);   // swipe left  → next month
+          if (v > 300) _goToMonth(-1);   // swipe right → prev month
+        },
+        child: body,
+      );
+    }
+    return body;
   }
 }
 

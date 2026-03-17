@@ -11,7 +11,7 @@ Method | HTTP request | Description
 
 
 # **delete**
-> str delete(code)
+> Delete1200Response delete(code)
 
 Remove a currency from the current user
 
@@ -21,6 +21,7 @@ Remove a currency from the current user
 
 ```python
 import tracko_sdk
+from tracko_sdk.models.delete1200_response import Delete1200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -66,7 +67,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-**str**
+[**Delete1200Response**](Delete1200Response.md)
 
 ### Authorization
 
@@ -75,7 +76,7 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 
@@ -86,7 +87,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **get_all**
-> List[UserCurrency] get_all()
+> GetAll200Response get_all()
 
 List currencies configured for the current user
 
@@ -96,7 +97,7 @@ List currencies configured for the current user
 
 ```python
 import tracko_sdk
-from tracko_sdk.models.user_currency import UserCurrency
+from tracko_sdk.models.get_all200_response import GetAll200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -138,7 +139,7 @@ This endpoint does not need any parameter.
 
 ### Return type
 
-[**List[UserCurrency]**](UserCurrency.md)
+[**GetAll200Response**](GetAll200Response.md)
 
 ### Authorization
 
@@ -147,7 +148,7 @@ This endpoint does not need any parameter.
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 
@@ -158,7 +159,7 @@ This endpoint does not need any parameter.
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **save**
-> str save(user_currency_request)
+> Delete1200Response save(user_currency_request)
 
 Add or update a currency with a manual exchange rate
 
@@ -168,6 +169,7 @@ Add or update a currency with a manual exchange rate
 
 ```python
 import tracko_sdk
+from tracko_sdk.models.delete1200_response import Delete1200Response
 from tracko_sdk.models.user_currency_request import UserCurrencyRequest
 from tracko_sdk.rest import ApiException
 from pprint import pprint
@@ -214,7 +216,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-**str**
+[**Delete1200Response**](Delete1200Response.md)
 
 ### Authorization
 
@@ -223,7 +225,7 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: application/json
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 
@@ -234,7 +236,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **save_auto**
-> str save_auto(currency_code)
+> Delete1200Response save_auto(currency_code)
 
 Add a currency with an automatically fetched exchange rate
 
@@ -244,6 +246,7 @@ Add a currency with an automatically fetched exchange rate
 
 ```python
 import tracko_sdk
+from tracko_sdk.models.delete1200_response import Delete1200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -289,7 +292,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-**str**
+[**Delete1200Response**](Delete1200Response.md)
 
 ### Authorization
 
@@ -298,7 +301,7 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 

@@ -18,6 +18,9 @@ from typing_extensions import Annotated
 
 from pydantic import Field
 from typing_extensions import Annotated
+from tracko_sdk.models.delete1200_response import Delete1200Response
+from tracko_sdk.models.get_all4200_response import GetAll4200Response
+from tracko_sdk.models.get_by_name200_response import GetByName200Response
 from tracko_sdk.models.json_store import JsonStore
 
 from tracko_sdk.api_client import ApiClient, RequestSerialized
@@ -54,7 +57,7 @@ class JSONStoreApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> JsonStore:
+    ) -> GetByName200Response:
         """Create a JSON store entry
 
 
@@ -91,7 +94,7 @@ class JSONStoreApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "JsonStore",
+            '200': "GetByName200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -120,7 +123,7 @@ class JSONStoreApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[JsonStore]:
+    ) -> ApiResponse[GetByName200Response]:
         """Create a JSON store entry
 
 
@@ -157,7 +160,7 @@ class JSONStoreApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "JsonStore",
+            '200': "GetByName200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -223,7 +226,7 @@ class JSONStoreApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "JsonStore",
+            '200': "GetByName200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -265,7 +268,7 @@ class JSONStoreApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -322,7 +325,7 @@ class JSONStoreApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> str:
+    ) -> Delete1200Response:
         """Delete a JSON store entry by name
 
 
@@ -359,7 +362,7 @@ class JSONStoreApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "str",
+            '200': "Delete1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -388,7 +391,7 @@ class JSONStoreApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[str]:
+    ) -> ApiResponse[Delete1200Response]:
         """Delete a JSON store entry by name
 
 
@@ -425,7 +428,7 @@ class JSONStoreApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "str",
+            '200': "Delete1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -491,7 +494,7 @@ class JSONStoreApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "str",
+            '200': "Delete1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -533,7 +536,7 @@ class JSONStoreApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -576,7 +579,7 @@ class JSONStoreApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> List[JsonStore]:
+    ) -> GetAll4200Response:
         """List all JSON store entries
 
 
@@ -610,7 +613,7 @@ class JSONStoreApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[JsonStore]",
+            '200': "GetAll4200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -638,7 +641,7 @@ class JSONStoreApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[List[JsonStore]]:
+    ) -> ApiResponse[GetAll4200Response]:
         """List all JSON store entries
 
 
@@ -672,7 +675,7 @@ class JSONStoreApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[JsonStore]",
+            '200': "GetAll4200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -734,7 +737,7 @@ class JSONStoreApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[JsonStore]",
+            '200': "GetAll4200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -773,7 +776,7 @@ class JSONStoreApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -817,7 +820,7 @@ class JSONStoreApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> JsonStore:
+    ) -> GetByName200Response:
         """Get a JSON store entry by name
 
 
@@ -854,7 +857,7 @@ class JSONStoreApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "JsonStore",
+            '200': "GetByName200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -883,7 +886,7 @@ class JSONStoreApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[JsonStore]:
+    ) -> ApiResponse[GetByName200Response]:
         """Get a JSON store entry by name
 
 
@@ -920,7 +923,7 @@ class JSONStoreApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "JsonStore",
+            '200': "GetByName200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -986,7 +989,7 @@ class JSONStoreApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "JsonStore",
+            '200': "GetByName200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1028,7 +1031,7 @@ class JSONStoreApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 
@@ -1073,7 +1076,7 @@ class JSONStoreApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> JsonStore:
+    ) -> GetByName200Response:
         """Update a JSON store entry by name
 
 
@@ -1113,7 +1116,7 @@ class JSONStoreApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "JsonStore",
+            '200': "GetByName200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1143,7 +1146,7 @@ class JSONStoreApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[JsonStore]:
+    ) -> ApiResponse[GetByName200Response]:
         """Update a JSON store entry by name
 
 
@@ -1183,7 +1186,7 @@ class JSONStoreApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "JsonStore",
+            '200': "GetByName200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1253,7 +1256,7 @@ class JSONStoreApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "JsonStore",
+            '200': "GetByName200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1298,7 +1301,7 @@ class JSONStoreApi:
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                '*/*'
+                'application/json'
             ]
         )
 

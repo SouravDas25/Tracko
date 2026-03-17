@@ -108,7 +108,14 @@ class _MonthlySummaryViewState extends RefreshableState<MonthlySummaryView> {
 
   @override
   Widget completeWidget(BuildContext context) {
-    return SmartRefresher(
+    return GestureDetector(
+      onHorizontalDragEnd: (details) {
+        final v = details.primaryVelocity;
+        if (v == null) return;
+        if (v < -300) _nextYear();     // swipe left  → next year
+        if (v > 300) _previousYear();  // swipe right → prev year
+      },
+      child: SmartRefresher(
       controller: _refreshController,
       enablePullDown: true,
       onRefresh: refresh,
@@ -137,6 +144,7 @@ class _MonthlySummaryViewState extends RefreshableState<MonthlySummaryView> {
           ),
         ],
       ),
+    ),
     );
   }
 

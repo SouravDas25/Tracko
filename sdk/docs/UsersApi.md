@@ -15,7 +15,7 @@ Method | HTTP request | Description
 
 
 # **create**
-> object create(user_save_request)
+> Create200Response create(user_save_request)
 
 Create a new user (admin only)
 
@@ -25,6 +25,7 @@ Create a new user (admin only)
 
 ```python
 import tracko_sdk
+from tracko_sdk.models.create200_response import Create200Response
 from tracko_sdk.models.user_save_request import UserSaveRequest
 from tracko_sdk.rest import ApiException
 from pprint import pprint
@@ -71,7 +72,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-**object**
+[**Create200Response**](Create200Response.md)
 
 ### Authorization
 
@@ -80,7 +81,7 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: application/json
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 
@@ -91,7 +92,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **me**
-> object me()
+> Me200Response me()
 
 Get the current user's profile
 
@@ -101,6 +102,7 @@ Get the current user's profile
 
 ```python
 import tracko_sdk
+from tracko_sdk.models.me200_response import Me200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -142,7 +144,7 @@ This endpoint does not need any parameter.
 
 ### Return type
 
-**object**
+[**Me200Response**](Me200Response.md)
 
 ### Authorization
 
@@ -151,7 +153,7 @@ This endpoint does not need any parameter.
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 
@@ -162,7 +164,7 @@ This endpoint does not need any parameter.
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **reset_data**
-> object reset_data()
+> Delete1200Response reset_data()
 
 Reset all user data (accounts, categories, transactions)
 
@@ -172,6 +174,7 @@ Reset all user data (accounts, categories, transactions)
 
 ```python
 import tracko_sdk
+from tracko_sdk.models.delete1200_response import Delete1200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -213,7 +216,7 @@ This endpoint does not need any parameter.
 
 ### Return type
 
-**object**
+[**Delete1200Response**](Delete1200Response.md)
 
 ### Authorization
 
@@ -222,7 +225,7 @@ This endpoint does not need any parameter.
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 
@@ -233,7 +236,7 @@ This endpoint does not need any parameter.
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **reset_transactions**
-> object reset_transactions()
+> Delete1200Response reset_transactions()
 
 Reset only transactions for the current user
 
@@ -243,6 +246,7 @@ Reset only transactions for the current user
 
 ```python
 import tracko_sdk
+from tracko_sdk.models.delete1200_response import Delete1200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -284,7 +288,7 @@ This endpoint does not need any parameter.
 
 ### Return type
 
-**object**
+[**Delete1200Response**](Delete1200Response.md)
 
 ### Authorization
 
@@ -293,7 +297,7 @@ This endpoint does not need any parameter.
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 
@@ -304,7 +308,7 @@ This endpoint does not need any parameter.
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **show**
-> object show()
+> ShowByPhone200Response show()
 
 List users (admin) or get a user by ID
 
@@ -314,6 +318,7 @@ List users (admin) or get a user by ID
 
 ```python
 import tracko_sdk
+from tracko_sdk.models.show_by_phone200_response import ShowByPhone200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -355,7 +360,7 @@ This endpoint does not need any parameter.
 
 ### Return type
 
-**object**
+[**ShowByPhone200Response**](ShowByPhone200Response.md)
 
 ### Authorization
 
@@ -364,7 +369,7 @@ This endpoint does not need any parameter.
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 
@@ -375,7 +380,7 @@ This endpoint does not need any parameter.
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **show1**
-> object show1(id)
+> ShowByPhone200Response show1(id)
 
 List users (admin) or get a user by ID
 
@@ -385,6 +390,7 @@ List users (admin) or get a user by ID
 
 ```python
 import tracko_sdk
+from tracko_sdk.models.show_by_phone200_response import ShowByPhone200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -430,7 +436,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-**object**
+[**ShowByPhone200Response**](ShowByPhone200Response.md)
 
 ### Authorization
 
@@ -439,7 +445,7 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 
@@ -450,7 +456,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **show_by_phone**
-> object show_by_phone(phone_no)
+> ShowByPhone200Response show_by_phone(phone_no)
 
 Look up a user by phone number
 
@@ -460,6 +466,7 @@ Look up a user by phone number
 
 ```python
 import tracko_sdk
+from tracko_sdk.models.show_by_phone200_response import ShowByPhone200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -505,7 +512,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-**object**
+[**ShowByPhone200Response**](ShowByPhone200Response.md)
 
 ### Authorization
 
@@ -514,7 +521,7 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 
@@ -525,7 +532,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **update_profile**
-> object update_profile(user_profile_update_request)
+> UpdateProfile200Response update_profile(user_profile_update_request)
 
 Update the current user's profile
 
@@ -535,6 +542,7 @@ Update the current user's profile
 
 ```python
 import tracko_sdk
+from tracko_sdk.models.update_profile200_response import UpdateProfile200Response
 from tracko_sdk.models.user_profile_update_request import UserProfileUpdateRequest
 from tracko_sdk.rest import ApiException
 from pprint import pprint
@@ -581,7 +589,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-**object**
+[**UpdateProfile200Response**](UpdateProfile200Response.md)
 
 ### Authorization
 
@@ -590,7 +598,7 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: application/json
- - **Accept**: */*
+ - **Accept**: application/json
 
 ### HTTP response details
 

@@ -5,6 +5,7 @@ import 'package:tracko/services/budget_service.dart';
 import 'package:tracko/services/exchange_rate_service.dart';
 import 'package:tracko/services/SessionService.dart';
 import 'package:tracko/repositories/account_repository.dart';
+import 'package:tracko/repositories/analytics_repository.dart';
 import 'package:tracko/repositories/category_repository.dart';
 import 'package:tracko/repositories/contact_repository.dart';
 import 'package:tracko/repositories/json_store_repository.dart';
@@ -38,6 +39,8 @@ Future<void> setupDI() async {
 
   sl.registerLazySingleton<AccountRepository>(
       () => AccountRepository(api: sl<ApiClient>()));
+  sl.registerLazySingleton<AnalyticsRepository>(
+      () => AnalyticsRepository(api: sl<ApiClient>()));
   sl.registerLazySingleton<CategoryRepository>(
       () => CategoryRepository(api: sl<ApiClient>()));
   sl.registerLazySingleton<ContactRepository>(

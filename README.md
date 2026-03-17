@@ -8,77 +8,35 @@ A comprehensive expense management application with Flutter mobile UI and dual b
 - **backend**: Spring Boot REST API backend
 - **ml-backend**: Django backend with ML-powered expense categorization
 
-## Getting Started
+## Quick Start
 
 ### Prerequisites
 - Flutter SDK 3.0+
-- Java 17+ (set JAVA_HOME to a JDK 17 installation)
+- Java 17+ 
 - Maven 3.8+
 - Python 3.8+
-- PostgreSQL (for local development)
 - Docker & Docker Compose (optional)
-- Task (Taskfile) - `go install github.com/go-task/task/v3/cmd/task@latest` (recommended)
+- Task (recommended): `go install github.com/go-task/task/v3/cmd/task@latest`
 
-### Quick Start Options
-
-#### Option 1: Taskfile (Recommended)
+### Option 1: Taskfile (Recommended)
 ```bash
-task start          # Start both backend and Flutter UI
-task stop           # Stop all services
-task clean          # Clean build artifacts
-task test           # Run all tests
-task install        # Install dependencies
+task start    # Start backend + Flutter
+task stop     # Stop services
+task test     # Run tests
 ```
 
-#### Option 2: Manual Startup
+### Option 2: Manual
 ```bash
 # Terminal 1 - Backend
-cd backend
-mvn spring-boot:run -P dev
-
-# Terminal 2 - Flutter UI  
-cd frontend
-flutter run
+cd backend && mvn spring-boot:run -P dev
+# Terminal 2 - Flutter 
+cd frontend && flutter run
 ```
 
-#### Option 3: Docker Compose
+### Option 3: Docker
 ```bash
 docker-compose up -d
 ```
-
-### Setup Instructions
-
-1. **Flutter UI Setup**
-   ```bash
-   cd frontend
-   flutter pub get
-   flutter run
-   ```
-
-2. **Java Backend Setup**
-   ```bash
-   cd backend
-   mvn clean install -P dev
-   mvn spring-boot:run -P dev
-   ```
-
-> Tip: For hot reload during development, add Spring Boot DevTools to your backend `pom.xml` (development only):
-
-```xml
-<dependency>
-  <groupId>org.springframework.boot</groupId>
-  <artifactId>spring-boot-devtools</artifactId>
-  <optional>true</optional>
-</dependency>
-```
-
-3. **Python ML Backend Setup**
-   ```bash
-   cd ml-backend
-   pip install -r requirements.txt
-   python manage.py migrate
-   python manage.py runserver
-   ```
 
 ## Configuration
 
@@ -93,220 +51,33 @@ Database credentials and other sensitive configuration should be stored in envir
 
 ## Features
 
-- 📱 Cross-platform mobile app (Flutter) with modern UI design
-- 💰 Comprehensive expense tracking and categorization
-- 📊 Advanced analytics and reporting with sticky navigation
-- 🤖 ML-powered smart categorization
-- 🔐 Secure authentication with JWT (username/password & phone login)
-- ☁️ Cloud deployment ready (Docker, Heroku, SAP Cloud Platform)
-- 💳 **Zero-Based Budgeting (ZBB)** system with monthly allocations
-- 💱 **Multi-currency support** with live exchange rates
-- 🔄 **Unified Transaction/Transfer API** for seamless money movement
-- 📋 **CLI tools** for API testing and database seeding
-- 🎨 **Modern UI** with consistent design language across all pages
-- 🐳 **Docker support** for containerized deployment
+📱 Cross-platform Flutter app • 💰 Expense tracking & categorization • 📊 Analytics with sticky navigation • 🤖 ML-powered categorization • 🔐 JWT auth (username/password & phone) • 💳 Zero-Based Budgeting • 💱 Multi-currency with live rates • 🔄 Unified Transaction/Transfer API • 📋 CLI tools • 🎨 Modern UI • 🐳 Docker support
 
 ## Architecture
 
-### Backend (Java Spring Boot)
-- **RESTful API** with JWT authentication
-- **Zero-Based Budgeting (ZBB)** engine with monthly allocations and rollover logic
-- **Multi-currency support** with automatic exchange rate fetching
-- **Unified Transaction/Transfer API** handling both expense/income and account transfers
-- **Liquibase database migrations** for schema versioning
-- **Comprehensive test coverage** with integration tests
+**Backend (Java Spring Boot):** REST API with JWT, ZBB engine, multi-currency, unified transaction/transfer API, Liquibase migrations, comprehensive tests
 
-### Frontend (Flutter)
-- **Modern UI design** with consistent styling across all pages
-- **Sticky navigation headers** for better UX in list views
-- **Multi-currency transaction entry** with automatic rate conversion
-- **Budget management interface** with allocation and tracking
-- **Transfer functionality** integrated with transaction flow
-- **Offline-first architecture** with local caching
+**Frontend (Flutter):** Modern UI with sticky navigation, multi-currency entry, budget management, transfer functionality, offline-first
 
-### ML Backend (Python Django)
-- **Smart categorization** using machine learning models
-- **Natural language processing** for transaction descriptions
-- **API integration** with main Java backend
+**ML Backend (Python Django):** Smart categorization using ML models, NLP for descriptions
 
 ## Development Tools
 
-### Taskfile Commands
+**Taskfile Commands:** `task start` • `task flutter` • `task backend` • `task stop` • `task clean` • `task test` • `task install`
+
+**Docker:** `docker-compose up -d` • `docker build -t tracko-app .`
+
+**Integration Tests:**
 ```bash
-task start          # Start Flutter UI and Java Backend
-task flutter        # Start Flutter UI only (Chrome)
-task backend        # Start Java Backend only (detached)
-task stop           # Stop all services
-task clean          # Clean build artifacts
-task test           # Run tests (Flutter and Backend)
-task install        # Install dependencies
-task docker:tar     # Build and export Docker image
-task docker:publish # Tag and push to registry
-```
-
-### Docker Support
-```bash
-# Build and run with Docker Compose
-docker-compose up -d
-
-# Build standalone Docker image
-docker build -t tracko-app .
-```
-
-### Integration Testing
-
-Tracko includes comprehensive integration tests for the backend API:
-
-#### Running Integration Tests
-```bash
-# Run all integration tests
 cd backend
 mvn test -Dtest=*IntegrationTest
-
-# Run specific test classes
 mvn test -Dtest=AccountIntegrationTest
 mvn test -Dtest=TransactionIntegrationTest
 mvn test -Dtest=BudgetIntegrationTest
 ```
 
-#### Test Coverage
-The integration test suite covers:
-- **Account Management** (6 tests) - CRUD operations
-- **Transaction Management** (8 tests) - CRUD, date range, filtering
-- **Budget System** (multiple tests) - ZBB allocations and calculations
-- **Multi-Currency** (multiple tests) - Exchange rates and conversions
-- **Authentication** (multiple tests) - JWT and phone login
-- **Transfers & Splits** (multiple tests) - Money movement between accounts
+**Test Coverage:** Account Management (6) • Transaction Management (8) • Budget System • Multi-Currency • Authentication • Transfers & Splits
 
-#### Test Results
-All integration tests are designed to pass with 100% success rate, providing full API coverage for the Flutter frontend.
-
-## CLI and Database Seeding
-
-Tracko includes a powerful command-line interface (CLI) for API testing and database management, along with a database seeding script.
-
-### Tracko CLI
-
-The CLI provides direct access to all Tracko backend APIs for testing, debugging, and data management.
-
-#### Installation & Setup
-
-The CLI is located in the `cli/` directory:
-
-```bash
-cd cli
-python -m cli --help
-```
-
-#### Authentication
-
-First, authenticate with the backend:
-
-```bash
-# Login with username/password
-python -m cli login --username user@example.com --password password
-
-# Or use OAuth token endpoint
-python -m cli oauth-token --phone-no 9999999999 --firebase-uuid your-uuid
-```
-
-The CLI automatically saves the authentication token for subsequent commands.
-
-#### Common Commands
-
-```bash
-# Health check
-python -m cli health
-
-# Accounts
-python -m cli accounts list
-python -m cli accounts add --name "HDFC Savings"
-
-# Categories
-python -m cli categories list
-python -m cli categories add --name "Food & Dining"
-
-# Transactions
-python -m cli transactions list
-python -m cli transactions add --account-id 1 --category-id 1 --amount 50.0 --type expense --name "Lunch"
-
-# Budget
-python -m cli budget view --month 2 --year 2026
-python -m cli budget allocate --category-id 1 --amount 500.0 --month 2 --year 2026
-
-# Contacts
-python -m cli contacts list
-python -m cli contacts add --name "Alice" --phone "9876543210" --email "alice@example.com"
-
-# Currencies
-python -m cli currencies list
-python -m cli currencies add --code EUR --rate 0.85
-
-# Generic API requests
-python -m cli request --method GET --path /api/health
-python -m cli request --method POST --path /api/contacts --json '{"name":"Bob"}'
-```
-
-#### CLI Options
-
-- `--base-url`: Backend API URL (default: http://localhost:8080)
-- `--token`: Override saved authentication token
-- `--raw`: Print raw API response instead of formatted output
-
-### Database Seeding Script
-
-Tracko includes a comprehensive database seeding script that populates the database with realistic sample data for testing and development.
-
-#### Running the Seeder
-
-```bash
-cd cli
-python seed_database.py
-```
-
-#### What Gets Seeded
-
-The seeder creates the following sample data:
-
-- **5 Accounts**: HDFC Savings, ICICI Credit Card, Cash Wallet, Paytm Wallet, Investment Account
-- **12 Categories**: Food & Dining, Transportation, Shopping, Entertainment, Bills & Utilities, Healthcare, Education, Travel, Investments, Salary, Freelance, Other Income
-- **5 Contacts**: Sample contacts with phone numbers and emails
-- **90+ Transactions**: Distributed across the previous 3 months from current month
-  - Mix of income and expense transactions
-  - Realistic amounts and timing
-  - Various categories and accounts
-- **5-7 Budget Allocations**: Monthly budget allocations for expense categories
-- **6 Currency Configurations**: EUR, GBP, JPY, INR, CAD, AUD with exchange rates
-- **Sample Split Transactions**: Split expense transactions with contacts
-
-#### Seeder Features
-
-- **Automatic API Health Check**: Waits for backend to be available
-- **Authentication**: Uses existing user credentials (user@example.com / password)
-- **Error Handling**: Robust error handling with detailed logging
-- **Progress Tracking**: Real-time progress updates during data creation
-- **Realistic Data**: Transactions distributed across 3 months with proper timing
-
-#### Customization
-
-You can modify `seed_database.py` to:
-- Change sample data (names, amounts, categories)
-- Adjust the number of entities created
-- Modify the time range for transactions
-- Add different types of test data
-
-#### Using the CLI After Seeding
-
-After running the seeder, you can use the CLI with the provided token:
-
-```bash
-# The seeder outputs the authentication token
-python -m cli --base-url http://localhost:8080 --token <TOKEN> accounts list
-python -m cli --base-url http://localhost:8080 --token <TOKEN> transactions list
-python -m cli --base-url http://localhost:8080 --token <TOKEN> budget view
-```
-
-For detailed documentation, see `cli/README_SEEDING.md`.
 
 ### CSV Import Tool
 
@@ -321,138 +92,27 @@ See `money-manager-converter/README.md` for full documentation.
 
 ## Documentation
 
-- **[Startup Guide](README-STARTUP.md)** - Detailed startup instructions and troubleshooting
-- **[Backend Integration Guide](backend/docs/FLUTTER_INTEGRATION_GUIDE.md)** - Complete API documentation
-- **[Migration Complete](backend/docs/MIGRATION_COMPLETE.md)** - Backend migration status
-- **[CLI Seeding Guide](cli/README_SEEDING.md)** - Database seeding documentation
+**[Startup Guide](README-STARTUP.md)** • **[Backend API](backend/docs/FLUTTER_INTEGRATION_GUIDE.md)** • **[Migration Status](backend/docs/MIGRATION_COMPLETE.md)** • **[CLI Guide](cli/README_TYPER.md)**
 
-## CLI and Database Seeding
+## CLI Tools (New Typer-based CLI)
 
-Tracko includes a powerful command-line interface (CLI) for API testing and database management, along with a database seeding script.
-
-### Tracko CLI
-
-The CLI provides direct access to all Tracko backend APIs for testing, debugging, and data management.
-
-#### Installation & Setup
-
-The CLI is located in the `cli/` directory:
-
+**Quick Start:**
 ```bash
-python -m cli --help
-
-alias tk="python -m cli"
+cd cli && pip install -r requirements.txt
+python -m cli auth login
+python -m cli account list
+python -m cli db seed
 ```
 
-#### Authentication
+**Features:** Rich tables • Interactive prompts • Progress bars • Tab completion
 
-First, authenticate with the backend:
+**Key Commands:**
+- **Auth:** `python -m cli auth login/logout`
+- **Database:** `python -m cli db seed/reset`
+- **Resources:** `python -m cli account|transaction|category|budget|contact|currency list/add/update/delete`
+- **API:** `python -m cli request --method GET --path /api/health`
 
-```bash
-# Login with username/password
-python -m cli login --username user@example.com --password password
-
-# Or use OAuth token endpoint
-python -m cli oauth-token --phone-no 9999999999 --firebase-uuid your-uuid
-```
-
-The CLI automatically saves the authentication token for subsequent commands.
-
-#### Common Commands
-
-```bash
-# Health check
-python -m cli health
-
-# Accounts
-python -m cli accounts list
-python -m cli accounts add --name "HDFC Savings"
-
-# Categories
-python -m cli categories list
-python -m cli categories add --name "Food & Dining"
-
-# Transactions
-python -m cli transactions list
-python -m cli transactions add --account-id 1 --category-id 1 --amount 50.0 --type expense --name "Lunch"
-
-# Budget
-python -m cli budget view --month 2 --year 2026
-python -m cli budget allocate --category-id 1 --amount 500.0 --month 2 --year 2026
-
-# Contacts
-python -m cli contacts list
-python -m cli contacts add --name "Alice" --phone "9876543210" --email "alice@example.com"
-
-# Currencies
-python -m cli currencies list
-python -m cli currencies add --code EUR --rate 0.85
-
-# Generic API requests
-python -m cli request --method GET --path /api/health
-python -m cli request --method POST --path /api/contacts --json '{"name":"Bob"}'
-```
-
-#### CLI Options
-
-- `--base-url`: Backend API URL (default: http://localhost:8080)
-- `--token`: Override saved authentication token
-- `--raw`: Print raw API response instead of formatted output
-
-### Database Seeding Script
-
-Tracko includes a comprehensive database seeding script that populates the database with realistic sample data for testing and development.
-
-#### Running the Seeder
-
-```bash
-cd cli
-python seed_database.py
-```
-
-#### What Gets Seeded
-
-The seeder creates the following sample data:
-
-- **5 Accounts**: HDFC Savings, ICICI Credit Card, Cash Wallet, Paytm Wallet, Investment Account
-- **12 Categories**: Food & Dining, Transportation, Shopping, Entertainment, Bills & Utilities, Healthcare, Education, Travel, Investments, Salary, Freelance, Other Income
-- **5 Contacts**: Sample contacts with phone numbers and emails
-- **90+ Transactions**: Distributed across the previous 3 months from current month
-  - Mix of income and expense transactions
-  - Realistic amounts and timing
-  - Various categories and accounts
-- **5-7 Budget Allocations**: Monthly budget allocations for expense categories
-- **6 Currency Configurations**: EUR, GBP, JPY, INR, CAD, AUD with exchange rates
-- **Sample Split Transactions**: Split expense transactions with contacts
-
-#### Seeder Features
-
-- **Automatic API Health Check**: Waits for backend to be available
-- **Authentication**: Uses existing user credentials (user@example.com / password)
-- **Error Handling**: Robust error handling with detailed logging
-- **Progress Tracking**: Real-time progress updates during data creation
-- **Realistic Data**: Transactions distributed across 3 months with proper timing
-
-#### Customization
-
-You can modify `seed_database.py` to:
-- Change sample data (names, amounts, categories)
-- Adjust the number of entities created
-- Modify the time range for transactions
-- Add different types of test data
-
-#### Using the CLI After Seeding
-
-After running the seeder, you can use the CLI with the provided token:
-
-```bash
-# The seeder outputs the authentication token
-python -m cli --base-url http://localhost:8080 --token <TOKEN> accounts list
-python -m cli --base-url http://localhost:8080 --token <TOKEN> transactions list
-python -m cli --base-url http://localhost:8080 --token <TOKEN> budget view
-```
-
-For detailed documentation, see `cli/README_SEEDING.md`.
+**Documentation:** [`cli/README_TYPER.md`](cli/README_TYPER.md) • [`cli/MIGRATION_COMPLETE.md`](cli/MIGRATION_COMPLETE.md)
 
 ## License
 
@@ -460,27 +120,12 @@ See individual component repositories for license information.
 
 ## Troubleshooting
 
-### Port 8080 already in use
-- Use `task stop` to cleanly stop all services
-- If issues persist, on Windows:
-  - Find listeners: `powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort 8080 -State Listen | Select OwningProcess"`
-  - Kill process: `taskkill /T /PID <PID> /F`
+**Port 8080 in use:** `task stop` or find/kill process on Windows
 
-### Flutter hot reload not working
-- Make sure you're in an interactive run (`flutter run`), not `flutter run --machine`.
-- Use `task flutter` to start Flutter UI with proper configuration.
+**Flutter hot reload:** Use `flutter run` (interactive) or `task flutter`
 
-### Backend fails to start
-- Check Java version: `java -version` (should be 17+)
-- Verify MAVEN_HOME is set: `mvn -version`
-- Clean and rebuild: `task clean && task install`
+**Backend fails:** Check Java 17+, Maven setup, or run `task clean && task install`
 
-### Database connection issues
-- For development, the backend uses H2 in-memory database (no setup required)
-- For production, configure PostgreSQL in `application.properties`
-- Check environment variables are set correctly
+**Database:** Uses H2 in-memory for development, PostgreSQL for production
 
-### Docker issues
-- Ensure Docker Desktop is running
-- Check Docker Compose version: `docker-compose --version`
-- Rebuild images: `docker-compose build --no-cache`
+**Docker:** Ensure Docker Desktop running, try `docker-compose build --no-cache`

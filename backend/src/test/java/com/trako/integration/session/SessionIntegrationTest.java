@@ -1,6 +1,5 @@
 package com.trako.integration.session;
 
-import com.trako.config.TestJwtSecurityConfig;
 import com.trako.entities.User;
 import com.trako.integration.BaseIntegrationTest;
 import com.trako.models.request.AuthicationRequest;
@@ -10,7 +9,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -30,7 +28,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import(TestJwtSecurityConfig.class)
 @Transactional
 public class SessionIntegrationTest extends BaseIntegrationTest {
 

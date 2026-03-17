@@ -284,7 +284,6 @@ class TransactionRepository {
       'date': t.date.toIso8601String(),
       'accountId': t.accountId,
       'categoryId': t.categoryId,
-      'isCountable': t.isCountable,
       'comments': t.comments, // mapped from description/comments
       'originalCurrency': t.originalCurrency,
       'originalAmount': t.originalAmount,

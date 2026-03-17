@@ -1,6 +1,5 @@
 package com.trako.integration.transaction;
 
-import com.trako.config.TestJwtSecurityConfig;
 import com.trako.dtos.TransferResult;
 import com.trako.entities.*;
 import com.trako.enums.CategoryType;
@@ -15,7 +14,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,7 +28,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import(TestJwtSecurityConfig.class)
 @Transactional
 public class TransactionTypeUpdateTest extends BaseIntegrationTest {
 
@@ -99,7 +96,6 @@ public class TransactionTypeUpdateTest extends BaseIntegrationTest {
                 null,                    // comments
                 categoryIncome.getId(),  // categoryId
                 TransactionType.CREDIT,  // transactionType
-                null,                    // isCountable
                 null,                    // originalCurrency
                 null,                    // originalAmount
                 null,                    // exchangeRate
@@ -146,7 +142,6 @@ public class TransactionTypeUpdateTest extends BaseIntegrationTest {
                 null,                    // comments
                 categoryExpense.getId(), // categoryId
                 TransactionType.DEBIT,   // transactionType
-                null,                    // isCountable
                 null,                    // originalCurrency
                 null,                    // originalAmount
                 null,                    // exchangeRate
@@ -193,7 +188,6 @@ public class TransactionTypeUpdateTest extends BaseIntegrationTest {
                 null,                    // comments
                 null,                    // categoryId
                 TransactionType.TRANSFER,// transactionType
-                null,                    // isCountable
                 null,                    // originalCurrency
                 null,                    // originalAmount
                 null,                    // exchangeRate
@@ -254,7 +248,6 @@ public class TransactionTypeUpdateTest extends BaseIntegrationTest {
                 null,                    // comments
                 null,                    // categoryId
                 TransactionType.TRANSFER,// transactionType
-                null,                    // isCountable
                 null,                    // originalCurrency
                 null,                    // originalAmount
                 null,                    // exchangeRate
@@ -322,7 +315,6 @@ public class TransactionTypeUpdateTest extends BaseIntegrationTest {
                 null,                    // comments
                 categoryExpense.getId(), // categoryId
                 TransactionType.DEBIT,   // transactionType
-                null,                    // isCountable
                 null,                    // originalCurrency
                 null,                    // originalAmount
                 null,                    // exchangeRate
@@ -377,7 +369,6 @@ public class TransactionTypeUpdateTest extends BaseIntegrationTest {
                 null,                    // comments
                 categoryIncome.getId(),  // categoryId
                 TransactionType.CREDIT,  // transactionType
-                null,                    // isCountable
                 null,                    // originalCurrency
                 null,                    // originalAmount
                 null,                    // exchangeRate

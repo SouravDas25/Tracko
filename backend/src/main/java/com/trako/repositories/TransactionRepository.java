@@ -1,5 +1,7 @@
 package com.trako.repositories;
 
+import com.trako.dtos.DateAmountRow;
+import com.trako.dtos.GroupedDateAmountRow;
 import com.trako.entities.Transaction;
 import com.trako.enums.TransactionDbType;
 import org.springframework.data.domain.Page;
@@ -341,6 +343,62 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             @Param("categoryId") Long categoryId
     );
 
+    // ── Unified query: optional categoryId ──
+
+    @Query("SELECT t.date, SUM(t.amount) " +
+            "FROM Transaction t " +
+            "WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId) " +
+            "AND t.isCountable = 1 " +
+            "AND t.transactionType = :transactionType " +
+            "AND (:accountId IS NULL OR t.accountId = :accountId) " +
+            "AND (:categoryId IS NULL OR t.categoryId = :categoryId) " +
+            "GROUP BY t.date " +
+            "ORDER BY t.date ASC")
+    List<Object[]> sumAmountsByDate(
+            @Param("userId") String userId,
+            @Param("transactionType") TransactionDbType transactionType,
+            @Param("accountId") Long accountId,
+            @Param("categoryId") Long categoryId
+    );
+
+    // ── Grouped queries for analytics (single query, no N+1) ──
+
+    @Query("SELECT t.categoryId, t.date, SUM(t.amount) " +
+            "FROM Transaction t " +
+            "WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId) " +
+            "AND t.isCountable = 1 " +
+            "AND t.transactionType = :transactionType " +
+            "AND (:accountId IS NULL OR t.accountId = :accountId) " +
+            "AND t.date >= :startDate AND t.date < :endDate " +
+            "GROUP BY t.categoryId, t.date " +
+            "ORDER BY t.categoryId, t.date ASC")
+    List<Object[]> sumAmountsByDateGroupedByCategory(
+            @Param("userId") String userId,
+            @Param("transactionType") TransactionDbType transactionType,
+            @Param("accountId") Long accountId,
+            @Param("startDate") Date startDate,
+            @Param("endDate") Date endDate
+    );
+
+    @Query("SELECT t.accountId, t.date, SUM(t.amount) " +
+            "FROM Transaction t " +
+            "WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId) " +
+            "AND t.isCountable = 1 " +
+            "AND t.transactionType = :transactionType " +
+            "AND (:accountId IS NULL OR t.accountId = :accountId) " +
+            "AND (:categoryId IS NULL OR t.categoryId = :categoryId) " +
+            "AND t.date >= :startDate AND t.date < :endDate " +
+            "GROUP BY t.accountId, t.date " +
+            "ORDER BY t.accountId, t.date ASC")
+    List<Object[]> sumAmountsByDateGroupedByAccount(
+            @Param("userId") String userId,
+            @Param("transactionType") TransactionDbType transactionType,
+            @Param("accountId") Long accountId,
+            @Param("categoryId") Long categoryId,
+            @Param("startDate") Date startDate,
+            @Param("endDate") Date endDate
+    );
+
     @Query("SELECT t.categoryId, SUM(t.amount) " +
             "FROM Transaction t " +
             "WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId) " +
@@ -374,6 +432,61 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             @Param("endDate") Date endDate
     );
 
+
+    // ── Analytics queries: multi-account and multi-category filtering ──
+
+    @Query("SELECT new com.trako.dtos.DateAmountRow(t.date, SUM(t.amount)) " +
+            "FROM Transaction t " +
+            "WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId) " +
+            "AND t.isCountable = 1 " +
+            "AND t.transactionType = :transactionType " +
+            "AND (:#{#accountIds == null || #accountIds.isEmpty()} = true OR t.accountId IN :accountIds) " +
+            "AND (:#{#categoryIds == null || #categoryIds.isEmpty()} = true OR t.categoryId IN :categoryIds) " +
+            "AND t.date >= :startDate AND t.date < :endDate " +
+            "GROUP BY t.date " +
+            "ORDER BY t.date ASC")
+    List<DateAmountRow> sumAmountsByDateFiltered(
+            @Param("userId") String userId,
+            @Param("transactionType") TransactionDbType transactionType,
+            @Param("accountIds") List<Long> accountIds,
+            @Param("categoryIds") List<Long> categoryIds,
+            @Param("startDate") Date startDate,
+            @Param("endDate") Date endDate
+    );
+
+    @Query("SELECT new com.trako.dtos.GroupedDateAmountRow(t.categoryId, t.date, SUM(t.amount)) " +
+            "FROM Transaction t " +
+            "WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId) " +
+            "AND t.isCountable = 1 " +
+            "AND t.transactionType = :transactionType " +
+            "AND (:#{#accountIds == null || #accountIds.isEmpty()} = true OR t.accountId IN :accountIds) " +
+            "AND t.date >= :startDate AND t.date < :endDate " +
+            "GROUP BY t.categoryId, t.date " +
+            "ORDER BY t.categoryId, t.date ASC")
+    List<GroupedDateAmountRow> sumAmountsByDateGroupedByCategoryFiltered(
+            @Param("userId") String userId,
+            @Param("transactionType") TransactionDbType transactionType,
+            @Param("accountIds") List<Long> accountIds,
+            @Param("startDate") Date startDate,
+            @Param("endDate") Date endDate
+    );
+
+    @Query("SELECT new com.trako.dtos.GroupedDateAmountRow(t.accountId, t.date, SUM(t.amount)) " +
+            "FROM Transaction t " +
+            "WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId) " +
+            "AND t.isCountable = 1 " +
+            "AND t.transactionType = :transactionType " +
+            "AND (:#{#categoryIds == null || #categoryIds.isEmpty()} = true OR t.categoryId IN :categoryIds) " +
+            "AND t.date >= :startDate AND t.date < :endDate " +
+            "GROUP BY t.accountId, t.date " +
+            "ORDER BY t.accountId, t.date ASC")
+    List<GroupedDateAmountRow> sumAmountsByDateGroupedByAccountFiltered(
+            @Param("userId") String userId,
+            @Param("transactionType") TransactionDbType transactionType,
+            @Param("categoryIds") List<Long> categoryIds,
+            @Param("startDate") Date startDate,
+            @Param("endDate") Date endDate
+    );
     @Modifying
     @Query("DELETE FROM Transaction t WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId)")
     void deleteByUserId(@Param("userId") String userId);

@@ -1,122 +1,61 @@
+"""Tracko CLI - Typer-based command-line interface."""
+import typer
 from .commands import (
-    accounts,
-    auth,
-    budget,
-    categories,
-    config,
-    contacts,
-    currencies,
     health,
-    misc,
-    splits,
+    auth,
+    config,
+    account,
+    category,
+    contact,
+    user,
+    transaction,
+    budget,
+    currency,
+    split,
     stats,
-    transactions,
-    users,
+    misc,
+    db,
+    completion,
 )
 
-import argparse
-import sys
+app = typer.Typer(
+    name="tracko",
+    help="Tracko CLI - Expense management tool",
+    no_args_is_help=True,
+    add_completion=True,
+)
+
+# Phase 1: Foundation & Core Commands
+app.add_typer(health.app, name="health")
+app.add_typer(auth.app, name="auth")
+app.add_typer(config.app, name="config")
+
+# Phase 2: Resource Management Commands
+app.add_typer(account.app, name="account")
+app.add_typer(category.app, name="category")
+app.add_typer(contact.app, name="contact")
+app.add_typer(user.app, name="user")
+
+# Phase 3: Transaction & Financial Commands
+app.add_typer(transaction.app, name="transaction")
+app.add_typer(budget.app, name="budget")
+app.add_typer(currency.app, name="currency")
+
+# Phase 4: Advanced Features
+app.add_typer(split.app, name="split")
+app.add_typer(stats.app, name="stats")
+app.add_typer(misc.exchange_app, name="exchange")
+app.add_typer(misc.store_app, name="store")
+app.add_typer(db.app, name="db")
+
+# Phase 5: Utilities
+app.add_typer(completion.app, name="completion")
 
 
-
-
-def build_parser() -> argparse.ArgumentParser:
-    examples = """Examples:
-  # Health
-  python -m cli health
-
-  # Auth
-  python -m cli login --username user@example.com --password password
-  python -m cli --base-url http://192.168.1.10:8080 login --username user@example.com --password password
-  python -m cli logout
-
-  # Users
-  python -m cli users list
-
-  # Accounts
-  python -m cli accounts list
-  python -m cli accounts balances
-  python -m cli accounts add --name HDFC
-
-  # Categories
-  python -m cli categories list
-  python -m cli categories add --name FOOD
-
-  # Contacts
-  python -m cli contacts list
-  python -m cli contacts add --name Alice --phone 99999 --email alice@example.com
-  python -m cli contacts update --id 1 --name 'Alice B'
-  python -m cli contacts delete --id 1
-
-  # Transactions
-  python -m cli transactions list
-  python -m cli transactions summary --start-date 2026-01-01 --end-date 2026-12-31
-  python -m cli transactions add --account-id 2 --category-id 2 --amount 250 --type expense --name Lunch --comments 'Team lunch'
-  python -m cli transactions get --id 1
-  python -m cli transactions update --id 1 --account-id 2 --category-id 2 --amount 300 --type expense --name 'Lunch (updated)' --comments 'Updated from CLI'
-  python -m cli transactions delete --id 1
-
-  # Transfers (now uses unified transactions API)
-  python -m cli transfers create --from-account-id 2 --to-account-id 3 --amount 500 --name 'Move to Savings' --comments 'Feb savings'
-
-  # Splits (list)
-  python -m cli splits list
-  python -m cli splits for-transaction --transaction-id 6
-  python -m cli splits for-user --user-id 575e15bc-...
-  python -m cli splits unsettled --user-id 575e15bc-...
-  python -m cli splits for-contact --contact-id 1
-  python -m cli splits unsettled-contact --contact-id 1
-
-  # Splits (create)
-  python -m cli splits create --transaction-id 6 --user-id 575e15bc-... --amount 125 --contact-id 1
-
-  # Budget
-  python -m cli budget view --month 2 --year 2026
-  python -m cli budget allocate --category-id 1 --amount 500 --month 2 --year 2026
-  python -m cli budget available --month 2 --year 2026
-
-  # Currency settings
-  python -m cli currencies list
-  python -m cli currencies add --code USD --rate 0.85
-"""
-    p = argparse.ArgumentParser(
-        description="Tracko CLI (dev/admin tool)",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog=examples,
-        prog="cli",
-    )
-    p.add_argument("--base-url", default=None)
-    p.add_argument(
-        "--token", default=None, help="Override token (otherwise uses saved token)"
-    )
-    p.add_argument("--raw", action="store_true", help="Print raw response body")
-
-    sub = p.add_subparsers(dest="cmd", required=True)
-
-    # Register module parsers
-    health.setup_parser(sub)
-    auth.setup_parser(sub)
-    config.setup_parser(sub)
-    users.setup_parser(sub)
-    accounts.setup_parser(sub)
-    categories.setup_parser(sub)
-    contacts.setup_parser(sub)
-    transactions.setup_parser(sub)
-    transactions.setup_transfers_parser(sub)
-    splits.setup_parser(sub)
-    budget.setup_parser(sub)
-    stats.setup_parser(sub)
-    currencies.setup_parser(sub)
-    misc.setup_parser(sub)
-
-    return p
-
-
-def main(argv: list[str]) -> int:
-    parser = build_parser()
-    args = parser.parse_args(argv)
-    return int(args.func(args))
+def main():
+    """Entry point for the CLI."""
+    app()
 
 
 if __name__ == "__main__":
-    raise SystemExit(main(sys.argv[1:]))
+    main()

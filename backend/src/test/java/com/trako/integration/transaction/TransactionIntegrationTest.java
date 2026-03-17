@@ -1,6 +1,5 @@
 package com.trako.integration.transaction;
 
-import com.trako.config.TestJwtSecurityConfig;
 import com.trako.dtos.TransferResult;
 import com.trako.entities.*;
 import com.trako.enums.TransactionDbType;
@@ -17,7 +16,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,7 +33,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import(TestJwtSecurityConfig.class)
 @Transactional
 public class TransactionIntegrationTest extends BaseIntegrationTest {
 
@@ -115,7 +112,6 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
                 "date-check",           // comments
                 null,                    // categoryId
                 TransactionType.TRANSFER,// transactionType
-                null,                    // isCountable
                 "INR",                   // originalCurrency
                 123.45,                  // originalAmount
                 null,                    // exchangeRate (auto-resolve to 1.0 for base currency)
@@ -180,7 +176,6 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
                 "updated",              // comments
                 null,                    // categoryId
                 TransactionType.TRANSFER, // transactionType - updating a transfer, not converting
-                null,                    // isCountable
                 debit.getOriginalCurrency(), // originalCurrency
                 debit.getOriginalAmount(),   // originalAmount
                 null,                    // exchangeRate (keep existing)
@@ -1434,7 +1429,6 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
                 null,                    // comments
                 null,                    // categoryId
                 TransactionType.TRANSFER,// transactionType
-                null,                    // isCountable
                 null,                    // originalCurrency
                 10.0,                    // originalAmount (using amount field)
                 null,                    // exchangeRate
@@ -1461,7 +1455,6 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
                 null,                    // comments
                 null,                    // categoryId (missing for regular transaction validation)
                 null,                    // transactionType (missing - should error)
-                null,                    // isCountable
                 "INR",                   // originalCurrency
                 10.0,                    // originalAmount
                 null,                    // exchangeRate
@@ -1493,7 +1486,6 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
                 null,                    // comments
                 null,                    // categoryId
                 TransactionType.TRANSFER,// transactionType
-                null,                    // isCountable
                 "USD",                   // originalCurrency
                 0.0,                     // originalAmount (invalid - should trigger validation)
                 null,                    // exchangeRate
@@ -1581,7 +1573,6 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
                 null,                    // comments (keep existing)
                 null,                    // categoryId (keep existing)
                 null,                    // transactionType (keep existing)
-                null,                    // isCountable (keep existing)
                 "INR",                   // originalCurrency
                 20.00,                   // originalAmount
                 null,                    // exchangeRate (keep existing)
@@ -1637,7 +1628,6 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
                 null,                    // comments (keep existing)
                 null,                    // categoryId (keep existing)
                 null,                    // transactionType (keep existing)
-                null,                    // isCountable (keep existing)
                 null,                    // originalCurrency (keep existing)
                 null,                    // originalAmount (keep existing)
                 null,                    // exchangeRate (keep existing)
@@ -1690,7 +1680,6 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
                 null,                    // comments (keep existing)
                 null,                    // categoryId (keep existing)
                 null,                    // transactionType (keep existing)
-                null,                    // isCountable (keep existing)
                 null,                    // originalCurrency (keep existing)
                 null,                    // originalAmount (keep existing)
                 null,                    // exchangeRate (keep existing)
@@ -1738,7 +1727,6 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
                 null,                    // comments (keep existing)
                 null,                    // categoryId (keep existing)
                 null,                    // transactionType (keep existing)
-                null,                    // isCountable (keep existing)
                 null,                    // originalCurrency (keep existing)
                 null,                    // originalAmount (keep existing)
                 2.0,                     // exchangeRate (change to 2.0)
@@ -1768,7 +1756,6 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
                 null,                    // comments (keep existing)
                 null,                    // categoryId (keep existing)
                 null,                    // transactionType (keep existing)
-                null,                    // isCountable (keep existing)
                 null,                    // originalCurrency (keep existing)
                 20.00,                   // originalAmount (change to 20.00)
                 null,                    // exchangeRate (keep existing at 2.0)
@@ -1818,7 +1805,6 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
                 null,                    // comments (keep existing)
                 null,                    // categoryId (keep existing)
                 null,                    // transactionType (keep existing)
-                null,                    // isCountable (keep existing)
                 "GBP",                   // originalCurrency (change to GBP)
                 1.0,                     // originalAmount (change to 1)
                 120.0,                   // exchangeRate (explicitly set to 120.0)
@@ -1863,7 +1849,6 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
                 null,                    // comments (keep existing)
                 null,                    // categoryId (keep existing)
                 null,                    // transactionType (keep existing)
-                null,                    // isCountable (keep existing)
                 "INR",                   // originalCurrency
                 10.00,                   // originalAmount
                 null,                    // exchangeRate (keep existing)
@@ -1913,7 +1898,6 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
                 null,                    // comments (keep existing)
                 null,                    // categoryId (keep existing)
                 TransactionType.DEBIT,                    // transactionType (keep existing)
-                null,                    // isCountable (keep existing)
                 "GBP",                   // originalCurrency (change to GBP)
                 1.00,                    // originalAmount (change to 1.00)
                 120.0,                   // exchangeRate (set to 120.0)
@@ -1965,7 +1949,6 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
                 null,                    // comments (keep existing)
                 null,                    // categoryId (keep existing)
                 null,                    // transactionType (keep existing)
-                null,                    // isCountable (keep existing)
                 "INR",                   // originalCurrency (change to INR)
                 50.00,                   // originalAmount (change to 50.00)
                 1.0,                     // exchangeRate (set to 1.0 for base currency)
@@ -2027,7 +2010,6 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
                 null,                    // comments (keep existing)
                 null,                    // categoryId (keep existing)
                 null,                    // transactionType (keep existing)
-                null,                    // isCountable (keep existing)
                 "INR",                   // originalCurrency (change to INR)
                 500.00,                  // originalAmount (change to 500.00)
                 null,                    // exchangeRate (auto-set to 1.0 for base currency)
@@ -2087,7 +2069,6 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
                 null,                    // comments (keep existing)
                 null,                    // categoryId (keep existing)
                 null,                    // transactionType (keep existing)
-                null,                    // isCountable (keep existing)
                 "GBP",                   // originalCurrency (change to GBP)
                 null,                    // originalAmount (keep existing)
                 null,                    // exchangeRate (auto-resolve from UserCurrency: 1.2)
@@ -2137,7 +2118,6 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
                 null,                    // comments (keep existing)
                 null,                    // categoryId (keep existing)
                 null,                    // transactionType (keep existing)
-                null,                    // isCountable (keep existing)
                 "INR",                   // originalCurrency (change to INR)
                 null,                    // originalAmount (keep existing)
                 null,                    // exchangeRate (auto-set to 1.0 for base currency)
@@ -2197,7 +2177,6 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
                 null,                    // comments (keep existing)
                 null,                    // categoryId (keep existing)
                 null,                    // transactionType (keep existing)
-                null,                    // isCountable (keep existing)
                 "GBP",                   // originalCurrency (change to GBP)
                 null,                    // originalAmount (keep existing)
                 null,                    // exchangeRate (auto-resolve from UserCurrency: 1.2)
