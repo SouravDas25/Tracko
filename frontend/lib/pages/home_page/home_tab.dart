@@ -8,7 +8,7 @@ import 'package:tracko/pages/split_page/SplitPage.dart';
 import 'package:tracko/pages/transaction_list_page/transaction_list_page.dart';
 import 'package:tracko/pages/account_page/AccountPage.dart';
 import 'package:tracko/pages/account_page/accounts_overview_page.dart';
-import 'package:bottom_navy_bar/bottom_navy_bar.dart';
+import 'package:tracko/pages/analytics_page/analytics_page.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -25,18 +25,13 @@ class HomeTab extends StatefulWidget {
 class _HomeTab extends State<HomeTab> with SingleTickerProviderStateMixin {
   late TabController tabController;
 
-  int _selectedIndex = 2;
-  // Mapping of bottom bar item positions (compact layout) to TabController indices.
-  // We omit the 'Split' tab (index 2) on small screens to satisfy BottomNavyBar's
-  // 2..5 item constraint while keeping 6 tabs available on wide screens via NavigationRail.
-  // Order maps compact bottom bar positions -> TabController indices.
-  // Keep Home (tab index 3) centered at bottom bar position 2.
-  final List<int> _navTabIndices = const [0, 1, 2, 3, 4];
+  int _selectedIndex = 3;
+  // Keep Home (tab index 3) centered.
 
   @override
   initState() {
     super.initState();
-    tabController = TabController(length: 5, vsync: this, initialIndex: 2);
+    tabController = TabController(length: 6, vsync: this, initialIndex: 3);
     tabController.addListener(() {
       // Keep the tab index as the source of truth
       setState(() {
@@ -56,31 +51,30 @@ class _HomeTab extends State<HomeTab> with SingleTickerProviderStateMixin {
     super.dispose();
   }
 
-  final navlist = [
-    BottomNavyBarItem(
+  final destinations = const [
+    NavigationDestination(
       icon: Icon(Icons.account_circle),
-      title: Text("Accounts"),
-      activeColor: Colors.red,
+      label: "Accounts",
     ),
-    BottomNavyBarItem(
-      icon: Icon(Icons.monetization_on),
-      title: Text("Budget"),
-      activeColor: Colors.green,
-    ),
-    BottomNavyBarItem(
-      icon: Icon(Icons.home),
-      title: Text("Home"),
-      activeColor: Colors.teal,
-    ),
-    BottomNavyBarItem(
+    NavigationDestination(
       icon: Icon(Icons.call_split),
-      title: Text("Split"),
-      activeColor: Colors.orange,
+      label: "Split",
     ),
-    BottomNavyBarItem(
+    NavigationDestination(
+      icon: Icon(Icons.monetization_on),
+      label: "Budget",
+    ),
+    NavigationDestination(
+      icon: Icon(Icons.home),
+      label: "Home",
+    ),
+    NavigationDestination(
       icon: Icon(Icons.bar_chart),
-      title: Text("Stats"),
-      activeColor: Colors.blue,
+      label: "Stats",
+    ),
+    NavigationDestination(
+      icon: Icon(Icons.analytics),
+      label: "Analytics",
     ),
   ];
 
@@ -92,43 +86,15 @@ class _HomeTab extends State<HomeTab> with SingleTickerProviderStateMixin {
     return Scaffold(
       bottomNavigationBar: isWide
           ? null
-          : Container(
-              decoration: BoxDecoration(
-                color: Theme.of(context)
-                        .bottomNavigationBarTheme
-                        .backgroundColor ??
-                    Theme.of(context).cardColor,
-                border: const Border(
-                  top: BorderSide(
-                    color: Color(0x3DFFFFFF),
-                    width: 0.5,
-                  ),
-                ),
-              ),
-              child: MediaQuery(
-                data: MediaQuery.of(context)
-                    .copyWith(textScaler: TextScaler.noScaling),
-                child: BottomNavyBar(
-                iconSize: 20,
-                // Convert current tab index to the compact bottom bar's item index.
-                selectedIndex: (() {
-                  final idx = _navTabIndices.indexOf(_selectedIndex);
-                  return idx >= 0 ? idx : 0;
-                })(),
-                showElevation: true,
-                itemCornerRadius: 8,
-                curve: Curves.easeInOut,
-                backgroundColor: Colors.transparent,
-                onItemSelected: (int selectedPos) {
-                  setState(() {
-                    // Map from bottom bar position to actual tab index
-                    _selectedIndex = _navTabIndices[selectedPos];
-                  });
-                  tabController.animateTo(_selectedIndex);
-                },
-                items: navlist,
-              ),
-                ),
+          : NavigationBar(
+              selectedIndex: _selectedIndex,
+              onDestinationSelected: (int index) {
+                setState(() {
+                  _selectedIndex = index;
+                });
+                tabController.animateTo(index);
+              },
+              destinations: destinations,
             ),
       appBar: AppBar(
         leading: IconButton(
@@ -183,14 +149,15 @@ class _HomeTab extends State<HomeTab> with SingleTickerProviderStateMixin {
                       'label': 'Accounts',
                       'tab': 0
                     },
+                    {'icon': Icons.call_split, 'label': 'Split', 'tab': 1},
                     {
                       'icon': Icons.monetization_on,
                       'label': 'Budget',
-                      'tab': 1
+                      'tab': 2
                     },
-                    {'icon': Icons.home, 'label': 'Home', 'tab': 2},
-                    {'icon': Icons.call_split, 'label': 'Split', 'tab': 3},
+                    {'icon': Icons.home, 'label': 'Home', 'tab': 3},
                     {'icon': Icons.bar_chart, 'label': 'Stats', 'tab': 4},
+                    {'icon': Icons.analytics, 'label': 'Analytics', 'tab': 5},
                   ];
                   int railSelected =
                       railItems.indexWhere((e) => e['tab'] == _selectedIndex);
@@ -224,10 +191,11 @@ class _HomeTab extends State<HomeTab> with SingleTickerProviderStateMixin {
                       controller: tabController,
                       children: <Widget>[
                         AccountsOverviewPage(),
+                        SplitPage(),
                         BudgetPage(),
                         TransactionListPage(embedded: true),
-                        SplitPage(),
                         StatsPage(),
+                        AnalyticsPage(showAppBar: false),
                       ]),
                 ),
               ],
@@ -237,10 +205,11 @@ class _HomeTab extends State<HomeTab> with SingleTickerProviderStateMixin {
               controller: tabController,
               children: <Widget>[
                   AccountsOverviewPage(),
+                  SplitPage(),
                   BudgetPage(),
                   TransactionListPage(embedded: true),
-                  SplitPage(),
                   StatsPage(),
+                  AnalyticsPage(showAppBar: false),
                 ]),
     );
   }

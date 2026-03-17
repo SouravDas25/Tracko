@@ -6,7 +6,6 @@ import 'package:tracko/models/category.dart';
 import 'package:tracko/pages/stats_page/category_transactions_page.dart';
 import 'package:tracko/pages/stats_page/components/stats_category_list.dart';
 import 'package:tracko/pages/stats_page/components/stats_filter_section.dart';
-import 'package:tracko/pages/stats_page/components/stats_line_chart.dart';
 import 'package:tracko/pages/stats_page/components/stats_pie_chart.dart';
 import 'package:tracko/pages/stats_page/controllers/stats_controller.dart';
 
@@ -15,9 +14,10 @@ import 'package:tracko/pages/stats_page/controllers/stats_controller.dart';
 /// This page displays an overview of the user's financial statistics over a selected
 /// date range (e.g., month, year, or custom range). It includes:
 /// - A filter section to toggle between income/expense and select accounts.
-/// - A line chart showing the trend of expenses/income over time.
 /// - A pie chart showing the breakdown of expenses/income by category.
 /// - A list of categories with their respective total amounts and progress bars.
+///
+/// The line chart has been relocated to the dedicated Analytics Page.
 ///
 /// Tapping on a category in the list navigates to the [CategoryTransactionsPage]
 /// for a detailed view of that category's transactions.
@@ -289,36 +289,6 @@ class _StatsPageState extends State<StatsPage> {
               },
               onKindChanged: _controller.setKind,
               onAccountChanged: _controller.setAccount,
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                      color: Theme.of(context).dividerColor.withOpacity(0.1)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.02),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    )
-                  ],
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: StatsLineChart(
-                    loading: _controller.loading,
-                    error: _controller.error,
-                    series: _controller.series,
-                    seriesMaxY: _controller.seriesMaxY,
-                    kindColor: _controller.kindColor,
-                  ),
-                ),
-              ),
             ),
           ),
           SliverPersistentHeader(

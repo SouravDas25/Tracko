@@ -196,7 +196,7 @@ public class AnalyticsService {
                                                 List<Long> accountIds, List<Long> categoryIds,
                                                 Date currentStart, Date currentEnd) {
         List<DateAmountRow> rows = transactionRepository
-                .sumAmountsByDateFiltered(userId, dbType, accountIds, categoryIds);
+                .sumAmountsByDateFiltered(userId, dbType, accountIds, categoryIds, currentStart, currentEnd);
         List<StatsPointDTO> series = buildSeries(granularity, rows, currentStart, currentEnd);
 
         String name = "All";

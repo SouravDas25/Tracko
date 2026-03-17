@@ -442,13 +442,16 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             "AND t.transactionType = :transactionType " +
             "AND (:#{#accountIds == null || #accountIds.isEmpty()} = true OR t.accountId IN :accountIds) " +
             "AND (:#{#categoryIds == null || #categoryIds.isEmpty()} = true OR t.categoryId IN :categoryIds) " +
+            "AND t.date >= :startDate AND t.date < :endDate " +
             "GROUP BY t.date " +
             "ORDER BY t.date ASC")
     List<DateAmountRow> sumAmountsByDateFiltered(
             @Param("userId") String userId,
             @Param("transactionType") TransactionDbType transactionType,
             @Param("accountIds") List<Long> accountIds,
-            @Param("categoryIds") List<Long> categoryIds
+            @Param("categoryIds") List<Long> categoryIds,
+            @Param("startDate") Date startDate,
+            @Param("endDate") Date endDate
     );
 
     @Query("SELECT new com.trako.dtos.GroupedDateAmountRow(t.categoryId, t.date, SUM(t.amount)) " +
