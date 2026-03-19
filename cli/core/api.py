@@ -8,6 +8,9 @@ _SDK_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", 
 if _SDK_PATH not in sys.path:
     sys.path.insert(0, _SDK_PATH)
 
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 import tracko_sdk
 from tracko_sdk.rest import ApiException
 
@@ -31,6 +34,8 @@ def get_api_client(base_url: str, token: str | None = None):
     """Context manager that yields a configured SDK ApiClient."""
     config = tracko_sdk.Configuration(host=base_url.rstrip("/"))
     config.access_token = token
+    if base_url.startswith("https"):
+        config.verify_ssl = False
     with tracko_sdk.ApiClient(config) as client:
         yield client
 
