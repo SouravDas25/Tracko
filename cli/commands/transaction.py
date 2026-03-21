@@ -1,4 +1,5 @@
 """Transaction management commands."""
+import builtins
 import sys
 
 import typer
@@ -69,7 +70,7 @@ def list(
                 for txn in transactions:
                     table.add_row(
                         str(txn.id or ""),
-                        str(txn.date)[:10] if txn.date else "",
+                        str(txn.var_date)[:10] if txn.var_date else "",
                         str(txn.name or ""),
                         f"{float(txn.amount or 0):.2f}",
                         str(txn.transaction_type or "")
@@ -591,15 +592,27 @@ def total_expense(
 @app.command()
 def import_csv(
     file: str = typer.Option(..., "--file", "-f", help="CSV file path"),
-    account_id: int = typer.Option(..., "--account-id", help="Account ID"),
+    currency: str = typer.Option("INR", "--currency", help="Default currency code"),
 ):
-    """Import transactions from CSV file."""
+    """Import transactions from CSV file.
+
+    CSV columns: date, amount, type, category, account, currency, name, comments.
+    'category' and 'account' should contain names (e.g. FOOD, Cash).
+    'currency' defaults to INR if omitted.
+    """
     base_url, token = get_config_for_api()
 
     try:
         with open(file, 'r') as f:
             reader = csv.DictReader(f)
-            rows = list(reader)
+            rows = builtins.list(reader)
+
+        # Build name -> id lookups
+        with get_api_client(base_url, token) as client:
+            categories = unwrap_envelope(tracko_sdk.CategoriesApi(client).get_all5()) or []
+            accounts = unwrap_envelope(tracko_sdk.AccountsApi(client).get_all6()) or []
+        cat_map = {c.name.lower(): c.id for c in categories if c.name}
+        acc_map = {a.name.lower(): a.id for a in accounts if a.name}
 
         with Progress(
             TextColumn("[progress.description]{task.description}"),
@@ -614,9 +627,23 @@ def import_csv(
                 api = tracko_sdk.TransactionsApi(client)
 
                 for row in rows:
+                    cat_name = (row.get('category') or '').strip().lower()
+                    category_id = cat_map.get(cat_name)
+                    if not category_id:
+                        print_error(f"Unknown category '{row.get('category')}' for row: {row.get('name')}")
+                        raise typer.Exit(1)
+
+                    acc_name = (row.get('account') or '').strip().lower()
+                    aid = acc_map.get(acc_name)
+                    if not aid:
+                        print_error(f"Unknown account '{row.get('account')}' for row: {row.get('name')}")
+                        raise typer.Exit(1)
+
                     req = TransactionRequest(
-                        account_id=account_id,
-                        amount=float(row.get('amount', 0)),
+                        account_id=aid,
+                        category_id=category_id,
+                        original_amount=float(row.get('amount', 0)),
+                        original_currency=row.get('currency', 'INR').strip() or 'INR',
                         transaction_type=_parse_type(row.get('type', 'expense')),
                         name=row.get('name', ''),
                         comments=row.get('comments'),
@@ -632,3 +659,12 @@ def import_csv(
     except (ConnectionError, MaxRetryError, NewConnectionError, OSError):
         print_error("Could not connect to API. Is the server running?")
         sys.exit(1)
+
+
+@app.command()
+def csv_template():
+    """Print the CSV template expected by import_csv."""
+    header = "date,amount,type,category,account,currency,name,comments"
+    example = "2026-01-01,100.50,expense,FOOD,Cash,INR,Lunch,Team lunch at cafe"
+    console.print(header)
+    console.print(example)

@@ -113,7 +113,7 @@ tasks:
     desc: Run CLI tests
     dir: cli
     cmds:
-      - cmd: python3 run_cli_test.py
+      - cmd: python run_cli_test.py
 
   # Install dependencies
   install:

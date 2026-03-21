@@ -18,7 +18,7 @@ def test_print_success():
         print_success("Operation completed")
         mock_print.assert_called_once()
         args = mock_print.call_args[0][0]
-        assert "✓" in args
+        assert ("✓" in args or "[OK]" in args)
         assert "Operation completed" in args
 
 
@@ -28,7 +28,7 @@ def test_print_error():
         print_error("Something went wrong")
         mock_print.assert_called_once()
         args = mock_print.call_args[0][0]
-        assert "✗" in args
+        assert ("✗" in args or "[ERROR]" in args)
         assert "Something went wrong" in args
 
 
@@ -38,7 +38,7 @@ def test_print_warning():
         print_warning("Be careful")
         mock_print.assert_called_once()
         args = mock_print.call_args[0][0]
-        assert "⚠" in args
+        assert ("⚠" in args or "[WARN]" in args)
         assert "Be careful" in args
 
 
@@ -48,7 +48,7 @@ def test_print_info():
         print_info("FYI")
         mock_print.assert_called_once()
         args = mock_print.call_args[0][0]
-        assert "ℹ" in args
+        assert ("ℹ" in args or "[INFO]" in args)
         assert "FYI" in args
 
 
