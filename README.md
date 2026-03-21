@@ -1,131 +1,87 @@
 # Tracko - Expense Manager
 
-A comprehensive expense management application with Flutter mobile UI and dual backend (Java + Python with ML).
+A full-stack expense management app: Flutter mobile UI, Spring Boot API, and ML-powered categorization.
 
-## Project Structure
+## What It Does
 
-- **frontend**: Flutter mobile application
-- **backend**: Spring Boot REST API backend
-- **ml-backend**: Django backend with ML-powered expense categorization
-
-## Quick Start
-
-### Prerequisites
-- Flutter SDK 3.0+
-- Java 17+ 
-- Maven 3.8+
-- Python 3.8+
-- Docker & Docker Compose (optional)
-- Task (recommended): `go install github.com/go-task/task/v3/cmd/task@latest`
-
-### Option 1: Taskfile (Recommended)
-```bash
-task start    # Start backend + Flutter
-task stop     # Stop services
-task test     # Run tests
-```
-
-### Option 2: Manual
-```bash
-# Terminal 1 - Backend
-cd backend && mvn spring-boot:run -P dev
-# Terminal 2 - Flutter 
-cd frontend && flutter run
-```
-
-### Option 3: Docker
-```bash
-docker-compose up -d
-```
-
-## Configuration
-
-Database credentials and other sensitive configuration should be stored in environment variables or secure configuration files (not committed to version control).
-
-### Environment Variables
-- `DB_HOST`: Database host
-- `DB_PORT`: Database port
-- `DB_NAME`: Database name
-- `DB_USER`: Database username
-- `DB_PASSWORD`: Database password
-
-## Features
-
-📱 Cross-platform Flutter app • 💰 Expense tracking & categorization • 📊 Analytics with sticky navigation • 🤖 ML-powered categorization • 🔐 JWT auth (username/password & phone) • 💳 Zero-Based Budgeting • 💱 Multi-currency with live rates • 🔄 Unified Transaction/Transfer API • 📋 CLI tools • 🎨 Modern UI • 🐳 Docker support
+- Track expenses and income across multiple accounts and currencies
+- Zero-based budgeting with real-time usage tracking
+- ML-powered automatic expense categorization
+- Transfer money between accounts with split tracking
+- JWT authentication (username/password & phone)
+- CLI tools for power users and automation
 
 ## Architecture
 
-**Backend (Java Spring Boot):** REST API with JWT, ZBB engine, multi-currency, unified transaction/transfer API, Liquibase migrations, comprehensive tests
-
-**Frontend (Flutter):** Modern UI with sticky navigation, multi-currency entry, budget management, transfer functionality, offline-first
-
-**ML Backend (Python Django):** Smart categorization using ML models, NLP for descriptions
-
-## Development Tools
-
-**Taskfile Commands:** `task start` • `task flutter` • `task backend` • `task stop` • `task clean` • `task test` • `task install`
-
-**Docker:** `docker-compose up -d` • `docker build -t tracko-app .`
-
-**Integration Tests:**
-```bash
-cd backend
-mvn test -Dtest=*IntegrationTest
-mvn test -Dtest=AccountIntegrationTest
-mvn test -Dtest=TransactionIntegrationTest
-mvn test -Dtest=BudgetIntegrationTest
+```
+┌─────────────┐     ┌──────────────────┐        ┌─────────────────┐
+│   Flutter    │────▶│  Spring Boot API  │────▶│   PostgreSQL    │
+│  Mobile App  │    │  (Java 17, JWT)  │        │   (H2 in dev)   │
+└─────────────┘     └───────────────────┘       └─────────────────┘
 ```
 
-**Test Coverage:** Account Management (6) • Transaction Management (8) • Budget System • Multi-Currency • Authentication • Transfers & Splits
+| Component | Path | Tech |
+|-----------|------|------|
+| Mobile App | `frontend/` | Flutter/Dart |
+| REST API | `backend/` | Spring Boot, Liquibase, JWT |
+| ML Service | `ml-backend/` | Django, scikit-learn, NLP |
+| CLI | `cli/` | Python, Typer, Rich |
 
+## Quick Start
 
-### CSV Import Tool
-
-For migrating data from other sources (like Money Manager), a CSV import tool is available.
+**Prerequisites:** Flutter 3.0+ • Java 17+ • Maven 3.8+ • Python 3.8+
 
 ```bash
-cd money-manager-converter
-python import_csv_to_tracko.py "data.csv" --user "Name"
+# Install Task runner (recommended)
+go install github.com/go-task/task/v3/cmd/task@latest
+
+task start    # Starts backend (localhost:8080) + Flutter app
+task stop     # Stops all services
+task test     # Runs test suite
 ```
 
-See `money-manager-converter/README.md` for full documentation.
+> For manual startup, Docker, or Windows scripts → **[Startup Guide](README-STARTUP.md)**
+
+## Development
+
+```bash
+task start       # Start everything
+task backend     # Backend only
+task flutter     # Flutter only
+task clean       # Clean build artifacts
+task install     # Install dependencies
+```
+
+Backend API runs at `http://localhost:8080`. Uses H2 in-memory database in development, PostgreSQL in production.
+
+## CLI Usage
+
+```bash
+cd cli && pip install -r requirements.txt
+```
+
+```bash
+python -m cli auth login                # Login (interactive password prompt)
+python -m cli account list              # List accounts
+python -m cli transaction add \
+  --amount 50 --type expense \
+  --name "Lunch"                        # Add expense
+python -m cli budget view               # View budget with usage %
+python -m cli db seed                   # Seed sample data
+```
+
+Common command groups: `account` • `transaction` • `budget` • `category` • `contact` • `currency` • `split` • `stats`
+
+All commands support `--raw` for JSON output and `--help` for usage details.
+
+> Full command reference → **[CLI Guide](cli/README.md)**
 
 ## Documentation
 
-**[Startup Guide](README-STARTUP.md)** • **[Backend API](backend/docs/FLUTTER_INTEGRATION_GUIDE.md)** • **[Migration Status](backend/docs/MIGRATION_COMPLETE.md)** • **[CLI Guide](cli/README_TYPER.md)**
-
-## CLI Tools (New Typer-based CLI)
-
-**Quick Start:**
-```bash
-cd cli && pip install -r requirements.txt
-python -m cli auth login
-python -m cli account list
-python -m cli db seed
-```
-
-**Features:** Rich tables • Interactive prompts • Progress bars • Tab completion
-
-**Key Commands:**
-- **Auth:** `python -m cli auth login/logout`
-- **Database:** `python -m cli db seed/reset`
-- **Resources:** `python -m cli account|transaction|category|budget|contact|currency list/add/update/delete`
-- **API:** `python -m cli request --method GET --path /api/health`
-
-**Documentation:** [`cli/README_TYPER.md`](cli/README_TYPER.md) • [`cli/MIGRATION_COMPLETE.md`](cli/MIGRATION_COMPLETE.md)
-
-## License
-
-See individual component repositories for license information.
-
-## Troubleshooting
-
-**Port 8080 in use:** `task stop` or find/kill process on Windows
-
-**Flutter hot reload:** Use `flutter run` (interactive) or `task flutter`
-
-**Backend fails:** Check Java 17+, Maven setup, or run `task clean && task install`
-
-**Database:** Uses H2 in-memory for development, PostgreSQL for production
-
-**Docker:** Ensure Docker Desktop running, try `docker-compose build --no-cache`
+| Guide | Description |
+|-------|-------------|
+| **[Startup Guide](README-STARTUP.md)** | Configuration, env variables, troubleshooting |
+| **[API Integration](backend/docs/FLUTTER_INTEGRATION_GUIDE.md)** | Backend API reference for frontend |
+| **[CLI Guide](cli/README.md)** | Full CLI command reference |
+| **[CSV Import](money-manager-converter/README.md)** | Migrate data from Money Manager etc. |
+| **[Migration Status](backend/docs/MIGRATION_COMPLETE.md)** | Backend migration changelog |
