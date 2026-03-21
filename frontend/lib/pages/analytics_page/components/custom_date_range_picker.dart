@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:tracko/component/app_dropdown.dart';
 
 /// Shows a dialog to pick a custom date range, with an optional year-mode toggle.
 /// Returns the selected [DateTimeRange] or null if cancelled.
@@ -128,14 +129,11 @@ class _YearRow extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
-          DropdownButton<int>(
+          AppInlineDropdown<int>(
             value: value,
-            items: years.map((y) {
-              return DropdownMenuItem(value: y, child: Text(y.toString()));
-            }).toList(),
-            onChanged: (val) {
-              if (val != null) onChanged(val);
-            },
+            items: years,
+            labelBuilder: (y) => y.toString(),
+            onChanged: onChanged,
           ),
         ],
       ),

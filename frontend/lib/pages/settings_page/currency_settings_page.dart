@@ -9,6 +9,7 @@ import 'package:tracko/services/SessionService.dart';
 import 'package:tracko/services/exchange_rate_service.dart';
 import 'package:tracko/di/di.dart';
 import 'package:flutter/material.dart';
+import 'package:tracko/component/app_dropdown.dart';
 
 class CurrencySettingsPage extends StatefulWidget {
   @override
@@ -97,9 +98,8 @@ class _CurrencySettingsPageState extends State<CurrencySettingsPage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (existing == null)
-                  DropdownButtonFormField<String>(
+                  AppFormDropdown<String>(
                     value: selectedCurrency,
-                    decoration: InputDecoration(labelText: "Currency"),
                     items: ConstantUtil.CURRENCIES
                         .where((c) =>
                             c != baseCurrency &&
@@ -107,17 +107,14 @@ class _CurrencySettingsPageState extends State<CurrencySettingsPage> {
                                 !secondaryCurrencies
                                     .any((sc) => sc.currencyCode == c) ||
                                 c == selectedCurrency))
-                        .map((c) => DropdownMenuItem(
-                              value: c,
-                              child: Text(
-                                  "$c (${CommonUtil.getCurrencySymbol(c)})"),
-                            ))
                         .toList(),
+                    labelBuilder: (c) =>
+                        "$c (${CommonUtil.getCurrencySymbol(c)})",
+                    label: 'Currency',
+                    filled: false,
                     onChanged: (val) {
                       setStateDialog(() {
                         selectedCurrency = val!;
-                        // Optionally auto-fetch when currency changes?
-                        // Let's keep it manual via button for now to avoid spamming
                         rateController.clear();
                       });
                     },

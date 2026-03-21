@@ -8,6 +8,7 @@ import 'package:tracko/pages/stats_page/components/stats_category_list.dart';
 import 'package:tracko/pages/stats_page/components/stats_filter_section.dart';
 import 'package:tracko/pages/stats_page/components/stats_pie_chart.dart';
 import 'package:tracko/pages/stats_page/controllers/stats_controller.dart';
+import 'package:tracko/component/app_dropdown.dart';
 
 /// The main Statistics dashboard page.
 ///
@@ -139,25 +140,19 @@ class _StatsPageState extends State<StatsPage> {
                         children: [
                           const Text("From Year:",
                               style: TextStyle(fontWeight: FontWeight.w600)),
-                          DropdownButton<int>(
+                          AppInlineDropdown<int>(
                             value: years.contains(start.year)
                                 ? start.year
                                 : years.first,
-                            items: years.map((y) {
-                              return DropdownMenuItem(
-                                value: y,
-                                child: Text(y.toString()),
-                              );
-                            }).toList(),
+                            items: years,
+                            labelBuilder: (y) => y.toString(),
                             onChanged: (val) {
-                              if (val != null) {
-                                setState(() {
-                                  start = DateTime(val, 1, 1);
-                                  if (end.year < val) {
-                                    end = DateTime(val, 12, 31);
-                                  }
-                                });
-                              }
+                              setState(() {
+                                start = DateTime(val, 1, 1);
+                                if (end.year < val) {
+                                  end = DateTime(val, 12, 31);
+                                }
+                              });
                             },
                           ),
                         ],
@@ -170,25 +165,19 @@ class _StatsPageState extends State<StatsPage> {
                         children: [
                           const Text("To Year:",
                               style: TextStyle(fontWeight: FontWeight.w600)),
-                          DropdownButton<int>(
+                          AppInlineDropdown<int>(
                             value: years.contains(end.year)
                                 ? end.year
                                 : years.first,
-                            items: years.map((y) {
-                              return DropdownMenuItem(
-                                value: y,
-                                child: Text(y.toString()),
-                              );
-                            }).toList(),
+                            items: years,
+                            labelBuilder: (y) => y.toString(),
                             onChanged: (val) {
-                              if (val != null) {
-                                setState(() {
-                                  end = DateTime(val, 12, 31);
-                                  if (start.year > val) {
-                                    start = DateTime(val, 1, 1);
-                                  }
-                                });
-                              }
+                              setState(() {
+                                end = DateTime(val, 12, 31);
+                                if (start.year > val) {
+                                  start = DateTime(val, 1, 1);
+                                }
+                              });
                             },
                           ),
                         ],

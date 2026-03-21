@@ -5,6 +5,7 @@ import 'package:tracko/Utils/enums.dart';
 import 'package:tracko/component/AccountDialog.dart';
 import 'package:tracko/component/CategoryDialog.dart';
 import 'package:tracko/models/account.dart';
+import 'package:tracko/component/app_dropdown.dart';
 import 'package:tracko/models/category.dart';
 
 class TransactionDetailsForm extends StatelessWidget {
@@ -104,27 +105,15 @@ class TransactionDetailsForm extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: DropdownButtonFormField<int>(
-                  value: filteredCategories
-                          .map((c) => c.id)
-                          .whereType<int>()
-                          .contains(categoryId)
-                      ? categoryId
-                      : null,
-                  decoration: _fieldDecoration(context,
-                      label: 'Category', icon: Icons.category_outlined),
-                  items: filteredCategories.map((Category value) {
-                    return DropdownMenuItem<int>(
-                      value: value.id,
-                      child: Text(
-                        value.name,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    );
-                  }).toList(),
-                  onChanged: (int? id) {
-                    onCategoryChanged(id ?? 0);
-                  },
+                child: AppBottomSheetPicker<Category>(
+                  value: _findCategory(categoryId),
+                  items: filteredCategories,
+                  title: 'Select Category',
+                  labelBuilder: (c) => c.name,
+                  iconBuilder: (c) => Icons.category_outlined,
+                  onSelected: (c) => onCategoryChanged(c?.id ?? 0),
+                  allItemsLabel: 'Category',
+                  isExpanded: true,
                 ),
               ),
               SizedBox(width: 12),
@@ -149,10 +138,16 @@ class TransactionDetailsForm extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: _buildAccountDropdown(
-                    context, "From Account", transferFromAccountId, (val) {
-                  onTransferFromAccountChanged(val ?? 0);
-                }),
+                child: AppBottomSheetPicker<Account>(
+                  value: _findAccount(transferFromAccountId),
+                  items: accounts,
+                  title: 'Select From Account',
+                  labelBuilder: (a) => a.name,
+                  iconBuilder: (a) => Icons.account_balance_wallet_outlined,
+                  onSelected: (a) => onTransferFromAccountChanged(a?.id ?? 0),
+                  allItemsLabel: 'From Account',
+                  isExpanded: true,
+                ),
               ),
               if (onSwapTransferAccounts != null) ...[
                 SizedBox(width: 12),
@@ -180,18 +175,30 @@ class TransactionDetailsForm extends StatelessWidget {
             ],
           ),
           SizedBox(height: 16),
-          _buildAccountDropdown(context, "To Account", transferToAccountId,
-              (val) {
-            onTransferToAccountChanged(val ?? 0);
-          }),
+          AppBottomSheetPicker<Account>(
+            value: _findAccount(transferToAccountId),
+            items: accounts,
+            title: 'Select To Account',
+            labelBuilder: (a) => a.name,
+            iconBuilder: (a) => Icons.account_balance_wallet_outlined,
+            onSelected: (a) => onTransferToAccountChanged(a?.id ?? 0),
+            allItemsLabel: 'To Account',
+            isExpanded: true,
+          ),
         ] else ...[
           Row(
             children: [
               Expanded(
-                child:
-                    _buildAccountDropdown(context, "Account", accountId, (val) {
-                  onAccountChanged(val ?? 0);
-                }),
+                child: AppBottomSheetPicker<Account>(
+                  value: _findAccount(accountId),
+                  items: accounts,
+                  title: 'Select Account',
+                  labelBuilder: (a) => a.name,
+                  iconBuilder: (a) => Icons.account_balance_wallet_outlined,
+                  onSelected: (a) => onAccountChanged(a?.id ?? 0),
+                  allItemsLabel: 'Account',
+                  isExpanded: true,
+                ),
               ),
               SizedBox(width: 12),
               _addButton(context, onTap: () {
@@ -239,22 +246,21 @@ class TransactionDetailsForm extends StatelessWidget {
     );
   }
 
-  Widget _buildAccountDropdown(BuildContext context, String label, int? value,
-      Function(int?) onChanged) {
-    final ids = accounts.map((a) => a.id).whereType<int>().toSet();
-    final int? safeValue =
-        (value != null && value != 0 && ids.contains(value)) ? value : null;
-    return DropdownButtonFormField<int>(
-      value: safeValue,
-      decoration: _fieldDecoration(context,
-          label: label, icon: Icons.account_balance_wallet_outlined),
-      items: accounts.map((Account value) {
-        return DropdownMenuItem<int>(
-          value: value.id,
-          child: Text(value.name),
-        );
-      }).toList(),
-      onChanged: onChanged,
-    );
+  Account? _findAccount(int? id) {
+    if (id == null || id == 0) return null;
+    try {
+      return accounts.firstWhere((a) => a.id == id);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Category? _findCategory(int? id) {
+    if (id == null || id == 0) return null;
+    try {
+      return filteredCategories.firstWhere((c) => c.id == id);
+    } catch (_) {
+      return null;
+    }
   }
 }
