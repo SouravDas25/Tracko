@@ -270,6 +270,13 @@ class SmartAddItemController extends ChangeNotifier {
     notifyListeners();
   }
 
+  void swapTransferAccounts() {
+    final temp = transferFromAccountId;
+    transferFromAccountId = transferToAccountId;
+    transferToAccountId = temp;
+    notifyListeners();
+  }
+
   Future<void> addSplit(Contact backendContact) async {
     frequentSplitters.remove(backendContact);
     if (!splitList.contains(backendContact)) {

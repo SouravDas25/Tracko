@@ -69,20 +69,15 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
 
   @override
   Widget build(BuildContext context) {
+    final typeColor = TransactionType.color(_controller.transactionType);
+
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: _controller.transactionType == TransactionType.DEBIT
-            ? Colors.redAccent
-            : (_controller.transactionType == TransactionType.TRANSFER
-                ? Colors.blueGrey
-                : Colors.teal),
+        backgroundColor: typeColor,
         actions: _controller.transactionType == TransactionType.DEBIT
             ? <Widget>[
                 IconButton(
-                  icon: Icon(
-                    Icons.call_split,
-                    size: 28.0,
-                  ),
+                  icon: Icon(Icons.call_split, size: 28.0),
                   onPressed: () => _controller.callSplitPage(context),
                   tooltip: "Split Transaction",
                 )
@@ -92,6 +87,27 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
             Text(_controller.isEdit ? "Edit Transaction" : "New Transaction"),
         centerTitle: true,
         elevation: 0,
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: typeColor,
+              padding: EdgeInsets.symmetric(vertical: 16),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 4,
+            ),
+            onPressed: _save,
+            child: Text(
+              widget.mainButtonText,
+              style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -116,7 +132,9 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
                     currencyRates: _controller.currencyRates,
                     onCurrencyChanged: _controller.setCurrency,
                   ),
-                  SizedBox(height: 16),
+                  SizedBox(height: 20),
+                  _sectionHeader(context, "Details", Icons.receipt_long_outlined),
+                  SizedBox(height: 8),
                   TransactionDetailsForm(
                     transactionType: _controller.transactionType,
                     date: _controller.date,
@@ -140,9 +158,10 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
                       _controller.initData();
                     },
                     nameController: _controller.nameController,
+                    onSwapTransferAccounts: _controller.swapTransferAccounts,
                   ),
                   if (_controller.transactionType == TransactionType.DEBIT) ...[
-                    SizedBox(height: 16),
+                    SizedBox(height: 20),
                     SplitManagerSection(
                       frequentSplitters: _controller.frequentSplitters,
                       splitList: _controller.splitList,
@@ -151,44 +170,41 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
                       amount: _controller.castAmountText2Double(
                           _controller.amountController.text),
                       currencySymbol: _controller.selectedCurrency,
-                      onCallSplitPage: () => _controller.callSplitPage(context),
+                      onCallSplitPage: () =>
+                          _controller.callSplitPage(context),
                       onAddSplit: _controller.addSplit,
                       onDeleteSplit: _controller.removeSplit,
                     ),
                   ],
-                  SizedBox(height: 16),
+                  SizedBox(height: 20),
+                  _sectionHeader(context, "Notes", Icons.sticky_note_2_outlined),
+                  SizedBox(height: 8),
                   CommentsSection(controller: _controller.commentsController),
                   SizedBox(height: 24),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          _controller.transactionType == TransactionType.DEBIT
-                              ? Colors.redAccent
-                              : (_controller.transactionType ==
-                                      TransactionType.TRANSFER
-                                  ? Colors.blueGrey
-                                  : Colors.teal),
-                      padding: EdgeInsets.symmetric(vertical: 16),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 4,
-                    ),
-                    onPressed: _save,
-                    child: Text(
-                      widget.mainButtonText,
-                      style: TextStyle(
-                          fontSize: 18.0, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  SizedBox(height: 40),
                 ],
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _sectionHeader(BuildContext context, String title, IconData icon) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: Theme.of(context).hintColor),
+        SizedBox(width: 6),
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).hintColor,
+            letterSpacing: 0.5,
+          ),
+        ),
+      ],
     );
   }
 }

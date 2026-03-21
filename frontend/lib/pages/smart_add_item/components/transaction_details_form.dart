@@ -25,6 +25,7 @@ class TransactionDetailsForm extends StatelessWidget {
   final Function onAddAccount;
   final TextEditingController nameController;
   final String dateLabel;
+  final VoidCallback? onSwapTransferAccounts;
 
   const TransactionDetailsForm({
     Key? key,
@@ -45,7 +46,33 @@ class TransactionDetailsForm extends StatelessWidget {
     required this.onAddAccount,
     required this.nameController,
     this.dateLabel = 'Date',
+    this.onSwapTransferAccounts,
   }) : super(key: key);
+
+  InputDecoration _fieldDecoration(BuildContext context,
+      {required String label, required IconData icon}) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(
+            color: Theme.of(context).dividerColor.withOpacity(0.1)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide:
+            BorderSide(color: Theme.of(context).primaryColor, width: 2),
+      ),
+      filled: true,
+      fillColor: Theme.of(context).cardColor,
+      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -57,27 +84,8 @@ class TransactionDetailsForm extends StatelessWidget {
           format: DateFormat('dd-MMM-yyyy'),
           readOnly: true,
           resetIcon: null,
-          decoration: InputDecoration(
-            labelText: dateLabel,
-            prefixIcon: Icon(Icons.calendar_today_outlined),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide.none,
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(
-                  color: Theme.of(context).dividerColor.withOpacity(0.1)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide:
-                  BorderSide(color: Theme.of(context).primaryColor, width: 2),
-            ),
-            filled: true,
-            fillColor: Theme.of(context).cardColor,
-            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          ),
+          decoration: _fieldDecoration(context,
+              label: dateLabel, icon: Icons.calendar_today_outlined),
           onShowPicker: (context, currentValue) {
             return showDatePicker(
                 context: context,
@@ -103,29 +111,8 @@ class TransactionDetailsForm extends StatelessWidget {
                           .contains(categoryId)
                       ? categoryId
                       : null,
-                  decoration: InputDecoration(
-                    labelText: 'Category',
-                    prefixIcon: Icon(Icons.category_outlined),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide.none,
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(
-                          color:
-                              Theme.of(context).dividerColor.withOpacity(0.1)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(
-                          color: Theme.of(context).primaryColor, width: 2),
-                    ),
-                    filled: true,
-                    fillColor: Theme.of(context).cardColor,
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                  ),
+                  decoration: _fieldDecoration(context,
+                      label: 'Category', icon: Icons.category_outlined),
                   items: filteredCategories.map((Category value) {
                     return DropdownMenuItem<int>(
                       value: value.id,
@@ -141,35 +128,17 @@ class TransactionDetailsForm extends StatelessWidget {
                 ),
               ),
               SizedBox(width: 12),
-              Ink(
-                decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                      color: Theme.of(context).dividerColor.withOpacity(0.1)),
-                ),
-                child: InkWell(
-                  customBorder: CircleBorder(),
-                  onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (_) => CategoryDialog(
-                        callback: onAddCategory,
-                        categoryType: transactionType == TransactionType.CREDIT
-                            ? 'INCOME'
-                            : 'EXPENSE',
-                      ),
-                    );
-                  },
-                  child: Container(
-                    height: 48,
-                    width: 48,
-                    alignment: Alignment.center,
-                    child: Icon(Icons.add,
-                        color: Theme.of(context).colorScheme.onSurface),
+              _addButton(context, onTap: () {
+                showDialog(
+                  context: context,
+                  builder: (_) => CategoryDialog(
+                    callback: onAddCategory,
+                    categoryType: transactionType == TransactionType.CREDIT
+                        ? 'INCOME'
+                        : 'EXPENSE',
                   ),
-                ),
-              )
+                );
+              }),
             ],
           ),
           SizedBox(height: 16),
@@ -177,10 +146,39 @@ class TransactionDetailsForm extends StatelessWidget {
 
         // Accounts
         if (transactionType == TransactionType.TRANSFER) ...[
-          _buildAccountDropdown(context, "From Account", transferFromAccountId,
-              (val) {
-            onTransferFromAccountChanged(val ?? 0);
-          }),
+          Row(
+            children: [
+              Expanded(
+                child: _buildAccountDropdown(
+                    context, "From Account", transferFromAccountId, (val) {
+                  onTransferFromAccountChanged(val ?? 0);
+                }),
+              ),
+              if (onSwapTransferAccounts != null) ...[
+                SizedBox(width: 12),
+                Ink(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).cardColor,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                        color:
+                            Theme.of(context).dividerColor.withOpacity(0.1)),
+                  ),
+                  child: InkWell(
+                    customBorder: CircleBorder(),
+                    onTap: onSwapTransferAccounts,
+                    child: Container(
+                      height: 48,
+                      width: 48,
+                      alignment: Alignment.center,
+                      child: Icon(Icons.swap_vert_rounded, size: 22,
+                          color: Theme.of(context).colorScheme.onSurface),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
           SizedBox(height: 16),
           _buildAccountDropdown(context, "To Account", transferToAccountId,
               (val) {
@@ -196,32 +194,14 @@ class TransactionDetailsForm extends StatelessWidget {
                 }),
               ),
               SizedBox(width: 12),
-              Ink(
-                decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                      color: Theme.of(context).dividerColor.withOpacity(0.1)),
-                ),
-                child: InkWell(
-                  customBorder: CircleBorder(),
-                  onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (_) => AccountDialog(
-                        callback: onAddAccount,
-                      ),
-                    );
-                  },
-                  child: Container(
-                    height: 48,
-                    width: 48,
-                    alignment: Alignment.center,
-                    child: Icon(Icons.add,
-                        color: Theme.of(context).colorScheme.onSurface),
+              _addButton(context, onTap: () {
+                showDialog(
+                  context: context,
+                  builder: (_) => AccountDialog(
+                    callback: onAddAccount,
                   ),
-                ),
-              )
+                );
+              }),
             ],
           ),
         ],
@@ -230,29 +210,32 @@ class TransactionDetailsForm extends StatelessWidget {
         // Name Input
         TextField(
           controller: nameController,
-          decoration: InputDecoration(
-            labelText: 'Description',
-            prefixIcon: Icon(Icons.description_outlined),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide.none,
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(
-                  color: Theme.of(context).dividerColor.withOpacity(0.1)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide:
-                  BorderSide(color: Theme.of(context).primaryColor, width: 2),
-            ),
-            filled: true,
-            fillColor: Theme.of(context).cardColor,
-            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          ),
+          decoration: _fieldDecoration(context,
+              label: 'Description', icon: Icons.description_outlined),
         ),
       ],
+    );
+  }
+
+  Widget _addButton(BuildContext context, {required VoidCallback onTap}) {
+    return Ink(
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        shape: BoxShape.circle,
+        border: Border.all(
+            color: Theme.of(context).dividerColor.withOpacity(0.1)),
+      ),
+      child: InkWell(
+        customBorder: CircleBorder(),
+        onTap: onTap,
+        child: Container(
+          height: 48,
+          width: 48,
+          alignment: Alignment.center,
+          child: Icon(Icons.add,
+              color: Theme.of(context).colorScheme.onSurface),
+        ),
+      ),
     );
   }
 
@@ -263,27 +246,8 @@ class TransactionDetailsForm extends StatelessWidget {
         (value != null && value != 0 && ids.contains(value)) ? value : null;
     return DropdownButtonFormField<int>(
       value: safeValue,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(Icons.account_balance_wallet_outlined),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(
-              color: Theme.of(context).dividerColor.withOpacity(0.1)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide:
-              BorderSide(color: Theme.of(context).primaryColor, width: 2),
-        ),
-        filled: true,
-        fillColor: Theme.of(context).cardColor,
-        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      ),
+      decoration: _fieldDecoration(context,
+          label: label, icon: Icons.account_balance_wallet_outlined),
       items: accounts.map((Account value) {
         return DropdownMenuItem<int>(
           value: value.id,

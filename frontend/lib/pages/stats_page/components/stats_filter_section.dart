@@ -25,146 +25,145 @@ class StatsFilterSection extends StatelessWidget {
   String _rangeLabel(StatsRange r) {
     switch (r) {
       case StatsRange.weekly:
-        return 'Weekly';
+        return 'W';
       case StatsRange.monthly:
-        return 'Monthly';
+        return 'M';
       case StatsRange.yearly:
-        return 'Yearly';
+        return 'Y';
       case StatsRange.custom:
         return 'Custom';
     }
   }
 
+  IconData _rangeIcon(StatsRange r) {
+    switch (r) {
+      case StatsRange.weekly:
+        return Icons.view_week_outlined;
+      case StatsRange.monthly:
+        return Icons.calendar_month_outlined;
+      case StatsRange.yearly:
+        return Icons.date_range_outlined;
+      case StatsRange.custom:
+        return Icons.tune_outlined;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final chipBg = isDark ? Colors.white10 : Colors.grey.shade100;
+    final chipSelectedBg = Theme.of(context).primaryColor;
+
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
       child: Column(
         children: [
+          // Row 1: Range chips + Kind toggle
           Row(
             children: [
-              // Range Dropdown Pill
+              // Range chips
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                height: 36,
                 decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                      color: Theme.of(context).dividerColor.withOpacity(0.1)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.02),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    )
-                  ],
+                  color: chipBg,
+                  borderRadius: BorderRadius.circular(18),
                 ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<StatsRange>(
-                    value: range,
-                    icon: Padding(
-                      padding: const EdgeInsets.only(left: 8.0),
-                      child: Icon(Icons.keyboard_arrow_down,
-                          size: 20, color: Theme.of(context).primaryColor),
-                    ),
-                    isDense: true,
-                    dropdownColor: Theme.of(context).cardColor,
-                    style: TextStyle(
-                      color: Theme.of(context).textTheme.bodyLarge?.color,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                    ),
-                    items: StatsRange.values.map((r) {
-                      return DropdownMenuItem(
-                        value: r,
-                        child: Text(_rangeLabel(r)),
-                      );
-                    }).toList(),
-                    onChanged: (v) {
-                      if (v != null) onRangeChanged(v);
-                    },
-                  ),
+                padding: const EdgeInsets.all(3),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: StatsRange.values.map((r) {
+                    final isSelected = range == r;
+                    return GestureDetector(
+                      onTap: () => onRangeChanged(r),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: r == StatsRange.custom ? 12 : 10,
+                        ),
+                        height: 30,
+                        decoration: BoxDecoration(
+                          color: isSelected ? chipSelectedBg : Colors.transparent,
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          _rangeLabel(r),
+                          style: TextStyle(
+                            color: isSelected
+                                ? Colors.white
+                                : Theme.of(context).hintColor,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
                 ),
               ),
               const Spacer(),
-              // Kind Toggle Pill
+              // Kind toggle
               Container(
-                height: 40,
+                height: 36,
                 decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                      color: Theme.of(context).dividerColor.withOpacity(0.1)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.02),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    )
-                  ],
+                  color: chipBg,
+                  borderRadius: BorderRadius.circular(18),
                 ),
+                padding: const EdgeInsets.all(3),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _buildKindOption(context, StatsKind.expense, "Expense",
+                    _buildKindChip(context, StatsKind.expense, "Expense",
                         Colors.redAccent),
-                    _buildKindOption(
+                    _buildKindChip(
                         context, StatsKind.income, "Income", Colors.teal),
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          // Account Filter Dropdown (Modern Filled Style)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            decoration: BoxDecoration(
-              color: Theme.of(context).cardColor,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                  color: Theme.of(context).dividerColor.withOpacity(0.1)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.02),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                )
-              ],
-            ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<Account?>(
-                value: selectedAccount,
-                isExpanded: true,
-                icon: Icon(Icons.keyboard_arrow_down,
-                    size: 20, color: Theme.of(context).primaryColor),
-                dropdownColor: Theme.of(context).cardColor,
-                hint: Text(
-                  'All Accounts',
-                  style: TextStyle(
-                    color: Theme.of(context).textTheme.bodyLarge?.color,
-                    fontWeight: FontWeight.w600,
+          const SizedBox(height: 8),
+          // Row 2: Account selector
+          GestureDetector(
+            onTap: () => _showAccountPicker(context),
+            child: Container(
+              height: 40,
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              decoration: BoxDecoration(
+                color: Theme.of(context).cardColor,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                    color: Theme.of(context).dividerColor.withOpacity(0.15)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.account_balance_wallet_outlined,
+                      size: 18, color: Theme.of(context).hintColor),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      selectedAccount?.name ?? 'All Accounts',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
-                style: TextStyle(
-                  color: Theme.of(context).textTheme.bodyLarge?.color,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                ),
-                items: [
-                  const DropdownMenuItem<Account?>(
-                    value: null,
-                    child: Text('All Accounts'),
-                  ),
-                  ...accounts.map((a) {
-                    return DropdownMenuItem<Account?>(
-                      value: a,
-                      child: Text(a.name ?? 'Unknown Account'),
-                    );
-                  }).toList(),
+                  if (selectedAccount != null)
+                    GestureDetector(
+                      onTap: () => onAccountChanged(null),
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 4),
+                        child: Icon(Icons.close, size: 16,
+                            color: Theme.of(context).hintColor),
+                      ),
+                    ),
+                  const SizedBox(width: 4),
+                  Icon(Icons.keyboard_arrow_down,
+                      size: 18, color: Theme.of(context).hintColor),
                 ],
-                onChanged: onAccountChanged,
               ),
             ),
           ),
@@ -173,18 +172,124 @@ class StatsFilterSection extends StatelessWidget {
     );
   }
 
-  Widget _buildKindOption(
+  void _showAccountPicker(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final unselectedIconColor = isDark ? Colors.white54 : Colors.black45;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      isScrollControlled: true,
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.5,
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Select Account',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
+                      ),
+                    ),
+                    if (selectedAccount != null)
+                      TextButton(
+                        onPressed: () {
+                          onAccountChanged(null);
+                          Navigator.pop(context);
+                        },
+                        child: const Text('Clear'),
+                      ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              Flexible(
+                child: ListView(
+                  shrinkWrap: true,
+                  children: [
+                    ListTile(
+                      iconColor: selectedAccount == null
+                          ? Theme.of(context).primaryColor
+                          : unselectedIconColor,
+                      leading: Icon(Icons.select_all),
+                      title: Text('All Accounts',
+                          style: TextStyle(
+                            color: Theme.of(context).textTheme.bodyLarge?.color,
+                            fontWeight: selectedAccount == null
+                                ? FontWeight.w700
+                                : FontWeight.normal,
+                          )),
+                      trailing: selectedAccount == null
+                          ? Icon(Icons.check,
+                              color: Colors.blue)
+                          : null,
+                      onTap: () {
+                        onAccountChanged(null);
+                        Navigator.pop(context);
+                      },
+                    ),
+                    ...accounts.map((a) {
+                      final isSelected = selectedAccount?.id == a.id;
+                      return ListTile(
+                        iconColor: isSelected
+                            ? Theme.of(context).primaryColor
+                            : unselectedIconColor,
+                        leading: const Icon(
+                          Icons.account_balance_wallet_outlined,
+                        ),
+                        title: Text(a.name ?? 'Unknown',
+                            style: TextStyle(
+                              color: Theme.of(context).textTheme.bodyLarge?.color,
+                              fontWeight: isSelected
+                                  ? FontWeight.w700
+                                  : FontWeight.normal,
+                            )),
+                        trailing: isSelected
+                            ? Icon(Icons.check,
+                                color: Colors.blue)
+                            : null,
+                        onTap: () {
+                          onAccountChanged(a);
+                          Navigator.pop(context);
+                        },
+                      );
+                    }),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildKindChip(
       BuildContext context, StatsKind value, String label, Color color) {
-    bool isSelected = kind == value;
+    final isSelected = kind == value;
     return GestureDetector(
       onTap: () => onKindChanged(value),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        height: 40,
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        height: 30,
         decoration: BoxDecoration(
           color: isSelected ? color : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(15),
         ),
         alignment: Alignment.center,
         child: Text(
@@ -192,7 +297,7 @@ class StatsFilterSection extends StatelessWidget {
           style: TextStyle(
             color: isSelected ? Colors.white : Theme.of(context).hintColor,
             fontWeight: FontWeight.w600,
-            fontSize: 14,
+            fontSize: 13,
           ),
         ),
       ),

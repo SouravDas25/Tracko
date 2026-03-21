@@ -26,21 +26,15 @@ class SplitManagerSection extends StatelessWidget {
   }) : super(key: key);
 
   String _calcAmount() {
-    double a;
     final totalPeople = splitList.length + 1; // + you
-    if (amount > 0 && totalPeople > 0) {
-      a = (amount / totalPeople);
-    } else {
-      a = 0;
-    }
+    final a = (amount > 0 && totalPeople > 0) ? (amount / totalPeople) : 0.0;
     return "$currencySymbol ${a.toStringAsFixed(2)}";
   }
 
   @override
   Widget build(BuildContext context) {
     final contactsList = splitList.toList(growable: false);
-    final totalPeople = contactsList.length + 1;
-    bool disableSlide = totalPeople <= 1;
+    final hasSplits = contactsList.isNotEmpty;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -48,19 +42,29 @@ class SplitManagerSection extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              "Splits",
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Theme.of(context).hintColor,
-              ),
+            Row(
+              children: [
+                Icon(Icons.call_split, size: 16,
+                    color: Theme.of(context).hintColor),
+                SizedBox(width: 6),
+                Text(
+                  "Splits",
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(context).hintColor,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
             ),
-            IconButton(
-              icon:
-                  Icon(Icons.call_split, color: Theme.of(context).primaryColor),
+            TextButton.icon(
+              icon: Icon(Icons.person_add_outlined, size: 18),
+              label: Text("Add"),
               onPressed: () => onCallSplitPage(),
-              tooltip: "Split Transaction",
+              style: TextButton.styleFrom(
+                foregroundColor: Theme.of(context).primaryColor,
+              ),
             ),
           ],
         ),
@@ -82,9 +86,7 @@ class SplitManagerSection extends StatelessWidget {
                                     .dividerColor
                                     .withOpacity(0.1)),
                           ),
-                          onPressed: () {
-                            onAddSplit(contact);
-                          },
+                          onPressed: () => onAddSplit(contact),
                         ),
                       ))
                   .toList(),
@@ -92,69 +94,99 @@ class SplitManagerSection extends StatelessWidget {
           ),
           SizedBox(height: 12),
         ],
-        ListView.builder(
-          physics: NeverScrollableScrollPhysics(),
-          shrinkWrap: true,
-          itemCount: totalPeople,
-          itemBuilder: (context, int index) {
-            String displayAmount = _calcAmount();
+        if (!hasSplits && frequentSplitters.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(vertical: 24),
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardColor,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                  color: Theme.of(context).dividerColor.withOpacity(0.1)),
+            ),
+            child: Column(
+              children: [
+                Icon(Icons.group_outlined, size: 32,
+                    color: Theme.of(context).hintColor.withOpacity(0.4)),
+                SizedBox(height: 8),
+                Text(
+                  "No splits yet",
+                  style: TextStyle(
+                    color: Theme.of(context).hintColor.withOpacity(0.6),
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        if (hasSplits)
+          ListView.builder(
+            physics: NeverScrollableScrollPhysics(),
+            shrinkWrap: true,
+            itemCount: contactsList.length + 1, // +1 for "You" row
+            itemBuilder: (context, int index) {
+              final displayAmount = _calcAmount();
+              final isYouRow = index == 0;
+              final Contact? element =
+                  isYouRow ? null : contactsList[index - 1];
 
-            final isYouRow = index == 0;
-            final Contact? element = isYouRow ? null : contactsList[index - 1];
-
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 8.0),
-              child: Slidable(
-                enabled: !disableSlide,
-                endActionPane: ActionPane(
-                  motion: ScrollMotion(),
-                  children: [
-                    SlidableAction(
-                      onPressed: (context) {
-                        if (!isYouRow && element != null) {
-                          onDeleteSplit(element, index);
-                        }
-                      },
-                      backgroundColor: Theme.of(context).colorScheme.error,
-                      foregroundColor: Theme.of(context).colorScheme.onError,
-                      icon: Icons.delete,
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: Slidable(
+                  enabled: !isYouRow,
+                  endActionPane: ActionPane(
+                    motion: ScrollMotion(),
+                    children: [
+                      SlidableAction(
+                        onPressed: (context) {
+                          if (!isYouRow && element != null) {
+                            onDeleteSplit(element, index);
+                          }
+                        },
+                        backgroundColor: Theme.of(context).colorScheme.error,
+                        foregroundColor: Theme.of(context).colorScheme.onError,
+                        icon: Icons.delete,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ],
+                  ),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).cardColor,
                       borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                          color: Theme.of(context)
+                              .dividerColor
+                              .withOpacity(0.1)),
                     ),
-                  ],
-                ),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).cardColor,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                        color: Theme.of(context).dividerColor.withOpacity(0.1)),
-                  ),
-                  child: ListTile(
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                    dense: true,
-                    trailing: Text(
-                      displayAmount,
-                      style: TextStyle(
-                          fontSize: 18.0, fontWeight: FontWeight.bold),
+                    child: ListTile(
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                      dense: true,
+                      trailing: Text(
+                        displayAmount,
+                        style: TextStyle(
+                            fontSize: 18.0, fontWeight: FontWeight.bold),
+                      ),
+                      title: Text(
+                        isYouRow ? "You" : (element?.name ?? ''),
+                        style: TextStyle(
+                            fontSize: 16.0, fontWeight: FontWeight.w600),
+                      ),
+                      subtitle: isYouRow
+                          ? null
+                          : Text(
+                              element?.phoneNo ?? '',
+                              style: TextStyle(fontSize: 14.0),
+                            ),
+                      leading: WidgetUtil.textAvatar(
+                          isYouRow ? "You" : (element?.name ?? '')),
                     ),
-                    title: Text(
-                      isYouRow ? "You" : (element?.name ?? ''),
-                      style: TextStyle(
-                          fontSize: 16.0, fontWeight: FontWeight.w600),
-                    ),
-                    subtitle: Text(
-                      isYouRow ? "" : ((element?.phoneNo ?? '')),
-                      style: TextStyle(fontSize: 14.0),
-                    ),
-                    leading: WidgetUtil.textAvatar(
-                        isYouRow ? "You" : (element?.name ?? '')),
                   ),
                 ),
-              ),
-            );
-          },
-        ),
+              );
+            },
+          ),
       ],
     );
   }

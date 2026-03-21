@@ -12,7 +12,7 @@ class CommentsSection extends StatelessWidget {
       maxLines: 3,
       decoration: InputDecoration(
         labelText: 'Comments',
-        prefixIcon: Icon(Icons.comment_outlined),
+        hintText: 'Add a note...',
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none,

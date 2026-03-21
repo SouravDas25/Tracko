@@ -28,15 +28,8 @@ class AmountInputSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    Color typeColor;
-    if (transactionType == TransactionType.DEBIT) {
-      typeColor = isDarkMode ? Colors.redAccent : Colors.red;
-    } else if (transactionType == TransactionType.TRANSFER) {
-      typeColor = isDarkMode ? Colors.lightBlueAccent : Colors.blueGrey;
-    } else {
-      typeColor = isDarkMode ? Colors.tealAccent : Colors.teal;
-    }
+    final typeColor = TransactionType.color(
+        transactionType, brightness: Theme.of(context).brightness);
 
     return Card(
       elevation: 0,
