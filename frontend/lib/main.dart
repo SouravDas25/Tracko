@@ -6,7 +6,6 @@ import 'package:tracko/pages/login_page/login_page.dart';
 import 'package:tracko/pages/route.dart';
 import 'package:tracko/pages/transaction_list_page/transaction_list_page.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:tracko/Utils/ssl_bypass.dart'
     if (dart.library.html) 'package:tracko/Utils/ssl_bypass_web.dart';
 
@@ -29,9 +28,9 @@ class MyApp extends StatelessWidget {
         brightness: Brightness.light,
         primarySwatch: Colors.blue,
         scaffoldBackgroundColor: Colors.white,
-        textTheme: GoogleFonts.interTextTheme(
-          ThemeData(brightness: Brightness.light).textTheme,
-        ),
+        textTheme: ThemeData(brightness: Brightness.light).textTheme.apply(
+              fontFamily: 'Inter',
+            ),
         cardTheme: CardThemeData(
           elevation: 2,
           shape:
@@ -42,9 +41,9 @@ class MyApp extends StatelessWidget {
         brightness: Brightness.dark,
         primarySwatch: Colors.blue,
         scaffoldBackgroundColor: const Color(0xFF121212),
-        textTheme: GoogleFonts.interTextTheme(
-          ThemeData(brightness: Brightness.dark).textTheme,
-        ),
+        textTheme: ThemeData(brightness: Brightness.dark).textTheme.apply(
+              fontFamily: 'Inter',
+            ),
         cardTheme: CardThemeData(
           elevation: 2,
           color: const Color(0xFF1E1E1E),

@@ -185,3 +185,8 @@ tasks:
       - cmd: docker build -t "{{.DOCKER_IMAGE}}" .
       - cmd: docker tag "{{.DOCKER_IMAGE}}" "{{.DOCKER_PUBLISH_IMAGE}}"
       - cmd: docker push "{{.DOCKER_PUBLISH_IMAGE}}"
+
+  lxc:upgrade:
+    desc: Update the LXC container with the latest image (runs upgrade-test-lxc.sh)
+    cmds:
+      - cmd: bash upgrade-test-lxc.sh
