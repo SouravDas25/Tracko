@@ -24,10 +24,6 @@ public class JwtUserDetailsService implements UserDetailsService {
         if (u == null) {
             u = usersRepository.findByEmail(phoneNo);
         }
-
-        if (u == null) {
-            u = usersRepository.findByName(phoneNo);
-        }
         if (u == null) {
             throw new UsernameNotFoundException("User not found in DB.");
         }

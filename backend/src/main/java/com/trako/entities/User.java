@@ -18,10 +18,10 @@ public class User extends AbstractBaseEntity {
     private String name;
 
     @NotNull
-    @Column(name = "phone_no")
+    @Column(name = "phone_no", unique = true)
     private String phoneNo;
 
-    @Column(name = "email")
+    @Column(name = "email", unique = true)
     private String email;
 
     @Column(name = "profile_pic")

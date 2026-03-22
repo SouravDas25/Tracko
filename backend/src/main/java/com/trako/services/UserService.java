@@ -99,6 +99,16 @@ public class UserService {
 
         User user;
         User isPreset = usersRepository.findByPhoneNo(phnNo);
+
+        // Reject if email is already taken by a different user
+        if (userSaveRequest.getEmail() != null && !userSaveRequest.getEmail().isBlank()) {
+            User emailOwner = usersRepository.findByEmail(userSaveRequest.getEmail());
+            if (emailOwner != null && (isPreset == null || !emailOwner.getId().equals(isPreset.getId()))) {
+                log.warn("User save rejected: email {} already in use", userSaveRequest.getEmail());
+                return null;
+            }
+        }
+
         if (isPreset != null) {
             user = CommonUtil.mapModel(isPreset, User.class);
         } else {
