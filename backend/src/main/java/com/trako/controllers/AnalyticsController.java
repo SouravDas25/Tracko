@@ -57,7 +57,7 @@ public class AnalyticsController {
             if (groupBy != null && !groupBy.isEmpty()) {
                 groupByEnum = AnalyticsGroupBy.fromString(groupBy);
                 if (groupByEnum == null) {
-                    return Response.badRequest("Invalid groupBy. Use category or account");
+                    return Response.badRequest("Invalid groupBy. Use category, account, or name");
                 }
             }
 

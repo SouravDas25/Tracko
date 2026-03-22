@@ -1,7 +1,7 @@
 package com.trako.enums;
 
 public enum AnalyticsGroupBy {
-    CATEGORY, ACCOUNT;
+    CATEGORY, ACCOUNT, NAME;
 
     public static AnalyticsGroupBy fromString(String value) {
         if (value == null || value.isEmpty()) return null;

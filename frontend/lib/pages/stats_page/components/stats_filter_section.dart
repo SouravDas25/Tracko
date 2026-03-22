@@ -31,6 +31,10 @@ class StatsFilterSection extends StatelessWidget {
         return 'M';
       case StatsRange.yearly:
         return 'Y';
+      case StatsRange.fiveYearly:
+        return '5Y';
+      case StatsRange.tenYearly:
+        return '10Y';
       case StatsRange.custom:
         return 'Custom';
     }
@@ -43,6 +47,10 @@ class StatsFilterSection extends StatelessWidget {
       case StatsRange.monthly:
         return Icons.calendar_month_outlined;
       case StatsRange.yearly:
+        return Icons.date_range_outlined;
+      case StatsRange.fiveYearly:
+        return Icons.date_range_outlined;
+      case StatsRange.tenYearly:
         return Icons.date_range_outlined;
       case StatsRange.custom:
         return Icons.tune_outlined;

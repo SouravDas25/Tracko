@@ -48,6 +48,8 @@ public class AnalyticsService {
             groupedSeries = buildGroupedByCategory(userId, dbType, granularity, accountIds, currentStart, currentEnd);
         } else if (groupBy == AnalyticsGroupBy.ACCOUNT && (accountIds == null || accountIds.isEmpty())) {
             groupedSeries = buildGroupedByAccount(userId, dbType, granularity, categoryIds, currentStart, currentEnd);
+        } else if (groupBy == AnalyticsGroupBy.NAME) {
+            groupedSeries = buildGroupedByName(userId, dbType, granularity, accountIds, categoryIds, currentStart, currentEnd);
         } else {
             groupedSeries = buildUngrouped(userId, dbType, granularity, accountIds, categoryIds, currentStart, currentEnd);
         }
@@ -266,5 +268,34 @@ public class AnalyticsService {
                 .collect(Collectors.toMap(Account::getId, Account::getName));
 
         return buildGroupedSeries(rows, nameMap, "Account", granularity, currentStart, currentEnd);
+    }
+
+    /**
+     * Groups chart data by transaction name — one line series per unique name.
+     * Accepts both account and category filters. Skips rows with null entityName
+     * and excludes series where all data points are zero.
+     */
+    private List<NamedSeriesDTO> buildGroupedByName(String userId, TransactionDbType dbType,
+                                                    AnalyticsGranularity granularity,
+                                                    List<Long> accountIds, List<Long> categoryIds,
+                                                    Date currentStart, Date currentEnd) {
+        List<NamedDateAmountRow> rows = transactionRepository
+                .sumAmountsByDateGroupedByNameFiltered(userId, dbType, accountIds, categoryIds, currentStart, currentEnd);
+
+        LinkedHashMap<String, List<DateAmountRow>> byName = new LinkedHashMap<>();
+        for (NamedDateAmountRow row : rows) {
+            if (row.entityName() == null) continue;
+            byName.computeIfAbsent(row.entityName(), k -> new ArrayList<>())
+                    .add(new DateAmountRow(row.date(), row.amount()));
+        }
+
+        List<NamedSeriesDTO> result = new ArrayList<>();
+        for (Map.Entry<String, List<DateAmountRow>> entry : byName.entrySet()) {
+            List<StatsPointDTO> series = buildSeries(granularity, entry.getValue(), currentStart, currentEnd);
+            if (series.stream().anyMatch(pt -> pt.getValue() != null && pt.getValue() > 0)) {
+                result.add(new NamedSeriesDTO(entry.getKey(), series));
+            }
+        }
+        return result;
     }
 }

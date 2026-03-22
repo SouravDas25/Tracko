@@ -96,6 +96,8 @@ class _AnalyticsFilterSectionState extends State<AnalyticsFilterSection>
         return 'Category';
       case GroupByMode.account:
         return 'Account';
+      case GroupByMode.description:
+        return 'Description';
     }
   }
 

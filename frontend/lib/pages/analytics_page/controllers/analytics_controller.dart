@@ -259,6 +259,19 @@ class AnalyticsController extends ChangeNotifier {
   // Data loading
   // ---------------------------------------------------------------------------
 
+  String? _groupByApiValue() {
+    switch (_groupBy) {
+      case GroupByMode.none:
+        return null;
+      case GroupByMode.category:
+        return 'category';
+      case GroupByMode.account:
+        return 'account';
+      case GroupByMode.description:
+        return 'name';
+    }
+  }
+
   String _fmtDate(DateTime d) {
     final mm = d.month.toString().padLeft(2, '0');
     final dd = d.day.toString().padLeft(2, '0');
@@ -281,7 +294,7 @@ class AnalyticsController extends ChangeNotifier {
         startDate: _fmtDate(_startDate),
         endDate: _fmtDate(_endDate),
         granularity: _granularity.name,
-        groupBy: _groupBy != GroupByMode.none ? _groupBy.name : null,
+        groupBy: _groupByApiValue(),
         accountId: _selectedAccount?.id,
         categoryId: _selectedCategory?.id,
       );

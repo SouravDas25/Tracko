@@ -91,7 +91,7 @@ public class StatsService {
             }
         }
 
-        if (range == Range.yearly) {
+        if (range == Range.yearly || range == Range.fiveYearly || range == Range.tenYearly) {
             TreeMap<Integer, Double> byYear = new TreeMap<>();
             for (Object[] row : aggs) {
                 Date d = (Date) row[0];
@@ -174,6 +174,14 @@ public class StatsService {
                 currentStart = startOfMonth(now);
                 currentEnd = nextMonth(currentStart);
                 break;
+            case fiveYearly:
+                currentStart = startOfYear(addYears(now, -4));
+                currentEnd = nextYear(startOfYear(now));
+                break;
+            case tenYearly:
+                currentStart = startOfYear(addYears(now, -9));
+                currentEnd = nextYear(startOfYear(now));
+                break;
             case yearly:
             default:
                 currentStart = startOfYear(now);
@@ -242,6 +250,14 @@ public class StatsService {
                 currentStart = startOfMonth(now);
                 currentEnd = nextMonth(currentStart);
                 break;
+            case fiveYearly:
+                currentStart = startOfYear(addYears(now, -4));
+                currentEnd = nextYear(startOfYear(now));
+                break;
+            case tenYearly:
+                currentStart = startOfYear(addYears(now, -9));
+                currentEnd = nextYear(startOfYear(now));
+                break;
             case yearly:
             default:
                 currentStart = startOfYear(now);
@@ -270,6 +286,8 @@ public class StatsService {
         weekly,
         monthly,
         yearly,
+        fiveYearly,
+        tenYearly,
         custom
     }
 }
