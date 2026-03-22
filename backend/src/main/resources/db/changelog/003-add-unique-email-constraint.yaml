@@ -1,0 +1,15 @@
+databaseChangeLog:
+    -   changeSet:
+            id: 003-add-unique-email-constraint
+            author: sd25
+            preConditions:
+                -   onFail: MARK_RAN
+                -   not:
+                        -   uniqueConstraintExists:
+                                tableName: users
+                                constraintName: uq_users_email
+            changes:
+                -   addUniqueConstraint:
+                        tableName: users
+                        columnNames: email
+                        constraintName: uq_users_email

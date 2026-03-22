@@ -28,6 +28,9 @@ class MyApp extends StatelessWidget {
         brightness: Brightness.light,
         primarySwatch: Colors.blue,
         scaffoldBackgroundColor: Colors.white,
+        textTheme: ThemeData(brightness: Brightness.light).textTheme.apply(
+              fontFamily: 'Inter',
+            ),
         cardTheme: CardThemeData(
           elevation: 2,
           shape:
@@ -38,6 +41,9 @@ class MyApp extends StatelessWidget {
         brightness: Brightness.dark,
         primarySwatch: Colors.blue,
         scaffoldBackgroundColor: const Color(0xFF121212),
+        textTheme: ThemeData(brightness: Brightness.dark).textTheme.apply(
+              fontFamily: 'Inter',
+            ),
         cardTheme: CardThemeData(
           elevation: 2,
           color: const Color(0xFF1E1E1E),

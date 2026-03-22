@@ -4,6 +4,7 @@ import 'package:tracko/repositories/category_repository.dart';
 import 'package:tracko/services/SessionService.dart';
 import 'package:flutter/material.dart';
 import 'package:tracko/di/di.dart';
+import 'package:tracko/component/app_dropdown.dart';
 
 // ignore: must_be_immutable
 class CategoryDialog extends StatelessWidget {
@@ -66,21 +67,12 @@ class CategoryDialog extends StatelessWidget {
                 ),
               ),
               SizedBox(height: 12),
-              DropdownButtonFormField<String>(
+              AppFormDropdown<String>(
                 value: _selectedCategoryType,
-                decoration: InputDecoration(
-                  labelText: 'Type',
-                ),
-                items: const [
-                  DropdownMenuItem(
-                    value: 'EXPENSE',
-                    child: Text('Expense'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'INCOME',
-                    child: Text('Income'),
-                  ),
-                ],
+                items: const ['EXPENSE', 'INCOME'],
+                labelBuilder: (v) => v == 'EXPENSE' ? 'Expense' : 'Income',
+                label: 'Type',
+                filled: false,
                 onChanged: (val) {
                   if (val == null) return;
                   setState(() {

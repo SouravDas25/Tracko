@@ -2,6 +2,7 @@ package com.trako.repositories;
 
 import com.trako.dtos.DateAmountRow;
 import com.trako.dtos.GroupedDateAmountRow;
+import com.trako.dtos.NamedDateAmountRow;
 import com.trako.entities.Transaction;
 import com.trako.enums.TransactionDbType;
 import org.springframework.data.domain.Page;
@@ -483,6 +484,25 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     List<GroupedDateAmountRow> sumAmountsByDateGroupedByAccountFiltered(
             @Param("userId") String userId,
             @Param("transactionType") TransactionDbType transactionType,
+            @Param("categoryIds") List<Long> categoryIds,
+            @Param("startDate") Date startDate,
+            @Param("endDate") Date endDate
+    );
+
+    @Query("SELECT new com.trako.dtos.NamedDateAmountRow(t.name, t.date, SUM(t.amount)) " +
+            "FROM Transaction t " +
+            "WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId) " +
+            "AND t.isCountable = 1 " +
+            "AND t.transactionType = :transactionType " +
+            "AND (:#{#accountIds == null || #accountIds.isEmpty()} = true OR t.accountId IN :accountIds) " +
+            "AND (:#{#categoryIds == null || #categoryIds.isEmpty()} = true OR t.categoryId IN :categoryIds) " +
+            "AND t.date >= :startDate AND t.date < :endDate " +
+            "GROUP BY t.name, t.date " +
+            "ORDER BY t.name, t.date ASC")
+    List<NamedDateAmountRow> sumAmountsByDateGroupedByNameFiltered(
+            @Param("userId") String userId,
+            @Param("transactionType") TransactionDbType transactionType,
+            @Param("accountIds") List<Long> accountIds,
             @Param("categoryIds") List<Long> categoryIds,
             @Param("startDate") Date startDate,
             @Param("endDate") Date endDate

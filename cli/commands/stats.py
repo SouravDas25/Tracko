@@ -26,7 +26,7 @@ def _parse_date(value: Optional[str]) -> Optional[datetime]:
 
 @app.command()
 def summary(
-    range: str = typer.Option(..., "--range", "-r", help="Range (WEEK/MONTH/YEAR/CUSTOM)"),
+    range: str = typer.Option(..., "--range", "-r", help="Range (WEEK/MONTH/YEAR/FIVE_YEAR/TEN_YEAR/CUSTOM)"),
     transaction_type: str = typer.Option(..., "--type", "-t", help="Type (INCOME/EXPENSE)"),
     start_date: Optional[str] = typer.Option(None, "--start-date", help="Start date (YYYY-MM-DD)"),
     end_date: Optional[str] = typer.Option(None, "--end-date", help="End date (YYYY-MM-DD)"),
@@ -92,7 +92,7 @@ def summary(
 @app.command()
 def category_summary(
     category_id: int = typer.Option(..., "--category-id", help="Category ID"),
-    range: str = typer.Option(..., "--range", "-r", help="Range (WEEK/MONTH/YEAR/CUSTOM)"),
+    range: str = typer.Option(..., "--range", "-r", help="Range (WEEK/MONTH/YEAR/FIVE_YEAR/TEN_YEAR/CUSTOM)"),
     transaction_type: str = typer.Option(..., "--type", "-t", help="Type (INCOME/EXPENSE)"),
     start_date: Optional[str] = typer.Option(None, "--start-date", help="Start date (YYYY-MM-DD)"),
     end_date: Optional[str] = typer.Option(None, "--end-date", help="End date (YYYY-MM-DD)"),

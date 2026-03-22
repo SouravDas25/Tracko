@@ -5,6 +5,7 @@ import 'package:tracko/Utils/enums.dart';
 import 'package:tracko/component/AccountDialog.dart';
 import 'package:tracko/component/CategoryDialog.dart';
 import 'package:tracko/models/account.dart';
+import 'package:tracko/component/app_dropdown.dart';
 import 'package:tracko/models/category.dart';
 
 class TransactionDetailsForm extends StatelessWidget {
@@ -25,6 +26,7 @@ class TransactionDetailsForm extends StatelessWidget {
   final Function onAddAccount;
   final TextEditingController nameController;
   final String dateLabel;
+  final VoidCallback? onSwapTransferAccounts;
 
   const TransactionDetailsForm({
     Key? key,
@@ -45,7 +47,33 @@ class TransactionDetailsForm extends StatelessWidget {
     required this.onAddAccount,
     required this.nameController,
     this.dateLabel = 'Date',
+    this.onSwapTransferAccounts,
   }) : super(key: key);
+
+  InputDecoration _fieldDecoration(BuildContext context,
+      {required String label, required IconData icon}) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(
+            color: Theme.of(context).dividerColor.withOpacity(0.1)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide:
+            BorderSide(color: Theme.of(context).primaryColor, width: 2),
+      ),
+      filled: true,
+      fillColor: Theme.of(context).cardColor,
+      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -57,27 +85,8 @@ class TransactionDetailsForm extends StatelessWidget {
           format: DateFormat('dd-MMM-yyyy'),
           readOnly: true,
           resetIcon: null,
-          decoration: InputDecoration(
-            labelText: dateLabel,
-            prefixIcon: Icon(Icons.calendar_today_outlined),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide.none,
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(
-                  color: Theme.of(context).dividerColor.withOpacity(0.1)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide:
-                  BorderSide(color: Theme.of(context).primaryColor, width: 2),
-            ),
-            filled: true,
-            fillColor: Theme.of(context).cardColor,
-            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          ),
+          decoration: _fieldDecoration(context,
+              label: dateLabel, icon: Icons.calendar_today_outlined),
           onShowPicker: (context, currentValue) {
             return showDatePicker(
                 context: context,
@@ -96,80 +105,29 @@ class TransactionDetailsForm extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: DropdownButtonFormField<int>(
-                  value: filteredCategories
-                          .map((c) => c.id)
-                          .whereType<int>()
-                          .contains(categoryId)
-                      ? categoryId
-                      : null,
-                  decoration: InputDecoration(
-                    labelText: 'Category',
-                    prefixIcon: Icon(Icons.category_outlined),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide.none,
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(
-                          color:
-                              Theme.of(context).dividerColor.withOpacity(0.1)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(
-                          color: Theme.of(context).primaryColor, width: 2),
-                    ),
-                    filled: true,
-                    fillColor: Theme.of(context).cardColor,
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                  ),
-                  items: filteredCategories.map((Category value) {
-                    return DropdownMenuItem<int>(
-                      value: value.id,
-                      child: Text(
-                        value.name,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    );
-                  }).toList(),
-                  onChanged: (int? id) {
-                    onCategoryChanged(id ?? 0);
-                  },
+                child: AppBottomSheetPicker<Category>(
+                  value: _findCategory(categoryId),
+                  items: filteredCategories,
+                  title: 'Select Category',
+                  labelBuilder: (c) => c.name,
+                  iconBuilder: (c) => Icons.category_outlined,
+                  onSelected: (c) => onCategoryChanged(c?.id ?? 0),
+                  allItemsLabel: 'Category',
+                  isExpanded: true,
                 ),
               ),
               SizedBox(width: 12),
-              Ink(
-                decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                      color: Theme.of(context).dividerColor.withOpacity(0.1)),
-                ),
-                child: InkWell(
-                  customBorder: CircleBorder(),
-                  onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (_) => CategoryDialog(
-                        callback: onAddCategory,
-                        categoryType: transactionType == TransactionType.CREDIT
-                            ? 'INCOME'
-                            : 'EXPENSE',
-                      ),
-                    );
-                  },
-                  child: Container(
-                    height: 48,
-                    width: 48,
-                    alignment: Alignment.center,
-                    child: Icon(Icons.add,
-                        color: Theme.of(context).colorScheme.onSurface),
+              _addButton(context, onTap: () {
+                showDialog(
+                  context: context,
+                  builder: (_) => CategoryDialog(
+                    callback: onAddCategory,
+                    categoryType: transactionType == TransactionType.CREDIT
+                        ? 'INCOME'
+                        : 'EXPENSE',
                   ),
-                ),
-              )
+                );
+              }),
             ],
           ),
           SizedBox(height: 16),
@@ -177,51 +135,80 @@ class TransactionDetailsForm extends StatelessWidget {
 
         // Accounts
         if (transactionType == TransactionType.TRANSFER) ...[
-          _buildAccountDropdown(context, "From Account", transferFromAccountId,
-              (val) {
-            onTransferFromAccountChanged(val ?? 0);
-          }),
+          Row(
+            children: [
+              Expanded(
+                child: AppBottomSheetPicker<Account>(
+                  value: _findAccount(transferFromAccountId),
+                  items: accounts,
+                  title: 'Select From Account',
+                  labelBuilder: (a) => a.name,
+                  iconBuilder: (a) => Icons.account_balance_wallet_outlined,
+                  onSelected: (a) => onTransferFromAccountChanged(a?.id ?? 0),
+                  allItemsLabel: 'From Account',
+                  isExpanded: true,
+                ),
+              ),
+              if (onSwapTransferAccounts != null) ...[
+                SizedBox(width: 12),
+                Ink(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).cardColor,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                        color:
+                            Theme.of(context).dividerColor.withOpacity(0.1)),
+                  ),
+                  child: InkWell(
+                    customBorder: CircleBorder(),
+                    onTap: onSwapTransferAccounts,
+                    child: Container(
+                      height: 48,
+                      width: 48,
+                      alignment: Alignment.center,
+                      child: Icon(Icons.swap_vert_rounded, size: 22,
+                          color: Theme.of(context).colorScheme.onSurface),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
           SizedBox(height: 16),
-          _buildAccountDropdown(context, "To Account", transferToAccountId,
-              (val) {
-            onTransferToAccountChanged(val ?? 0);
-          }),
+          AppBottomSheetPicker<Account>(
+            value: _findAccount(transferToAccountId),
+            items: accounts,
+            title: 'Select To Account',
+            labelBuilder: (a) => a.name,
+            iconBuilder: (a) => Icons.account_balance_wallet_outlined,
+            onSelected: (a) => onTransferToAccountChanged(a?.id ?? 0),
+            allItemsLabel: 'To Account',
+            isExpanded: true,
+          ),
         ] else ...[
           Row(
             children: [
               Expanded(
-                child:
-                    _buildAccountDropdown(context, "Account", accountId, (val) {
-                  onAccountChanged(val ?? 0);
-                }),
+                child: AppBottomSheetPicker<Account>(
+                  value: _findAccount(accountId),
+                  items: accounts,
+                  title: 'Select Account',
+                  labelBuilder: (a) => a.name,
+                  iconBuilder: (a) => Icons.account_balance_wallet_outlined,
+                  onSelected: (a) => onAccountChanged(a?.id ?? 0),
+                  allItemsLabel: 'Account',
+                  isExpanded: true,
+                ),
               ),
               SizedBox(width: 12),
-              Ink(
-                decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                      color: Theme.of(context).dividerColor.withOpacity(0.1)),
-                ),
-                child: InkWell(
-                  customBorder: CircleBorder(),
-                  onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (_) => AccountDialog(
-                        callback: onAddAccount,
-                      ),
-                    );
-                  },
-                  child: Container(
-                    height: 48,
-                    width: 48,
-                    alignment: Alignment.center,
-                    child: Icon(Icons.add,
-                        color: Theme.of(context).colorScheme.onSurface),
+              _addButton(context, onTap: () {
+                showDialog(
+                  context: context,
+                  builder: (_) => AccountDialog(
+                    callback: onAddAccount,
                   ),
-                ),
-              )
+                );
+              }),
             ],
           ),
         ],
@@ -230,67 +217,50 @@ class TransactionDetailsForm extends StatelessWidget {
         // Name Input
         TextField(
           controller: nameController,
-          decoration: InputDecoration(
-            labelText: 'Description',
-            prefixIcon: Icon(Icons.description_outlined),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide.none,
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(
-                  color: Theme.of(context).dividerColor.withOpacity(0.1)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide:
-                  BorderSide(color: Theme.of(context).primaryColor, width: 2),
-            ),
-            filled: true,
-            fillColor: Theme.of(context).cardColor,
-            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          ),
+          decoration: _fieldDecoration(context,
+              label: 'Description', icon: Icons.description_outlined),
         ),
       ],
     );
   }
 
-  Widget _buildAccountDropdown(BuildContext context, String label, int? value,
-      Function(int?) onChanged) {
-    final ids = accounts.map((a) => a.id).whereType<int>().toSet();
-    final int? safeValue =
-        (value != null && value != 0 && ids.contains(value)) ? value : null;
-    return DropdownButtonFormField<int>(
-      value: safeValue,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(Icons.account_balance_wallet_outlined),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(
-              color: Theme.of(context).dividerColor.withOpacity(0.1)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide:
-              BorderSide(color: Theme.of(context).primaryColor, width: 2),
-        ),
-        filled: true,
-        fillColor: Theme.of(context).cardColor,
-        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+  Widget _addButton(BuildContext context, {required VoidCallback onTap}) {
+    return Ink(
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        shape: BoxShape.circle,
+        border: Border.all(
+            color: Theme.of(context).dividerColor.withOpacity(0.1)),
       ),
-      items: accounts.map((Account value) {
-        return DropdownMenuItem<int>(
-          value: value.id,
-          child: Text(value.name),
-        );
-      }).toList(),
-      onChanged: onChanged,
+      child: InkWell(
+        customBorder: CircleBorder(),
+        onTap: onTap,
+        child: Container(
+          height: 48,
+          width: 48,
+          alignment: Alignment.center,
+          child: Icon(Icons.add,
+              color: Theme.of(context).colorScheme.onSurface),
+        ),
+      ),
     );
+  }
+
+  Account? _findAccount(int? id) {
+    if (id == null || id == 0) return null;
+    try {
+      return accounts.firstWhere((a) => a.id == id);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Category? _findCategory(int? id) {
+    if (id == null || id == 0) return null;
+    try {
+      return filteredCategories.firstWhere((c) => c.id == id);
+    } catch (_) {
+      return null;
+    }
   }
 }

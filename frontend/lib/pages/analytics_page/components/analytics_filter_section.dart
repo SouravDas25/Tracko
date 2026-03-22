@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tracko/component/app_dropdown.dart';
 import 'package:tracko/models/account.dart';
 import 'package:tracko/models/category.dart';
 import 'package:tracko/pages/analytics_page/models/analytics_models.dart';
@@ -62,11 +63,11 @@ class _AnalyticsFilterSectionState extends State<AnalyticsFilterSection>
   String _granularityLabel(AnalyticsGranularity g) {
     switch (g) {
       case AnalyticsGranularity.weekly:
-        return 'Weekly';
+        return 'W';
       case AnalyticsGranularity.monthly:
-        return 'Monthly';
+        return 'M';
       case AnalyticsGranularity.yearly:
-        return 'Yearly';
+        return 'Y';
     }
   }
 
@@ -95,6 +96,8 @@ class _AnalyticsFilterSectionState extends State<AnalyticsFilterSection>
         return 'Category';
       case GroupByMode.account:
         return 'Account';
+      case GroupByMode.description:
+        return 'Description';
     }
   }
 
@@ -117,12 +120,16 @@ class _AnalyticsFilterSectionState extends State<AnalyticsFilterSection>
           Row(
             children: [
               Expanded(
-                child: _buildPillDropdown<DateRangePreset>(
-                  context: context,
+                child: AppBottomSheetPicker<DateRangePreset>(
                   value: widget.datePreset,
                   items: DateRangePreset.values,
+                  title: 'Select Date Range',
                   labelBuilder: _presetLabel,
-                  onChanged: widget.onDatePresetChanged,
+                  iconBuilder: (_) => Icons.date_range_outlined,
+                  onSelected: (val) =>
+                      widget.onDatePresetChanged(val ?? DateRangePreset.thisMonth),
+                  triggerLabelBuilder: (val) =>
+                      val != null ? _presetLabel(val) : 'This Month',
                   isExpanded: true,
                 ),
               ),
@@ -228,9 +235,31 @@ class _AnalyticsFilterSectionState extends State<AnalyticsFilterSection>
           // Account + Category side by side
           Row(
             children: [
-              Expanded(child: _buildAccountDropdown(context)),
+              Expanded(
+                child: AppBottomSheetPicker<Account>(
+                  value: widget.selectedAccount,
+                  items: widget.accounts,
+                  title: 'Select Account',
+                  labelBuilder: (a) => a.name,
+                  iconBuilder: (a) => Icons.account_balance_wallet_outlined,
+                  onSelected: widget.onAccountChanged,
+                  allItemsLabel: 'All Accounts',
+                  isExpanded: true,
+                ),
+              ),
               const SizedBox(width: 8),
-              Expanded(child: _buildCategoryDropdown(context)),
+              Expanded(
+                child: AppBottomSheetPicker<Category>(
+                  value: widget.selectedCategory,
+                  items: widget.categories,
+                  title: 'Select Category',
+                  labelBuilder: (c) => c.name,
+                  iconBuilder: (c) => Icons.category_outlined,
+                  onSelected: widget.onCategoryChanged,
+                  allItemsLabel: 'All Categories',
+                  isExpanded: true,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 10),
@@ -246,14 +275,17 @@ class _AnalyticsFilterSectionState extends State<AnalyticsFilterSection>
   // ---------------------------------------------------------------------------
 
   Widget _buildGranularityChips(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final chipBg = isDark ? Colors.white10 : Colors.grey.shade100;
+    final chipSelectedBg = Theme.of(context).primaryColor;
+
     return Container(
       height: 36,
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
+        color: chipBg,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-            color: Theme.of(context).dividerColor.withOpacity(0.1)),
       ),
+      padding: const EdgeInsets.all(3),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: AnalyticsGranularity.values.map((g) {
@@ -261,14 +293,12 @@ class _AnalyticsFilterSectionState extends State<AnalyticsFilterSection>
           return GestureDetector(
             onTap: () => widget.onGranularityChanged(g),
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              height: 36,
+              duration: const Duration(milliseconds: 180),
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              height: 30,
               decoration: BoxDecoration(
-                color: isSelected
-                    ? Theme.of(context).primaryColor
-                    : Colors.transparent,
-                borderRadius: BorderRadius.circular(18),
+                color: isSelected ? chipSelectedBg : Colors.transparent,
+                borderRadius: BorderRadius.circular(15),
               ),
               alignment: Alignment.center,
               child: Text(
@@ -278,7 +308,7 @@ class _AnalyticsFilterSectionState extends State<AnalyticsFilterSection>
                       ? Colors.white
                       : Theme.of(context).hintColor,
                   fontWeight: FontWeight.w600,
-                  fontSize: 12,
+                  fontSize: 13,
                 ),
               ),
             ),
@@ -393,160 +423,4 @@ class _AnalyticsFilterSectionState extends State<AnalyticsFilterSection>
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // Generic pill-style dropdown
-  // ---------------------------------------------------------------------------
-
-  Widget _buildPillDropdown<T>({
-    required BuildContext context,
-    required T value,
-    required List<T> items,
-    required String Function(T) labelBuilder,
-    required ValueChanged<T> onChanged,
-    bool isExpanded = false,
-  }) {
-    return Container(
-      height: 40,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 0),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-            color: Theme.of(context).dividerColor.withOpacity(0.1)),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<T>(
-          value: value,
-          isExpanded: isExpanded,
-          icon: Padding(
-            padding: const EdgeInsets.only(left: 4.0),
-            child: Icon(Icons.keyboard_arrow_down,
-                size: 18, color: Theme.of(context).primaryColor),
-          ),
-          isDense: true,
-          dropdownColor: Theme.of(context).cardColor,
-          style: TextStyle(
-            color: Theme.of(context).textTheme.bodyLarge?.color,
-            fontWeight: FontWeight.w600,
-            fontSize: 13,
-          ),
-          items: items.map((item) {
-            return DropdownMenuItem<T>(
-              value: item,
-              child: Text(labelBuilder(item)),
-            );
-          }).toList(),
-          onChanged: (v) {
-            if (v != null) onChanged(v);
-          },
-        ),
-      ),
-    );
-  }
-
-  // ---------------------------------------------------------------------------
-  // Account dropdown
-  // ---------------------------------------------------------------------------
-
-  Widget _buildAccountDropdown(BuildContext context) {
-    return Container(
-      height: 40,
-      padding: const EdgeInsets.symmetric(horizontal: 14),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-            color: Theme.of(context).dividerColor.withOpacity(0.1)),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<Account?>(
-          value: widget.selectedAccount,
-          isExpanded: true,
-          icon: Icon(Icons.keyboard_arrow_down,
-              size: 18, color: Theme.of(context).primaryColor),
-          dropdownColor: Theme.of(context).cardColor,
-          isDense: true,
-          hint: Text(
-            'All Accounts',
-            style: TextStyle(
-              color: Theme.of(context).textTheme.bodyLarge?.color,
-              fontWeight: FontWeight.w600,
-              fontSize: 13,
-            ),
-          ),
-          style: TextStyle(
-            color: Theme.of(context).textTheme.bodyLarge?.color,
-            fontWeight: FontWeight.w600,
-            fontSize: 13,
-          ),
-          items: [
-            const DropdownMenuItem<Account?>(
-              value: null,
-              child: Text('All Accounts'),
-            ),
-            ...widget.accounts.map((a) {
-              return DropdownMenuItem<Account?>(
-                value: a,
-                child: Text(a.name),
-              );
-            }),
-          ],
-          onChanged: widget.onAccountChanged,
-        ),
-      ),
-    );
-  }
-
-  // ---------------------------------------------------------------------------
-  // Category dropdown
-  // ---------------------------------------------------------------------------
-
-  Widget _buildCategoryDropdown(BuildContext context) {
-    return Container(
-      height: 40,
-      padding: const EdgeInsets.symmetric(horizontal: 14),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-            color: Theme.of(context).dividerColor.withOpacity(0.1)),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<Category?>(
-          value: widget.selectedCategory,
-          isExpanded: true,
-          icon: Icon(Icons.keyboard_arrow_down,
-              size: 18, color: Theme.of(context).primaryColor),
-          dropdownColor: Theme.of(context).cardColor,
-          isDense: true,
-          hint: Text(
-            'All Categories',
-            style: TextStyle(
-              color: Theme.of(context).textTheme.bodyLarge?.color,
-              fontWeight: FontWeight.w600,
-              fontSize: 13,
-            ),
-          ),
-          style: TextStyle(
-            color: Theme.of(context).textTheme.bodyLarge?.color,
-            fontWeight: FontWeight.w600,
-            fontSize: 13,
-          ),
-          items: [
-            const DropdownMenuItem<Category?>(
-              value: null,
-              child: Text('All Categories'),
-            ),
-            ...widget.categories.map((c) {
-              return DropdownMenuItem<Category?>(
-                value: c,
-                child: Text(c.name),
-              );
-            }),
-          ],
-          onChanged: widget.onCategoryChanged,
-        ),
-      ),
-    );
-  }
 }

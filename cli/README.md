@@ -1,415 +1,145 @@
-# Tracko CLI - Typer Edition
+# Tracko CLI
 
-Modern command-line interface for Tracko expense management, built with Typer and Rich.
-
-## Features
-
-- 🎨 **Beautiful output** with Rich tables, colors, and spinners
-- 🔐 **Interactive prompts** for passwords and confirmations
-- 📊 **Progress bars** for bulk operations
-- ⚡ **Fast and intuitive** grouped commands
-- 🛡️ **Type-safe** with automatic validation
-- 🎯 **Tab completion** support (bash/zsh/fish)
+Command-line interface for Tracko expense management, built with [Typer](https://typer.tiangolo.com/) and [Rich](https://rich.readthedocs.io/).
 
 ## Installation
 
 ```bash
-cd cli
-pip install -r requirements.txt
+cd cli && pip install -r requirements.txt
+```
+
+Optional — enable tab completion:
+```bash
+python -m cli --install-completion bash   # or zsh / fish
 ```
 
 ## Quick Start
 
 ```bash
-# Login
-python -m cli auth login
-
-# Check health
-python -m cli health check
-
-# List accounts
-python -m cli account list
-
-# Create transaction
-python -m cli transaction add --amount 50 --type expense --name "Lunch"
-
-# View budget
-python -m cli budget view
-
-# Seed database with sample data
-python -m cli db seed
+python -m cli auth login                          # Login
+python -m cli account list                        # List accounts
+python -m cli transaction add --amount 50 \
+  --type expense --name "Lunch"                   # Add expense
+python -m cli budget view                         # View budget
+python -m cli db seed                             # Seed sample data
 ```
 
-## Command Structure
+All commands follow the pattern: `python -m cli <group> <command> [options]`
 
-All commands follow the pattern: `tracko <group> <command> [options]`
+## Command Groups
 
-### Authentication
+| Group | Description | Key Commands |
+|-------|-------------|--------------|
+| `auth` | Authentication | `login`, `logout` |
+| `account` | Bank accounts & balances | `list`, `add`, `balances`, `summary`, `transactions` |
+| `transaction` | Expenses, income & transfers | `add`, `list`, `transfer`, `import-csv`, `summary` |
+| `budget` | Zero-based budgeting | `view`, `current`, `allocate`, `available` |
+| `category` | Expense/income categories | `list`, `add`, `update`, `delete` |
+| `contact` | People for splits | `list`, `add`, `update`, `delete` |
+| `split` | Split expenses with contacts | `create`, `settle`, `unsettle`, `unsettled` |
+| `stats` | Spending analytics | `summary`, `category-summary` |
+| `currency` | Multi-currency management | `list`, `add`, `update`, `delete` |
+| `exchange` | Live exchange rates | `get` |
+| `user` | User management | `me`, `list`, `find-phone` |
+| `config` | CLI profiles | `list`, `show`, `use`, `set` |
+| `store` | Key-value JSON storage | `list`, `get`, `create`, `update`, `delete` |
+| `db` | Database operations | `seed` |
+| `health` | API health check | `check` |
+
+Use `python -m cli <group> --help` for full details on any group.
+
+## Common Workflows
+
+### Daily Usage
 
 ```bash
-tracko auth login              # Interactive login with password prompt
-tracko auth logout             # Clear saved token
-```
-
-### Configuration
-
-```bash
-tracko config list             # List all profiles
-tracko config show             # Show current profile
-tracko config use <profile>    # Switch profile
-tracko config set --base-url <url>  # Update base URL
-```
-
-### Accounts
-
-```bash
-tracko account list                    # List all accounts
-tracko account add --name "HDFC"       # Create account
-tracko account get 1                   # Get account by ID
-tracko account update 1 --name "HDFC Savings"
-tracko account delete 1                # Delete (with confirmation)
-tracko account balances                # Get all balances
-tracko account summary 1 --start-date 2026-01-01 --end-date 2026-12-31
-tracko account transactions 1          # Get account transactions
-```
-
-### Categories
-
-```bash
-tracko category list                   # List all categories
-tracko category add --name "Food" --type EXPENSE
-tracko category get 1
-tracko category update 1 --name "Food & Dining"
-tracko category delete 1               # Delete (with confirmation)
-```
-
-### Contacts
-
-```bash
-tracko contact list
-tracko contact add --name "Alice" --phone "9876543210" --email "alice@example.com"
-tracko contact get 1
-tracko contact update 1 --name "Alice Smith"
-tracko contact delete 1                # Delete (with confirmation)
-```
-
-### Users
-
-```bash
-tracko user list                       # List all users (admin)
-tracko user me                         # Get current user info
-tracko user get 1
-tracko user find-phone 9876543210
-tracko user upsert --name "John" --email "john@example.com"
-```
-
-### Transactions
-
-```bash
-# List and query
-tracko transaction list --month 3 --year 2026
-tracko transaction get 1
-
-# Create
-tracko transaction add \
-  --account-id 1 \
-  --category-id 2 \
-  --amount 50 \
-  --type expense \
-  --name "Lunch" \
-  --comments "Team lunch"
-
-# Update
-tracko transaction update 1 --amount 60 --name "Lunch (updated)"
-
-# Delete
-tracko transaction delete 1            # Delete (with confirmation)
-
-# Summaries
-tracko transaction summary --start-date 2026-01-01 --end-date 2026-12-31
-tracko transaction total-income --start-date 2026-01-01 --end-date 2026-12-31
-tracko transaction total-expense --start-date 2026-01-01 --end-date 2026-12-31
-
-# Transfer
-tracko transaction transfer \
-  --from-account-id 1 \
-  --to-account-id 2 \
-  --amount 100 \
-  --name "Savings transfer"
-
-# Import CSV (with progress bar)
-tracko transaction import-csv --file data.csv --account-id 1
-```
-
-### Budget
-
-```bash
-# View budget with usage percentages
-tracko budget view --month 3 --year 2026
-tracko budget current              # Current month
-
-# Allocate funds
-tracko budget allocate \
-  --category-id 1 \
-  --amount 5000 \
-  --month 3 \
-  --year 2026
-
-# Check available
-tracko budget available --month 3 --year 2026
-```
-
-### Currency
-
-```bash
-tracko currency list
-tracko currency add --code USD --rate 0.85
-tracko currency update --code USD --rate 0.86
-tracko currency delete USD             # Delete (with confirmation)
-```
-
-### Splits
-
-```bash
-tracko split list
-tracko split get 1
-tracko split create --transaction-id 1 --user-id <uuid> --amount 50 --contact-id 1
-tracko split delete 1                  # Delete (with confirmation)
-tracko split settle 1                  # Mark as settled (with confirmation)
-tracko split unsettle 1                # Mark as unsettled (with confirmation)
-
-# Query splits
-tracko split for-transaction 1
-tracko split for-contact 1
-tracko split unsettled                 # All unsettled for current user
-tracko split unsettled-contact 1
-```
-
-### Statistics
-
-```bash
-# Overall stats with Rich tables
-tracko stats summary \
-  --range MONTH \
-  --type EXPENSE \
-  --start-date 2026-01-01 \
-  --end-date 2026-12-31
-
-# Category-specific stats
-tracko stats category-summary \
-  --category-id 1 \
-  --range MONTH \
-  --type EXPENSE
-```
-
-### Exchange Rates
-
-```bash
-tracko exchange get --base USD         # Get current rates
-```
-
-### JSON Store
-
-```bash
-tracko store list
-tracko store get <name>
-tracko store create --name "config" --value '{"key":"value"}'
-tracko store update <name> --value '{"key":"new_value"}'
-tracko store delete <name>             # Delete (with confirmation)
-```
-
-### Database Operations
-
-```bash
-# Seed database with sample data (with progress bars)
-tracko db seed
-
-# Preview without creating
-tracko db seed --dry-run
-
-# Skip transaction creation
-tracko db seed --skip-transactions
-```
-
-### Health Check
-
-```bash
-tracko health check                    # With spinner
-tracko health check --raw              # Raw JSON output
-```
-
-## Global Options
-
-### Raw Output
-
-Add `--raw` to any command for JSON output:
-
-```bash
-tracko account list --raw
-tracko transaction get 1 --raw
-```
-
-### Help
-
-Get help for any command:
-
-```bash
-tracko --help
-tracko account --help
-tracko transaction add --help
-```
-
-## Interactive Features
-
-### Password Prompts
-
-Login prompts for password securely (hidden input):
-
-```bash
-tracko auth login
-# Username: user@example.com
-# Password: ********
-```
-
-### Confirmations
-
-Destructive operations require confirmation:
-
-```bash
-tracko account delete 1
-# Delete account 1? [y/N]: y
-```
-
-### Progress Indicators
-
-- **Spinners** for API calls
-- **Progress bars** for bulk operations (CSV import, database seeding)
-
-## Shell Completion
-
-Enable tab completion for your shell:
-
-```bash
-# Bash
-tracko --install-completion bash
-
-# Zsh
-tracko --install-completion zsh
-
-# Fish
-tracko --install-completion fish
-```
-
-## Configuration
-
-Configuration is stored in `~/.tracko-cli.json`:
-
-```json
-{
-  "active_profile": "default",
-  "profiles": {
-    "default": {
-      "base_url": "http://localhost:8080",
-      "token": "eyJ..."
-    },
-    "production": {
-      "base_url": "https://api.tracko.com",
-      "token": "eyJ..."
-    }
-  }
-}
-```
-
-## Examples
-
-### Daily Workflow
-
-```bash
-# Morning: Check budget
-tracko budget view
-
-# Add expense
-tracko transaction add --amount 50 --type expense --name "Coffee"
-
-# Check balance
-tracko account balances
-
-# Evening: Review today's transactions
-tracko transaction list
+python -m cli budget view                         # Check budget
+python -m cli transaction add --amount 50 \
+  --type expense --name "Coffee"                  # Log expense
+python -m cli account balances                    # Check balances
+python -m cli transaction list                    # Review transactions
 ```
 
 ### Monthly Review
 
 ```bash
-# View monthly budget with usage
-tracko budget view --month 3 --year 2026
+python -m cli budget view --month 3 --year 2026
+python -m cli stats summary --range MONTH --type EXPENSE
+python -m cli stats category-summary --category-id 1 --range MONTH --type EXPENSE
+```
 
-# Get statistics
-tracko stats summary --range MONTH --type EXPENSE
+### Transfers & Splits
 
-# Check category spending
-tracko stats category-summary --category-id 1 --range MONTH --type EXPENSE
+```bash
+python -m cli transaction transfer \
+  --from-account-id 1 --to-account-id 2 \
+  --amount 100 --name "Savings transfer"
+
+python -m cli split create \
+  --transaction-id 1 --contact-id 1 --amount 50
+python -m cli split unsettled                     # View unsettled splits
+python -m cli split settle 1                      # Mark as settled
+```
+
+### CSV Import
+
+```bash
+python -m cli transaction csv-template            # Print expected format
+python -m cli transaction import-csv \
+  --file data.csv --account-id 1                  # Import with progress bar
 ```
 
 ### Setup New Environment
 
 ```bash
-# Login
-tracko auth login
-
-# Seed with sample data
-tracko db seed
-
-# Verify
-tracko account list
-tracko category list
-tracko transaction list
+python -m cli auth login
+python -m cli db seed                             # Seed sample data
+python -m cli db seed --dry-run                   # Preview without creating
+python -m cli account list                        # Verify
 ```
 
-## Migration from Old CLI
+## Global Options
 
-The new CLI uses grouped commands instead of flat structure:
+- `--raw` on any command for JSON output: `python -m cli account list --raw`
+- `--help` on any command for usage details: `python -m cli transaction add --help`
 
-| Old Command | New Command |
-|-------------|-------------|
-| `cli accounts list` | `tracko account list` |
-| `cli transactions add` | `tracko transaction add` |
-| `cli budget view` | `tracko budget view` |
+## Configuration
 
-Global options `--base-url` and `--token` are removed. Use `tracko config` instead.
+Profiles are stored in `~/.tracko-cli.json`:
+
+```json
+{
+  "active_profile": "default",
+  "profiles": {
+    "default": { "base_url": "http://localhost:8080" },
+    "production": { "base_url": "https://api.tracko.com" }
+  }
+}
+```
+
+```bash
+python -m cli config list                         # List profiles
+python -m cli config use production               # Switch profile
+python -m cli config set --base-url <url>         # Update URL
+```
 
 ## Troubleshooting
 
-### Not logged in
-
-```bash
-tracko auth login
-```
-
-### Wrong base URL
-
-```bash
-tracko config set --base-url http://localhost:8080
-```
-
-### Switch profile
-
-```bash
-tracko config use production
-```
+| Problem | Fix |
+|---------|-----|
+| Not logged in | `python -m cli auth login` |
+| Wrong backend URL | `python -m cli config set --base-url http://localhost:8080` |
+| Need different environment | `python -m cli config use <profile>` |
+| Backend not running | Start with `task start` from project root |
 
 ## Development
-
-### Project Structure
 
 ```
 cli/
 ├── main.py              # Typer app with command groups
-├── commands/            # Command modules
-│   ├── *_new.py        # New Typer commands
-│   └── *.py            # Old argparse commands (deprecated)
+├── commands/            # Command modules (*_new.py = Typer, *.py = deprecated argparse)
 ├── core/
-│   ├── api.py          # SDK client wrapper
+│   ├── api.py          # API client wrapper
 │   ├── config.py       # Profile management
 │   └── output.py       # Rich output helpers
 └── utils/
@@ -417,13 +147,9 @@ cli/
     └── dates.py        # Date parsing
 ```
 
-### Adding New Commands
+### Adding a New Command Group
 
 1. Create `commands/mycommand_new.py`
 2. Define Typer app: `app = typer.Typer(help="...")`
 3. Add commands with `@app.command()`
 4. Register in `main.py`: `app.add_typer(mycommand_new.app, name="mycommand")`
-
-## License
-
-See main project LICENSE.

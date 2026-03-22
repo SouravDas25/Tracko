@@ -80,6 +80,14 @@ public final class DateUtil {
         return c.getTime();
     }
 
+    /** Returns a new date shifted by the given number of years (positive or negative). */
+    public static Date addYears(Date d, int years) {
+        Calendar c = Calendar.getInstance();
+        c.setTime(d);
+        c.add(Calendar.YEAR, years);
+        return c.getTime();
+    }
+
     /** Extracts the 4-digit year from a date. */
     public static int toYear(Date d) {
         Calendar c = Calendar.getInstance();

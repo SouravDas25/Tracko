@@ -30,15 +30,18 @@ class TransactionTypeSelector extends StatelessWidget {
           children: [
             Expanded(
               child: _buildTypeButton(
-                  context, TransactionType.CREDIT, "Income", Colors.teal),
+                  context, TransactionType.CREDIT, "Income",
+                  TransactionType.color(TransactionType.CREDIT)),
             ),
             Expanded(
               child: _buildTypeButton(
-                  context, TransactionType.DEBIT, "Expense", Colors.redAccent),
+                  context, TransactionType.DEBIT, "Expense",
+                  TransactionType.color(TransactionType.DEBIT)),
             ),
             Expanded(
-              child: _buildTypeButton(context, TransactionType.TRANSFER,
-                  "Transfer", Colors.blueGrey),
+              child: _buildTypeButton(
+                  context, TransactionType.TRANSFER, "Transfer",
+                  TransactionType.color(TransactionType.TRANSFER)),
             ),
           ],
         ),

@@ -5,6 +5,7 @@ import 'package:tracko/repositories/account_repository.dart';
 import 'package:tracko/services/SessionService.dart';
 import 'package:flutter/material.dart';
 import 'package:tracko/di/di.dart';
+import 'package:tracko/component/app_dropdown.dart';
 
 class AccountDialog extends StatefulWidget {
   final Function callback;
@@ -73,19 +74,12 @@ class _AccountDialogState extends State<AccountDialog> {
             ),
           ),
           SizedBox(height: 16),
-          DropdownButtonFormField<String>(
+          AppFormDropdown<String>(
             value: selectedCurrency,
-            decoration: InputDecoration(
-              labelText: 'Currency',
-              border: OutlineInputBorder(),
-              contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 0),
-            ),
-            items: ConstantUtil.CURRENCIES.map((String value) {
-              return DropdownMenuItem<String>(
-                value: value,
-                child: Text(value),
-              );
-            }).toList(),
+            items: ConstantUtil.CURRENCIES,
+            labelBuilder: (c) => c,
+            label: 'Currency',
+            filled: false,
             onChanged: (newValue) {
               setState(() {
                 selectedCurrency = newValue!;

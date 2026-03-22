@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
 import 'package:tracko/Utils/enums.dart';
+import 'package:tracko/component/app_dropdown.dart';
 
 class AmountInputSection extends StatelessWidget {
   final int transactionType;
@@ -28,15 +29,8 @@ class AmountInputSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    Color typeColor;
-    if (transactionType == TransactionType.DEBIT) {
-      typeColor = isDarkMode ? Colors.redAccent : Colors.red;
-    } else if (transactionType == TransactionType.TRANSFER) {
-      typeColor = isDarkMode ? Colors.lightBlueAccent : Colors.blueGrey;
-    } else {
-      typeColor = isDarkMode ? Colors.tealAccent : Colors.teal;
-    }
+    final typeColor = TransactionType.color(
+        transactionType, brightness: Theme.of(context).brightness);
 
     return Card(
       elevation: 0,
@@ -64,30 +58,20 @@ class AmountInputSection extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.baseline,
               textBaseline: TextBaseline.alphabetic,
               children: [
-                DropdownButton<String>(
-                  value: availableCurrencies.contains(selectedCurrency)
-                      ? selectedCurrency
-                      : (availableCurrencies.isNotEmpty
-                          ? availableCurrencies.first
-                          : null),
-                  underline: SizedBox(),
-                  icon: Icon(Icons.arrow_drop_down, size: 20, color: typeColor),
-                  style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: typeColor),
-                  items: availableCurrencies.map((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
-                  onChanged: (newValue) {
-                    if (newValue != null) {
-                      onCurrencyChanged(newValue);
-                    }
-                  },
-                ),
+                if (availableCurrencies.isNotEmpty)
+                  AppInlineDropdown<String>(
+                    value: availableCurrencies.contains(selectedCurrency)
+                        ? selectedCurrency
+                        : availableCurrencies.first,
+                    items: availableCurrencies,
+                    labelBuilder: (currency) => currency,
+                    onChanged: onCurrencyChanged,
+                    style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: typeColor),
+                    iconColor: typeColor,
+                  ),
                 SizedBox(width: 8),
                 IntrinsicWidth(
                   child: TextField(

@@ -36,7 +36,7 @@ public class StatsController {
     @Autowired
     private StatsService statsService;
 
-    @Operation(summary = "Get aggregated stats by range (weekly/monthly/yearly/custom)")
+    @Operation(summary = "Get aggregated stats by range (weekly/monthly/yearly/fiveYearly/tenYearly/custom)")
     @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = StatsResponseDTO.class)))
     @GetMapping("/summary")
     public ResponseEntity<?> getStats(
@@ -57,9 +57,9 @@ public class StatsController {
             String currentUserId = userService.loggedInUser().getId();
             StatsService.Range r;
             try {
-                r = StatsService.Range.valueOf(range.toLowerCase());
+                r = StatsService.Range.valueOf(range);
             } catch (Exception e) {
-                return Response.badRequest("Invalid range. Use weekly|monthly|yearly|custom");
+                return Response.badRequest("Invalid range. Use weekly|monthly|yearly|fiveYearly|tenYearly|custom");
             }
 
             Date anchor = (date == null) ? new Date() : date;
@@ -97,9 +97,9 @@ public class StatsController {
             var currentUserId = userService.loggedInUser().getId();
             StatsService.Range r;
             try {
-                r = StatsService.Range.valueOf(range.toLowerCase());
+                r = StatsService.Range.valueOf(range);
             } catch (Exception e) {
-                return Response.badRequest("Invalid range. Use weekly|monthly|yearly|custom");
+                return Response.badRequest("Invalid range. Use weekly|monthly|yearly|fiveYearly|tenYearly|custom");
             }
 
             if (categoryId == null || categoryId <= 0) {

@@ -24,3 +24,7 @@
 *.ico binary
 *.jar binary
 *.db binary
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary

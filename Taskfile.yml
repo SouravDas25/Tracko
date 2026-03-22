@@ -113,7 +113,7 @@ tasks:
     desc: Run CLI tests
     dir: cli
     cmds:
-      - cmd: python3 run_cli_test.py
+      - cmd: python run_cli_test.py
 
   # Install dependencies
   install:
@@ -185,3 +185,12 @@ tasks:
       - cmd: docker build -t "{{.DOCKER_IMAGE}}" .
       - cmd: docker tag "{{.DOCKER_IMAGE}}" "{{.DOCKER_PUBLISH_IMAGE}}"
       - cmd: docker push "{{.DOCKER_PUBLISH_IMAGE}}"
+
+  lxc:upgrade:
+    desc: Update the LXC container with the latest image
+    vars:
+      VMID: 303
+      NODE: chiki
+      IMAGE: docker.io/sd25/tracko-app:latest
+    cmds:
+      - cmd: pve-oci deploy --vmid "{{.VMID}}" --node "{{.NODE}}" --image "{{.IMAGE}}"

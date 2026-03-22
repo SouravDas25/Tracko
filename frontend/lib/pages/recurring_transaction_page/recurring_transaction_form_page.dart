@@ -13,6 +13,7 @@ import 'package:tracko/pages/smart_add_item/components/transaction_type_selector
 import 'package:tracko/pages/smart_add_item/components/transaction_details_form.dart';
 import 'package:tracko/pages/smart_add_item/components/amount_input_section.dart';
 import 'package:tracko/services/SessionService.dart';
+import 'package:tracko/component/app_dropdown.dart';
 import 'package:tracko/di/di.dart';
 
 class RecurringTransactionFormPage extends StatefulWidget {
@@ -359,7 +360,18 @@ class _RecurringTransactionFormPageState
                     SizedBox(height: 16),
 
                     // Frequency Dropdown
-                    _buildFrequencyDropdown(),
+                    AppBottomSheetPicker<Frequency>(
+                      value: _frequency,
+                      items: Frequency.values,
+                      title: 'Frequency',
+                      labelBuilder: (f) => f.name[0] + f.name.substring(1).toLowerCase(),
+                      iconBuilder: (_) => Icons.repeat,
+                      onSelected: (v) => setState(() {
+                        if (v != null) _frequency = v;
+                      }),
+                      allItemsLabel: 'Select Frequency',
+                      isExpanded: true,
+                    ),
                     SizedBox(height: 16),
 
                     // Transaction Details (Date, Category, Accounts, Name)
@@ -428,39 +440,6 @@ class _RecurringTransactionFormPageState
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildFrequencyDropdown() {
-    return DropdownButtonFormField<Frequency>(
-      value: _frequency,
-      decoration: InputDecoration(
-        labelText: 'Frequency',
-        prefixIcon: Icon(Icons.repeat),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(
-              color: Theme.of(context).dividerColor.withOpacity(0.1)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: _themeColor, width: 2),
-        ),
-        filled: true,
-        fillColor: Theme.of(context).cardColor,
-        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      ),
-      items: Frequency.values.map((f) {
-        return DropdownMenuItem(
-          value: f,
-          child: Text(f.name[0] + f.name.substring(1).toLowerCase()),
-        );
-      }).toList(),
-      onChanged: (v) => setState(() => _frequency = v!),
     );
   }
 

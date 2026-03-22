@@ -9,7 +9,7 @@ import 'package:tracko/Utils/ChartUtil.dart';
 import 'package:tracko/services/api_client.dart';
 import 'package:tracko/di/di.dart';
 
-enum StatsRange { weekly, monthly, yearly, custom }
+enum StatsRange { weekly, monthly, yearly, fiveYearly, tenYearly, custom }
 
 enum StatsKind { expense, income }
 
@@ -152,6 +152,10 @@ class StatsController extends ChangeNotifier {
         return DateTime(anchor.year, anchor.month + delta, 15);
       case StatsRange.yearly:
         return DateTime(anchor.year + delta, anchor.month, 15);
+      case StatsRange.fiveYearly:
+        return DateTime(anchor.year + (5 * delta), anchor.month, 15);
+      case StatsRange.tenYearly:
+        return DateTime(anchor.year + (10 * delta), anchor.month, 15);
       case StatsRange.custom:
         return anchor;
     }
@@ -180,6 +184,10 @@ class StatsController extends ChangeNotifier {
       case StatsRange.yearly:
         // "2023"
         return DateFormat('yyyy').format(start);
+      case StatsRange.fiveYearly:
+      case StatsRange.tenYearly:
+        // "2019 - 2023"
+        return '${DateFormat('yyyy').format(start)} - ${DateFormat('yyyy').format(endInclusive)}';
     }
   }
 
@@ -191,6 +199,10 @@ class StatsController extends ChangeNotifier {
         return 'Monthly';
       case StatsRange.yearly:
         return 'Yearly';
+      case StatsRange.fiveYearly:
+        return '5 Years';
+      case StatsRange.tenYearly:
+        return '10 Years';
       case StatsRange.custom:
         return 'Custom';
     }

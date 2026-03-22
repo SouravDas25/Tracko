@@ -8,6 +8,7 @@ import 'package:tracko/pages/stats_page/components/stats_category_list.dart';
 import 'package:tracko/pages/stats_page/components/stats_filter_section.dart';
 import 'package:tracko/pages/stats_page/components/stats_pie_chart.dart';
 import 'package:tracko/pages/stats_page/controllers/stats_controller.dart';
+import 'package:tracko/component/app_dropdown.dart';
 
 /// The main Statistics dashboard page.
 ///
@@ -139,25 +140,19 @@ class _StatsPageState extends State<StatsPage> {
                         children: [
                           const Text("From Year:",
                               style: TextStyle(fontWeight: FontWeight.w600)),
-                          DropdownButton<int>(
+                          AppInlineDropdown<int>(
                             value: years.contains(start.year)
                                 ? start.year
                                 : years.first,
-                            items: years.map((y) {
-                              return DropdownMenuItem(
-                                value: y,
-                                child: Text(y.toString()),
-                              );
-                            }).toList(),
+                            items: years,
+                            labelBuilder: (y) => y.toString(),
                             onChanged: (val) {
-                              if (val != null) {
-                                setState(() {
-                                  start = DateTime(val, 1, 1);
-                                  if (end.year < val) {
-                                    end = DateTime(val, 12, 31);
-                                  }
-                                });
-                              }
+                              setState(() {
+                                start = DateTime(val, 1, 1);
+                                if (end.year < val) {
+                                  end = DateTime(val, 12, 31);
+                                }
+                              });
                             },
                           ),
                         ],
@@ -170,25 +165,19 @@ class _StatsPageState extends State<StatsPage> {
                         children: [
                           const Text("To Year:",
                               style: TextStyle(fontWeight: FontWeight.w600)),
-                          DropdownButton<int>(
+                          AppInlineDropdown<int>(
                             value: years.contains(end.year)
                                 ? end.year
                                 : years.first,
-                            items: years.map((y) {
-                              return DropdownMenuItem(
-                                value: y,
-                                child: Text(y.toString()),
-                              );
-                            }).toList(),
+                            items: years,
+                            labelBuilder: (y) => y.toString(),
                             onChanged: (val) {
-                              if (val != null) {
-                                setState(() {
-                                  end = DateTime(val, 12, 31);
-                                  if (start.year > val) {
-                                    start = DateTime(val, 1, 1);
-                                  }
-                                });
-                              }
+                              setState(() {
+                                end = DateTime(val, 12, 31);
+                                if (start.year > val) {
+                                  start = DateTime(val, 1, 1);
+                                }
+                              });
                             },
                           ),
                         ],
@@ -300,40 +289,28 @@ class _StatsPageState extends State<StatsPage> {
               disableNavigation: _controller.range == StatsRange.custom,
               onPrevious: () => _controller.shiftAnchor(-1),
               onNext: () => _controller.shiftAnchor(1),
+              kindLabel: _controller.kindLabel,
+              total: _controller.total,
+              kindColor: _controller.kindColor,
             ),
           ),
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: Text(
-                '${_controller.kindLabel}: ${CommonUtil.toCurrency(_controller.total)}',
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
               child: Container(
                 decoration: BoxDecoration(
                   color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
                       color: Theme.of(context).dividerColor.withOpacity(0.1)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.02),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    )
-                  ],
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(12.0),
+                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
                   child: StatsPieChart(
                     loading: _controller.loading,
                     error: _controller.error,
                     pieSeries: _controller.pieSeries,
+                    total: _controller.total,
                   ),
                 ),
               ),
@@ -363,6 +340,9 @@ class _StickyStatsHeaderDelegate extends SliverPersistentHeaderDelegate {
   final bool disableNavigation;
   final VoidCallback onPrevious;
   final VoidCallback onNext;
+  final String kindLabel;
+  final double total;
+  final Color kindColor;
 
   _StickyStatsHeaderDelegate({
     required this.context,
@@ -371,56 +351,102 @@ class _StickyStatsHeaderDelegate extends SliverPersistentHeaderDelegate {
     this.disableNavigation = false,
     required this.onPrevious,
     required this.onNext,
+    required this.kindLabel,
+    required this.total,
+    required this.kindColor,
   });
 
   @override
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
     return Container(
-      color: Theme.of(context).appBarTheme.backgroundColor ??
-          Theme.of(context).primaryColor,
-      child: SafeArea(
-        top: false,
-        bottom: false,
-        child: SizedBox(
-          height: 56.0,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              IconButton(
-                icon: Icon(
-                  Icons.chevron_left_rounded,
-                  color: disableNavigation ? Colors.white38 : Colors.white,
-                ),
-                onPressed: isLoading || disableNavigation ? null : onPrevious,
-              ),
-              Text(
-                dateText,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white,
-                ),
-              ),
-              IconButton(
-                icon: Icon(
-                  Icons.chevron_right_rounded,
-                  color: disableNavigation ? Colors.white38 : Colors.white,
-                ),
-                onPressed: isLoading || disableNavigation ? null : onNext,
-              ),
-            ],
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        border: Border(
+          bottom: BorderSide(
+            color: Theme.of(context).dividerColor.withOpacity(0.1),
           ),
         ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Date navigation row
+          SizedBox(
+            height: 36,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton(
+                  icon: Icon(
+                    Icons.chevron_left_rounded,
+                    size: 22,
+                    color: disableNavigation
+                        ? Theme.of(context).hintColor.withOpacity(0.2)
+                        : Theme.of(context).textTheme.bodyLarge?.color,
+                  ),
+                  padding: EdgeInsets.zero,
+                  onPressed:
+                      isLoading || disableNavigation ? null : onPrevious,
+                ),
+                Text(
+                  dateText,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(
+                    Icons.chevron_right_rounded,
+                    size: 22,
+                    color: disableNavigation
+                        ? Theme.of(context).hintColor.withOpacity(0.2)
+                        : Theme.of(context).textTheme.bodyLarge?.color,
+                  ),
+                  padding: EdgeInsets.zero,
+                  onPressed: isLoading || disableNavigation ? null : onNext,
+                ),
+              ],
+            ),
+          ),
+          // Total row
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  kindLabel,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: Theme.of(context).hintColor,
+                  ),
+                ),
+                Text(
+                  CommonUtil.toCurrency(total),
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: kindColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 4),
+        ],
       ),
     );
   }
 
   @override
-  double get maxExtent => 56.0;
+  double get maxExtent => 68.0;
 
   @override
-  double get minExtent => 56.0;
+  double get minExtent => 68.0;
 
   @override
   bool shouldRebuild(_StickyStatsHeaderDelegate oldDelegate) {
@@ -428,6 +454,9 @@ class _StickyStatsHeaderDelegate extends SliverPersistentHeaderDelegate {
         isLoading != oldDelegate.isLoading ||
         disableNavigation != oldDelegate.disableNavigation ||
         onPrevious != oldDelegate.onPrevious ||
-        onNext != oldDelegate.onNext;
+        onNext != oldDelegate.onNext ||
+        total != oldDelegate.total ||
+        kindLabel != oldDelegate.kindLabel ||
+        kindColor != oldDelegate.kindColor;
   }
 }

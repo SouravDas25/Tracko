@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:tracko/Utils/ChartUtil.dart';
 import 'package:tracko/pages/stats_page/controllers/stats_controller.dart';
 
-enum GroupByMode { none, category, account }
+enum GroupByMode { none, category, account, description }
 
 enum AnalyticsGranularity { weekly, monthly, yearly }
 

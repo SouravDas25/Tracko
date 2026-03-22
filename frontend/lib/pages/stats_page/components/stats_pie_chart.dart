@@ -8,12 +8,14 @@ class StatsPieChart extends StatefulWidget {
   final bool loading;
   final String? error;
   final List<ChartEntry> pieSeries;
+  final double total;
 
   const StatsPieChart({
     Key? key,
     required this.loading,
     required this.error,
     required this.pieSeries,
+    this.total = 0,
   }) : super(key: key);
 
   @override
@@ -25,9 +27,6 @@ class _StatsPieChartState extends State<StatsPieChart> {
 
   @override
   Widget build(BuildContext context) {
-    final chartHeight =
-        (MediaQuery.of(context).size.height * 0.4).clamp(300.0, 520.0);
-
     if (widget.loading) {
       return const SizedBox(
         height: 260,
@@ -38,129 +37,144 @@ class _StatsPieChartState extends State<StatsPieChart> {
       return const SizedBox.shrink();
     }
     if (widget.pieSeries.isEmpty) {
-      return const SizedBox(
-        height: 260,
-        child: Center(child: Text('No data')),
+      return SizedBox(
+        height: 200,
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.pie_chart_outline, size: 48,
+                  color: Theme.of(context).hintColor.withOpacity(0.3)),
+              const SizedBox(height: 8),
+              Text('No data for this period',
+                  style: TextStyle(
+                    color: Theme.of(context).hintColor.withOpacity(0.6),
+                    fontSize: 14,
+                  )),
+            ],
+          ),
+        ),
       );
     }
 
-    // Clone list to avoid modifying the controller's list during preparation
     final seriesList = List<ChartEntry>.from(widget.pieSeries);
     ChartUtil.prepareForChart(seriesList);
-
     final totalValue = seriesList.fold(0.0, (sum, item) => sum + item.value);
 
-    return SizedBox(
-      width: double.infinity,
-      height: chartHeight,
-      child: Column(
-        children: [
-          const SizedBox(height: 12),
-          // Legend
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: seriesList.asMap().entries.map((e) {
-                final idx = e.key;
-                final ce = e.value;
-                final isTouched = idx == touchedIndex;
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                  child: Opacity(
-                    opacity: touchedIndex == -1 || isTouched ? 1.0 : 0.3,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SizedBox(height: 8),
+        // Legend on top as horizontal scroll
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: seriesList.asMap().entries.map((e) {
+              final idx = e.key;
+              final ce = e.value;
+              final isTouched = idx == touchedIndex;
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Opacity(
+                  opacity: touchedIndex == -1 || isTouched ? 1.0 : 0.4,
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        touchedIndex = touchedIndex == idx ? -1 : idx;
+                      });
+                    },
                     child: Indicator(
                       color: ce.color,
                       text: ce.label,
                       isSquare: true,
-                      size: isTouched ? 18 : 16,
+                      size: isTouched ? 16 : 14,
                       textColor: isTouched
                           ? Theme.of(context).textTheme.bodyLarge!.color!
                           : Colors.grey,
                     ),
                   ),
-                );
-              }).toList(),
-            ),
+                ),
+              );
+            }).toList(),
           ),
-          const SizedBox(height: 24),
-          // Chart Area with Center Text
-          Expanded(
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                AspectRatio(
-                  aspectRatio: 1,
-                  child: PieChart(
-                    PieChartData(
-                      pieTouchData: PieTouchData(
-                        touchCallback: (FlTouchEvent event, pieTouchResponse) {
-                          setState(() {
-                            if (!event.isInterestedForInteractions ||
-                                pieTouchResponse == null ||
-                                pieTouchResponse.touchedSection == null) {
-                              touchedIndex = -1;
-                              return;
-                            }
-                            touchedIndex = pieTouchResponse
-                                .touchedSection!.touchedSectionIndex;
-                          });
-                        },
-                      ),
-                      startDegreeOffset: 270,
-                      borderData: FlBorderData(show: false),
-                      sectionsSpace: 2,
-                      centerSpaceRadius: 60, // Donut hole radius
-                      sections: _showingSections(seriesList),
-                    ),
+        ),
+        const SizedBox(height: 16),
+        // Pie chart with center text
+        SizedBox(
+          height: 220,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              PieChart(
+                PieChartData(
+                  pieTouchData: PieTouchData(
+                    touchCallback: (FlTouchEvent event, pieTouchResponse) {
+                      setState(() {
+                        if (!event.isInterestedForInteractions ||
+                            pieTouchResponse == null ||
+                            pieTouchResponse.touchedSection == null) {
+                          touchedIndex = -1;
+                          return;
+                        }
+                        touchedIndex = pieTouchResponse
+                            .touchedSection!.touchedSectionIndex;
+                      });
+                    },
                   ),
+                  startDegreeOffset: 270,
+                  borderData: FlBorderData(show: false),
+                  sectionsSpace: 2,
+                  centerSpaceRadius: 56,
+                  sections: _showingSections(seriesList),
                 ),
-                // Center Text
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      touchedIndex != -1 && touchedIndex < seriesList.length
-                          ? seriesList[touchedIndex].label
-                          : 'Total',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).hintColor,
-                      ),
-                      textAlign: TextAlign.center,
+              ),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    touchedIndex != -1 && touchedIndex < seriesList.length
+                        ? seriesList[touchedIndex].label
+                        : 'Total',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).hintColor,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      touchedIndex != -1 && touchedIndex < seriesList.length
-                          ? CommonUtil.toCurrency(
-                              seriesList[touchedIndex].value.toDouble())
-                          : CommonUtil.toCurrency(totalValue),
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                        color: touchedIndex != -1 &&
-                                touchedIndex < seriesList.length
-                            ? seriesList[touchedIndex].color
-                            : Theme.of(context).textTheme.bodyLarge?.color,
-                      ),
-                      textAlign: TextAlign.center,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    touchedIndex != -1 && touchedIndex < seriesList.length
+                        ? CommonUtil.toCurrency(
+                            seriesList[touchedIndex].value.toDouble())
+                        : CommonUtil.toCurrency(totalValue),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                      color: touchedIndex != -1 &&
+                              touchedIndex < seriesList.length
+                          ? seriesList[touchedIndex].color
+                          : Theme.of(context).textTheme.bodyLarge?.color,
                     ),
-                  ],
-                ),
-              ],
-            ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 8),
+      ],
     );
   }
 
   List<PieChartSectionData> _showingSections(List<ChartEntry> data) {
     return List.generate(data.length, (i) {
       final isTouched = i == touchedIndex;
-      final fontSize = isTouched ? 18.0 : 14.0;
-      final radius = isTouched ? 60.0 : 50.0;
+      final fontSize = isTouched ? 16.0 : 12.0;
+      final radius = isTouched ? 55.0 : 45.0;
       final entry = data[i];
 
       return PieChartSectionData(
@@ -174,27 +188,7 @@ class _StatsPieChartState extends State<StatsPieChart> {
           color: const Color(0xffffffff),
           shadows: const [Shadow(color: Colors.black26, blurRadius: 2)],
         ),
-        badgeWidget: isTouched
-            ? Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      blurRadius: 4,
-                    ),
-                  ],
-                ),
-                child: Icon(
-                  Icons.star,
-                  size: 16,
-                  color: entry.color,
-                ),
-              )
-            : null,
-        badgePositionPercentageOffset: .98,
+        badgeWidget: null,
       );
     });
   }
