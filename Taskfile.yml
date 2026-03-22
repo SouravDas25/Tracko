@@ -187,6 +187,10 @@ tasks:
       - cmd: docker push "{{.DOCKER_PUBLISH_IMAGE}}"
 
   lxc:upgrade:
-    desc: Update the LXC container with the latest image (runs upgrade-test-lxc.sh)
+    desc: Update the LXC container with the latest image
+    vars:
+      VMID: 303
+      NODE: chiki
+      IMAGE: docker.io/sd25/tracko-app:latest
     cmds:
-      - cmd: bash upgrade-test-lxc.sh
+      - cmd: pve-oci deploy --vmid "{{.VMID}}" --node "{{.NODE}}" --image "{{.IMAGE}}"
