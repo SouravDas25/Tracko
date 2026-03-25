@@ -10,7 +10,23 @@ permissions:
   contents: write
 
 jobs:
-  test:
+  backend-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Run backend tests
+        run: mvn verify -Dspring.profiles.active=test
+        working-directory: backend
+
+  cli-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -34,11 +50,11 @@ jobs:
           pip install ./sdk
           pip install ./cli
 
-      - name: Run tests with backend
+      - name: Run CLI tests with backend
         run: python cli/run_cli_test.py
 
   build:
-    needs: test
+    needs: [backend-test, cli-test]
     strategy:
       matrix:
         include:
