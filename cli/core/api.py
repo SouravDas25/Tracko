@@ -3,10 +3,14 @@ import os
 import sys
 from contextlib import contextmanager
 
-# Add the generated SDK to the path so it can be imported without installation.
-_SDK_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "sdk"))
-if _SDK_PATH not in sys.path:
-    sys.path.insert(0, _SDK_PATH)
+# Use installed tracko_sdk if available, otherwise fall back to local ../sdk/ for development.
+try:
+    import tracko_sdk as _probe  # noqa: F401
+    del _probe
+except ImportError:
+    _SDK_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "sdk"))
+    if os.path.isdir(_SDK_PATH) and _SDK_PATH not in sys.path:
+        sys.path.insert(0, _SDK_PATH)
 
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)

@@ -145,7 +145,7 @@ public class AnalyticsIntegrationTest extends BaseIntegrationTest {
                         .queryParam("endDate", "2026-01-31")
                         .queryParam("groupBy", "invalid"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Invalid groupBy. Use category or account"));
+                .andExpect(jsonPath("$.message").value("Invalid groupBy. Use category, account, or name"));
     }
 
     @Test

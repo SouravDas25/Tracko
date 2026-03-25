@@ -19,8 +19,8 @@ from .commands import (
 )
 
 app = typer.Typer(
-    name="tracko",
-    help="Tracko CLI - Expense management tool",
+    name="trako",
+    help="Trako CLI - Expense management tool",
     no_args_is_help=True,
     add_completion=True,
 )
