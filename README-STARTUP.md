@@ -1,10 +1,10 @@
-# Tracko Startup Scripts
+# Trako Startup Scripts
 
 This repo includes multiple ways to start/stop the backend and Flutter UI.
 
 ## Recommended (Taskfile)
 
-If you have `task` installed, this is the simplest way to run Tracko.
+If you have `task` installed, this is the simplest way to run Trako.
 
 ### Common commands
 

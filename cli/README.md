@@ -1,30 +1,60 @@
-# Tracko CLI
+# Trako CLI
 
-Command-line interface for Tracko expense management, built with [Typer](https://typer.tiangolo.com/) and [Rich](https://rich.readthedocs.io/).
+Command-line interface for Trako expense management, built with [Typer](https://typer.tiangolo.com/) and [Rich](https://rich.readthedocs.io/).
 
 ## Installation
 
-```bash
-cd cli && pip install -r requirements.txt
+### Download Binary (no Python needed)
+
+Grab the latest binary for your OS from [GitHub Releases](https://github.com/SouravDas25/Tracko/releases/latest).
+
+**Windows:**
+```powershell
+# Move the downloaded binary to a folder in your PATH
+mkdir $env:USERPROFILE\trako
+move $env:USERPROFILE\Downloads\trako-windows.exe $env:USERPROFILE\trako\trako.exe
+# Add to PATH (run once)
+[Environment]::SetEnvironmentVariable("Path", $env:Path + ";$env:USERPROFILE\trako", "User")
+# Restart terminal, then:
+trako --help
 ```
 
-Optional — enable tab completion:
+**Linux:**
 ```bash
-python -m cli --install-completion bash   # or zsh / fish
+curl -L https://github.com/SouravDas25/Tracko/releases/latest/download/trako-linux -o trako
+chmod +x trako
+sudo mv trako /usr/local/bin/
+trako --help
+```
+
+**macOS:**
+```bash
+curl -L https://github.com/SouravDas25/Tracko/releases/latest/download/trako-macos -o trako
+chmod +x trako
+sudo mv trako /usr/local/bin/
+trako --help
+```
+
+### Install from Source (requires Python 3.10+)
+
+```bash
+pip install ./sdk
+pip install ./cli
+trako --help
 ```
 
 ## Quick Start
 
 ```bash
-python -m cli auth login                          # Login
-python -m cli account list                        # List accounts
-python -m cli transaction add --amount 50 \
-  --type expense --name "Lunch"                   # Add expense
-python -m cli budget view                         # View budget
-python -m cli db seed                             # Seed sample data
+trako auth login                          # Login
+trako account list                        # List accounts
+trako transaction add --amount 50 \
+  --type expense --name "Lunch"           # Add expense
+trako budget view                         # View budget
+trako db seed                             # Seed sample data
 ```
 
-All commands follow the pattern: `python -m cli <group> <command> [options]`
+All commands follow the pattern: `trako <group> <command> [options]`
 
 ## Command Groups
 
@@ -46,62 +76,62 @@ All commands follow the pattern: `python -m cli <group> <command> [options]`
 | `db` | Database operations | `seed` |
 | `health` | API health check | `check` |
 
-Use `python -m cli <group> --help` for full details on any group.
+Use `trako <group> --help` for full details on any group.
 
 ## Common Workflows
 
 ### Daily Usage
 
 ```bash
-python -m cli budget view                         # Check budget
-python -m cli transaction add --amount 50 \
-  --type expense --name "Coffee"                  # Log expense
-python -m cli account balances                    # Check balances
-python -m cli transaction list                    # Review transactions
+trako budget view                         # Check budget
+trako transaction add --amount 50 \
+  --type expense --name "Coffee"          # Log expense
+trako account balances                    # Check balances
+trako transaction list                    # Review transactions
 ```
 
 ### Monthly Review
 
 ```bash
-python -m cli budget view --month 3 --year 2026
-python -m cli stats summary --range MONTH --type EXPENSE
-python -m cli stats category-summary --category-id 1 --range MONTH --type EXPENSE
+trako budget view --month 3 --year 2026
+trako stats summary --range MONTH --type EXPENSE
+trako stats category-summary --category-id 1 --range MONTH --type EXPENSE
 ```
 
 ### Transfers & Splits
 
 ```bash
-python -m cli transaction transfer \
+trako transaction transfer \
   --from-account-id 1 --to-account-id 2 \
   --amount 100 --name "Savings transfer"
 
-python -m cli split create \
+trako split create \
   --transaction-id 1 --contact-id 1 --amount 50
-python -m cli split unsettled                     # View unsettled splits
-python -m cli split settle 1                      # Mark as settled
+trako split unsettled                     # View unsettled splits
+trako split settle 1                      # Mark as settled
 ```
 
 ### CSV Import
 
 ```bash
-python -m cli transaction csv-template            # Print expected format
-python -m cli transaction import-csv \
-  --file data.csv --account-id 1                  # Import with progress bar
+trako transaction csv-template            # Print expected format
+trako transaction import-csv \
+  --file data.csv --account-id 1          # Import with progress bar
 ```
 
 ### Setup New Environment
 
 ```bash
-python -m cli auth login
-python -m cli db seed                             # Seed sample data
-python -m cli db seed --dry-run                   # Preview without creating
-python -m cli account list                        # Verify
+trako auth login
+trako db seed                             # Seed sample data
+trako db seed --dry-run                   # Preview without creating
+trako account list                        # Verify
 ```
 
 ## Global Options
 
-- `--raw` on any command for JSON output: `python -m cli account list --raw`
-- `--help` on any command for usage details: `python -m cli transaction add --help`
+- `--raw` on any command for JSON output: `trako account list --raw`
+- `--help` on any command for usage details: `trako transaction add --help`
 
 ## Configuration
 
@@ -118,18 +148,18 @@ Profiles are stored in `~/.tracko-cli.json`:
 ```
 
 ```bash
-python -m cli config list                         # List profiles
-python -m cli config use production               # Switch profile
-python -m cli config set --base-url <url>         # Update URL
+trako config list                         # List profiles
+trako config use production               # Switch profile
+trako config set --base-url <url>         # Update URL
 ```
 
 ## Troubleshooting
 
 | Problem | Fix |
 |---------|-----|
-| Not logged in | `python -m cli auth login` |
-| Wrong backend URL | `python -m cli config set --base-url http://localhost:8080` |
-| Need different environment | `python -m cli config use <profile>` |
+| Not logged in | `trako auth login` |
+| Wrong backend URL | `trako config set --base-url http://localhost:8080` |
+| Need different environment | `trako config use <profile>` |
 | Backend not running | Start with `task start` from project root |
 
 ## Development

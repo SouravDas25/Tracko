@@ -11,7 +11,7 @@ DEFAULT_PROFILE_NAME = "default"
 
 def config_path() -> str:
     """Return the absolute path to the config file."""
-    return os.path.abspath(os.path.join(os.getcwd(), ".tracko-cli.json"))
+    return os.path.join(os.path.expanduser("~"), ".tracko-cli.json")
 
 
 def load_raw_config() -> Dict[str, Any]:
