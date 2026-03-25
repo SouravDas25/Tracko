@@ -32,11 +32,11 @@ def mock_config():
     """Load real token from 'test' profile saved by run_cli_test.py.
 
     NOTE: This fixture is a no-op for CLI commands — the CLI reads config
-    directly from disk via os.getcwd()/.tracko-cli.json.  Kept for backward
+    directly from disk via ~/.tracko-cli.json.  Kept for backward
     compatibility with other test files that reference it.
     """
     import os
-    config_file = os.path.join(os.getcwd(), ".tracko-cli.json")
+    config_file = os.path.join(os.path.expanduser("~"), ".tracko-cli.json")
     if os.path.exists(config_file):
         with open(config_file) as f:
             cfg = json.load(f)
