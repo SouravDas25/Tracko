@@ -87,7 +87,7 @@ public class StatsIntegrationTest extends BaseIntegrationTest {
                         .queryParam("range", "bad")
                         .queryParam("transactionType", "1"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Invalid range. Use weekly|monthly|yearly|custom"));
+                .andExpect(jsonPath("$.message").value("Invalid range. Use weekly|monthly|yearly|fiveYearly|tenYearly|custom"));
     }
 
     @Test
