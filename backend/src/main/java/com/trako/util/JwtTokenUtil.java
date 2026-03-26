@@ -19,10 +19,13 @@ import java.util.function.Function;
 @Component
 public class JwtTokenUtil implements Serializable {
 
-    public static final long JWT_TOKEN_VALIDITY = 5 * 60 * 60;
+    private static final long DEFAULT_TOKEN_VALIDITY = 90L * 24 * 60 * 60; // ~3 months in seconds
     private static final long serialVersionUID = -2550185165626007488L;
     @Value("${jwt.secret}")
     private String secret;
+
+    @Value("${jwt.token.validity:" + DEFAULT_TOKEN_VALIDITY + "}")
+    private long jwtTokenValidity;
 
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
@@ -74,7 +77,7 @@ public class JwtTokenUtil implements Serializable {
                 .setClaims(claims)
                 .setSubject(subject)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY * 1000))
+                .setExpiration(new Date(System.currentTimeMillis() + jwtTokenValidity * 1000))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
