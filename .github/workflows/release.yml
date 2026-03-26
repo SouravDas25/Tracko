@@ -61,7 +61,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             artifact: trako-linux
             binary: dist/trako
             container: quay.io/pypa/manylinux_2_28_x86_64
