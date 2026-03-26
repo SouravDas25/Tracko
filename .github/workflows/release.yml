@@ -64,23 +64,34 @@ jobs:
           - os: ubuntu-latest
             artifact: trako-linux
             binary: dist/trako
+            container: quay.io/pypa/manylinux_2_28_x86_64
           - os: macos-latest
             artifact: trako-macos
             binary: dist/trako
+            container: ""
           - os: windows-latest
             artifact: trako-windows
             binary: dist/trako.exe
+            container: ""
 
     runs-on: ${{ matrix.os }}
+    container: ${{ matrix.container || null }}
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Set up Python (non-container)
+        if: matrix.container == ''
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: pip
+
+      - name: Set up Python (manylinux container)
+        if: matrix.container != ''
+        run: |
+          ln -sf /opt/python/cp312-cp312/bin/python3 /usr/local/bin/python
+          ln -sf /opt/python/cp312-cp312/bin/pip3 /usr/local/bin/pip
 
       - name: Install dependencies
         run: |
