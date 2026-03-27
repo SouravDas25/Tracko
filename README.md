@@ -32,21 +32,27 @@ Download the latest binary from [GitHub Releases](https://github.com/SouravDas25
 **Windows (PowerShell):**
 ```powershell
 mkdir $env:USERPROFILE\trako
-move $env:USERPROFILE\Downloads\trako-windows.exe $env:USERPROFILE\trako\trako.exe
+move $env:USERPROFILE\Downloads\trako-windows-x86_64.exe $env:USERPROFILE\trako\trako.exe
 [Environment]::SetEnvironmentVariable("Path", $env:Path + ";$env:USERPROFILE\trako", "User")
 # Restart terminal
 trako --help
 ```
 
-**Linux:**
+**Linux (x86_64):**
 ```bash
-curl -L https://github.com/SouravDas25/Tracko/releases/latest/download/trako-linux -o trako
+curl -L https://github.com/SouravDas25/Tracko/releases/latest/download/trako-linux-x86_64 -o trako
 chmod +x trako && sudo mv trako /usr/local/bin/
 ```
 
-**macOS:**
+**macOS (Apple Silicon):**
 ```bash
-curl -L https://github.com/SouravDas25/Tracko/releases/latest/download/trako-macos -o trako
+curl -L https://github.com/SouravDas25/Tracko/releases/latest/download/trako-macos-arm64 -o trako
+chmod +x trako && sudo mv trako /usr/local/bin/
+```
+
+**macOS (Intel):**
+```bash
+curl -L https://github.com/SouravDas25/Tracko/releases/latest/download/trako-macos-x86_64 -o trako
 chmod +x trako && sudo mv trako /usr/local/bin/
 ```
 
