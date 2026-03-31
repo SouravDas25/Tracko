@@ -19,6 +19,8 @@ class GroupBySelector extends StatelessWidget {
         return 'By Category';
       case GroupByMode.account:
         return 'By Account';
+      case GroupByMode.description:
+        return 'By Description';
     }
   }
 
@@ -61,9 +63,8 @@ class GroupBySelector extends StatelessWidget {
                 child: Text(
                   _label(mode),
                   style: TextStyle(
-                    color: isSelected
-                        ? Colors.white
-                        : Theme.of(context).hintColor,
+                    color:
+                        isSelected ? Colors.white : Theme.of(context).hintColor,
                     fontWeight: FontWeight.w600,
                     fontSize: 13,
                   ),

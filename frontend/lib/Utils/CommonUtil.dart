@@ -91,6 +91,12 @@ class CommonUtil {
     return formatted;
   }
 
+  /// Formats an amount with a specific currency code, using the same logic as
+  /// [toCurrency] but allowing the caller to override the currency.
+  static String toCurrencyWithCurrency(double amount, String currencyCode) {
+    return toCurrency(amount, currencyCode: currencyCode);
+  }
+
   static String toSign(int type) {
     if (type == TransactionType.DEBIT) return " - ";
     if (type == TransactionType.TRANSFER) return " ";

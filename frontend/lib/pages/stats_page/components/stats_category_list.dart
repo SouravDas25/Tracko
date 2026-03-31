@@ -159,7 +159,8 @@ class StatsCategoryList extends StatelessWidget {
                         const SizedBox(width: 4),
                         Icon(Icons.chevron_right,
                             size: 18,
-                            color: Theme.of(context).hintColor.withOpacity(0.4)),
+                            color:
+                                Theme.of(context).hintColor.withOpacity(0.4)),
                       ],
                     ),
                   ),

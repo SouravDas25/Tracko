@@ -44,8 +44,8 @@ class SplitManagerSection extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.call_split, size: 16,
-                    color: Theme.of(context).hintColor),
+                Icon(Icons.call_split,
+                    size: 16, color: Theme.of(context).hintColor),
                 SizedBox(width: 6),
                 Text(
                   "Splits",
@@ -106,7 +106,8 @@ class SplitManagerSection extends StatelessWidget {
             ),
             child: Column(
               children: [
-                Icon(Icons.group_outlined, size: 32,
+                Icon(Icons.group_outlined,
+                    size: 32,
                     color: Theme.of(context).hintColor.withOpacity(0.4)),
                 SizedBox(height: 8),
                 Text(
@@ -155,9 +156,8 @@ class SplitManagerSection extends StatelessWidget {
                       color: Theme.of(context).cardColor,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                          color: Theme.of(context)
-                              .dividerColor
-                              .withOpacity(0.1)),
+                          color:
+                              Theme.of(context).dividerColor.withOpacity(0.1)),
                     ),
                     child: ListTile(
                       contentPadding:

@@ -305,7 +305,8 @@ class _StatsPageState extends State<StatsPage> {
                       color: Theme.of(context).dividerColor.withOpacity(0.1)),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
                   child: StatsPieChart(
                     loading: _controller.loading,
                     error: _controller.error,
@@ -386,8 +387,7 @@ class _StickyStatsHeaderDelegate extends SliverPersistentHeaderDelegate {
                         : Theme.of(context).textTheme.bodyLarge?.color,
                   ),
                   padding: EdgeInsets.zero,
-                  onPressed:
-                      isLoading || disableNavigation ? null : onPrevious,
+                  onPressed: isLoading || disableNavigation ? null : onPrevious,
                 ),
                 Text(
                   dateText,

@@ -95,9 +95,10 @@ class TransactionTile extends StatelessWidget {
             child: InkWell(
               borderRadius: BorderRadius.circular(16),
               onTap: () async {
-                final saved = await Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) =>
-                        AddItemPage(transaction: transaction)));
+                final saved = await Navigator.of(context).push(
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            AddItemPage(transaction: transaction)));
                 if (saved == true) {
                   try {
                     (parent as dynamic).refresh();
@@ -204,38 +205,41 @@ class TransactionTile extends StatelessWidget {
     final bool isDebit = transaction.transactionType == TransactionType.DEBIT;
     final bool isTransfer = transaction.isTransfer;
 
-    Color color;
-    String sign;
-
-    if (isTransfer) {
-      // Transfers usually blue or distinctive
-      color = Colors.blue.shade600;
-      // If it's the debit side (out), maybe red or blue?
-      // Typically transfers are neutral or blue in UI to distinguish from expense.
-      // But let's stick to logic:
-      // Transfer Out (Debit) -> -
-      // Transfer In (Credit) -> +
-      // But user might prefer neutral. Let's use blue for both but keep sign.
-      if (transaction.transactionType == TransactionType.DEBIT) {
-        sign = "- ";
-      } else if (transaction.transactionType == TransactionType.CREDIT) {
-        sign = "+ ";
-      } else {
-        sign = ""; // Type 3 (Transfer parent/wrapper?)
-      }
-    } else {
-      color = isDebit ? Colors.red.shade400 : Colors.green.shade600;
-      sign = isDebit ? "- " : "+ ";
+    // Default to blue; override for debit/credit
+    Color color = Colors.blue;
+    if (!isTransfer) {
+      color = isDebit ? Colors.red : Colors.green;
     }
 
-    String amountText = CommonUtil.toCurrency(transaction.amount);
+    // Display the original amount in the original currency
+    String amountText = CommonUtil.toCurrencyWithCurrency(
+        transaction.originalAmount ?? 0.0, transaction.originalCurrency ?? '');
 
-    return Text(
-      "$sign$amountText",
-      style: TextStyle(
-        color: color,
-        fontWeight: FontWeight.bold,
-        fontSize: 15,
+    // Separate the currency symbol from the numeric value so we can style them
+    final symbol =
+        CommonUtil.getCurrencySymbol(transaction.originalCurrency ?? '');
+    final numeric = amountText.replaceAll(symbol, '').trim();
+
+    return RichText(
+      text: TextSpan(
+        children: [
+          TextSpan(
+            text: symbol + " ",
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.bold,
+              fontSize: 22, // 2 points larger than amount
+            ),
+          ),
+          TextSpan(
+            text: numeric,
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.bold,
+              fontSize: 15,
+            ),
+          ),
+        ],
       ),
     );
   }

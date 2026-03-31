@@ -327,8 +327,8 @@ class _SmartTransactionListState extends State<SmartTransactionList> {
         onHorizontalDragEnd: (details) {
           final v = details.primaryVelocity;
           if (v == null) return;
-          if (v < -300) _goToMonth(1);   // swipe left  → next month
-          if (v > 300) _goToMonth(-1);   // swipe right → prev month
+          if (v < -300) _goToMonth(1); // swipe left  → next month
+          if (v > 300) _goToMonth(-1); // swipe right → prev month
         },
         child: body,
       );

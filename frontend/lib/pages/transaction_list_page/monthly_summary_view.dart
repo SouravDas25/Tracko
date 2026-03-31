@@ -112,39 +112,39 @@ class _MonthlySummaryViewState extends RefreshableState<MonthlySummaryView> {
       onHorizontalDragEnd: (details) {
         final v = details.primaryVelocity;
         if (v == null) return;
-        if (v < -300) _nextYear();     // swipe left  → next year
-        if (v > 300) _previousYear();  // swipe right → prev year
+        if (v < -300) _nextYear(); // swipe left  → next year
+        if (v > 300) _previousYear(); // swipe right → prev year
       },
       child: SmartRefresher(
-      controller: _refreshController,
-      enablePullDown: true,
-      onRefresh: refresh,
-      child: CustomScrollView(
-        slivers: [
-          SliverPersistentHeader(
-            pinned: true,
-            delegate: _StickyYearHeaderDelegate(
-              context: context,
-              year: _selectedYear,
-              onPrevious: _previousYear,
-              onNext: _nextYear,
-            ),
-          ),
-          SliverPadding(
-            padding: EdgeInsets.all(16),
-            sliver: SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final summary = _summaries[index];
-                  return _buildMonthItem(summary);
-                },
-                childCount: _summaries.length,
+        controller: _refreshController,
+        enablePullDown: true,
+        onRefresh: refresh,
+        child: CustomScrollView(
+          slivers: [
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _StickyYearHeaderDelegate(
+                context: context,
+                year: _selectedYear,
+                onPrevious: _previousYear,
+                onNext: _nextYear,
               ),
             ),
-          ),
-        ],
+            SliverPadding(
+              padding: EdgeInsets.all(16),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final summary = _summaries[index];
+                    return _buildMonthItem(summary);
+                  },
+                  childCount: _summaries.length,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
-    ),
     );
   }
 

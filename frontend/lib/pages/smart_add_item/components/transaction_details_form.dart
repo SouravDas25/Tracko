@@ -61,13 +61,12 @@ class TransactionDetailsForm extends StatelessWidget {
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(
-            color: Theme.of(context).dividerColor.withOpacity(0.1)),
+        borderSide:
+            BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.1)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide:
-            BorderSide(color: Theme.of(context).primaryColor, width: 2),
+        borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2),
       ),
       filled: true,
       fillColor: Theme.of(context).cardColor,
@@ -156,8 +155,7 @@ class TransactionDetailsForm extends StatelessWidget {
                     color: Theme.of(context).cardColor,
                     shape: BoxShape.circle,
                     border: Border.all(
-                        color:
-                            Theme.of(context).dividerColor.withOpacity(0.1)),
+                        color: Theme.of(context).dividerColor.withOpacity(0.1)),
                   ),
                   child: InkWell(
                     customBorder: CircleBorder(),
@@ -166,7 +164,8 @@ class TransactionDetailsForm extends StatelessWidget {
                       height: 48,
                       width: 48,
                       alignment: Alignment.center,
-                      child: Icon(Icons.swap_vert_rounded, size: 22,
+                      child: Icon(Icons.swap_vert_rounded,
+                          size: 22,
                           color: Theme.of(context).colorScheme.onSurface),
                     ),
                   ),
@@ -229,8 +228,8 @@ class TransactionDetailsForm extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         shape: BoxShape.circle,
-        border: Border.all(
-            color: Theme.of(context).dividerColor.withOpacity(0.1)),
+        border:
+            Border.all(color: Theme.of(context).dividerColor.withOpacity(0.1)),
       ),
       child: InkWell(
         customBorder: CircleBorder(),
@@ -239,8 +238,8 @@ class TransactionDetailsForm extends StatelessWidget {
           height: 48,
           width: 48,
           alignment: Alignment.center,
-          child: Icon(Icons.add,
-              color: Theme.of(context).colorScheme.onSurface),
+          child:
+              Icon(Icons.add, color: Theme.of(context).colorScheme.onSurface),
         ),
       ),
     );

@@ -133,7 +133,8 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
                     onCurrencyChanged: _controller.setCurrency,
                   ),
                   SizedBox(height: 20),
-                  _sectionHeader(context, "Details", Icons.receipt_long_outlined),
+                  _sectionHeader(
+                      context, "Details", Icons.receipt_long_outlined),
                   SizedBox(height: 8),
                   TransactionDetailsForm(
                     transactionType: _controller.transactionType,
@@ -170,14 +171,14 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
                       amount: _controller.castAmountText2Double(
                           _controller.amountController.text),
                       currencySymbol: _controller.selectedCurrency,
-                      onCallSplitPage: () =>
-                          _controller.callSplitPage(context),
+                      onCallSplitPage: () => _controller.callSplitPage(context),
                       onAddSplit: _controller.addSplit,
                       onDeleteSplit: _controller.removeSplit,
                     ),
                   ],
                   SizedBox(height: 20),
-                  _sectionHeader(context, "Notes", Icons.sticky_note_2_outlined),
+                  _sectionHeader(
+                      context, "Notes", Icons.sticky_note_2_outlined),
                   SizedBox(height: 8),
                   CommentsSection(controller: _controller.commentsController),
                   SizedBox(height: 24),

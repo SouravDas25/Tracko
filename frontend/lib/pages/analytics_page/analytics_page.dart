@@ -63,8 +63,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
     final isCustom = _controller.datePreset == DateRangePreset.custom;
 
     return Scaffold(
-      appBar:
-          widget.showAppBar ? AppBar(title: const Text("Analytics")) : null,
+      appBar: widget.showAppBar ? AppBar(title: const Text("Analytics")) : null,
       body: CustomScrollView(
         slivers: [
           // Compact filter section (granularity + kind always visible,
@@ -175,8 +174,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                     color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                        color:
-                            Theme.of(context).dividerColor.withOpacity(0.1)),
+                        color: Theme.of(context).dividerColor.withOpacity(0.1)),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.02),
@@ -197,12 +195,10 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                           series: flatSeries,
                           seriesMaxY: _controller.seriesMaxY,
                           kindColor: _kindColor,
-                          multiSeries: useMultiSeries
-                              ? _controller.groupedSeries
-                              : null,
+                          multiSeries:
+                              useMultiSeries ? _controller.groupedSeries : null,
                           onPointTouched: useMultiSeries
-                              ? (data) =>
-                                  setState(() => _touchedPoint = data)
+                              ? (data) => setState(() => _touchedPoint = data)
                               : null,
                         ),
                       ),

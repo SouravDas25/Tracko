@@ -47,5 +47,4 @@ class SessionService {
     setCurrentUser(backendUser);
     return backendUser;
   }
-
 }

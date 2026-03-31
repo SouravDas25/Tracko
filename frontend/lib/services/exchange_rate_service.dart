@@ -9,7 +9,8 @@ class ExchangeRateService {
   Future<double?> getExchangeRate(
       String fromCurrency, String toCurrency) async {
     try {
-      print('[ExchangeRateService] getExchangeRate: $fromCurrency -> $toCurrency');
+      print(
+          '[ExchangeRateService] getExchangeRate: $fromCurrency -> $toCurrency');
       final data = await _api.get<Map<String, dynamic>>(
           "${ApiConfig.exchangeRates}/$fromCurrency");
 
@@ -17,7 +18,8 @@ class ExchangeRateService {
 
       // ApiClient interceptor already unwraps the envelope, so data = result object
       final rates = data['rates'] as Map<String, dynamic>?;
-      print('[ExchangeRateService] rates keys count: ${rates?.length}, looking for: $toCurrency');
+      print(
+          '[ExchangeRateService] rates keys count: ${rates?.length}, looking for: $toCurrency');
 
       if (rates != null && rates.containsKey(toCurrency)) {
         final rate = (rates[toCurrency] as num).toDouble();
@@ -25,7 +27,8 @@ class ExchangeRateService {
         return rate;
       }
 
-      print('[ExchangeRateService] toCurrency "$toCurrency" not found in rates');
+      print(
+          '[ExchangeRateService] toCurrency "$toCurrency" not found in rates');
       return null;
     } catch (e, st) {
       print('[ExchangeRateService] Error fetching exchange rate: $e\n$st');
@@ -46,7 +49,8 @@ class ExchangeRateService {
       print('[ExchangeRateService] rates keys count: ${rates?.length}');
 
       if (rates != null) {
-        return rates.map((key, value) => MapEntry(key, (value as num).toDouble()));
+        return rates
+            .map((key, value) => MapEntry(key, (value as num).toDouble()));
       }
 
       print('[ExchangeRateService] rates field is null');

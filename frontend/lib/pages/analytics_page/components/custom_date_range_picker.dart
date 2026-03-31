@@ -46,7 +46,8 @@ Future<DateTimeRange?> showCustomDateRangePicker({
                 if (isYearMode) ...[
                   _YearRow(
                     label: "From Year:",
-                    value: years.contains(start.year) ? start.year : years.first,
+                    value:
+                        years.contains(start.year) ? start.year : years.first,
                     years: years,
                     onChanged: (val) {
                       setState(() {
@@ -96,8 +97,8 @@ Future<DateTimeRange?> showCustomDateRangePicker({
                 child: const Text("Cancel"),
               ),
               TextButton(
-                onPressed: () =>
-                    Navigator.pop(context, DateTimeRange(start: start, end: end)),
+                onPressed: () => Navigator.pop(
+                    context, DateTimeRange(start: start, end: end)),
                 child: const Text("Apply"),
               ),
             ],

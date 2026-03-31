@@ -69,7 +69,6 @@ class AppPillDropdown<T> extends StatelessWidget {
   }
 }
 
-
 /// A form-integrated dropdown with label, prefix icon, and validation support.
 ///
 /// Renders a [DropdownButtonFormField] with a standardized [InputDecoration]:
@@ -148,7 +147,6 @@ class AppFormDropdown<T> extends StatelessWidget {
     );
   }
 }
-
 
 /// A bottom sheet picker that displays a scrollable selection list in a modal.
 ///
@@ -248,7 +246,8 @@ class AppBottomSheetPicker<T> extends StatelessWidget {
                   ...items.map((item) {
                     final isSelected = item == value;
                     return ListTile(
-                      leading: Icon(iconBuilder(item), color: theme.primaryColor),
+                      leading:
+                          Icon(iconBuilder(item), color: theme.primaryColor),
                       title: Text(labelBuilder(item)),
                       trailing: isSelected
                           ? Icon(Icons.check, color: theme.primaryColor)
@@ -288,9 +287,7 @@ class AppBottomSheetPicker<T> extends StatelessWidget {
           mainAxisSize: isExpanded ? MainAxisSize.max : MainAxisSize.min,
           children: [
             Icon(
-              value != null
-                  ? iconBuilder(value as T)
-                  : Icons.select_all,
+              value != null ? iconBuilder(value as T) : Icons.select_all,
               size: 18,
               color: theme.hintColor,
             ),
@@ -339,7 +336,6 @@ class AppBottomSheetPicker<T> extends StatelessWidget {
     );
   }
 }
-
 
 /// A minimal borderless dropdown for inline contexts (e.g., currency next to
 /// an amount field).

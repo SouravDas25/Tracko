@@ -91,7 +91,8 @@ class StatsFilterSection extends StatelessWidget {
                         ),
                         height: 30,
                         decoration: BoxDecoration(
-                          color: isSelected ? chipSelectedBg : Colors.transparent,
+                          color:
+                              isSelected ? chipSelectedBg : Colors.transparent,
                           borderRadius: BorderRadius.circular(15),
                         ),
                         alignment: Alignment.center,

@@ -29,8 +29,8 @@ class AmountInputSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final typeColor = TransactionType.color(
-        transactionType, brightness: Theme.of(context).brightness);
+    final typeColor = TransactionType.color(transactionType,
+        brightness: Theme.of(context).brightness);
 
     return Card(
       elevation: 0,

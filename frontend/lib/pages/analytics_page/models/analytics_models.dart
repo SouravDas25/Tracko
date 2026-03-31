@@ -7,7 +7,14 @@ enum GroupByMode { none, category, account, description }
 
 enum AnalyticsGranularity { weekly, monthly, yearly }
 
-enum DateRangePreset { thisMonth, last3Months, last6Months, thisYear, last5Years, custom }
+enum DateRangePreset {
+  thisMonth,
+  last3Months,
+  last6Months,
+  thisYear,
+  last5Years,
+  custom
+}
 
 class NamedSeries {
   final String name;

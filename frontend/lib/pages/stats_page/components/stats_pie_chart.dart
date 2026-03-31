@@ -43,7 +43,8 @@ class _StatsPieChartState extends State<StatsPieChart> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.pie_chart_outline, size: 48,
+              Icon(Icons.pie_chart_outline,
+                  size: 48,
                   color: Theme.of(context).hintColor.withOpacity(0.3)),
               const SizedBox(height: 8),
               Text('No data for this period',
@@ -153,10 +154,10 @@ class _StatsPieChartState extends State<StatsPieChart> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w900,
-                      color: touchedIndex != -1 &&
-                              touchedIndex < seriesList.length
-                          ? seriesList[touchedIndex].color
-                          : Theme.of(context).textTheme.bodyLarge?.color,
+                      color:
+                          touchedIndex != -1 && touchedIndex < seriesList.length
+                              ? seriesList[touchedIndex].color
+                              : Theme.of(context).textTheme.bodyLarge?.color,
                     ),
                     textAlign: TextAlign.center,
                   ),
