@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:tracko/Utils/CommonUtil.dart';
+import 'package:tracko/component/amount_text.dart';
 import 'package:tracko/Utils/WidgetUtil.dart';
 import 'package:tracko/pages/stats_page/controllers/stats_controller.dart';
 import 'package:tracko/Utils/ChartUtil.dart';
@@ -111,13 +111,10 @@ class StatsCategoryList extends StatelessWidget {
                                     ),
                                   ),
                                   const SizedBox(width: 8),
-                                  Text(
-                                    CommonUtil.toCurrency(s.amount),
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: kindColor,
-                                      fontSize: 15,
-                                    ),
+                                  AmountText(
+                                    amount: s.amount,
+                                    color: kindColor,
+                                    fontSize: 12,
                                   ),
                                 ],
                               ),

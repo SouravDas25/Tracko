@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:tracko/Utils/CommonUtil.dart';
+import 'package:tracko/component/amount_text.dart';
 
 class AnalyticsSummaryCard extends StatelessWidget {
   final double total;
@@ -40,12 +40,10 @@ class AnalyticsSummaryCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 4),
-            Text(
-              CommonUtil.toCurrency(total),
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+            AmountText(
+              amount: total,
+              color: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white,
+              fontSize: 21,
             ),
           ],
         ),

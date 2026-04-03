@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:tracko/Utils/CommonUtil.dart';
 import 'package:tracko/Utils/WidgetUtil.dart';
+import 'package:tracko/component/amount_text.dart';
 import 'package:tracko/component/month_picker_dialog.dart';
 import 'package:tracko/models/budget_response.dart';
 import 'package:tracko/pages/budget_page/widgets/allocation_dialog.dart';
@@ -189,68 +190,41 @@ class _BudgetPageState extends State<BudgetPage> {
   Widget _buildSummaryCard() {
     if (_budgetData == null) return Container();
 
-    return Card(
-      elevation: 0,
-      margin: EdgeInsets.all(16),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side:
-            BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.1)),
-      ),
-      color: Theme.of(context).cardColor,
-      child: Padding(
-        padding: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.1)),
+          color: Theme.of(context).cardColor,
+        ),
         child: Column(
           children: [
             Text(
               "Available to Assign",
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 12,
                 color: Theme.of(context).hintColor,
                 fontWeight: FontWeight.w500,
               ),
             ),
             SizedBox(height: 2),
-            Text(
-              CommonUtil.toCurrency(_budgetData!.availableToAssign),
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: _budgetData!.availableToAssign >= 0
-                    ? Colors.green[700]
-                    : Colors.red[700],
-              ),
+            AmountText(
+              amount: _budgetData!.availableToAssign,
+              color: _budgetData!.availableToAssign >= 0
+                  ? Colors.green[700]!
+                  : Colors.red[700]!,
+              fontSize: 17,
             ),
-            SizedBox(height: 8),
+            SizedBox(height: 6),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildSummaryItem(
-                  "Total Income",
-                  _budgetData!.totalIncome,
-                  Colors.green,
-                ),
-                _buildSummaryItem(
-                  "Rollover",
-                  _budgetData!.rolloverAmount,
-                  Colors.orange,
-                ),
-              ],
-            ),
-            SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildSummaryItem(
-                  "Total Budgeted",
-                  _budgetData!.totalBudget,
-                  Colors.blue,
-                ),
-                _buildSummaryItem(
-                  "Total Spent",
-                  _budgetData!.totalSpent,
-                  Colors.red,
-                ),
+                _buildSummaryItem("Income", _budgetData!.totalIncome, Colors.green),
+                _buildSummaryItem("Rollover", _budgetData!.rolloverAmount, Colors.orange),
+                _buildSummaryItem("Budgeted", _budgetData!.totalBudget, Colors.blue),
+                _buildSummaryItem("Spent", _budgetData!.totalSpent, Colors.red),
               ],
             ),
           ],
@@ -264,20 +238,10 @@ class _BudgetPageState extends State<BudgetPage> {
       children: [
         Text(
           label,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey[600],
-          ),
+          style: TextStyle(fontSize: 10, color: Colors.grey[600]),
         ),
-        SizedBox(height: 2),
-        Text(
-          CommonUtil.toCurrency(amount),
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: color,
-          ),
-        ),
+        SizedBox(height: 1),
+        AmountText(amount: amount, color: color, fontSize: 10),
       ],
     );
   }

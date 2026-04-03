@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tracko/Utils/CommonUtil.dart';
+import 'package:tracko/component/amount_text.dart';
 import 'package:tracko/pages/analytics_page/components/analytics_touch_details.dart';
 import 'package:tracko/pages/analytics_page/components/custom_date_range_picker.dart';
 import 'package:tracko/pages/analytics_page/components/analytics_empty_state.dart';
@@ -115,13 +116,10 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Text(
-                      CommonUtil.toCurrency(_controller.total),
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: _kindColor,
-                      ),
+                    AmountText(
+                      amount: _controller.total,
+                      color: _kindColor,
+                      fontSize: 15,
                     ),
                   ],
                 ),

@@ -99,11 +99,11 @@ class TransactionListWidget extends StatelessWidget {
       if (index == 0 || prevHuman != currentHuman) {
         children.add(
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
             child: Text(
               currentHuman,
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 11.5,
                 fontWeight: FontWeight.bold,
                 color: Theme.of(context).hintColor,
                 letterSpacing: 1.0,

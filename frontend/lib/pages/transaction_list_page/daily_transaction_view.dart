@@ -1,5 +1,6 @@
 import 'package:tracko/Utils/CommonUtil.dart';
 import 'package:tracko/Utils/SettingUtil.dart';
+import 'package:tracko/component/amount_text.dart';
 import 'package:tracko/component/smart_transaction_list.dart';
 import 'package:tracko/component/interfaces.dart';
 import 'package:tracko/controllers/TransactionController.dart';
@@ -101,9 +102,9 @@ class _DailyTransactionViewState extends State<DailyTransactionView> {
         _loadTotals();
       },
       headerWidget: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
         child: Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
@@ -113,12 +114,12 @@ class _DailyTransactionViewState extends State<DailyTransactionView> {
                 Theme.of(context).cardColor.withOpacity(0.95),
               ],
             ),
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.03),
-                blurRadius: 15,
-                offset: const Offset(0, 8),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
             ],
             border: Border.all(
@@ -132,22 +133,22 @@ class _DailyTransactionViewState extends State<DailyTransactionView> {
                   Text(
                     "Total Balance",
                     style: TextStyle(
-                      fontSize: 15,
+                      fontSize: 13,
                       fontWeight: FontWeight.w500,
                       color: Theme.of(context).hintColor,
                     ),
                   ),
                   Container(
                     padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: Theme.of(context).primaryColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
                       "Net",
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 10,
                         fontWeight: FontWeight.bold,
                         color: Theme.of(context).primaryColor,
                       ),
@@ -155,20 +156,16 @@ class _DailyTransactionViewState extends State<DailyTransactionView> {
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 4),
               Align(
                 alignment: Alignment.centerLeft,
-                child: Text(
-                  CommonUtil.toCurrency(totalAmount),
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w800,
-                    color: Theme.of(context).textTheme.bodyLarge?.color,
-                    letterSpacing: -0.5,
-                  ),
+                child: AmountText(
+                  amount: totalAmount,
+                  color: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white,
+                  fontSize: 21,
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 10),
               Row(
                 children: [
                   Expanded(
@@ -182,7 +179,7 @@ class _DailyTransactionViewState extends State<DailyTransactionView> {
                   ),
                   Container(
                     width: 1,
-                    height: 40,
+                    height: 28,
                     color: Theme.of(context).dividerColor.withOpacity(0.2),
                   ),
                   Expanded(
@@ -211,32 +208,29 @@ class _DailyTransactionViewState extends State<DailyTransactionView> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(4),
+              padding: const EdgeInsets.all(3),
               decoration: BoxDecoration(
                 color: color.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, size: 12, color: color),
+              child: Icon(icon, size: 10, color: color),
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 4),
             Text(
               label,
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 11,
                 fontWeight: FontWeight.w500,
                 color: Theme.of(context).hintColor,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 4),
-        Text(
-          CommonUtil.toCurrency(amount),
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
+        const SizedBox(height: 2),
+        AmountText(
+          amount: amount,
+          color: color,
+          fontSize: 11,
         ),
       ],
     );

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:tracko/Utils/CommonUtil.dart';
+import 'package:tracko/component/amount_text.dart';
 import 'package:tracko/pages/stats_page/components/stats_line_chart.dart';
 
 class AnalyticsTouchDetails extends StatefulWidget {
@@ -107,13 +107,10 @@ class _AnalyticsTouchDetailsState extends State<AnalyticsTouchDetails> {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          Text(
-                            CommonUtil.toCurrency(v.value),
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: widget.kindColor,
-                            ),
+                          AmountText(
+                            amount: v.value,
+                            color: widget.kindColor,
+                            fontSize: 11,
                           ),
                         ],
                       ),

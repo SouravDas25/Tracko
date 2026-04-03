@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tracko/Utils/CommonUtil.dart';
+import 'package:tracko/component/amount_text.dart';
 import 'package:tracko/models/budget_category.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'dart:math' as math;
@@ -29,110 +30,85 @@ class BudgetCategoryTile extends StatelessWidget {
         ? Colors.red
         : Colors.green;
 
-    return Card(
-      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: onTap,
-        child: Padding(
-          padding: EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    category.categoryName,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: category.remainingBalance >= 0
-                          ? Colors.green.withOpacity(0.1)
-                          : Colors.red.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      category.remainingBalance >= 0
-                          ? '${CommonUtil.toCurrency(category.remainingBalance)} left'
-                          : '${CommonUtil.toCurrency(category.remainingBalance.abs())} over',
-                      style: TextStyle(
-                        color: category.remainingBalance >= 0
-                            ? Colors.green[700]
-                            : Colors.red[700],
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 12),
-              // Budget Bar
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text("Budget",
-                          style:
-                              TextStyle(fontSize: 12, color: Colors.grey[600])),
-                      Text(CommonUtil.toCurrency(category.allocatedAmount),
-                          style: TextStyle(
-                              fontSize: 12, fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                  SizedBox(height: 4),
-                  LinearPercentIndicator(
-                    lineHeight: 8.0,
-                    percent: budgetPercent,
-                    backgroundColor: Colors.grey[200],
-                    progressColor: Colors.blue[300],
-                    padding: EdgeInsets.zero,
-                    barRadius: Radius.circular(4),
-                    animation: true,
-                  ),
-                ],
-              ),
-              SizedBox(height: 12),
-              // Spent Bar
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text("Spent",
-                          style:
-                              TextStyle(fontSize: 12, color: Colors.grey[600])),
-                      Text(CommonUtil.toCurrency(category.actualSpent),
-                          style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: spentColor)),
-                    ],
-                  ),
-                  SizedBox(height: 4),
-                  LinearPercentIndicator(
-                    lineHeight: 8.0,
-                    percent: spentPercent,
-                    backgroundColor: Colors.grey[200],
-                    progressColor: spentColor,
-                    padding: EdgeInsets.zero,
-                    barRadius: Radius.circular(4),
-                    animation: true,
-                  ),
-                ],
-              ),
-            ],
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: Theme.of(context).dividerColor.withOpacity(0.08),
+              width: 0.5,
+            ),
           ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  category.categoryName,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                Text(
+                  category.remainingBalance >= 0
+                      ? '${CommonUtil.toCurrency(category.remainingBalance)} left'
+                      : '${CommonUtil.toCurrency(category.remainingBalance.abs())} over',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: category.remainingBalance >= 0
+                        ? Colors.green[700]
+                        : Colors.red[700],
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 6),
+            Row(
+              children: [
+                Text("Budget ", style: TextStyle(fontSize: 10, color: Colors.grey[600])),
+                Text(CommonUtil.toCurrency(category.allocatedAmount),
+                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                Spacer(),
+                Text("Spent ", style: TextStyle(fontSize: 10, color: Colors.grey[600])),
+                Text(CommonUtil.toCurrency(category.actualSpent),
+                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: spentColor)),
+              ],
+            ),
+            SizedBox(height: 4),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(3),
+              child: SizedBox(
+                height: 5,
+                child: Stack(
+                  children: [
+                    LinearPercentIndicator(
+                      lineHeight: 5.0,
+                      percent: budgetPercent,
+                      backgroundColor: Colors.grey[800],
+                      progressColor: Colors.blue[300]!.withOpacity(0.3),
+                      padding: EdgeInsets.zero,
+                      barRadius: Radius.circular(3),
+                    ),
+                    LinearPercentIndicator(
+                      lineHeight: 5.0,
+                      percent: spentPercent,
+                      backgroundColor: Colors.transparent,
+                      progressColor: spentColor,
+                      padding: EdgeInsets.zero,
+                      barRadius: Radius.circular(3),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

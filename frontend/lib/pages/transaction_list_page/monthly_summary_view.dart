@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tracko/Utils/CommonUtil.dart';
 import 'package:tracko/Utils/AppLog.dart';
+import 'package:tracko/component/amount_text.dart';
 import 'package:tracko/component/interfaces.dart';
 import 'package:tracko/controllers/TransactionController.dart';
 import 'package:tracko/models/transaction_period_summary.dart';
@@ -108,12 +109,18 @@ class _MonthlySummaryViewState extends RefreshableState<MonthlySummaryView> {
 
   @override
   Widget completeWidget(BuildContext context) {
+    final hintStyle = TextStyle(
+      fontSize: 11,
+      fontWeight: FontWeight.w600,
+      color: Theme.of(context).hintColor,
+    );
+
     return GestureDetector(
       onHorizontalDragEnd: (details) {
         final v = details.primaryVelocity;
         if (v == null) return;
-        if (v < -300) _nextYear(); // swipe left  → next year
-        if (v > 300) _previousYear(); // swipe right → prev year
+        if (v < -300) _nextYear();
+        if (v > 300) _previousYear();
       },
       child: SmartRefresher(
         controller: _refreshController,
@@ -130,16 +137,27 @@ class _MonthlySummaryViewState extends RefreshableState<MonthlySummaryView> {
                 onNext: _nextYear,
               ),
             ),
-            SliverPadding(
-              padding: EdgeInsets.all(16),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final summary = _summaries[index];
-                    return _buildMonthItem(summary);
-                  },
-                  childCount: _summaries.length,
+            SliverToBoxAdapter(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                color: Theme.of(context).cardColor,
+                child: Row(
+                  children: [
+                    Expanded(flex: 3, child: Text("Month", style: hintStyle)),
+                    Expanded(flex: 3, child: Text("Income", style: hintStyle, textAlign: TextAlign.right)),
+                    Expanded(flex: 3, child: Text("Expense", style: hintStyle, textAlign: TextAlign.right)),
+                    Expanded(flex: 3, child: Text("Net", style: hintStyle, textAlign: TextAlign.right)),
+                  ],
                 ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Divider(height: 0.5, thickness: 0.5, color: Theme.of(context).dividerColor.withOpacity(0.2)),
+            ),
+            SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) => _buildMonthRow(_summaries[index], index),
+                childCount: _summaries.length,
               ),
             ),
           ],
@@ -148,92 +166,70 @@ class _MonthlySummaryViewState extends RefreshableState<MonthlySummaryView> {
     );
   }
 
-  Widget _buildMonthItem(TransactionPeriodSummary summary) {
+  Widget _buildMonthRow(TransactionPeriodSummary summary, int index) {
     final monthName =
-        DateFormat('MMMM').format(DateTime(summary.year, summary.month!));
+        DateFormat('MMM').format(DateTime(summary.year, summary.month!));
 
-    return GestureDetector(
-      onTap: () => widget.onMonthSelected(summary.year, summary.month!),
-      child: Container(
-        margin: EdgeInsets.only(bottom: 12),
-        padding: EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: Offset(0, 4),
+    return Material(
+      color: index.isEven
+          ? Colors.transparent
+          : Theme.of(context).cardColor.withOpacity(0.4),
+      child: InkWell(
+        onTap: () => widget.onMonthSelected(summary.year, summary.month!),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: Theme.of(context).dividerColor.withOpacity(0.06),
+                width: 0.5,
+              ),
             ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  monthName,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                flex: 3,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(monthName, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                    SizedBox(height: 1),
+                    Text("${summary.count} txns", style: TextStyle(fontSize: 10, color: Theme.of(context).hintColor)),
+                  ],
                 ),
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    "${summary.count} txns",
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Theme.of(context).primaryColor,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+              ),
+              Expanded(
+                flex: 3,
+                child: AmountText(
+                  amount: summary.income,
+                  color: Colors.green,
+                  fontSize: 11,
+                  textAlign: TextAlign.right,
                 ),
-              ],
-            ),
-            Divider(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _buildSummaryValue("Income", summary.income, Colors.green),
-                _buildSummaryValue("Expense", summary.expense, Colors.red),
-                _buildSummaryValue("Net", summary.netTotal,
-                    summary.netTotal >= 0 ? Colors.green : Colors.red),
-              ],
-            ),
-          ],
+              ),
+              Expanded(
+                flex: 3,
+                child: AmountText(
+                  amount: summary.expense,
+                  color: Colors.red,
+                  fontSize: 11,
+                  textAlign: TextAlign.right,
+                ),
+              ),
+              Expanded(
+                flex: 3,
+                child: AmountText(
+                  amount: summary.netTotal,
+                  color: summary.netTotal >= 0 ? Colors.green : Colors.red,
+                  fontSize: 11,
+                  textAlign: TextAlign.right,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-    );
-  }
-
-  Widget _buildSummaryValue(String label, double amount, Color color) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: Theme.of(context).hintColor,
-          ),
-        ),
-        SizedBox(height: 4),
-        Text(
-          CommonUtil.toCurrency(amount),
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
-        ),
-      ],
     );
   }
 
@@ -262,24 +258,24 @@ class _StickyYearHeaderDelegate extends SliverPersistentHeaderDelegate {
     return Container(
       color: Theme.of(context).appBarTheme.backgroundColor ??
           Theme.of(context).primaryColor,
-      height: 56,
+      height: 44,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           IconButton(
-            icon: Icon(Icons.chevron_left, color: Colors.white),
+            icon: Icon(Icons.chevron_left, color: Colors.white, size: 22),
             onPressed: onPrevious,
           ),
           Text(
             "$year",
             style: TextStyle(
-              fontSize: 20,
+              fontSize: 17,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
           ),
           IconButton(
-            icon: Icon(Icons.chevron_right, color: Colors.white),
+            icon: Icon(Icons.chevron_right, color: Colors.white, size: 22),
             onPressed: onNext,
           ),
         ],
@@ -288,10 +284,10 @@ class _StickyYearHeaderDelegate extends SliverPersistentHeaderDelegate {
   }
 
   @override
-  double get maxExtent => 56;
+  double get maxExtent => 44;
 
   @override
-  double get minExtent => 56;
+  double get minExtent => 44;
 
   @override
   bool shouldRebuild(_StickyYearHeaderDelegate oldDelegate) {
