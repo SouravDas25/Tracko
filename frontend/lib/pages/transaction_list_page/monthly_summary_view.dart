@@ -139,20 +139,33 @@ class _MonthlySummaryViewState extends RefreshableState<MonthlySummaryView> {
             ),
             SliverToBoxAdapter(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 color: Theme.of(context).cardColor,
                 child: Row(
                   children: [
                     Expanded(flex: 3, child: Text("Month", style: hintStyle)),
-                    Expanded(flex: 3, child: Text("Income", style: hintStyle, textAlign: TextAlign.right)),
-                    Expanded(flex: 3, child: Text("Expense", style: hintStyle, textAlign: TextAlign.right)),
-                    Expanded(flex: 3, child: Text("Net", style: hintStyle, textAlign: TextAlign.right)),
+                    Expanded(
+                        flex: 3,
+                        child: Text("Income",
+                            style: hintStyle, textAlign: TextAlign.right)),
+                    Expanded(
+                        flex: 3,
+                        child: Text("Expense",
+                            style: hintStyle, textAlign: TextAlign.right)),
+                    Expanded(
+                        flex: 3,
+                        child: Text("Net",
+                            style: hintStyle, textAlign: TextAlign.right)),
                   ],
                 ),
               ),
             ),
             SliverToBoxAdapter(
-              child: Divider(height: 0.5, thickness: 0.5, color: Theme.of(context).dividerColor.withOpacity(0.2)),
+              child: Divider(
+                  height: 0.5,
+                  thickness: 0.5,
+                  color: Theme.of(context).dividerColor.withOpacity(0.2)),
             ),
             SliverList(
               delegate: SliverChildBuilderDelegate(
@@ -193,9 +206,13 @@ class _MonthlySummaryViewState extends RefreshableState<MonthlySummaryView> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(monthName, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                    Text(monthName,
+                        style: TextStyle(
+                            fontSize: 15, fontWeight: FontWeight.w700)),
                     SizedBox(height: 1),
-                    Text("${summary.count} txns", style: TextStyle(fontSize: 10, color: Theme.of(context).hintColor)),
+                    Text("${summary.count} txns",
+                        style: TextStyle(
+                            fontSize: 10, color: Theme.of(context).hintColor)),
                   ],
                 ),
               ),

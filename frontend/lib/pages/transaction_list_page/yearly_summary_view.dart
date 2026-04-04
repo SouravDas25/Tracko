@@ -84,13 +84,25 @@ class _YearlySummaryViewState extends RefreshableState<YearlySummaryView> {
             child: Row(
               children: [
                 Expanded(flex: 3, child: Text("Year", style: hintStyle)),
-                Expanded(flex: 3, child: Text("Income", style: hintStyle, textAlign: TextAlign.right)),
-                Expanded(flex: 3, child: Text("Expense", style: hintStyle, textAlign: TextAlign.right)),
-                Expanded(flex: 3, child: Text("Net", style: hintStyle, textAlign: TextAlign.right)),
+                Expanded(
+                    flex: 3,
+                    child: Text("Income",
+                        style: hintStyle, textAlign: TextAlign.right)),
+                Expanded(
+                    flex: 3,
+                    child: Text("Expense",
+                        style: hintStyle, textAlign: TextAlign.right)),
+                Expanded(
+                    flex: 3,
+                    child: Text("Net",
+                        style: hintStyle, textAlign: TextAlign.right)),
               ],
             ),
           ),
-          Divider(height: 0.5, thickness: 0.5, color: Theme.of(context).dividerColor.withOpacity(0.2)),
+          Divider(
+              height: 0.5,
+              thickness: 0.5,
+              color: Theme.of(context).dividerColor.withOpacity(0.2)),
           // Data rows
           for (int i = 0; i < _summaries.length; i++)
             _buildYearRow(_summaries[i], i),
@@ -125,12 +137,14 @@ class _YearlySummaryViewState extends RefreshableState<YearlySummaryView> {
                   children: [
                     Text(
                       "${summary.year}",
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                     ),
                     SizedBox(height: 1),
                     Text(
                       "${summary.count} txns",
-                      style: TextStyle(fontSize: 10, color: Theme.of(context).hintColor),
+                      style: TextStyle(
+                          fontSize: 10, color: Theme.of(context).hintColor),
                     ),
                   ],
                 ),

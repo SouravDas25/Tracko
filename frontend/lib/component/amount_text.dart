@@ -30,7 +30,12 @@ class AmountText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final resolvedColor = color ?? (amount > 0 ? Colors.green : amount < 0 ? Colors.red : Colors.blue);
+    final resolvedColor = color ??
+        (amount > 0
+            ? Colors.green
+            : amount < 0
+                ? Colors.red
+                : Colors.blue);
     final formatted = currencyCode != null
         ? CommonUtil.toCurrency(amount, currencyCode: currencyCode)
         : CommonUtil.toCurrency(amount);

@@ -72,13 +72,19 @@ class BudgetCategoryTile extends StatelessWidget {
             SizedBox(height: 6),
             Row(
               children: [
-                Text("Budget ", style: TextStyle(fontSize: 10, color: Colors.grey[600])),
+                Text("Budget ",
+                    style: TextStyle(fontSize: 10, color: Colors.grey[600])),
                 Text(CommonUtil.toCurrency(category.allocatedAmount),
-                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                    style:
+                        TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
                 Spacer(),
-                Text("Spent ", style: TextStyle(fontSize: 10, color: Colors.grey[600])),
+                Text("Spent ",
+                    style: TextStyle(fontSize: 10, color: Colors.grey[600])),
                 Text(CommonUtil.toCurrency(category.actualSpent),
-                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: spentColor)),
+                    style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: spentColor)),
               ],
             ),
             SizedBox(height: 4),

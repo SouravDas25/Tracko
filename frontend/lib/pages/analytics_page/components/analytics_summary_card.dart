@@ -42,7 +42,8 @@ class AnalyticsSummaryCard extends StatelessWidget {
             const SizedBox(height: 4),
             AmountText(
               amount: total,
-              color: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white,
+              color:
+                  Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white,
               fontSize: 21,
             ),
           ],

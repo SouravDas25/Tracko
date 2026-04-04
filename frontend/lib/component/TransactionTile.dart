@@ -86,10 +86,8 @@ class TransactionTile extends StatelessWidget {
           color: Colors.transparent,
           child: InkWell(
             onTap: () async {
-              final saved = await Navigator.of(context).push(
-                  MaterialPageRoute(
-                      builder: (context) =>
-                          AddItemPage(transaction: transaction)));
+              final saved = await Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => AddItemPage(transaction: transaction)));
               if (saved == true) {
                 try {
                   (parent as dynamic).refresh();
@@ -99,7 +97,8 @@ class TransactionTile extends StatelessWidget {
               }
             },
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
               child: Row(
                 children: [
                   _buildAvatar(context),
@@ -113,8 +112,7 @@ class TransactionTile extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color:
-                                Theme.of(context).textTheme.bodyLarge?.color,
+                            color: Theme.of(context).textTheme.bodyLarge?.color,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,

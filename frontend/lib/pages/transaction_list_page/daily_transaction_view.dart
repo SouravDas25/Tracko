@@ -161,7 +161,8 @@ class _DailyTransactionViewState extends State<DailyTransactionView> {
                 alignment: Alignment.centerLeft,
                 child: AmountText(
                   amount: totalAmount,
-                  color: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white,
+                  color: Theme.of(context).textTheme.bodyLarge?.color ??
+                      Colors.white,
                   fontSize: 21,
                 ),
               ),

@@ -196,7 +196,8 @@ class _BudgetPageState extends State<BudgetPage> {
         padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.1)),
+          border: Border.all(
+              color: Theme.of(context).dividerColor.withOpacity(0.1)),
           color: Theme.of(context).cardColor,
         ),
         child: Column(
@@ -221,9 +222,12 @@ class _BudgetPageState extends State<BudgetPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildSummaryItem("Income", _budgetData!.totalIncome, Colors.green),
-                _buildSummaryItem("Rollover", _budgetData!.rolloverAmount, Colors.orange),
-                _buildSummaryItem("Budgeted", _budgetData!.totalBudget, Colors.blue),
+                _buildSummaryItem(
+                    "Income", _budgetData!.totalIncome, Colors.green),
+                _buildSummaryItem(
+                    "Rollover", _budgetData!.rolloverAmount, Colors.orange),
+                _buildSummaryItem(
+                    "Budgeted", _budgetData!.totalBudget, Colors.blue),
                 _buildSummaryItem("Spent", _budgetData!.totalSpent, Colors.red),
               ],
             ),
