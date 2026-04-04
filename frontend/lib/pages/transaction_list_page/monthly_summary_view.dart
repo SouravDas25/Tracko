@@ -208,7 +208,7 @@ class _MonthlySummaryViewState extends RefreshableState<MonthlySummaryView> {
                   children: [
                     Text(monthName,
                         style: TextStyle(
-                            fontSize: 15, fontWeight: FontWeight.w700)),
+                            fontSize: 14, fontWeight: FontWeight.w600)),
                     SizedBox(height: 1),
                     Text("${summary.count} txns",
                         style: TextStyle(
@@ -221,7 +221,7 @@ class _MonthlySummaryViewState extends RefreshableState<MonthlySummaryView> {
                 child: AmountText(
                   amount: summary.income,
                   color: Colors.green,
-                  fontSize: 11,
+                  fontSize: 13,
                   textAlign: TextAlign.right,
                 ),
               ),
@@ -230,7 +230,7 @@ class _MonthlySummaryViewState extends RefreshableState<MonthlySummaryView> {
                 child: AmountText(
                   amount: summary.expense,
                   color: Colors.red,
-                  fontSize: 11,
+                  fontSize: 13,
                   textAlign: TextAlign.right,
                 ),
               ),
@@ -239,7 +239,7 @@ class _MonthlySummaryViewState extends RefreshableState<MonthlySummaryView> {
                 child: AmountText(
                   amount: summary.netTotal,
                   color: summary.netTotal >= 0 ? Colors.green : Colors.red,
-                  fontSize: 11,
+                  fontSize: 13,
                   textAlign: TextAlign.right,
                 ),
               ),

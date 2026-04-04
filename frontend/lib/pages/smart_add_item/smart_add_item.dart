@@ -90,21 +90,21 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
       ),
       bottomNavigationBar: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+          padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: typeColor,
-              padding: EdgeInsets.symmetric(vertical: 16),
+              padding: EdgeInsets.symmetric(vertical: 14),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(10),
               ),
-              elevation: 4,
+              elevation: 2,
             ),
             onPressed: _save,
             child: Text(
               widget.mainButtonText,
-              style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w600),
             ),
           ),
         ),
@@ -132,10 +132,10 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
                     currencyRates: _controller.currencyRates,
                     onCurrencyChanged: _controller.setCurrency,
                   ),
-                  SizedBox(height: 20),
+                  SizedBox(height: 10),
                   _sectionHeader(
                       context, "Details", Icons.receipt_long_outlined),
-                  SizedBox(height: 8),
+                  SizedBox(height: 4),
                   TransactionDetailsForm(
                     transactionType: _controller.transactionType,
                     date: _controller.date,
@@ -162,7 +162,7 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
                     onSwapTransferAccounts: _controller.swapTransferAccounts,
                   ),
                   if (_controller.transactionType == TransactionType.DEBIT) ...[
-                    SizedBox(height: 20),
+                    SizedBox(height: 10),
                     SplitManagerSection(
                       frequentSplitters: _controller.frequentSplitters,
                       splitList: _controller.splitList,
@@ -176,12 +176,12 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
                       onDeleteSplit: _controller.removeSplit,
                     ),
                   ],
-                  SizedBox(height: 20),
+                  SizedBox(height: 10),
                   _sectionHeader(
                       context, "Notes", Icons.sticky_note_2_outlined),
-                  SizedBox(height: 8),
+                  SizedBox(height: 4),
                   CommentsSection(controller: _controller.commentsController),
-                  SizedBox(height: 24),
+                  SizedBox(height: 12),
                 ],
               ),
             ),

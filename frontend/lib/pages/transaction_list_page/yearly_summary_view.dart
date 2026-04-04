@@ -138,7 +138,7 @@ class _YearlySummaryViewState extends RefreshableState<YearlySummaryView> {
                     Text(
                       "${summary.year}",
                       style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                          TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                     ),
                     SizedBox(height: 1),
                     Text(
@@ -154,7 +154,7 @@ class _YearlySummaryViewState extends RefreshableState<YearlySummaryView> {
                 child: AmountText(
                   amount: summary.income,
                   color: Colors.green,
-                  fontSize: 11,
+                  fontSize: 13,
                   textAlign: TextAlign.right,
                 ),
               ),
@@ -163,7 +163,7 @@ class _YearlySummaryViewState extends RefreshableState<YearlySummaryView> {
                 child: AmountText(
                   amount: summary.expense,
                   color: Colors.red,
-                  fontSize: 11,
+                  fontSize: 13,
                   textAlign: TextAlign.right,
                 ),
               ),
@@ -172,7 +172,7 @@ class _YearlySummaryViewState extends RefreshableState<YearlySummaryView> {
                 child: AmountText(
                   amount: summary.netTotal,
                   color: summary.netTotal >= 0 ? Colors.green : Colors.red,
-                  fontSize: 11,
+                  fontSize: 13,
                   textAlign: TextAlign.right,
                 ),
               ),

@@ -270,11 +270,67 @@ class AppBottomSheetPicker<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final bool hasValue = value != null;
 
+    // When used in expanded/form mode, wrap in InputDecorator for a matching
+    // floating-label style identical to TextField / DateTimeField.
+    if (isExpanded) {
+      return GestureDetector(
+        onTap: () => _openSheet(context),
+        child: InputDecorator(
+          decoration: InputDecoration(
+            labelText: allItemsLabel,
+            prefixIcon: Icon(
+              hasValue ? iconBuilder(value as T) : Icons.select_all,
+              size: 20,
+              color: theme.hintColor,
+            ),
+            suffixIcon: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (hasValue)
+                  GestureDetector(
+                    onTap: () => onSelected(null),
+                    child: Icon(Icons.close, size: 16, color: theme.hintColor),
+                  ),
+                const SizedBox(width: 4),
+                Icon(Icons.keyboard_arrow_down, size: 18, color: theme.hintColor),
+                const SizedBox(width: 4),
+              ],
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: theme.dividerColor.withOpacity(0.1),
+              ),
+            ),
+            filled: true,
+            fillColor: theme.cardColor,
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          ),
+          child: Text(
+            hasValue ? _triggerText() : '',
+            style: TextStyle(
+              color: theme.textTheme.bodyLarge?.color,
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+            ),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      );
+    }
+
+    // Compact inline mode (no label, used in filter bars etc.)
     return GestureDetector(
       onTap: () => _openSheet(context),
       child: Container(
-        height: 40,
+        height: 48,
         padding: const EdgeInsets.symmetric(horizontal: 14),
         decoration: BoxDecoration(
           color: theme.cardColor,
@@ -284,7 +340,7 @@ class AppBottomSheetPicker<T> extends StatelessWidget {
           ),
         ),
         child: Row(
-          mainAxisSize: isExpanded ? MainAxisSize.max : MainAxisSize.min,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               value != null ? iconBuilder(value as T) : Icons.select_all,
@@ -292,19 +348,7 @@ class AppBottomSheetPicker<T> extends StatelessWidget {
               color: theme.hintColor,
             ),
             const SizedBox(width: 10),
-            isExpanded
-                ? Expanded(
-                    child: Text(
-                      _triggerText(),
-                      style: TextStyle(
-                        color: theme.textTheme.bodyLarge?.color,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  )
-                : Text(
+            Text(
                     _triggerText(),
                     style: TextStyle(
                       color: theme.textTheme.bodyLarge?.color,

@@ -15,17 +15,17 @@ class TransactionTypeSelector extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       color: Theme.of(context).cardColor,
-      padding: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-      margin: EdgeInsets.only(bottom: 16),
+      padding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+      margin: EdgeInsets.only(bottom: 12),
       child: Container(
-        height: 48,
+        height: 40,
         decoration: BoxDecoration(
           color: Theme.of(context).brightness == Brightness.dark
               ? Colors.black26
               : Colors.grey.shade200,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(20),
         ),
-        padding: EdgeInsets.all(4),
+        padding: EdgeInsets.all(3),
         child: Row(
           children: [
             Expanded(
@@ -49,32 +49,27 @@ class TransactionTypeSelector extends StatelessWidget {
   Widget _buildTypeButton(
       BuildContext context, int type, String label, Color color) {
     bool isSelected = transactionType == type;
-    return GestureDetector(
-      onTap: () => onTypeChanged(type),
-      child: AnimatedContainer(
-        duration: Duration(milliseconds: 200),
-        decoration: BoxDecoration(
-          color: isSelected ? color : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: color.withOpacity(0.3),
-                    blurRadius: 8,
-                    offset: Offset(0, 2),
-                  )
-                ]
-              : [],
-        ),
-        alignment: Alignment.center,
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected
-                ? Colors.white
-                : Theme.of(context).hintColor.withOpacity(0.7),
-            fontWeight: FontWeight.bold,
-            fontSize: 14,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => onTypeChanged(type),
+        borderRadius: BorderRadius.circular(17),
+        child: AnimatedContainer(
+          duration: Duration(milliseconds: 200),
+          decoration: BoxDecoration(
+            color: isSelected ? color : Colors.transparent,
+            borderRadius: BorderRadius.circular(17),
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isSelected
+                  ? Colors.white
+                  : Theme.of(context).hintColor.withOpacity(0.7),
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+            ),
           ),
         ),
       ),
