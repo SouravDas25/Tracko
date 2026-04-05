@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tracko/Utils/CommonUtil.dart';
+import 'package:tracko/component/amount_text.dart';
 import 'package:tracko/component/interfaces.dart';
 import 'package:tracko/controllers/TransactionController.dart';
 import 'package:tracko/models/transaction_period_summary.dart';
@@ -63,106 +64,122 @@ class _YearlySummaryViewState extends RefreshableState<YearlySummaryView> {
 
   @override
   Widget completeWidget(BuildContext context) {
+    final hintStyle = TextStyle(
+      fontSize: 11,
+      fontWeight: FontWeight.w600,
+      color: Theme.of(context).hintColor,
+    );
+
     return SmartRefresher(
       controller: _refreshController,
       enablePullDown: true,
       onRefresh: refresh,
-      child: ListView.builder(
-        padding: EdgeInsets.all(16),
-        itemCount: _summaries.length,
-        itemBuilder: (context, index) {
-          final summary = _summaries[index];
-          return _buildYearItem(summary);
-        },
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          // Table header
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            color: Theme.of(context).cardColor,
+            child: Row(
+              children: [
+                Expanded(flex: 3, child: Text("Year", style: hintStyle)),
+                Expanded(
+                    flex: 3,
+                    child: Text("Income",
+                        style: hintStyle, textAlign: TextAlign.right)),
+                Expanded(
+                    flex: 3,
+                    child: Text("Expense",
+                        style: hintStyle, textAlign: TextAlign.right)),
+                Expanded(
+                    flex: 3,
+                    child: Text("Net",
+                        style: hintStyle, textAlign: TextAlign.right)),
+              ],
+            ),
+          ),
+          Divider(
+              height: 0.5,
+              thickness: 0.5,
+              color: Theme.of(context).dividerColor.withOpacity(0.2)),
+          // Data rows
+          for (int i = 0; i < _summaries.length; i++)
+            _buildYearRow(_summaries[i], i),
+        ],
       ),
     );
   }
 
-  Widget _buildYearItem(TransactionPeriodSummary summary) {
-    return GestureDetector(
-      onTap: () => widget.onYearSelected(summary.year),
-      child: Container(
-        margin: EdgeInsets.only(bottom: 12),
-        padding: EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: Offset(0, 4),
+  Widget _buildYearRow(TransactionPeriodSummary summary, int index) {
+    return Material(
+      color: index.isEven
+          ? Colors.transparent
+          : Theme.of(context).cardColor.withOpacity(0.4),
+      child: InkWell(
+        onTap: () => widget.onYearSelected(summary.year),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: Theme.of(context).dividerColor.withOpacity(0.06),
+                width: 0.5,
+              ),
             ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  "${summary.year}",
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).appBarTheme.backgroundColor ??
-                        Theme.of(context).primaryColor,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    "${summary.count} txns",
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Theme.of(context).appBarTheme.backgroundColor ??
-                          Theme.of(context).primaryColor,
-                      fontWeight: FontWeight.bold,
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                flex: 3,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "${summary.year}",
+                      style:
+                          TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                     ),
-                  ),
+                    SizedBox(height: 1),
+                    Text(
+                      "${summary.count} txns",
+                      style: TextStyle(
+                          fontSize: 10, color: Theme.of(context).hintColor),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            Divider(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _buildSummaryValue("Income", summary.income, Colors.green),
-                _buildSummaryValue("Expense", summary.expense, Colors.red),
-                _buildSummaryValue("Net", summary.netTotal,
-                    summary.netTotal >= 0 ? Colors.green : Colors.red),
-              ],
-            ),
-          ],
+              ),
+              Expanded(
+                flex: 3,
+                child: AmountText(
+                  amount: summary.income,
+                  color: Colors.green,
+                  fontSize: 13,
+                  textAlign: TextAlign.right,
+                ),
+              ),
+              Expanded(
+                flex: 3,
+                child: AmountText(
+                  amount: summary.expense,
+                  color: Colors.red,
+                  fontSize: 13,
+                  textAlign: TextAlign.right,
+                ),
+              ),
+              Expanded(
+                flex: 3,
+                child: AmountText(
+                  amount: summary.netTotal,
+                  color: summary.netTotal >= 0 ? Colors.green : Colors.red,
+                  fontSize: 13,
+                  textAlign: TextAlign.right,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-    );
-  }
-
-  Widget _buildSummaryValue(String label, double amount, Color color) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: Theme.of(context).hintColor,
-          ),
-        ),
-        SizedBox(height: 4),
-        Text(
-          CommonUtil.toCurrency(amount),
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
-        ),
-      ],
     );
   }
 

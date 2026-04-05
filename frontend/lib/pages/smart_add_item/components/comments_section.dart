@@ -14,23 +14,23 @@ class CommentsSection extends StatelessWidget {
         labelText: 'Comments',
         hintText: 'Add a note...',
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(
               color: Theme.of(context).dividerColor.withOpacity(0.1)),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           borderSide:
               BorderSide(color: Theme.of(context).primaryColor, width: 2),
         ),
         filled: true,
         fillColor: Theme.of(context).cardColor,
         alignLabelWithHint: true,
-        contentPadding: EdgeInsets.all(16),
+        contentPadding: EdgeInsets.all(14),
       ),
     );
   }

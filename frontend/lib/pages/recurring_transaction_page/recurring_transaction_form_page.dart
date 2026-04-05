@@ -364,7 +364,8 @@ class _RecurringTransactionFormPageState
                       value: _frequency,
                       items: Frequency.values,
                       title: 'Frequency',
-                      labelBuilder: (f) => f.name[0] + f.name.substring(1).toLowerCase(),
+                      labelBuilder: (f) =>
+                          f.name[0] + f.name.substring(1).toLowerCase(),
                       iconBuilder: (_) => Icons.repeat,
                       onSelected: (v) => setState(() {
                         if (v != null) _frequency = v;

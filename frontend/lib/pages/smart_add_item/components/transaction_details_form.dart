@@ -54,24 +54,23 @@ class TransactionDetailsForm extends StatelessWidget {
       {required String label, required IconData icon}) {
     return InputDecoration(
       labelText: label,
-      prefixIcon: Icon(icon),
+      prefixIcon: Icon(icon, size: 20),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide.none,
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(
-            color: Theme.of(context).dividerColor.withOpacity(0.1)),
+        borderRadius: BorderRadius.circular(12),
+        borderSide:
+            BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.1)),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide:
-            BorderSide(color: Theme.of(context).primaryColor, width: 2),
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2),
       ),
       filled: true,
       fillColor: Theme.of(context).cardColor,
-      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
     );
   }
 
@@ -98,7 +97,7 @@ class TransactionDetailsForm extends StatelessWidget {
             onDateChanged(date ?? DateTime.now());
           },
         ),
-        SizedBox(height: 16),
+        SizedBox(height: 10),
 
         // Category (if not transfer)
         if (transactionType != TransactionType.TRANSFER) ...[
@@ -116,7 +115,7 @@ class TransactionDetailsForm extends StatelessWidget {
                   isExpanded: true,
                 ),
               ),
-              SizedBox(width: 12),
+              SizedBox(width: 10),
               _addButton(context, onTap: () {
                 showDialog(
                   context: context,
@@ -130,7 +129,7 @@ class TransactionDetailsForm extends StatelessWidget {
               }),
             ],
           ),
-          SizedBox(height: 16),
+          SizedBox(height: 10),
         ],
 
         // Accounts
@@ -156,8 +155,7 @@ class TransactionDetailsForm extends StatelessWidget {
                     color: Theme.of(context).cardColor,
                     shape: BoxShape.circle,
                     border: Border.all(
-                        color:
-                            Theme.of(context).dividerColor.withOpacity(0.1)),
+                        color: Theme.of(context).dividerColor.withOpacity(0.1)),
                   ),
                   child: InkWell(
                     customBorder: CircleBorder(),
@@ -166,7 +164,8 @@ class TransactionDetailsForm extends StatelessWidget {
                       height: 48,
                       width: 48,
                       alignment: Alignment.center,
-                      child: Icon(Icons.swap_vert_rounded, size: 22,
+                      child: Icon(Icons.swap_vert_rounded,
+                          size: 20,
                           color: Theme.of(context).colorScheme.onSurface),
                     ),
                   ),
@@ -174,7 +173,7 @@ class TransactionDetailsForm extends StatelessWidget {
               ],
             ],
           ),
-          SizedBox(height: 16),
+          SizedBox(height: 10),
           AppBottomSheetPicker<Account>(
             value: _findAccount(transferToAccountId),
             items: accounts,
@@ -200,7 +199,7 @@ class TransactionDetailsForm extends StatelessWidget {
                   isExpanded: true,
                 ),
               ),
-              SizedBox(width: 12),
+              SizedBox(width: 10),
               _addButton(context, onTap: () {
                 showDialog(
                   context: context,
@@ -212,7 +211,7 @@ class TransactionDetailsForm extends StatelessWidget {
             ],
           ),
         ],
-        SizedBox(height: 16),
+        SizedBox(height: 10),
 
         // Name Input
         TextField(
@@ -229,8 +228,8 @@ class TransactionDetailsForm extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         shape: BoxShape.circle,
-        border: Border.all(
-            color: Theme.of(context).dividerColor.withOpacity(0.1)),
+        border:
+            Border.all(color: Theme.of(context).dividerColor.withOpacity(0.1)),
       ),
       child: InkWell(
         customBorder: CircleBorder(),
@@ -239,8 +238,8 @@ class TransactionDetailsForm extends StatelessWidget {
           height: 48,
           width: 48,
           alignment: Alignment.center,
-          child: Icon(Icons.add,
-              color: Theme.of(context).colorScheme.onSurface),
+          child:
+              Icon(Icons.add, size: 20, color: Theme.of(context).colorScheme.onSurface),
         ),
       ),
     );

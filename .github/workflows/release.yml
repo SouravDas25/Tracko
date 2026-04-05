@@ -43,7 +43,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.10"
           cache: pip
 
       - name: Install Python dependencies
@@ -56,42 +56,64 @@ jobs:
       - name: Run CLI tests with backend
         run: python cli/run_cli_test.py
 
-  build:
+  # ── Linux build ──────────────────────────────────────────────────────
+  # Built inside a Debian 11 (Bullseye) container → GLIBC 2.31
+  # Compatible with: Ubuntu 20.04+, Debian 11+, RHEL 9+, Fedora 34+, etc.
+  build-linux:
     needs: [backend-test, cli-test]
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-22.04
-            artifact: trako-linux
-            binary: dist/trako
-            container: quay.io/pypa/manylinux_2_28_x86_64
-          - os: macos-latest
-            artifact: trako-macos
-            binary: dist/trako
-            container: ""
-          - os: windows-latest
-            artifact: trako-windows
-            binary: dist/trako.exe
-            container: ""
-
-    runs-on: ${{ matrix.os }}
-    container: ${{ matrix.container || null }}
+    runs-on: ubuntu-22.04
+    container:
+      image: python:3.10-slim-bullseye
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python (non-container)
-        if: matrix.container == ''
+      - name: Install build dependencies
+        run: |
+          apt-get update && apt-get install -y --no-install-recommends binutils
+          python -m pip install --upgrade pip
+          pip install pyinstaller
+          pip install ./sdk
+          pip install ./cli
+
+      - name: Build binary
+        run: python -m PyInstaller trako.spec
+
+      - name: Verify GLIBC requirement
+        run: |
+          echo "--- Binary dependencies ---"
+          ldd dist/trako || true
+          objdump -T dist/trako 2>/dev/null | grep GLIBC | sed 's/.*GLIBC_//;s/ .*//' | sort -uV | tail -1 | xargs -I{} echo "Max GLIBC needed: {}" || true
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: trako-linux
+          path: dist/trako
+
+  # ── macOS builds ─────────────────────────────────────────────────────
+  # Intel (x86_64): macos-15-intel for older Mac support
+  # Apple Silicon (arm64): macos-15 for M1/M2/M3+ Macs
+  build-macos:
+    needs: [backend-test, cli-test]
+    strategy:
+      matrix:
+        include:
+          - runner: macos-15-intel
+            artifact: trako-macos-x86_64
+          - runner: macos-15
+            artifact: trako-macos-arm64
+
+    runs-on: ${{ matrix.runner }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.10"
           cache: pip
-
-      - name: Set up Python (manylinux container)
-        if: matrix.container != ''
-        run: |
-          ln -sf /opt/python/cp312-cp312/bin/python3 /usr/local/bin/python
-          ln -sf /opt/python/cp312-cp312/bin/pip3 /usr/local/bin/pip
 
       - name: Install dependencies
         run: |
@@ -101,16 +123,49 @@ jobs:
           pip install ./cli
 
       - name: Build binary
-        run: pyinstaller trako.spec
+        run: python -m PyInstaller trako.spec
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact }}
-          path: ${{ matrix.binary }}
+          path: dist/trako
 
+  # ── Windows build ────────────────────────────────────────────────────
+  # Python 3.10 supports Windows 8.1+
+  # (Python 3.12+ dropped Windows 7/8 support)
+  build-windows:
+    needs: [backend-test, cli-test]
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller
+          pip install ./sdk
+          pip install ./cli
+
+      - name: Build binary
+        run: python -m PyInstaller trako.spec
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: trako-windows
+          path: dist/trako.exe
+
+  # ── Release ──────────────────────────────────────────────────────────
   release:
-    needs: build
+    needs: [build-linux, build-macos, build-windows]
     runs-on: ubuntu-latest
 
     steps:
@@ -132,10 +187,11 @@ jobs:
 
       - name: Prepare release files
         run: |
-          mv artifacts/trako-linux/trako trako-linux
-          mv artifacts/trako-macos/trako trako-macos
-          mv artifacts/trako-windows/trako.exe trako-windows.exe
-          chmod +x trako-linux trako-macos
+          mv artifacts/trako-linux/trako trako-linux-x86_64
+          mv artifacts/trako-macos-x86_64/trako trako-macos-x86_64
+          mv artifacts/trako-macos-arm64/trako trako-macos-arm64
+          mv artifacts/trako-windows/trako.exe trako-windows-x86_64.exe
+          chmod +x trako-linux-x86_64 trako-macos-x86_64 trako-macos-arm64
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -144,6 +200,7 @@ jobs:
           name: Trako CLI ${{ steps.version.outputs.tag }}
           generate_release_notes: true
           files: |
-            trako-linux
-            trako-macos
-            trako-windows.exe
+            trako-linux-x86_64
+            trako-macos-x86_64
+            trako-macos-arm64
+            trako-windows-x86_64.exe

@@ -72,6 +72,7 @@ def created_expense(runner):
         "--account-name", "Cash",
         "--category-name", "FOOD",
         "--currency", "INR",
+        "--date", "2026-03-15",
     ])
     assert result.exit_code == 0, f"Failed to create fixture expense: {result.output}"
     return _extract_id_from_output(result.output)

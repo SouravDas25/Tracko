@@ -126,8 +126,8 @@ class _AnalyticsFilterSectionState extends State<AnalyticsFilterSection>
                   title: 'Select Date Range',
                   labelBuilder: _presetLabel,
                   iconBuilder: (_) => Icons.date_range_outlined,
-                  onSelected: (val) =>
-                      widget.onDatePresetChanged(val ?? DateRangePreset.thisMonth),
+                  onSelected: (val) => widget
+                      .onDatePresetChanged(val ?? DateRangePreset.thisMonth),
                   triggerLabelBuilder: (val) =>
                       val != null ? _presetLabel(val) : 'This Month',
                   isExpanded: true,
@@ -304,9 +304,8 @@ class _AnalyticsFilterSectionState extends State<AnalyticsFilterSection>
               child: Text(
                 _granularityLabel(g),
                 style: TextStyle(
-                  color: isSelected
-                      ? Colors.white
-                      : Theme.of(context).hintColor,
+                  color:
+                      isSelected ? Colors.white : Theme.of(context).hintColor,
                   fontWeight: FontWeight.w600,
                   fontSize: 13,
                 ),
@@ -328,14 +327,14 @@ class _AnalyticsFilterSectionState extends State<AnalyticsFilterSection>
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-            color: Theme.of(context).dividerColor.withOpacity(0.1)),
+        border:
+            Border.all(color: Theme.of(context).dividerColor.withOpacity(0.1)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _buildKindOption(context, StatsKind.expense, 'Expense',
-              Colors.redAccent),
+          _buildKindOption(
+              context, StatsKind.expense, 'Expense', Colors.redAccent),
           _buildKindOption(context, StatsKind.income, 'Income', Colors.teal),
         ],
       ),
@@ -408,9 +407,8 @@ class _AnalyticsFilterSectionState extends State<AnalyticsFilterSection>
                 child: Text(
                   _groupByLabel(mode),
                   style: TextStyle(
-                    color: isSelected
-                        ? Colors.white
-                        : Theme.of(context).hintColor,
+                    color:
+                        isSelected ? Colors.white : Theme.of(context).hintColor,
                     fontWeight: FontWeight.w600,
                     fontSize: 12,
                   ),
@@ -422,5 +420,4 @@ class _AnalyticsFilterSectionState extends State<AnalyticsFilterSection>
       ],
     );
   }
-
 }

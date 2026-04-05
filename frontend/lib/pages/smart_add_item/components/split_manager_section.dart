@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:tracko/Utils/WidgetUtil.dart';
+import 'package:tracko/Utils/CommonUtil.dart';
 import 'package:tracko/models/contact.dart';
 
 class SplitManagerSection extends StatelessWidget {
@@ -44,8 +44,8 @@ class SplitManagerSection extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.call_split, size: 16,
-                    color: Theme.of(context).hintColor),
+                Icon(Icons.call_split,
+                    size: 16, color: Theme.of(context).hintColor),
                 SizedBox(width: 6),
                 Text(
                   "Splits",
@@ -76,8 +76,19 @@ class SplitManagerSection extends StatelessWidget {
                   .map((Contact contact) => Padding(
                         padding: const EdgeInsets.only(right: 8.0),
                         child: ActionChip(
-                          avatar: WidgetUtil.textAvatar(contact.name),
-                          label: Text(contact.name),
+                          avatar: CircleAvatar(
+                            radius: 14,
+                            backgroundColor: Theme.of(context).primaryColor,
+                            child: Text(
+                              CommonUtil.getInitials(contact.name),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10,
+                              ),
+                            ),
+                          ),
+                          label: Text(contact.name, style: TextStyle(fontSize: 12)),
                           backgroundColor: Theme.of(context).cardColor,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
@@ -92,28 +103,23 @@ class SplitManagerSection extends StatelessWidget {
                   .toList(),
             ),
           ),
-          SizedBox(height: 12),
+          SizedBox(height: 8),
         ],
         if (!hasSplits && frequentSplitters.isEmpty)
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.symmetric(vertical: 24),
-            decoration: BoxDecoration(
-              color: Theme.of(context).cardColor,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                  color: Theme.of(context).dividerColor.withOpacity(0.1)),
-            ),
-            child: Column(
+          Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.group_outlined, size: 32,
+                Icon(Icons.group_outlined,
+                    size: 16,
                     color: Theme.of(context).hintColor.withOpacity(0.4)),
-                SizedBox(height: 8),
+                SizedBox(width: 6),
                 Text(
                   "No splits yet",
                   style: TextStyle(
                     color: Theme.of(context).hintColor.withOpacity(0.6),
-                    fontSize: 13,
+                    fontSize: 12,
                   ),
                 ),
               ],
@@ -129,58 +135,87 @@ class SplitManagerSection extends StatelessWidget {
               final isYouRow = index == 0;
               final Contact? element =
                   isYouRow ? null : contactsList[index - 1];
+              final name = isYouRow ? "You" : (element?.name ?? '');
 
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 8.0),
-                child: Slidable(
-                  enabled: !isYouRow,
-                  endActionPane: ActionPane(
-                    motion: ScrollMotion(),
-                    children: [
-                      SlidableAction(
-                        onPressed: (context) {
-                          if (!isYouRow && element != null) {
-                            onDeleteSplit(element, index);
-                          }
-                        },
-                        backgroundColor: Theme.of(context).colorScheme.error,
-                        foregroundColor: Theme.of(context).colorScheme.onError,
-                        icon: Icons.delete,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ],
-                  ),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).cardColor,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                          color: Theme.of(context)
-                              .dividerColor
-                              .withOpacity(0.1)),
+              return Slidable(
+                enabled: !isYouRow,
+                endActionPane: ActionPane(
+                  motion: ScrollMotion(),
+                  children: [
+                    SlidableAction(
+                      onPressed: (context) {
+                        if (!isYouRow && element != null) {
+                          onDeleteSplit(element, index);
+                        }
+                      },
+                      backgroundColor: Theme.of(context).colorScheme.error,
+                      foregroundColor: Theme.of(context).colorScheme.onError,
+                      icon: Icons.delete,
                     ),
-                    child: ListTile(
-                      contentPadding:
-                          EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                      dense: true,
-                      trailing: Text(
-                        displayAmount,
-                        style: TextStyle(
-                            fontSize: 18.0, fontWeight: FontWeight.bold),
+                  ],
+                ),
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(
+                        color: Theme.of(context).dividerColor.withOpacity(0.08),
+                        width: 0.5,
                       ),
-                      title: Text(
-                        isYouRow ? "You" : (element?.name ?? ''),
-                        style: TextStyle(
-                            fontSize: 16.0, fontWeight: FontWeight.w600),
-                      ),
-                      subtitle: isYouRow
-                          ? null
-                          : Text(
-                              element?.phoneNo ?? '',
-                              style: TextStyle(fontSize: 14.0),
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 8),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).primaryColor,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: Text(
+                              CommonUtil.getInitials(name),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
                             ),
-                      leading: WidgetUtil.textAvatar(
-                          isYouRow ? "You" : (element?.name ?? '')),
+                          ),
+                        ),
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                name,
+                                style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600),
+                              ),
+                              if (!isYouRow &&
+                                  element?.phoneNo != null &&
+                                  element!.phoneNo!.isNotEmpty)
+                                Text(
+                                  element.phoneNo!,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Theme.of(context).hintColor,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                        Text(
+                          displayAmount,
+                          style: TextStyle(
+                              fontSize: 14, fontWeight: FontWeight.w600),
+                        ),
+                      ],
                     ),
                   ),
                 ),

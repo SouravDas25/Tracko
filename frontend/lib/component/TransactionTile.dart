@@ -1,6 +1,7 @@
 import 'package:tracko/Utils/CommonUtil.dart';
 import 'package:tracko/Utils/WidgetUtil.dart';
 import 'package:tracko/Utils/enums.dart';
+import 'package:tracko/component/amount_text.dart';
 import 'package:tracko/controllers/TransactionController.dart';
 import 'package:tracko/models/transaction.dart';
 import 'package:tracko/pages/add_item_page/add_item.dart';
@@ -57,94 +58,82 @@ class TransactionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
-      child: Slidable(
-        endActionPane: ActionPane(
-          motion: ScrollMotion(),
-          children: [
-            SlidableAction(
-              onPressed: (context) {
-                _showDialog();
-              },
-              backgroundColor: Colors.red.shade400,
-              foregroundColor: Colors.white,
-              icon: Icons.delete_outline,
-              label: 'Delete',
-              borderRadius: BorderRadius.circular(16),
-            ),
-          ],
-        ),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).cardColor,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.04),
-                blurRadius: 10,
-                offset: Offset(0, 4),
-              ),
-            ],
-            border: Border.all(
-              color: Theme.of(context).dividerColor.withOpacity(0.05),
+    return Slidable(
+      endActionPane: ActionPane(
+        motion: ScrollMotion(),
+        children: [
+          SlidableAction(
+            onPressed: (context) {
+              _showDialog();
+            },
+            backgroundColor: Colors.red.shade400,
+            foregroundColor: Colors.white,
+            icon: Icons.delete_outline,
+            label: 'Delete',
+          ),
+        ],
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: Theme.of(context).dividerColor.withOpacity(0.08),
+              width: 0.5,
             ),
           ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(16),
-              onTap: () async {
-                final saved = await Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) =>
-                        AddItemPage(transaction: transaction)));
-                if (saved == true) {
-                  try {
-                    (parent as dynamic).refresh();
-                  } catch (e) {
-                    print("Parent refresh failed: $e");
-                  }
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () async {
+              final saved = await Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => AddItemPage(transaction: transaction)));
+              if (saved == true) {
+                try {
+                  (parent as dynamic).refresh();
+                } catch (e) {
+                  print("Parent refresh failed: $e");
                 }
-              },
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  children: [
-                    _buildAvatar(context),
-                    SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            transaction.name,
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color:
-                                  Theme.of(context).textTheme.bodyLarge?.color,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+              }
+            },
+            child: Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+              child: Row(
+                children: [
+                  _buildAvatar(context),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          transaction.name,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Theme.of(context).textTheme.bodyLarge?.color,
                           ),
-                          SizedBox(height: 4),
-                          Text(
-                            _getSubtitle(transaction),
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Theme.of(context).hintColor,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          _getSubtitle(transaction),
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            color: Theme.of(context).hintColor,
+                            fontWeight: FontWeight.w500,
                           ),
-                        ],
-                      ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ),
-                    SizedBox(width: 12),
-                    _buildAmount(context),
-                  ],
-                ),
+                  ),
+                  SizedBox(width: 8),
+                  _buildAmount(context),
+                ],
               ),
             ),
           ),
@@ -174,18 +163,11 @@ class TransactionTile extends StatelessWidget {
 
   Widget _buildAvatar(BuildContext context) {
     return Container(
-      width: 48,
-      height: 48,
+      width: 32,
+      height: 32,
       decoration: BoxDecoration(
         color: Theme.of(context).primaryColor,
         shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).primaryColor.withOpacity(0.3),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
       ),
       child: Center(
         child: Text(
@@ -193,7 +175,7 @@ class TransactionTile extends StatelessWidget {
           style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
-            fontSize: 18,
+            fontSize: 13,
           ),
         ),
       ),
@@ -204,39 +186,15 @@ class TransactionTile extends StatelessWidget {
     final bool isDebit = transaction.transactionType == TransactionType.DEBIT;
     final bool isTransfer = transaction.isTransfer;
 
-    Color color;
-    String sign;
-
-    if (isTransfer) {
-      // Transfers usually blue or distinctive
-      color = Colors.blue.shade600;
-      // If it's the debit side (out), maybe red or blue?
-      // Typically transfers are neutral or blue in UI to distinguish from expense.
-      // But let's stick to logic:
-      // Transfer Out (Debit) -> -
-      // Transfer In (Credit) -> +
-      // But user might prefer neutral. Let's use blue for both but keep sign.
-      if (transaction.transactionType == TransactionType.DEBIT) {
-        sign = "- ";
-      } else if (transaction.transactionType == TransactionType.CREDIT) {
-        sign = "+ ";
-      } else {
-        sign = ""; // Type 3 (Transfer parent/wrapper?)
-      }
-    } else {
-      color = isDebit ? Colors.red.shade400 : Colors.green.shade600;
-      sign = isDebit ? "- " : "+ ";
+    Color color = Colors.blue;
+    if (!isTransfer) {
+      color = isDebit ? Colors.red : Colors.green;
     }
 
-    String amountText = CommonUtil.toCurrency(transaction.amount);
-
-    return Text(
-      "$sign$amountText",
-      style: TextStyle(
-        color: color,
-        fontWeight: FontWeight.bold,
-        fontSize: 15,
-      ),
+    return AmountText(
+      amount: transaction.originalAmount ?? 0.0,
+      color: color,
+      currencyCode: transaction.originalCurrency,
     );
   }
 }

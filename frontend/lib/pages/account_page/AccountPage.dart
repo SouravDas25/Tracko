@@ -3,6 +3,7 @@ import 'package:tracko/Utils/CommonUtil.dart';
 import 'package:tracko/component/AccountDialog.dart';
 import 'package:tracko/component/AsynLoadState.dart';
 import 'package:tracko/component/FLushDialog.dart';
+import 'package:tracko/component/amount_text.dart';
 import 'package:tracko/component/screen.dart';
 import 'package:tracko/controllers/AccountController.dart';
 import 'package:tracko/models/account.dart';
@@ -173,16 +174,9 @@ class AccountPageState extends AsyncLoadState<AccountPage> {
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        CommonUtil.toCurrency(
-                          balances[accounts[i].id ?? 0] ?? 0.0,
-                          currencyCode: accounts[i].currency,
-                        ),
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                          color: Theme.of(context).textTheme.bodyLarge?.color,
-                        ),
+                      AmountText(
+                        amount: balances[accounts[i].id ?? 0] ?? 0.0,
+                        currencyCode: accounts[i].currency,
                       ),
                       const SizedBox(width: 8),
                       IconButton(

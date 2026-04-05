@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:tracko/Utils/CommonUtil.dart';
 import 'package:tracko/Utils/enums.dart';
+import 'package:tracko/component/amount_text.dart';
 import 'package:tracko/models/category.dart';
 import 'package:tracko/pages/stats_page/category_transactions_page.dart';
 import 'package:tracko/pages/stats_page/components/stats_category_list.dart';
@@ -305,7 +306,8 @@ class _StatsPageState extends State<StatsPage> {
                       color: Theme.of(context).dividerColor.withOpacity(0.1)),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
                   child: StatsPieChart(
                     loading: _controller.loading,
                     error: _controller.error,
@@ -386,8 +388,7 @@ class _StickyStatsHeaderDelegate extends SliverPersistentHeaderDelegate {
                         : Theme.of(context).textTheme.bodyLarge?.color,
                   ),
                   padding: EdgeInsets.zero,
-                  onPressed:
-                      isLoading || disableNavigation ? null : onPrevious,
+                  onPressed: isLoading || disableNavigation ? null : onPrevious,
                 ),
                 Text(
                   dateText,
@@ -425,13 +426,10 @@ class _StickyStatsHeaderDelegate extends SliverPersistentHeaderDelegate {
                     color: Theme.of(context).hintColor,
                   ),
                 ),
-                Text(
-                  CommonUtil.toCurrency(total),
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: kindColor,
-                  ),
+                AmountText(
+                  amount: total,
+                  color: kindColor,
+                  fontSize: 15,
                 ),
               ],
             ),

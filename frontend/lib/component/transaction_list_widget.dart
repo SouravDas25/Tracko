@@ -70,7 +70,8 @@ class TransactionListWidget extends StatelessWidget {
       }
     }
 
-    final int itemCount = transactions.length + ((!isSliver && hasMore) ? 1 : 0);
+    final int itemCount =
+        transactions.length + ((!isSliver && hasMore) ? 1 : 0);
 
     Widget buildItem(BuildContext context, int index) {
       if (!isSliver && hasMore && index == transactions.length) {
@@ -90,18 +91,19 @@ class TransactionListWidget extends StatelessWidget {
       final currentHuman = CommonUtil.humanDate(tx.date).toUpperCase();
       String? prevHuman;
       if (index > 0) {
-        prevHuman = CommonUtil.humanDate(transactions[index - 1].date).toUpperCase();
+        prevHuman =
+            CommonUtil.humanDate(transactions[index - 1].date).toUpperCase();
       }
 
       final List<Widget> children = [];
       if (index == 0 || prevHuman != currentHuman) {
         children.add(
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
             child: Text(
               currentHuman,
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 11.5,
                 fontWeight: FontWeight.bold,
                 color: Theme.of(context).hintColor,
                 letterSpacing: 1.0,

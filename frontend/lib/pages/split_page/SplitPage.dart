@@ -1,4 +1,5 @@
 import 'package:tracko/Utils/CommonUtil.dart';
+import 'package:tracko/component/amount_text.dart';
 import 'package:tracko/component/interfaces.dart';
 import 'package:tracko/models/contact.dart';
 import 'package:tracko/pages/split_page/SplitByContact.dart';
@@ -201,15 +202,11 @@ class _SplitPage extends RefreshableState<SplitPage> {
                   ),
                 ),
               ),
-              trailing: Text(
-                CommonUtil.toCurrency(row.dueAmount),
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 15,
-                  color: row.dueAmount > 0
-                      ? Colors.red.shade400
-                      : Colors.green.shade600,
-                ),
+              trailing: AmountText(
+                amount: row.dueAmount,
+                color: row.dueAmount > 0
+                    ? Colors.red.shade400
+                    : Colors.green.shade600,
               ),
               leading: Container(
                 width: 48,
