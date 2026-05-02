@@ -95,7 +95,10 @@ tasks:
   # Run tests
   test:
     desc: Run tests (Flutter, Backend, and CLI)
-    deps: [test:backend, test:flutter, test:cli]
+    cmds:
+      - task: test:backend
+      - task: test:flutter
+      - task: test:cli
 
   test:backend:
     desc: Run Backend tests (Maven verify)

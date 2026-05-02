@@ -134,6 +134,9 @@ public class TransactionValidationService {
     /**
      * Validates a request to convert a regular transaction into a transfer.
      * Required: transactionType, toAccountId.
+     * 
+     * The source account is determined by request.getSourceAccountId() if provided,
+     * otherwise falls back to the existing transaction's account.
      */
     public void validateConvertToTransfer(TransactionRequest request, Transaction existing) {
         if (request.transactionType() == null) {
@@ -142,7 +145,11 @@ public class TransactionValidationService {
         if (request.toAccountId() == null) {
             throw new BadRequestException("toAccountId is required when converting to a transfer");
         }
-        if (existing.getAccountId().equals(request.toAccountId())) {
+        // Use source account from request if provided, otherwise use existing account
+        Long sourceAccountId = request.getSourceAccountId() != null 
+                ? request.getSourceAccountId() 
+                : existing.getAccountId();
+        if (sourceAccountId.equals(request.toAccountId())) {
             throw new BadRequestException("Source and destination accounts cannot be the same");
         }
     }

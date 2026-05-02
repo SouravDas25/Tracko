@@ -394,4 +394,62 @@ public class TransactionTypeUpdateTest extends BaseIntegrationTest {
         boolean debitExists = transactionRepository.existsById(transferPair.debit().getId());
         assertThat(debitExists).isFalse();
     }
+
+    // Scenario: Convert INCOME to TRANSFER with a different source account specified.
+    // This tests the fix for GitHub issue #32 - the user can change the source account
+    // when converting to a transfer.
+    @Test
+    public void testUpdateIncomeToTransferWithDifferentSourceAccount() throws Exception {
+        // Create Income (CREDIT) on Account 1
+        Transaction t = new Transaction();
+        t.setTransactionType(TransactionDbType.CREDIT);
+        t.setName("Income");
+        t.setOriginalAmount(500.0);
+        t.setOriginalCurrency("INR");
+        t.setExchangeRate(1.0);
+        t.setDate(new Date());
+        t.setAccountId(account1.getId());
+        t.setCategoryId(categoryIncome.getId());
+        t.setIsCountable(1);
+        t = transactionWriteService.saveForUser(testUser.getId(), t);
+
+        // Update to Transfer with:
+        // - fromAccountId = Account 2 (different from original Account 1)
+        // - toAccountId = Account 1 (same as original account - this was causing 400 before the fix)
+        TransactionRequest payload = new TransactionRequest(
+                null,                    // id
+                null,                    // accountId
+                null,                    // date
+                "Income To Transfer",   // name
+                null,                    // comments
+                null,                    // categoryId
+                TransactionType.TRANSFER,// transactionType
+                null,                    // originalCurrency
+                null,                    // originalAmount
+                null,                    // exchangeRate
+                null,                    // linkedTransactionId
+                account1.getId(),        // toAccountId (same as original - was causing 400)
+                account2.getId()         // fromAccountId (different from original)
+        );
+
+        mockMvc.perform(put("/api/transactions/" + t.getId())
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(payload)))
+                .andExpect(status().isOk());
+
+        Transaction updated = transactionRepository.findById(t.getId()).orElseThrow();
+        assertThat(updated.getTransactionType()).isEqualTo(TransactionDbType.DEBIT);
+        assertThat(updated.getLinkedTransactionId()).isNotNull();
+        assertThat(updated.getName()).isEqualTo("Income To Transfer");
+        assertThat(updated.getIsCountable()).isEqualTo(0);
+        // The source account should be changed to Account 2
+        assertThat(updated.getAccountId()).isEqualTo(account2.getId());
+
+        Transaction linked = transactionRepository.findById(updated.getLinkedTransactionId()).orElseThrow();
+        // The destination should be Account 1
+        assertThat(linked.getAccountId()).isEqualTo(account1.getId());
+        assertThat(linked.getTransactionType()).isEqualTo(TransactionDbType.CREDIT);
+        assertThat(linked.getIsCountable()).isEqualTo(0);
+    }
 }

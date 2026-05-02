@@ -1,0 +1,84 @@
+{
+  "folders": [
+    {
+      "path": "backend",
+      "name": "Backend (Java/Spring Boot)"
+    },
+    {
+      "path": "frontend",
+      "name": "Frontend (Flutter/Dart)"
+    },
+    {
+      "path": "cli",
+      "name": "CLI (Python)"
+    },
+    {
+      "path": ".",
+      "name": "Root"
+    }
+  ],
+  "settings": {
+    // ── Shared settings ──
+    "files.eol": "\n",
+    "editor.formatOnSave": true,
+    "editor.minimap.enabled": false,
+    // ── Java / Spring Boot (backend) ──
+    "java.compile.nullAnalysis.mode": "automatic",
+    "java.configuration.updateBuildConfiguration": "interactive",
+    "java.jdt.ls.java.home": "",
+    // ── Dart / Flutter (frontend) ──
+    "dart.flutterSdkPath": "",
+    "[dart]": {
+      "editor.defaultFormatter": "Dart-Code.dart-code",
+      "editor.selectionHighlight": false,
+      "editor.suggestSelection": "first",
+      "editor.tabCompletion": "onlySnippets",
+      "editor.wordBasedSuggestions": "off"
+    },
+    // ── Python (cli) ──
+    "[python]": {
+      "editor.defaultFormatter": "ms-python.black-formatter"
+    },
+    "python.testing.pytestEnabled": true,
+    "python.testing.pytestArgs": [
+      "tests"
+    ],
+    // ── Search exclusions ──
+    "search.exclude": {
+      "**/target": true,
+      "**/build": true,
+      "**/.gradle": true,
+      "**/.dart_tool": true,
+      "**/__pycache__": true,
+      "**/dist": true,
+      "**/.pytest_cache": true,
+      "**/htmlcov": true,
+      "**/node_modules": true
+    },
+    "files.exclude": {
+      "**/.git": true,
+      "**/.DS_Store": true,
+      "**/Thumbs.db": true,
+      "**/__pycache__": true,
+      "**/.pytest_cache": true
+    },
+    // ── Kiro ──
+    "kiroAgent.configureMCP": "Enabled"
+  },
+  "extensions": {
+    "recommendations": [
+      // Java
+      "vscjava.vscode-java-pack",
+      "vmware.vscode-spring-boot",
+      "vscjava.vscode-spring-initializr",
+      // Flutter / Dart
+      "Dart-Code.dart-code",
+      "Dart-Code.flutter",
+      // Python
+      "ms-python.python",
+      "ms-python.black-formatter",
+      // General
+      "editorconfig.editorconfig"
+    ]
+  }
+}
