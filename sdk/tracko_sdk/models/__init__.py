@@ -17,6 +17,7 @@
 from tracko_sdk.models.account import Account
 from tracko_sdk.models.account_save_request import AccountSaveRequest
 from tracko_sdk.models.allocate_funds200_response import AllocateFunds200Response
+from tracko_sdk.models.analytics_response_dto import AnalyticsResponseDTO
 from tracko_sdk.models.authication_request import AuthicationRequest
 from tracko_sdk.models.budget_allocation_request_dto import BudgetAllocationRequestDTO
 from tracko_sdk.models.budget_category_dto import BudgetCategoryDTO
@@ -43,6 +44,7 @@ from tracko_sdk.models.get_by_id2200_response import GetById2200Response
 from tracko_sdk.models.get_by_id3200_response import GetById3200Response
 from tracko_sdk.models.get_by_id4200_response import GetById4200Response
 from tracko_sdk.models.get_by_name200_response import GetByName200Response
+from tracko_sdk.models.get_chart_data200_response import GetChartData200Response
 from tracko_sdk.models.get_my_account_balances200_response import GetMyAccountBalances200Response
 from tracko_sdk.models.get_my_summary200_response import GetMySummary200Response
 from tracko_sdk.models.get_my_total_income200_response import GetMyTotalIncome200Response
@@ -55,7 +57,9 @@ from tracko_sdk.models.jwt_response import JwtResponse
 from tracko_sdk.models.list_mine200_response import ListMine200Response
 from tracko_sdk.models.login_request import LoginRequest
 from tracko_sdk.models.me200_response import Me200Response
+from tracko_sdk.models.named_series_dto import NamedSeriesDTO
 from tracko_sdk.models.recurring_transaction import RecurringTransaction
+from tracko_sdk.models.search_transactions200_response import SearchTransactions200Response
 from tracko_sdk.models.show_by_phone200_response import ShowByPhone200Response
 from tracko_sdk.models.split import Split
 from tracko_sdk.models.split_detail_dto import SplitDetailDTO
@@ -65,6 +69,8 @@ from tracko_sdk.models.transaction import Transaction
 from tracko_sdk.models.transaction_detail_dto import TransactionDetailDTO
 from tracko_sdk.models.transaction_period_summary_dto import TransactionPeriodSummaryDTO
 from tracko_sdk.models.transaction_request import TransactionRequest
+from tracko_sdk.models.transaction_search_hit_dto import TransactionSearchHitDTO
+from tracko_sdk.models.transaction_search_result_dto import TransactionSearchResultDTO
 from tracko_sdk.models.transaction_summary_dto import TransactionSummaryDTO
 from tracko_sdk.models.transactions_page_dto import TransactionsPageDTO
 from tracko_sdk.models.update_profile200_response import UpdateProfile200Response

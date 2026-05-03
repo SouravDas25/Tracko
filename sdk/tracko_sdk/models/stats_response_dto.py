@@ -29,7 +29,7 @@ class StatsResponseDTO(BaseModel):
     StatsResponseDTO
     """ # noqa: E501
     range: Optional[StrictStr] = None
-    transaction_type: Optional[StrictStr] = Field(default=None, alias="transactionType")
+    transaction_type: Optional[Union[StrictStr, StrictInt]] = Field(default=None, alias="transactionType")
     period_start: Optional[StrictStr] = Field(default=None, alias="periodStart")
     period_end: Optional[StrictStr] = Field(default=None, alias="periodEnd")
     total: Optional[Union[StrictFloat, StrictInt]] = None
@@ -43,8 +43,8 @@ class StatsResponseDTO(BaseModel):
         if value is None:
             return value
 
-        if value not in set(['1', '2', '3']):
-            raise ValueError("must be one of enum values ('1', '2', '3')")
+        if value not in set(['1', '2', '3', 1, 2, 3]):
+            raise ValueError("must be one of enum values ('1', '2', '3', 1, 2, 3)")
         return value
 
     model_config = ConfigDict(

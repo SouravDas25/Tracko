@@ -1,7 +1,9 @@
 package com.trako.controllers;
 
+import com.trako.dtos.SearchRequestDTO;
 import com.trako.dtos.TransactionDetailDTO;
 import com.trako.dtos.TransactionPeriodSummaryDTO;
+import com.trako.dtos.TransactionSearchResultDTO;
 import com.trako.dtos.TransactionSummaryDTO;
 import com.trako.dtos.TransactionsPageDTO;
 import com.trako.entities.Account;
@@ -14,9 +16,11 @@ import com.trako.exceptions.UserNotLoggedInException;
 import com.trako.models.request.TransactionRequest;
 import com.trako.repositories.AccountRepository;
 import com.trako.repositories.CategoryRepository;
+import com.trako.services.TransactionSearchService;
 import com.trako.services.UserService;
 import com.trako.services.transactions.TransactionService;
 import com.trako.services.transactions.TransactionWriteService;
+import com.trako.util.CommonUtil;
 import com.trako.util.Response;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -25,7 +29,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,6 +72,9 @@ public class TransactionController {
 
     @Autowired
     private CategoryRepository categoryRepository;
+
+    @Autowired
+    private TransactionSearchService transactionSearchService;
 
     private List<Transaction> hideTransferCredits(List<Transaction> transactions, String userId) {
         var transferCats = categoryRepository.findByUserIdAndName(userId, "TRANSFER");
@@ -125,6 +134,65 @@ public class TransactionController {
             }
         }
         return dtos;
+    }
+
+    /**
+     * GET /api/transactions/search
+     * Searches transactions across all time periods using free-text query with fuzzy matching.
+     * Supports optional filters for date range, amount range, accounts, and category.
+     */
+    @Operation(summary = "Search transactions across all time periods")
+    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = TransactionSearchResultDTO.class)))
+    @GetMapping("/search")
+    public ResponseEntity<?> searchTransactions(
+            @RequestParam @NotBlank @Size(max = 200, message = "Search query must not exceed 200 characters") String query,
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "20") Integer size,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate,
+            @RequestParam(required = false) Double minAmount,
+            @RequestParam(required = false) Double maxAmount,
+            @RequestParam(required = false) String accountIds,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(defaultValue = "0.7") Double fuzzyThreshold,
+            @RequestParam(defaultValue = "false") Boolean expand) {
+        try {
+            // Validate query
+            if (query == null || query.isBlank()) {
+                return Response.badRequest("Search query cannot be empty");
+            }
+
+            // Validate size
+            if (size < 1 || size > 100) {
+                return Response.badRequest("Page size must be between 1 and 100");
+            }
+
+            // Validate date range
+            if (startDate != null && endDate != null && endDate.before(startDate)) {
+                return Response.badRequest("End date must be after start date");
+            }
+
+            String currentUserId = userService.loggedInUser().getId();
+
+            // Build SearchRequestDTO from query params
+            SearchRequestDTO request = new SearchRequestDTO();
+            request.setQuery(query);
+            request.setPage(page);
+            request.setSize(size);
+            request.setStartDate(startDate);
+            request.setEndDate(endDate);
+            request.setMinAmount(minAmount);
+            request.setMaxAmount(maxAmount);
+            request.setAccountIds(CommonUtil.parseAccountIds(accountIds));
+            request.setCategoryId(categoryId);
+            request.setFuzzyThreshold(fuzzyThreshold);
+            request.setExpand(expand);
+
+            TransactionSearchResultDTO result = transactionSearchService.search(currentUserId, request);
+            return Response.ok(result);
+        } catch (UserNotLoggedInException e) {
+            return Response.unauthorized();
+        }
     }
 
     /**

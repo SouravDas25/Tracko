@@ -105,6 +105,13 @@ class _HomeTab extends State<HomeTab> with SingleTickerProviderStateMixin {
             }),
         actions: <Widget>[
           IconButton(
+            tooltip: "Search",
+            icon: const Icon(Icons.search),
+            onPressed: () {
+              Navigator.of(context).pushNamed('/search');
+            },
+          ),
+          IconButton(
             tooltip: "Current Month",
             icon: Text(
               DateFormat("MMM").format(SettingUtil.currentMonth),

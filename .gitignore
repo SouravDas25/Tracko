@@ -94,6 +94,6 @@ cli/.coverage
 .coverage
 
 
-.kiro
-.vscode/
+.kiro/specs
+.vscode
 pve-ct-303-config-backup.json

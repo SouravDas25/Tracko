@@ -13,6 +13,7 @@ Method | HTTP request | Description
 [**get_my_total_expense**](TransactionsApi.md#get_my_total_expense) | **GET** /api/transactions/total-expense | Get total expense in a date range
 [**get_my_total_income**](TransactionsApi.md#get_my_total_income) | **GET** /api/transactions/total-income | Get total income in a date range
 [**get_yearly_summaries**](TransactionsApi.md#get_yearly_summaries) | **GET** /api/transactions/summary/yearly | Yearly summaries
+[**search_transactions**](TransactionsApi.md#search_transactions) | **GET** /api/transactions/search | Search transactions across all time periods
 [**update**](TransactionsApi.md#update) | **PUT** /api/transactions/{id} | Update a transaction or transfer
 
 
@@ -717,6 +718,102 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**GetYearlySummaries200Response**](GetYearlySummaries200Response.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+### HTTP response details
+
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+**200** | OK |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **search_transactions**
+> SearchTransactions200Response search_transactions(query, page=page, size=size, start_date=start_date, end_date=end_date, min_amount=min_amount, max_amount=max_amount, account_ids=account_ids, category_id=category_id, fuzzy_threshold=fuzzy_threshold, expand=expand)
+
+Search transactions across all time periods
+
+### Example
+
+* Bearer (JWT) Authentication (bearerAuth):
+
+```python
+import tracko_sdk
+from tracko_sdk.models.search_transactions200_response import SearchTransactions200Response
+from tracko_sdk.rest import ApiException
+from pprint import pprint
+
+# Defining the host is optional and defaults to http://localhost:8080
+# See configuration.py for a list of all supported configuration parameters.
+configuration = tracko_sdk.Configuration(
+    host = "http://localhost:8080"
+)
+
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure Bearer authorization (JWT): bearerAuth
+configuration = tracko_sdk.Configuration(
+    access_token = os.environ["BEARER_TOKEN"]
+)
+
+# Enter a context with an instance of the API client
+with tracko_sdk.ApiClient(configuration) as api_client:
+    # Create an instance of the API class
+    api_instance = tracko_sdk.TransactionsApi(api_client)
+    query = 'query_example' # str | 
+    page = 0 # int |  (optional) (default to 0)
+    size = 20 # int |  (optional) (default to 20)
+    start_date = '2013-10-20T19:20:30+01:00' # datetime |  (optional)
+    end_date = '2013-10-20T19:20:30+01:00' # datetime |  (optional)
+    min_amount = 3.4 # float |  (optional)
+    max_amount = 3.4 # float |  (optional)
+    account_ids = 'account_ids_example' # str |  (optional)
+    category_id = 56 # int |  (optional)
+    fuzzy_threshold = 0.7 # float |  (optional) (default to 0.7)
+    expand = False # bool |  (optional) (default to False)
+
+    try:
+        # Search transactions across all time periods
+        api_response = api_instance.search_transactions(query, page=page, size=size, start_date=start_date, end_date=end_date, min_amount=min_amount, max_amount=max_amount, account_ids=account_ids, category_id=category_id, fuzzy_threshold=fuzzy_threshold, expand=expand)
+        print("The response of TransactionsApi->search_transactions:\n")
+        pprint(api_response)
+    except Exception as e:
+        print("Exception when calling TransactionsApi->search_transactions: %s\n" % e)
+```
+
+
+
+### Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **query** | **str**|  | 
+ **page** | **int**|  | [optional] [default to 0]
+ **size** | **int**|  | [optional] [default to 20]
+ **start_date** | **datetime**|  | [optional] 
+ **end_date** | **datetime**|  | [optional] 
+ **min_amount** | **float**|  | [optional] 
+ **max_amount** | **float**|  | [optional] 
+ **account_ids** | **str**|  | [optional] 
+ **category_id** | **int**|  | [optional] 
+ **fuzzy_threshold** | **float**|  | [optional] [default to 0.7]
+ **expand** | **bool**|  | [optional] [default to False]
+
+### Return type
+
+[**SearchTransactions200Response**](SearchTransactions200Response.md)
 
 ### Authorization
 

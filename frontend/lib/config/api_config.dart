@@ -66,6 +66,7 @@ class ApiConfig {
   static const String accountBalances = '/api/accounts/balances';
   static const String categories = '/api/categories';
   static const String transactions = '/api/transactions';
+  static const String transactionSearch = '/api/transactions/search';
   static const String transfers = '/api/transfers';
   static const String stats = '/api/stats';
   static const String splits = '/api/splits';

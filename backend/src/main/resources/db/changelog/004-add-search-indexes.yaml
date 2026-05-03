@@ -1,0 +1,49 @@
+databaseChangeLog:
+    -   changeSet:
+            id: 004-add-search-index-transactions-name
+            author: sd25
+            preConditions:
+                -   onFail: MARK_RAN
+                -   not:
+                        -   indexExists:
+                                tableName: transactions
+                                indexName: idx_transactions_name
+            changes:
+                -   createIndex:
+                        tableName: transactions
+                        indexName: idx_transactions_name
+                        columns:
+                            -   column:
+                                    name: name
+    -   changeSet:
+            id: 004-add-search-index-transactions-date
+            author: sd25
+            preConditions:
+                -   onFail: MARK_RAN
+                -   not:
+                        -   indexExists:
+                                tableName: transactions
+                                indexName: idx_transactions_date
+            changes:
+                -   createIndex:
+                        tableName: transactions
+                        indexName: idx_transactions_date
+                        columns:
+                            -   column:
+                                    name: date
+    -   changeSet:
+            id: 004-add-search-index-categories-name
+            author: sd25
+            preConditions:
+                -   onFail: MARK_RAN
+                -   not:
+                        -   indexExists:
+                                tableName: categories
+                                indexName: idx_categories_name
+            changes:
+                -   createIndex:
+                        tableName: categories
+                        indexName: idx_categories_name
+                        columns:
+                            -   column:
+                                    name: name

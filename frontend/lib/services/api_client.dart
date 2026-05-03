@@ -140,10 +140,10 @@ class ApiClient {
 
   Dio get dio => _dio;
 
-  Future<T> get<T>(String path, {Map<String, dynamic>? query}) async {
+  Future<T> get<T>(String path, {Map<String, dynamic>? query, CancelToken? cancelToken}) async {
     AppLog.d(
         '[ApiClient] GET dispatch path=$path query=$query baseUrl=${_dio.options.baseUrl}');
-    final res = await _dio.get(path, queryParameters: query);
+    final res = await _dio.get(path, queryParameters: query, cancelToken: cancelToken);
     AppLog.d('[ApiClient] GET response path=$path status=${res.statusCode}');
     return res.data as T;
   }

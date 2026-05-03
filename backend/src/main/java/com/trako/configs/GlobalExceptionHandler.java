@@ -3,6 +3,7 @@ package com.trako.configs;
 import com.trako.exceptions.AuthorizationException;
 import com.trako.exceptions.BadRequestException;
 import com.trako.exceptions.NotFoundException;
+import com.trako.exceptions.SearchValidationException;
 import com.trako.exceptions.UserNotLoggedInException;
 import com.trako.models.responses.ApiResponse;
 import com.trako.util.Response;
@@ -31,6 +32,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<ApiResponse<Void>> handleBadRequestException(BadRequestException ex) {
         log.debug("Bad request: {}", ex.getMessage());
+        return Response.badRequest(ex.getMessage());
+    }
+
+    @ExceptionHandler(SearchValidationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleSearchValidation(SearchValidationException ex) {
+        log.warn("Search validation error: field={}, message={}", ex.getField(), ex.getMessage());
         return Response.badRequest(ex.getMessage());
     }
 

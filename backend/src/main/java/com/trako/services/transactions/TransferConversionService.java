@@ -43,21 +43,33 @@ public class TransferConversionService {
      * 1. Updating the existing transaction to be a DEBIT with TRANSFER category
      * 2. Creating a linked CREDIT transaction in the destination account
      *
+     * <p>If the request specifies a different source account (via fromAccountId or accountId),
+     * the existing transaction will be moved to that account.
+     *
      * @param userId        the authenticated user id
      * @param transactionId the id of the transaction to convert
-     * @param request       contains toAccountId and optional field overrides
+     * @param request       contains toAccountId and optional field overrides (including source account)
      * @return a {@link TransferResult} containing both debit and credit transactions
      */
     @Transactional
     public TransferResult convertRegularToTransfer(String userId, Long transactionId, TransactionRequest request) {
         Long toAccountId = request.toAccountId();
-        logger.info("Converting regular transaction {} to transfer (to account {}) for user {}", transactionId, toAccountId, userId);
+        Long sourceAccountId = request.getSourceAccountId();
+        
+        logger.info("Converting regular transaction {} to transfer (from account {} to account {}) for user {}", 
+                transactionId, sourceAccountId, toAccountId, userId);
 
         Transaction existing = transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new NotFoundException("Transaction not found: " + transactionId));
 
         validationService.validateAccountOwnership(userId, existing.getAccountId());
         validationService.validateAccountOwnership(userId, toAccountId);
+        
+        // If a different source account is specified, validate and update
+        if (sourceAccountId != null && !sourceAccountId.equals(existing.getAccountId())) {
+            validationService.validateAccountOwnership(userId, sourceAccountId);
+            existing.setAccountId(sourceAccountId);
+        }
 
         if (request.date() != null) existing.setDate(request.date());
         if (request.name() != null) existing.setName(request.name());

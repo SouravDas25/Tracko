@@ -252,3 +252,49 @@ def test_transaction_add_expense_invalid_category(runner):
     ])
     assert result.exit_code != 0
     assert "not found" in result.stdout.lower()
+
+
+# ---------------------------------------------------------------------------
+# search
+# ---------------------------------------------------------------------------
+
+def test_transaction_search_success(runner):
+    """Search returns a table with matching results."""
+    result = runner.invoke(app, ["transaction", "search", "Lunch"])
+    assert result.exit_code == 0
+    assert "Search Results" in result.stdout or "No results found" in result.stdout
+
+
+def test_transaction_search_empty(runner):
+    """Search with no matches shows 'No results found'."""
+    result = runner.invoke(app, ["transaction", "search", "xyznonexistent999abc"])
+    assert result.exit_code == 0
+    assert "No results found" in result.stdout
+
+
+def test_transaction_search_raw(runner):
+    """--raw flag outputs JSON containing 'results' key."""
+    result = runner.invoke(app, ["transaction", "search", "Lunch", "--raw"])
+    assert result.exit_code == 0
+    assert "results" in result.stdout.lower()
+
+
+def test_transaction_search_with_filters(runner):
+    """Search with date and amount filters returns exit code 0."""
+    result = runner.invoke(app, [
+        "transaction", "search", "Lunch",
+        "--start-date", "2026-01-01",
+        "--end-date", "2026-12-31",
+        "--min-amount", "1",
+    ])
+    assert result.exit_code == 0
+
+
+def test_transaction_search_pagination(runner):
+    """Search with --page and --size options returns exit code 0."""
+    result = runner.invoke(app, [
+        "transaction", "search", "Lunch",
+        "--page", "0",
+        "--size", "5",
+    ])
+    assert result.exit_code == 0
