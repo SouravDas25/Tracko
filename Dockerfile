@@ -26,7 +26,7 @@ COPY frontend/ ./
 RUN flutter build web --release --pwa-strategy=none --dart-define=IS_PRODUCTION=true
 
 # Runtime image: nginx + Java
-FROM eclipse-temurin:17-jre
+FROM eclipse-temurin:17-jre-noble
 
 RUN apt-get update \
   && apt-get install -y --no-install-recommends nginx ca-certificates \
