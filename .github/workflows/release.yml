@@ -1,4 +1,4 @@
-name: Build & Release Trako CLI
+name: Build & Release Trako
 
 on:
   push:
@@ -191,7 +191,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: sd25/tracko
+          images: sd25/trako
           tags: |
             type=raw,value=${{ steps.version.outputs.tag }}
             type=raw,value=latest

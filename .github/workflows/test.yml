@@ -1,4 +1,4 @@
-name: Test Trako CLI
+name: Pull Action on Trako
 
 on:
   pull_request:

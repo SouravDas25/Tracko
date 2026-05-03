@@ -3,9 +3,9 @@ version: '3'
 vars:
   BACKEND_DIR: backend
   FRONTEND_DIR: frontend
-  DOCKER_IMAGE: tracko-app:latest
-  DOCKER_PUBLISH_IMAGE: sd25/tracko-app:latest
-  DOCKER_TAR: dist/tracko-app.tar
+  DOCKER_IMAGE: trako:latest
+  DOCKER_PUBLISH_IMAGE: sd25/trako:latest
+  DOCKER_TAR: dist/trako.tar
 
 tasks:
   # Show common commands
@@ -178,6 +178,6 @@ tasks:
     vars:
       VMID: 303
       NODE: chiki
-      IMAGE: docker.io/sd25/tracko-app:latest
+      IMAGE: docker.io/sd25/trako:latest
     cmds:
       - cmd: pve-oci deploy --vmid "{{.VMID}}" --node "{{.NODE}}" --image "{{.IMAGE}}"
