@@ -4,6 +4,7 @@ import 'package:tracko/pages/add_item_page/add_item.dart';
 import 'package:tracko/pages/analytics_page/analytics_page.dart';
 import 'package:tracko/pages/home_page/home_tab.dart';
 import 'package:tracko/pages/login_page/login_page.dart';
+import 'package:tracko/pages/search_page/search_page.dart';
 import 'package:flutter/material.dart';
 
 class Routes {
@@ -17,5 +18,6 @@ class Routes {
       return AddItemPage(transaction: t);
     },
     '/analytics': (BuildContext context) => const AnalyticsPage(),
+    '/search': (BuildContext context) => const SearchPage(),
   };
 }

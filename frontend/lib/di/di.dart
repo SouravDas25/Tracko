@@ -10,6 +10,7 @@ import 'package:tracko/repositories/category_repository.dart';
 import 'package:tracko/repositories/contact_repository.dart';
 import 'package:tracko/repositories/json_store_repository.dart';
 import 'package:tracko/repositories/recurring_transaction_repository.dart';
+import 'package:tracko/repositories/search_repository.dart';
 import 'package:tracko/repositories/split_repository.dart';
 import 'package:tracko/repositories/transaction_repository.dart';
 import 'package:tracko/repositories/user_currency_repository.dart';
@@ -55,4 +56,6 @@ Future<void> setupDI() async {
       () => UserCurrencyRepository(api: sl<ApiClient>()));
   sl.registerLazySingleton<JsonStoreRepository>(
       () => JsonStoreRepository(api: sl<ApiClient>()));
+  sl.registerLazySingleton<SearchRepository>(
+      () => SearchRepository(api: sl<ApiClient>()));
 }
