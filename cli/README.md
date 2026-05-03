@@ -62,7 +62,7 @@ All commands follow the pattern: `trako <group> <command> [options]`
 |-------|-------------|--------------|
 | `auth` | Authentication | `login`, `logout` |
 | `account` | Bank accounts & balances | `list`, `add`, `balances`, `summary`, `transactions` |
-| `transaction` | Expenses, income & transfers | `add`, `list`, `transfer`, `import-csv`, `summary` |
+| `transaction` | Expenses, income & transfers | `add`, `list`, `search`, `transfer`, `import-csv`, `summary` |
 | `budget` | Zero-based budgeting | `view`, `current`, `allocate`, `available` |
 | `category` | Expense/income categories | `list`, `add`, `update`, `delete` |
 | `contact` | People for splits | `list`, `add`, `update`, `delete` |

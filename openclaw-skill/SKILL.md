@@ -89,6 +89,17 @@ trako transaction list --raw [--month M] [--year Y] [--page N] [--size N]
 ```
 Defaults to current month if no month/year given. Response is paginated.
 
+### Search transactions
+```
+trako transaction search "<query>" --raw \
+  [--start-date YYYY-MM-DD] [--end-date YYYY-MM-DD] \
+  [--min-amount <NUMBER>] [--max-amount <NUMBER>] \
+  [--account-ids "1,2,3"] [--category-id <ID>] \
+  [--page N] [--size N]
+```
+Full-text fuzzy search across transaction names and comments. All filters are optional.
+Response includes `results`, `totalResults`, `page`, `totalPages`, `searchTimeMs`, and per-hit `relevanceScore` and `matchedFields`.
+
 ### Get a single transaction
 ```
 trako transaction get <ID> --raw
@@ -319,4 +330,9 @@ trako budget view --raw
 ### "Who owes me money?"
 ```
 trako split unsettled --raw
+```
+
+### "Find that restaurant transaction from last year"
+```
+trako transaction search "restaurant" --start-date 2025-01-01 --end-date 2025-12-31 --raw
 ```

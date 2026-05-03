@@ -661,6 +661,93 @@ def import_csv(
         sys.exit(1)
 
 
+_TYPE_LABELS = {1: "Expense", 2: "Income", 3: "Transfer"}
+
+
+@app.command()
+def search(
+    query: str = typer.Argument(..., help="Search text (max 200 chars)"),
+    start_date: Optional[str] = typer.Option(None, "--start-date", help="Start date (YYYY-MM-DD)"),
+    end_date: Optional[str] = typer.Option(None, "--end-date", help="End date (YYYY-MM-DD)"),
+    min_amount: Optional[float] = typer.Option(None, "--min-amount", help="Minimum amount"),
+    max_amount: Optional[float] = typer.Option(None, "--max-amount", help="Maximum amount"),
+    account_ids: Optional[str] = typer.Option(None, "--account-ids", help="Comma-separated account IDs"),
+    category_id: Optional[int] = typer.Option(None, "--category-id", help="Category ID"),
+    page: Optional[int] = typer.Option(None, "--page", help="Page number (0-based)"),
+    size: Optional[int] = typer.Option(None, "--size", help="Page size (1-100)"),
+    raw: bool = typer.Option(False, "--raw", help="Output raw JSON"),
+):
+    """Search transactions by text with optional filters."""
+    base_url, token = get_config_for_api()
+
+    try:
+        start = datetime.strptime(start_date, "%Y-%m-%d") if start_date else None
+        end = datetime.strptime(end_date, "%Y-%m-%d") if end_date else None
+    except ValueError as e:
+        print_error(f"Invalid date format: {e}. Use YYYY-MM-DD.")
+        raise typer.Exit(1)
+
+    try:
+        with spinner("Searching transactions..."):
+            with get_api_client(base_url, token) as client:
+                result = unwrap_envelope(tracko_sdk.TransactionsApi(client).search_transactions(
+                    query=query,
+                    page=page,
+                    size=size,
+                    start_date=start,
+                    end_date=end,
+                    min_amount=min_amount,
+                    max_amount=max_amount,
+                    account_ids=account_ids,
+                    category_id=category_id,
+                    expand=True,
+                ))
+
+        if raw:
+            print_json(result)
+            return
+
+        hits = result.results or []
+        if not hits:
+            console.print("No results found.")
+            return
+
+        table = create_table(title="Search Results")
+        table.add_column("ID", justify="right", style="cyan")
+        table.add_column("Date", style="yellow")
+        table.add_column("Name", style="green")
+        table.add_column("Amount", justify="right", style="magenta")
+        table.add_column("Type", style="blue")
+        table.add_column("Category", style="dim")
+        table.add_column("Account", style="dim")
+
+        for hit in hits:
+            txn = hit.transaction
+            amount = txn.original_amount or txn.amount or 0
+            currency = txn.original_currency or ""
+            table.add_row(
+                str(txn.id or ""),
+                str(txn.var_date)[:10] if txn.var_date else "",
+                str(txn.name or ""),
+                f"{currency} {float(amount):.2f}".strip(),
+                _TYPE_LABELS.get(txn.transaction_type, str(txn.transaction_type or "")),
+                txn.category.name if txn.category else "",
+                txn.account.name if txn.account else "",
+            )
+
+        console.print(table)
+        console.print(
+            f"\n[dim]Page {result.page} of {result.total_pages} "
+            f"· {result.total_results} results · {result.search_time_ms}ms[/dim]"
+        )
+
+    except ApiException as e:
+        handle_api_error(e)
+    except (ConnectionError, MaxRetryError, NewConnectionError, OSError):
+        print_error("Could not connect to API. Is the server running?")
+        sys.exit(1)
+
+
 @app.command()
 def csv_template():
     """Print the CSV template expected by import_csv."""
