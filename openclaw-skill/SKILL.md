@@ -142,7 +142,6 @@ Use ₹ for INR, $ for USD, € for EUR. Use Indian number formatting for INR (�
 
 ## Known Issues
 
-- `stats summary` may crash with a deserialization error (backend returns int, SDK expects string for transactionType). If it fails, fall back to `transaction summary` for totals.
 - `transaction search` is not yet released. If it fails with "No such command", tell the user search isn't available yet and offer to list transactions by month instead.
 
 ---

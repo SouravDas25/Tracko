@@ -193,7 +193,6 @@ trako stats category-summary --category-id <ID> --range <RANGE> --type <TYPE> --
 - `custom` requires `--start-date` and `--end-date`
 
 **Type values (UPPERCASE):** `DEBIT` (expenses), `CREDIT` (income), `TRANSFER`
-- Note: The CLI help text says INCOME/EXPENSE but the backend requires DEBIT/CREDIT
 
 ---
 

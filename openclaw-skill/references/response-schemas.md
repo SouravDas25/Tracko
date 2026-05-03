@@ -155,8 +155,6 @@ Empty array `[]` means no unsettled splits.
 
 ## stats summary
 
-⚠️ Currently has a deserialization bug — may crash. When working, returns:
-
 ```json
 {
   "range": "monthly",
