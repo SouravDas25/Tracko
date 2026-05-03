@@ -203,12 +203,10 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
   # ── Release ──────────────────────────────────────────────────────────
   release:
-    needs: [build-linux, build-macos, build-windows, docker]
+    needs: [build-linux, build-macos, build-windows]
     runs-on: ubuntu-latest
 
     steps:
@@ -227,6 +225,8 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts
+          pattern: trako-*
+          merge-multiple: false
 
       - name: Prepare release files
         run: |
