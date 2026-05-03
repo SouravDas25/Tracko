@@ -12,11 +12,11 @@ A full-stack expense management app: Flutter mobile UI, Spring Boot API, and a C
 
 ## Architecture
 
-```
-┌─────────────┐     ┌───────────────────┐     ┌─────────────────┐
-│   Flutter    │────▶│  Spring Boot API  │────▶│   PostgreSQL    │
-│  Mobile App  │     │  (Java 17, JWT)  │     │   (H2 in dev)   │
-└─────────────┘     └───────────────────┘     └─────────────────┘
+```mermaid
+graph LR
+    A["Flutter\nMobile App"] -->|REST| B["Spring Boot API\n(Java 17, JWT)"]
+    C["CLI\n(Python, Typer)"] -->|REST| B
+    B --> D["PostgreSQL\n(H2 in dev)"]
 ```
 
 | Component | Path | Tech |
