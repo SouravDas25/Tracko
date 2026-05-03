@@ -104,6 +104,7 @@ Class | Method | HTTP request | Description
 *AccountsApi* | [**get_by_id4**](docs/AccountsApi.md#get_by_id4) | **GET** /api/accounts/{id} | Get an account by ID
 *AccountsApi* | [**get_my_account_balances**](docs/AccountsApi.md#get_my_account_balances) | **GET** /api/accounts/balances | Get balances for all accounts (derived from transactions)
 *AccountsApi* | [**update5**](docs/AccountsApi.md#update5) | **PUT** /api/accounts/{id} | Update an account
+*AnalyticsApi* | [**get_chart_data**](docs/AnalyticsApi.md#get_chart_data) | **GET** /api/analytics/chart | Get chart data with optional grouping and granularity
 *AuthenticationApi* | [**login**](docs/AuthenticationApi.md#login) | **POST** /api/login | Log in with username and password
 *AuthenticationApi* | [**sign_in**](docs/AuthenticationApi.md#sign_in) | **POST** /api/oauth/token | Sign in with phone number and password
 *BudgetApi* | [**allocate_funds**](docs/BudgetApi.md#allocate_funds) | **POST** /api/budget/allocate | Allocate funds to a category for a month
@@ -143,7 +144,7 @@ Class | Method | HTTP request | Description
 *SplitsApi* | [**settle**](docs/SplitsApi.md#settle) | **PATCH** /api/splits/settle/{splitId} | Mark a split as settled
 *SplitsApi* | [**unsettle**](docs/SplitsApi.md#unsettle) | **PATCH** /api/splits/unsettle/{splitId} | Reverse a settlement on a split
 *StatisticsApi* | [**get_category_stats**](docs/StatisticsApi.md#get_category_stats) | **GET** /api/stats/category-summary | Get stats for a specific category by range
-*StatisticsApi* | [**get_stats**](docs/StatisticsApi.md#get_stats) | **GET** /api/stats/summary | Get aggregated stats by range (weekly/monthly/yearly/custom)
+*StatisticsApi* | [**get_stats**](docs/StatisticsApi.md#get_stats) | **GET** /api/stats/summary | Get aggregated stats by range (weekly/monthly/yearly/fiveYearly/tenYearly/custom)
 *TransactionsApi* | [**create1**](docs/TransactionsApi.md#create1) | **POST** /api/transactions | Create a transaction or transfer
 *TransactionsApi* | [**delete1**](docs/TransactionsApi.md#delete1) | **DELETE** /api/transactions/{id} | Delete a transaction or transfer
 *TransactionsApi* | [**get_all1**](docs/TransactionsApi.md#get_all1) | **GET** /api/transactions | List transactions with optional filters
@@ -153,6 +154,7 @@ Class | Method | HTTP request | Description
 *TransactionsApi* | [**get_my_total_expense**](docs/TransactionsApi.md#get_my_total_expense) | **GET** /api/transactions/total-expense | Get total expense in a date range
 *TransactionsApi* | [**get_my_total_income**](docs/TransactionsApi.md#get_my_total_income) | **GET** /api/transactions/total-income | Get total income in a date range
 *TransactionsApi* | [**get_yearly_summaries**](docs/TransactionsApi.md#get_yearly_summaries) | **GET** /api/transactions/summary/yearly | Yearly summaries
+*TransactionsApi* | [**search_transactions**](docs/TransactionsApi.md#search_transactions) | **GET** /api/transactions/search | Search transactions across all time periods
 *TransactionsApi* | [**update**](docs/TransactionsApi.md#update) | **PUT** /api/transactions/{id} | Update a transaction or transfer
 *UserCurrenciesApi* | [**delete**](docs/UserCurrenciesApi.md#delete) | **DELETE** /api/user-currencies/{code} | Remove a currency from the current user
 *UserCurrenciesApi* | [**get_all**](docs/UserCurrenciesApi.md#get_all) | **GET** /api/user-currencies | List currencies configured for the current user
@@ -173,6 +175,7 @@ Class | Method | HTTP request | Description
  - [Account](docs/Account.md)
  - [AccountSaveRequest](docs/AccountSaveRequest.md)
  - [AllocateFunds200Response](docs/AllocateFunds200Response.md)
+ - [AnalyticsResponseDTO](docs/AnalyticsResponseDTO.md)
  - [AuthicationRequest](docs/AuthicationRequest.md)
  - [BudgetAllocationRequestDTO](docs/BudgetAllocationRequestDTO.md)
  - [BudgetCategoryDTO](docs/BudgetCategoryDTO.md)
@@ -199,6 +202,7 @@ Class | Method | HTTP request | Description
  - [GetById3200Response](docs/GetById3200Response.md)
  - [GetById4200Response](docs/GetById4200Response.md)
  - [GetByName200Response](docs/GetByName200Response.md)
+ - [GetChartData200Response](docs/GetChartData200Response.md)
  - [GetMyAccountBalances200Response](docs/GetMyAccountBalances200Response.md)
  - [GetMySummary200Response](docs/GetMySummary200Response.md)
  - [GetMyTotalIncome200Response](docs/GetMyTotalIncome200Response.md)
@@ -211,7 +215,9 @@ Class | Method | HTTP request | Description
  - [ListMine200Response](docs/ListMine200Response.md)
  - [LoginRequest](docs/LoginRequest.md)
  - [Me200Response](docs/Me200Response.md)
+ - [NamedSeriesDTO](docs/NamedSeriesDTO.md)
  - [RecurringTransaction](docs/RecurringTransaction.md)
+ - [SearchTransactions200Response](docs/SearchTransactions200Response.md)
  - [ShowByPhone200Response](docs/ShowByPhone200Response.md)
  - [Split](docs/Split.md)
  - [SplitDetailDTO](docs/SplitDetailDTO.md)
@@ -221,6 +227,8 @@ Class | Method | HTTP request | Description
  - [TransactionDetailDTO](docs/TransactionDetailDTO.md)
  - [TransactionPeriodSummaryDTO](docs/TransactionPeriodSummaryDTO.md)
  - [TransactionRequest](docs/TransactionRequest.md)
+ - [TransactionSearchHitDTO](docs/TransactionSearchHitDTO.md)
+ - [TransactionSearchResultDTO](docs/TransactionSearchResultDTO.md)
  - [TransactionSummaryDTO](docs/TransactionSummaryDTO.md)
  - [TransactionsPageDTO](docs/TransactionsPageDTO.md)
  - [UpdateProfile200Response](docs/UpdateProfile200Response.md)

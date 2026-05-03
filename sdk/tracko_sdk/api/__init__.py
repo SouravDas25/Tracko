@@ -2,6 +2,7 @@
 
 # import apis into api package
 from tracko_sdk.api.accounts_api import AccountsApi
+from tracko_sdk.api.analytics_api import AnalyticsApi
 from tracko_sdk.api.authentication_api import AuthenticationApi
 from tracko_sdk.api.budget_api import BudgetApi
 from tracko_sdk.api.categories_api import CategoriesApi

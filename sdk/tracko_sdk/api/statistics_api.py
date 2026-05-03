@@ -447,7 +447,7 @@ class StatisticsApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> GetStats200Response:
-        """Get aggregated stats by range (weekly/monthly/yearly/custom)
+        """Get aggregated stats by range (weekly/monthly/yearly/fiveYearly/tenYearly/custom)
 
 
         :param range: (required)
@@ -533,7 +533,7 @@ class StatisticsApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ApiResponse[GetStats200Response]:
-        """Get aggregated stats by range (weekly/monthly/yearly/custom)
+        """Get aggregated stats by range (weekly/monthly/yearly/fiveYearly/tenYearly/custom)
 
 
         :param range: (required)
@@ -619,7 +619,7 @@ class StatisticsApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Get aggregated stats by range (weekly/monthly/yearly/custom)
+        """Get aggregated stats by range (weekly/monthly/yearly/fiveYearly/tenYearly/custom)
 
 
         :param range: (required)

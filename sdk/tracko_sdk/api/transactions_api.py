@@ -17,14 +17,16 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from typing_extensions import Annotated
 
 from datetime import datetime
-from pydantic import StrictBool, StrictInt, StrictStr
-from typing import Optional
+from pydantic import Field, StrictBool, StrictFloat, StrictInt, StrictStr
+from typing import Optional, Union
+from typing_extensions import Annotated
 from tracko_sdk.models.delete1200_response import Delete1200Response
 from tracko_sdk.models.get_all1200_response import GetAll1200Response
 from tracko_sdk.models.get_by_id200_response import GetById200Response
 from tracko_sdk.models.get_my_summary200_response import GetMySummary200Response
 from tracko_sdk.models.get_my_total_income200_response import GetMyTotalIncome200Response
 from tracko_sdk.models.get_yearly_summaries200_response import GetYearlySummaries200Response
+from tracko_sdk.models.search_transactions200_response import SearchTransactions200Response
 from tracko_sdk.models.transaction_request import TransactionRequest
 
 from tracko_sdk.api_client import ApiClient, RequestSerialized
@@ -2711,6 +2713,451 @@ class TransactionsApi:
         return self.api_client.param_serialize(
             method='GET',
             resource_path='/api/transactions/summary/yearly',
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth
+        )
+
+
+
+
+    @validate_call
+    def search_transactions(
+        self,
+        query: Annotated[str, Field(min_length=0, strict=True, max_length=200)],
+        page: Optional[StrictInt] = None,
+        size: Optional[StrictInt] = None,
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None,
+        min_amount: Optional[Union[StrictFloat, StrictInt]] = None,
+        max_amount: Optional[Union[StrictFloat, StrictInt]] = None,
+        account_ids: Optional[StrictStr] = None,
+        category_id: Optional[StrictInt] = None,
+        fuzzy_threshold: Optional[Union[StrictFloat, StrictInt]] = None,
+        expand: Optional[StrictBool] = None,
+        _request_timeout: Union[
+            None,
+            Annotated[StrictFloat, Field(gt=0)],
+            Tuple[
+                Annotated[StrictFloat, Field(gt=0)],
+                Annotated[StrictFloat, Field(gt=0)]
+            ]
+        ] = None,
+        _request_auth: Optional[Dict[StrictStr, Any]] = None,
+        _content_type: Optional[StrictStr] = None,
+        _headers: Optional[Dict[StrictStr, Any]] = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> SearchTransactions200Response:
+        """Search transactions across all time periods
+
+
+        :param query: (required)
+        :type query: str
+        :param page:
+        :type page: int
+        :param size:
+        :type size: int
+        :param start_date:
+        :type start_date: datetime
+        :param end_date:
+        :type end_date: datetime
+        :param min_amount:
+        :type min_amount: float
+        :param max_amount:
+        :type max_amount: float
+        :param account_ids:
+        :type account_ids: str
+        :param category_id:
+        :type category_id: int
+        :param fuzzy_threshold:
+        :type fuzzy_threshold: float
+        :param expand:
+        :type expand: bool
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """ # noqa: E501
+
+        _param = self._search_transactions_serialize(
+            query=query,
+            page=page,
+            size=size,
+            start_date=start_date,
+            end_date=end_date,
+            min_amount=min_amount,
+            max_amount=max_amount,
+            account_ids=account_ids,
+            category_id=category_id,
+            fuzzy_threshold=fuzzy_threshold,
+            expand=expand,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index
+        )
+
+        _response_types_map: Dict[str, Optional[str]] = {
+            '200': "SearchTransactions200Response",
+        }
+        response_data = self.api_client.call_api(
+            *_param,
+            _request_timeout=_request_timeout
+        )
+        response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+
+    @validate_call
+    def search_transactions_with_http_info(
+        self,
+        query: Annotated[str, Field(min_length=0, strict=True, max_length=200)],
+        page: Optional[StrictInt] = None,
+        size: Optional[StrictInt] = None,
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None,
+        min_amount: Optional[Union[StrictFloat, StrictInt]] = None,
+        max_amount: Optional[Union[StrictFloat, StrictInt]] = None,
+        account_ids: Optional[StrictStr] = None,
+        category_id: Optional[StrictInt] = None,
+        fuzzy_threshold: Optional[Union[StrictFloat, StrictInt]] = None,
+        expand: Optional[StrictBool] = None,
+        _request_timeout: Union[
+            None,
+            Annotated[StrictFloat, Field(gt=0)],
+            Tuple[
+                Annotated[StrictFloat, Field(gt=0)],
+                Annotated[StrictFloat, Field(gt=0)]
+            ]
+        ] = None,
+        _request_auth: Optional[Dict[StrictStr, Any]] = None,
+        _content_type: Optional[StrictStr] = None,
+        _headers: Optional[Dict[StrictStr, Any]] = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[SearchTransactions200Response]:
+        """Search transactions across all time periods
+
+
+        :param query: (required)
+        :type query: str
+        :param page:
+        :type page: int
+        :param size:
+        :type size: int
+        :param start_date:
+        :type start_date: datetime
+        :param end_date:
+        :type end_date: datetime
+        :param min_amount:
+        :type min_amount: float
+        :param max_amount:
+        :type max_amount: float
+        :param account_ids:
+        :type account_ids: str
+        :param category_id:
+        :type category_id: int
+        :param fuzzy_threshold:
+        :type fuzzy_threshold: float
+        :param expand:
+        :type expand: bool
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """ # noqa: E501
+
+        _param = self._search_transactions_serialize(
+            query=query,
+            page=page,
+            size=size,
+            start_date=start_date,
+            end_date=end_date,
+            min_amount=min_amount,
+            max_amount=max_amount,
+            account_ids=account_ids,
+            category_id=category_id,
+            fuzzy_threshold=fuzzy_threshold,
+            expand=expand,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index
+        )
+
+        _response_types_map: Dict[str, Optional[str]] = {
+            '200': "SearchTransactions200Response",
+        }
+        response_data = self.api_client.call_api(
+            *_param,
+            _request_timeout=_request_timeout
+        )
+        response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+
+    @validate_call
+    def search_transactions_without_preload_content(
+        self,
+        query: Annotated[str, Field(min_length=0, strict=True, max_length=200)],
+        page: Optional[StrictInt] = None,
+        size: Optional[StrictInt] = None,
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None,
+        min_amount: Optional[Union[StrictFloat, StrictInt]] = None,
+        max_amount: Optional[Union[StrictFloat, StrictInt]] = None,
+        account_ids: Optional[StrictStr] = None,
+        category_id: Optional[StrictInt] = None,
+        fuzzy_threshold: Optional[Union[StrictFloat, StrictInt]] = None,
+        expand: Optional[StrictBool] = None,
+        _request_timeout: Union[
+            None,
+            Annotated[StrictFloat, Field(gt=0)],
+            Tuple[
+                Annotated[StrictFloat, Field(gt=0)],
+                Annotated[StrictFloat, Field(gt=0)]
+            ]
+        ] = None,
+        _request_auth: Optional[Dict[StrictStr, Any]] = None,
+        _content_type: Optional[StrictStr] = None,
+        _headers: Optional[Dict[StrictStr, Any]] = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Search transactions across all time periods
+
+
+        :param query: (required)
+        :type query: str
+        :param page:
+        :type page: int
+        :param size:
+        :type size: int
+        :param start_date:
+        :type start_date: datetime
+        :param end_date:
+        :type end_date: datetime
+        :param min_amount:
+        :type min_amount: float
+        :param max_amount:
+        :type max_amount: float
+        :param account_ids:
+        :type account_ids: str
+        :param category_id:
+        :type category_id: int
+        :param fuzzy_threshold:
+        :type fuzzy_threshold: float
+        :param expand:
+        :type expand: bool
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """ # noqa: E501
+
+        _param = self._search_transactions_serialize(
+            query=query,
+            page=page,
+            size=size,
+            start_date=start_date,
+            end_date=end_date,
+            min_amount=min_amount,
+            max_amount=max_amount,
+            account_ids=account_ids,
+            category_id=category_id,
+            fuzzy_threshold=fuzzy_threshold,
+            expand=expand,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index
+        )
+
+        _response_types_map: Dict[str, Optional[str]] = {
+            '200': "SearchTransactions200Response",
+        }
+        response_data = self.api_client.call_api(
+            *_param,
+            _request_timeout=_request_timeout
+        )
+        return response_data.response
+
+
+    def _search_transactions_serialize(
+        self,
+        query,
+        page,
+        size,
+        start_date,
+        end_date,
+        min_amount,
+        max_amount,
+        account_ids,
+        category_id,
+        fuzzy_threshold,
+        expand,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: Dict[str, str] = {
+        }
+
+        _path_params: Dict[str, str] = {}
+        _query_params: List[Tuple[str, str]] = []
+        _header_params: Dict[str, Optional[str]] = _headers or {}
+        _form_params: List[Tuple[str, str]] = []
+        _files: Dict[str, str] = {}
+        _body_params: Optional[bytes] = None
+
+        # process the path parameters
+        # process the query parameters
+        if query is not None:
+            
+            _query_params.append(('query', query))
+            
+        if page is not None:
+            
+            _query_params.append(('page', page))
+            
+        if size is not None:
+            
+            _query_params.append(('size', size))
+            
+        if start_date is not None:
+            if isinstance(start_date, datetime):
+                _query_params.append(
+                    (
+                        'startDate',
+                        start_date.strftime(
+                            self.api_client.configuration.datetime_format
+                        )
+                    )
+                )
+            else:
+                _query_params.append(('startDate', start_date))
+            
+        if end_date is not None:
+            if isinstance(end_date, datetime):
+                _query_params.append(
+                    (
+                        'endDate',
+                        end_date.strftime(
+                            self.api_client.configuration.datetime_format
+                        )
+                    )
+                )
+            else:
+                _query_params.append(('endDate', end_date))
+            
+        if min_amount is not None:
+            
+            _query_params.append(('minAmount', min_amount))
+            
+        if max_amount is not None:
+            
+            _query_params.append(('maxAmount', max_amount))
+            
+        if account_ids is not None:
+            
+            _query_params.append(('accountIds', account_ids))
+            
+        if category_id is not None:
+            
+            _query_params.append(('categoryId', category_id))
+            
+        if fuzzy_threshold is not None:
+            
+            _query_params.append(('fuzzyThreshold', fuzzy_threshold))
+            
+        if expand is not None:
+            
+            _query_params.append(('expand', expand))
+            
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+
+        # set the HTTP header `Accept`
+        _header_params['Accept'] = self.api_client.select_header_accept(
+            [
+                'application/json'
+            ]
+        )
+
+
+        # authentication setting
+        _auth_settings: List[str] = [
+            'bearerAuth'
+        ]
+
+        return self.api_client.param_serialize(
+            method='GET',
+            resource_path='/api/transactions/search',
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,

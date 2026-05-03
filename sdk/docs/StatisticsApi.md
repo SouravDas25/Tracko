@@ -5,7 +5,7 @@ All URIs are relative to *http://localhost:8080*
 Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**get_category_stats**](StatisticsApi.md#get_category_stats) | **GET** /api/stats/category-summary | Get stats for a specific category by range
-[**get_stats**](StatisticsApi.md#get_stats) | **GET** /api/stats/summary | Get aggregated stats by range (weekly/monthly/yearly/custom)
+[**get_stats**](StatisticsApi.md#get_stats) | **GET** /api/stats/summary | Get aggregated stats by range (weekly/monthly/yearly/fiveYearly/tenYearly/custom)
 
 
 # **get_category_stats**
@@ -99,7 +99,7 @@ Name | Type | Description  | Notes
 # **get_stats**
 > GetStats200Response get_stats(range, transaction_type, account_id=account_id, var_date=var_date, start_date=start_date, end_date=end_date)
 
-Get aggregated stats by range (weekly/monthly/yearly/custom)
+Get aggregated stats by range (weekly/monthly/yearly/fiveYearly/tenYearly/custom)
 
 ### Example
 
@@ -139,7 +139,7 @@ with tracko_sdk.ApiClient(configuration) as api_client:
     end_date = '2013-10-20T19:20:30+01:00' # datetime |  (optional)
 
     try:
-        # Get aggregated stats by range (weekly/monthly/yearly/custom)
+        # Get aggregated stats by range (weekly/monthly/yearly/fiveYearly/tenYearly/custom)
         api_response = api_instance.get_stats(range, transaction_type, account_id=account_id, var_date=var_date, start_date=start_date, end_date=end_date)
         print("The response of StatisticsApi->get_stats:\n")
         pprint(api_response)
