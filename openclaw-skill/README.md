@@ -22,15 +22,25 @@ Talk to your OpenClaw agent in natural language and it will manage your expenses
 
 ## Installation
 
-Copy the skill folder into your OpenClaw skills directory:
+### Linux / macOS
 
 ```bash
-# Linux / macOS
-cp -r openclaw-skill ~/.openclaw/skills/trako
-
-# Windows (PowerShell)
-Copy-Item -Recurse openclaw-skill $env:USERPROFILE\.openclaw\skills\trako
+curl -sL https://github.com/SouravDas25/Tracko/archive/refs/heads/main.tar.gz \
+  | tar xz --strip-components=1 -C /tmp Tracko-main/openclaw-skill
+cp -r /tmp/openclaw-skill ~/.openclaw/skills/trako
+rm -rf /tmp/openclaw-skill
 ```
+
+### Windows (PowerShell)
+
+```powershell
+Invoke-WebRequest -Uri "https://github.com/SouravDas25/Tracko/archive/refs/heads/main.zip" -OutFile "$env:TEMP\tracko.zip"
+Expand-Archive "$env:TEMP\tracko.zip" -DestinationPath "$env:TEMP\tracko" -Force
+Copy-Item -Recurse "$env:TEMP\tracko\Tracko-main\openclaw-skill" "$env:USERPROFILE\.openclaw\skills\trako"
+Remove-Item -Recurse -Force "$env:TEMP\tracko", "$env:TEMP\tracko.zip"
+```
+
+### Then configure your agent
 
 Add `trako` to your agent's `config.yaml`:
 

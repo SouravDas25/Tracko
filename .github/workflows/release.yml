@@ -1,4 +1,4 @@
-name: Build & Release Trako CLI
+name: Build & Release Trako
 
 on:
   push:
