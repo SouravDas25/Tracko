@@ -178,6 +178,6 @@ tasks:
     vars:
       VMID: 303
       NODE: chiki
-      IMAGE: docker.io/sd25/tracko-app:latest
+      IMAGE: docker.io/sd25/trako:latest
     cmds:
       - cmd: pve-oci deploy --vmid "{{.VMID}}" --node "{{.NODE}}" --image "{{.IMAGE}}"
