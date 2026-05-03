@@ -333,7 +333,7 @@ class _FilterPanelState extends State<FilterPanel> {
   /// Builds the filter content when expanded.
   Widget _buildFilterContent(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 0.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -410,10 +410,7 @@ class _FilterPanelState extends State<FilterPanel> {
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
           ),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 12,
-          ),
+          contentPadding: const EdgeInsets.fromLTRB(12, 20, 12, 12),
           suffixIcon: hasValue
               ? InkWell(
                   onTap: onClear,

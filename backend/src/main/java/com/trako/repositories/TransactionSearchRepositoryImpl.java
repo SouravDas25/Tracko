@@ -111,14 +111,29 @@ public class TransactionSearchRepositoryImpl implements TransactionSearchReposit
                 .where(cb.equal(accountRoot.get("userId"), userId));
         predicates.add(transaction.get("accountId").in(accountSubquery));
 
-        // Text search: for each token, create OR predicates with LIKE on name and comments
+        // Text search: for each token, create OR predicates with LIKE on name, comments, and amount
         if (queryTokens != null && !queryTokens.isEmpty()) {
             List<Predicate> tokenPredicates = new ArrayList<>();
             for (String token : queryTokens) {
                 String likePattern = "%" + token.toLowerCase() + "%";
                 Predicate nameLike = cb.like(cb.lower(transaction.get("name")), likePattern);
                 Predicate commentsLike = cb.like(cb.lower(transaction.get("comments")), likePattern);
-                tokenPredicates.add(cb.or(nameLike, commentsLike));
+
+                // Build list of OR predicates for this token
+                List<Predicate> orPredicates = new ArrayList<>();
+                orPredicates.add(nameLike);
+                orPredicates.add(commentsLike);
+
+                // If token is a valid number, also match against amount field
+                try {
+                    Double amountValue = Double.parseDouble(token);
+                    Predicate amountEquals = cb.equal(transaction.get("amount"), amountValue);
+                    orPredicates.add(amountEquals);
+                } catch (NumberFormatException ignored) {
+                    // Token is not a number, skip amount matching
+                }
+
+                tokenPredicates.add(cb.or(orPredicates.toArray(new Predicate[0])));
             }
             predicates.add(cb.and(tokenPredicates.toArray(new Predicate[0])));
         }
