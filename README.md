@@ -12,11 +12,11 @@ A full-stack expense management app: Flutter mobile UI, Spring Boot API, and a C
 
 ## Architecture
 
-```
-┌─────────────┐     ┌───────────────────┐     ┌─────────────────┐
-│   Flutter    │────▶│  Spring Boot API  │────▶│   PostgreSQL    │
-│  Mobile App  │     │  (Java 17, JWT)  │     │   (H2 in dev)   │
-└─────────────┘     └───────────────────┘     └─────────────────┘
+```mermaid
+graph LR
+    A["Flutter\nMobile App"] -->|REST| B["Spring Boot API\n(Java 17, JWT)"]
+    C["CLI\n(Python, Typer)"] -->|REST| B
+    B --> D["PostgreSQL\n(H2 in dev)"]
 ```
 
 | Component | Path | Tech |
@@ -29,31 +29,16 @@ A full-stack expense management app: Flutter mobile UI, Spring Boot API, and a C
 
 Download the latest binary from [GitHub Releases](https://github.com/SouravDas25/Tracko/releases/latest) — no Python needed.
 
+**Linux / macOS (one-liner):**
+```bash
+curl -fsSL https://raw.githubusercontent.com/SouravDas25/Tracko/main/scripts/install.sh | bash
+```
+
+This auto-detects your OS and architecture, downloads the right binary, and installs it to `/usr/local/bin`. Run the same command again to update.
+
 **Windows (PowerShell):**
 ```powershell
-mkdir $env:USERPROFILE\trako
-move $env:USERPROFILE\Downloads\trako-windows-x86_64.exe $env:USERPROFILE\trako\trako.exe
-[Environment]::SetEnvironmentVariable("Path", $env:Path + ";$env:USERPROFILE\trako", "User")
-# Restart terminal
-trako --help
-```
-
-**Linux (x86_64):**
-```bash
-curl -L https://github.com/SouravDas25/Tracko/releases/latest/download/trako-linux-x86_64 -o trako
-chmod +x trako && sudo mv trako /usr/local/bin/
-```
-
-**macOS (Apple Silicon):**
-```bash
-curl -L https://github.com/SouravDas25/Tracko/releases/latest/download/trako-macos-arm64 -o trako
-chmod +x trako && sudo mv trako /usr/local/bin/
-```
-
-**macOS (Intel):**
-```bash
-curl -L https://github.com/SouravDas25/Tracko/releases/latest/download/trako-macos-x86_64 -o trako
-chmod +x trako && sudo mv trako /usr/local/bin/
+irm https://raw.githubusercontent.com/SouravDas25/Tracko/main/scripts/install.ps1 | iex
 ```
 
 ## Quick Start
