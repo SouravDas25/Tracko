@@ -1,8 +1,6 @@
 package com.trako.integration.transaction;
 
-import com.trako.dtos.SearchRequestDTO;
-import com.trako.dtos.TransactionSearchHitDTO;
-import com.trako.dtos.TransactionSearchResultDTO;
+import com.jayway.jsonpath.JsonPath;
 import com.trako.entities.Account;
 import com.trako.entities.Category;
 import com.trako.entities.Transaction;
@@ -10,47 +8,33 @@ import com.trako.entities.User;
 import com.trako.enums.CategoryType;
 import com.trako.enums.TransactionDbType;
 import com.trako.integration.BaseIntegrationTest;
-import com.trako.services.TransactionSearchService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.RepeatedTest;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * Property-based test for Cross-Field Search Completeness.
- *
- * <p><b>Property 2: Cross-Field Search Completeness</b></p>
- * For any transaction where the search term appears in any searchable field,
- * verify the transaction is included in search results when the match meets
- * the fuzzy threshold.
- *
- * <p><b>Validates: Requirements 1.2, 2.1, 2.2</b></p>
- *
- * <p>Uses repeated tests with randomized unique search terms to simulate
- * property-based testing behavior. Transactions are created with a unique
- * search term placed in different fields (name, comments), then verified
- * that the full search flow via TransactionSearchService finds them all.</p>
+ * Validates: Requirements 1.2, 2.1, 2.2
  */
 @Transactional
 public class SearchCrossFieldPropertyTest extends BaseIntegrationTest {
 
-    @Autowired
-    private TransactionSearchService transactionSearchService;
-
     private static final Random RANDOM = new Random();
 
-    private User user;
+    private String token;
     private Account account;
     private Category category;
 
     @BeforeEach
     public void setup() {
-        user = createUniqueUser("CrossField Property User");
+        User user = createUniqueUser("CrossField Property User");
+        token = generateBearerToken(user);
 
         account = new Account();
         account.setName("CrossField Account");
@@ -65,185 +49,106 @@ public class SearchCrossFieldPropertyTest extends BaseIntegrationTest {
         category = categoryRepository.save(category);
     }
 
-    /**
-     * Property: a transaction with the search term in its NAME is found.
-     * Creates a transaction where only the name field contains the unique
-     * search term, then verifies the search service returns it.
-     */
     @RepeatedTest(5)
-    public void transactionWithSearchTermInNameIsFound() {
-        String uniqueTerm = generateUniqueTerm();
+    public void transactionWithSearchTermInNameIsFound() throws Exception {
+        String term = generateUniqueTerm();
+        Transaction tx = createTx(term + " expense item", "unrelated comment", 50.0);
 
-        // Create a transaction with the unique term only in the name
-        Transaction nameTransaction = createTransaction(
-                uniqueTerm + " expense item",
-                "unrelated comment text",
-                50.0);
-
-        SearchRequestDTO request = buildSearchRequest(uniqueTerm);
-        TransactionSearchResultDTO result = transactionSearchService.search(user.getId(), request);
-
-        Set<Long> returnedIds = extractTransactionIds(result);
-
-        assertTrue(returnedIds.contains(nameTransaction.getId()),
-                "Transaction with search term '" + uniqueTerm + "' in NAME (id="
-                        + nameTransaction.getId() + ") should be found by search service");
-        assertTrue(result.getTotalResults() >= 1,
-                "At least 1 result expected when searching for term in name field");
+        String response = searchRaw(term);
+        List<Integer> ids = JsonPath.read(response, "$.result.results[*].transaction.id");
+        Integer totalResults = JsonPath.read(response, "$.result.totalResults");
+        assertTrue(totalResults >= 1, "At least 1 result expected for name match");
+        assertTrue(ids.contains(tx.getId().intValue()),
+                "Transaction with term '" + term + "' in NAME should be found");
     }
 
-    /**
-     * Property: a transaction with the search term in its COMMENTS is found.
-     * Creates a transaction where only the comments field contains the unique
-     * search term, then verifies the search service returns it.
-     */
     @RepeatedTest(5)
-    public void transactionWithSearchTermInCommentsIsFound() {
-        String uniqueTerm = generateUniqueTerm();
+    public void transactionWithSearchTermInCommentsIsFound() throws Exception {
+        String term = generateUniqueTerm();
+        Transaction tx = createTx("generic payment", "note about " + term + " purchase", 75.0);
 
-        // Create a transaction with the unique term only in comments
-        Transaction commentsTransaction = createTransaction(
-                "generic payment",
-                "note about " + uniqueTerm + " purchase",
-                75.0);
-
-        SearchRequestDTO request = buildSearchRequest(uniqueTerm);
-        TransactionSearchResultDTO result = transactionSearchService.search(user.getId(), request);
-
-        Set<Long> returnedIds = extractTransactionIds(result);
-
-        assertTrue(returnedIds.contains(commentsTransaction.getId()),
-                "Transaction with search term '" + uniqueTerm + "' in COMMENTS (id="
-                        + commentsTransaction.getId() + ") should be found by search service");
-        assertTrue(result.getTotalResults() >= 1,
-                "At least 1 result expected when searching for term in comments field");
+        String response = searchRaw(term);
+        List<Integer> ids = JsonPath.read(response, "$.result.results[*].transaction.id");
+        Integer totalResults = JsonPath.read(response, "$.result.totalResults");
+        assertTrue(totalResults >= 1, "At least 1 result expected for comments match");
+        assertTrue(ids.contains(tx.getId().intValue()),
+                "Transaction with term '" + term + "' in COMMENTS should be found");
     }
 
-    /**
-     * Property: both name and comments matches are returned in a single search.
-     * Creates two transactions — one with the search term in name, another with
-     * it in comments — then verifies both appear in the results.
-     */
     @RepeatedTest(5)
-    public void bothNameAndCommentsMatchesAreReturned() {
-        String uniqueTerm = generateUniqueTerm();
+    public void bothNameAndCommentsMatchesAreReturned() throws Exception {
+        String term = generateUniqueTerm();
+        Transaction nameTx = createTx(term + " store visit", "paid with card", 30.0);
+        Transaction commentsTx = createTx("regular purchase", "related to " + term + " order", 60.0);
 
-        // Transaction with term in name only
-        Transaction nameTransaction = createTransaction(
-                uniqueTerm + " store visit",
-                "paid with card",
-                30.0);
-
-        // Transaction with term in comments only
-        Transaction commentsTransaction = createTransaction(
-                "regular purchase",
-                "related to " + uniqueTerm + " order",
-                60.0);
-
-        SearchRequestDTO request = buildSearchRequest(uniqueTerm);
-        TransactionSearchResultDTO result = transactionSearchService.search(user.getId(), request);
-
-        Set<Long> returnedIds = extractTransactionIds(result);
-
-        assertTrue(returnedIds.contains(nameTransaction.getId()),
-                "Transaction with search term '" + uniqueTerm + "' in NAME (id="
-                        + nameTransaction.getId() + ") should be in results");
-        assertTrue(returnedIds.contains(commentsTransaction.getId()),
-                "Transaction with search term '" + uniqueTerm + "' in COMMENTS (id="
-                        + commentsTransaction.getId() + ") should be in results");
-        assertTrue(result.getTotalResults() >= 2,
-                "At least 2 results expected when term appears in name and comments of different transactions");
+        String response = searchRaw(term);
+        List<Integer> ids = JsonPath.read(response, "$.result.results[*].transaction.id");
+        Integer totalResults = JsonPath.read(response, "$.result.totalResults");
+        assertTrue(totalResults >= 2, "At least 2 results expected when term in name and comments");
+        assertTrue(ids.contains(nameTx.getId().intValue()), "Name-match should be in results");
+        assertTrue(ids.contains(commentsTx.getId().intValue()), "Comments-match should be in results");
     }
 
-    /**
-     * Property: a transaction with the search term in both name and comments
-     * is found and reports matches in both fields.
-     */
     @RepeatedTest(3)
-    public void transactionWithTermInBothFieldsIsFoundWithBothMatched() {
-        String uniqueTerm = generateUniqueTerm();
+    public void transactionWithTermInBothFieldsReportsMatchedFields() throws Exception {
+        String term = generateUniqueTerm();
+        Transaction tx = createTx(term + " dinner", "enjoyed " + term + " restaurant", 45.0);
 
-        // Transaction with term in both name and comments
-        Transaction bothFieldsTransaction = createTransaction(
-                uniqueTerm + " dinner",
-                "enjoyed " + uniqueTerm + " restaurant",
-                45.0);
+        String response = mockMvc.perform(get("/api/transactions/search")
+                        .param("query", term).param("size", "100").param("expand", "true")
+                        .header("Authorization", token))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
 
-        SearchRequestDTO request = buildSearchRequest(uniqueTerm);
-        TransactionSearchResultDTO result = transactionSearchService.search(user.getId(), request);
+        List<Integer> ids = JsonPath.read(response, "$.result.results[*].transaction.id");
+        assertTrue(ids.contains(tx.getId().intValue()));
 
-        Set<Long> returnedIds = extractTransactionIds(result);
-
-        assertTrue(returnedIds.contains(bothFieldsTransaction.getId()),
-                "Transaction with search term '" + uniqueTerm + "' in BOTH name and comments (id="
-                        + bothFieldsTransaction.getId() + ") should be found");
-
-        // Verify the matched fields include both name and comments
-        Optional<TransactionSearchHitDTO> hit = result.getResults().stream()
-                .filter(h -> h.getTransaction().getId().equals(bothFieldsTransaction.getId()))
-                .findFirst();
-
-        assertTrue(hit.isPresent(), "Hit for transaction should be present in results");
-        List<String> matchedFields = hit.get().getMatchedFields();
-        assertNotNull(matchedFields, "matchedFields should not be null");
-        assertTrue(matchedFields.contains("name"),
-                "matchedFields should include 'name' when term appears in name. Actual: " + matchedFields);
-        assertTrue(matchedFields.contains("comments"),
-                "matchedFields should include 'comments' when term appears in comments. Actual: " + matchedFields);
+        // Find the hit and verify matchedFields
+        List<Map<String, Object>> results = JsonPath.read(response, "$.result.results[*]");
+        for (Map<String, Object> hit : results) {
+            Map<String, Object> transaction = (Map<String, Object>) hit.get("transaction");
+            if (Objects.equals(transaction.get("id"), tx.getId().intValue())) {
+                List<String> matchedFields = (List<String>) hit.get("matchedFields");
+                assertNotNull(matchedFields);
+                assertTrue(matchedFields.contains("name"));
+                assertTrue(matchedFields.contains("comments"));
+            }
+        }
     }
 
-    /**
-     * Property: transactions without the search term in any field are NOT returned.
-     * Creates a transaction with unrelated content and verifies it does not appear
-     * in results for the unique search term.
-     */
     @RepeatedTest(3)
-    public void transactionWithoutSearchTermIsNotReturned() {
-        String uniqueTerm = generateUniqueTerm();
+    public void transactionWithoutSearchTermIsNotReturned() throws Exception {
+        String term = generateUniqueTerm();
+        Transaction unrelated = createTx("completely different name", "no matching content", 100.0);
+        Transaction matching = createTx(term + " item", "some comment", 25.0);
 
-        // Transaction that does NOT contain the unique term
-        Transaction unrelatedTransaction = createTransaction(
-                "completely different name",
-                "no matching content here",
-                100.0);
-
-        // Transaction that DOES contain the unique term (to ensure search returns something)
-        Transaction matchingTransaction = createTransaction(
-                uniqueTerm + " item",
-                "some comment",
-                25.0);
-
-        SearchRequestDTO request = buildSearchRequest(uniqueTerm);
-        TransactionSearchResultDTO result = transactionSearchService.search(user.getId(), request);
-
-        Set<Long> returnedIds = extractTransactionIds(result);
-
-        assertTrue(returnedIds.contains(matchingTransaction.getId()),
-                "Matching transaction should be returned");
-        assertFalse(returnedIds.contains(unrelatedTransaction.getId()),
-                "Transaction without search term '" + uniqueTerm + "' in any field (id="
-                        + unrelatedTransaction.getId() + ") should NOT be in results");
+        List<Integer> ids = searchAndGetIds(term);
+        assertTrue(ids.contains(matching.getId().intValue()));
+        assertFalse(ids.contains(unrelated.getId().intValue()),
+                "Transaction without term should NOT be returned");
     }
 
-    // ---- Helper methods ----
+    private List<Integer> searchAndGetIds(String query) throws Exception {
+        String response = searchRaw(query);
+        return JsonPath.read(response, "$.result.results[*].transaction.id");
+    }
 
-    /**
-     * Generate a unique search term that won't collide with other test data.
-     * Uses a random alphabetic string to ensure uniqueness across repeated tests.
-     */
+    private String searchRaw(String query) throws Exception {
+        return mockMvc.perform(get("/api/transactions/search")
+                        .param("query", query).param("size", "100")
+                        .header("Authorization", token))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+    }
+
     private String generateUniqueTerm() {
         String chars = "abcdefghijklmnopqrstuvwxyz";
         StringBuilder sb = new StringBuilder("xfld");
-        for (int i = 0; i < 8; i++) {
-            sb.append(chars.charAt(RANDOM.nextInt(chars.length())));
-        }
+        for (int i = 0; i < 8; i++) sb.append(chars.charAt(RANDOM.nextInt(chars.length())));
         return sb.toString();
     }
 
-    /**
-     * Create and persist a transaction with the given name, comments, and amount.
-     */
-    private Transaction createTransaction(String name, String comments, double amount) {
+    private Transaction createTx(String name, String comments, double amount) {
         Transaction t = new Transaction();
         t.setName(name);
         t.setComments(comments);
@@ -255,30 +160,5 @@ public class SearchCrossFieldPropertyTest extends BaseIntegrationTest {
         t.setCategoryId(category.getId());
         t.setTransactionType(TransactionDbType.DEBIT);
         return transactionRepository.save(t);
-    }
-
-    /**
-     * Build a SearchRequestDTO for the given query with a large page size
-     * and the default fuzzy threshold.
-     */
-    private SearchRequestDTO buildSearchRequest(String query) {
-        SearchRequestDTO request = new SearchRequestDTO();
-        request.setQuery(query);
-        request.setPage(0);
-        request.setSize(100);
-        request.setFuzzyThreshold(0.7);
-        return request;
-    }
-
-    /**
-     * Extract transaction IDs from search results.
-     */
-    private Set<Long> extractTransactionIds(TransactionSearchResultDTO result) {
-        if (result.getResults() == null) {
-            return Collections.emptySet();
-        }
-        return result.getResults().stream()
-                .map(hit -> hit.getTransaction().getId())
-                .collect(Collectors.toSet());
     }
 }
