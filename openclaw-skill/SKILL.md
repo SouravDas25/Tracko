@@ -1,11 +1,13 @@
 ---
 name: trako
 description: >
-  Manage personal finances with the Trako expense tracker.
+  Manage personal finances with the Trako expense tracker CLI.
   Use when the user asks about expenses, income, transfers, transactions,
-  accounts, categories, balances, budgets, splits, or contacts.
-  Do NOT use for currency conversion or exchange rates.
-version: 1.0.0
+  accounts, categories, balances, budgets, splits, contacts, or spending stats.
+  Also use when the user says "I spent...", "I earned...", "move money...",
+  "how much did I spend", "what's my balance", "who owes me", or "transfer to...".
+  Do NOT use for currency conversion, exchange rates, or financial advice.
+version: 2.0.0
 user-invocable: true
 metadata:
   openclaw:
@@ -18,321 +20,137 @@ metadata:
 
 # Trako — Personal Finance Manager
 
-You have access to the `trako` CLI for managing personal finances.
-You can always pass `--raw` to every command so you receive JSON output you can parse.
+You have access to the `trako` CLI. Always pass `--raw` to get JSON output you can parse.
 
-## Important Rules
-
-1. Always run `trako account list --raw` and `trako category list --raw` first to resolve IDs before creating or updating transactions.
-2. The CLI supports `--account-name` and `--category-name` as alternatives to IDs for transaction commands — prefer names when the user provides them, as the CLI resolves them automatically.
-3. Dates must be in `YYYY-MM-DD` format.
-4. Currency codes are uppercase ISO 4217 (e.g. `INR`, `USD`, `EUR`).
-5. Commands that delete or settle require interactive confirmation in the terminal. There is no `--yes` flag. Warn the user they will see a prompt.
-6. When the user says "expense" they mean `add-expense`. When they say "income" they mean `add-income`. When they say "transfer" they mean `add-transfer`.
-7. If a command fails with an auth error, tell the user to run `trako auth login`.
+For full command syntax, read `references/commands.md`.
+For response JSON shapes, read `references/response-schemas.md`.
 
 ---
 
-## Setup & Health
+## Rules
 
-### Check if the API is reachable
-```
-trako health check --raw
-```
-
-### Login (interactive — prompts for password)
-```
-trako auth login --username "<username>"
-```
-
-### Switch config profile
-```
-trako config use <profile-name>
-```
+1. **Resolve IDs first.** Before any create/update, run `trako account list --raw` and `trako category list --raw` to get valid IDs/names. Never fabricate IDs.
+2. **Prefer names over IDs.** Use `--account-name` and `--category-name` when the user provides names — the CLI resolves them.
+3. **Dates:** `YYYY-MM-DD` format only.
+4. **Currency:** Uppercase ISO 4217 (`INR`, `USD`, `EUR`).
+5. **Destructive commands** (delete, settle) require interactive terminal confirmation. Warn the user: "Please confirm 'y' in your terminal."
+6. **Auth errors** → tell user to run `trako auth login`.
+7. **Context reuse:** If you already fetched accounts/categories in this conversation, don't fetch again.
+8. **Transaction list requires `--month` and `--year`** — they are not optional.
 
 ---
 
-## Accounts
+## Decision Tree
 
-### List all accounts
-```
-trako account list --raw
-```
+### Classify user intent:
 
-### Get account balances
-```
-trako account balances --raw
-```
+| User says... | Command |
+|---|---|
+| "I spent...", "bought...", "paid for..." | `add-expense` |
+| "I earned...", "received...", "got paid..." | `add-income` |
+| "move...", "transfer...", "shift to...", "send to my [account]" | `add-transfer` |
+| "how much did I spend" | `total-expense` or `stats summary` |
+| "how much did I earn" | `total-income` |
+| "show transactions", "what did I buy" | `transaction list` |
+| "find that...", "search for..." | `transaction search` |
+| "balance", "how much do I have" | `account balances` |
+| "budget", "how much is left" | `budget view` |
+| "who owes me", "splits" | `split unsettled` |
+| "spending breakdown", "stats" | `stats summary` |
 
-### Get a single account
-```
-trako account get <ID> --raw
-```
+### Ambiguous cases — ASK:
 
----
-
-## Categories
-
-### List all categories
-```
-trako category list --raw
-```
-Returns ID, name, and type (INCOME / EXPENSE) for each category.
+- "Add 500 to savings" → Is this income received, or a transfer from another account?
+- Amount mentioned but no type → "Is this an expense, income, or transfer?"
+- Account unclear + user has multiple → "Which account?" (show list)
+- Category unclear → Show matching categories and ask
 
 ---
 
-## Transactions
+## Transfers vs Expenses/Income
 
-### List transactions
-```
-trako transaction list --raw [--month M] [--year Y] [--page N] [--size N]
-```
-Defaults to current month if no month/year given. Response is paginated.
+Transfers are fundamentally different:
 
-### Search transactions
-```
-trako transaction search "<query>" --raw \
-  [--start-date YYYY-MM-DD] [--end-date YYYY-MM-DD] \
-  [--min-amount <NUMBER>] [--max-amount <NUMBER>] \
-  [--account-ids "1,2,3"] [--category-id <ID>] \
-  [--page N] [--size N]
-```
-Full-text fuzzy search across transaction names and comments. All filters are optional.
-Response includes `results`, `totalResults`, `page`, `totalPages`, `searchTimeMs`, and per-hit `relevanceScore` and `matchedFields`.
+| | Expense/Income | Transfer |
+|---|---|---|
+| Accounts | ONE account | TWO accounts (from + to) |
+| Category | Required | **NEVER** (no `--category-id`) |
+| Flags | `--account-name` | `--from-account-name` + `--to-account-name` |
+| Trigger words | "spent", "earned" | "move", "transfer", "shift" |
 
-### Get a single transaction
-```
-trako transaction get <ID> --raw
-```
-
-### Add an expense
-```
-trako transaction add-expense \
-  --amount <NUMBER> \
-  --name "<description>" \
-  --currency <CODE> \
-  --account-id <ID>    OR  --account-name "<name>" \
-  --category-id <ID>   OR  --category-name "<name>" \
-  [--comments "<text>"] \
-  [--date YYYY-MM-DD] \
-  [--exchange-rate <NUMBER>] \
-  --raw
-```
-Required: `--amount`, `--name`, `--currency`, one of account id/name, one of category id/name.
-If `--date` is omitted the CLI defaults to today.
-
-### Add an income
-```
-trako transaction add-income \
-  --amount <NUMBER> \
-  --name "<description>" \
-  --currency <CODE> \
-  --account-id <ID>    OR  --account-name "<name>" \
-  --category-id <ID>   OR  --category-name "<name>" \
-  [--comments "<text>"] \
-  [--date YYYY-MM-DD] \
-  [--exchange-rate <NUMBER>] \
-  --raw
-```
-Same required fields as add-expense.
-
-### Add a transfer
-```
-trako transaction add-transfer \
-  --amount <NUMBER> \
-  --currency <CODE> \
-  --from-account-id <ID>   OR  --from-account-name "<name>" \
-  --to-account-id <ID>     OR  --to-account-name "<name>" \
-  [--name "<description>"] \
-  [--comments "<text>"] \
-  [--date YYYY-MM-DD] \
-  --raw
-```
-Required: `--amount`, `--currency`, source account, destination account.
-Source and destination must be different accounts.
-
-### Update an expense
-```
-trako transaction update-expense <ID> \
-  [--amount <NUMBER>] \
-  [--name "<description>"] \
-  [--account-id <ID>] \
-  [--category-id <ID>] \
-  [--currency <CODE>] \
-  [--comments "<text>"] \
-  [--date YYYY-MM-DD] \
-  [--exchange-rate <NUMBER>] \
-  --raw
-```
-Only pass the fields you want to change.
-
-### Update an income
-```
-trako transaction update-income <ID> \
-  [--amount <NUMBER>] \
-  [--name "<description>"] \
-  [--account-id <ID>] \
-  [--category-id <ID>] \
-  [--currency <CODE>] \
-  [--comments "<text>"] \
-  [--date YYYY-MM-DD] \
-  [--exchange-rate <NUMBER>] \
-  --raw
-```
-
-### Update a transfer
-```
-trako transaction update-transfer <ID> \
-  [--amount <NUMBER>] \
-  [--name "<description>"] \
-  [--from-account-id <ID>] \
-  [--to-account-id <ID>] \
-  [--comments "<text>"] \
-  [--date YYYY-MM-DD] \
-  --raw
-```
-
-### Delete a transaction
-```
-trako transaction delete <ID>
-```
-Requires interactive confirmation. Tell the user: "Please confirm 'y' in your terminal."
-
-### Transaction summary
-```
-trako transaction summary --raw [--start-date YYYY-MM-DD] [--end-date YYYY-MM-DD] [--account-ids "1,2,3"]
-```
-
-### Total income in a date range
-```
-trako transaction total-income --start-date YYYY-MM-DD --end-date YYYY-MM-DD --raw
-```
-
-### Total expense in a date range
-```
-trako transaction total-expense --start-date YYYY-MM-DD --end-date YYYY-MM-DD --raw
-```
+**Before any transfer:** confirm both account names exist via `trako account list --raw`. If user only names one account, ask: "From which account, and to which?"
 
 ---
 
-## Budgets
+## Output Presentation
 
-### View budget for a month
-```
-trako budget view --raw [--month M] [--year Y]
-```
-Defaults to current month/year. Shows total budget, income, spent, available, and per-category allocations.
+Never dump raw JSON to the user. Summarize naturally:
 
-### View current month's budget
-```
-trako budget current --raw
-```
+- **Transaction added:** "✅ Added ₹500 expense 'Groceries' to Cash (May 3)"
+- **Balances:** One line per account: "Cash: ₹12,500 · Savings: ₹45,000 · Axis: -₹1,43,664"
+- **Transaction list:** Brief table — Date | Name | Amount | Account
+- **Budget:** Show categories with spend vs allocated: "FOOD: ₹3,200 / ₹5,000 (₹1,800 left)"
+- **Totals:** "You spent ₹36,211 this month"
+- **Splits:** "Rahul owes you ₹250 (from 'Dinner' on Apr 15)"
+- **Errors:** Explain what went wrong and what to do next
 
-### Allocate budget to a category
-```
-trako budget allocate --category-id <ID> --amount <NUMBER> --raw [--month M] [--year Y]
-```
-
-### Get available amount to assign
-```
-trako budget available --raw [--month M] [--year Y]
-```
+Use ₹ for INR, $ for USD, € for EUR. Use Indian number formatting for INR (₹1,43,664).
 
 ---
 
-## Contacts
+## Guard Clauses
 
-### List contacts
-```
-trako contact list --raw
-```
+### Before creating a transaction:
+1. Do you have the account name/ID? If not → `account list --raw`
+2. Do you have the category name/ID? (skip for transfers) If not → `category list --raw`
+3. Is the amount specified? If not → ask
+4. Is the type clear (expense/income/transfer)? If not → ask
 
----
+### Before deleting:
+1. Show the transaction details to the user first
+2. Get explicit confirmation
+3. Warn about terminal prompt
 
-## Splits
-
-### List all splits
-```
-trako split list --raw
-```
-
-### Create a split
-```
-trako split create --transaction-id <ID> --user-id "<uid>" --amount <NUMBER> [--contact-id <ID>] --raw
-```
-
-### View unsettled splits
-```
-trako split unsettled --raw
-```
-
-### Settle a split (interactive confirmation)
-```
-trako split settle <ID>
-```
-
-### Get splits for a transaction
-```
-trako split for-transaction <TRANSACTION_ID> --raw
-```
-
-### Get splits for a contact
-```
-trako split for-contact <CONTACT_ID> --raw
-```
+### Before settling a split:
+1. Show split details (who, amount, which transaction)
+2. Get confirmation
+3. Warn about terminal prompt
 
 ---
 
-## Statistics
+## Multi-step Workflows
 
-### Spending/income summary
-```
-trako stats summary --range <RANGE> --type <TYPE> --raw [--start-date YYYY-MM-DD] [--end-date YYYY-MM-DD]
-```
-Ranges: `WEEK`, `MONTH`, `YEAR`, `FIVE_YEAR`, `TEN_YEAR`, `CUSTOM` (requires start/end dates).
-Types: `INCOME`, `EXPENSE`.
+### "I spent 500 on groceries, split with Rahul"
+1. `account list --raw` + `category list --raw` (if not cached)
+2. `add-expense` → note the returned transaction ID
+3. `split create --transaction-id <ID> --user-id "rahul" --amount 250 --raw`
 
-### Category-level stats
-```
-trako stats category-summary --category-id <ID> --range <RANGE> --type <TYPE> --raw
-```
+### "How much did I spend on food this month?"
+1. `category list --raw` → find food category ID
+2. `stats category-summary --category-id <ID> --range monthly --type DEBIT --raw`
+
+### "Show my spending breakdown this month"
+1. `stats summary --range monthly --type DEBIT --raw`
+   - Note: stats `--type` uses `DEBIT` (not EXPENSE) and `CREDIT` (not INCOME)
+   - Note: stats `--range` uses camelCase: `weekly`, `monthly`, `yearly`, `fiveYearly`, `tenYearly`, `custom`
+
+### "Transfer 1000 from Savings to Cash"
+1. `account list --raw` → confirm both exist
+2. `add-transfer --amount 1000 --currency INR --from-account-name "Savings" --to-account-name "Cash" --raw`
 
 ---
 
-## Common Workflows
+## Known Issues
 
-### "I spent 500 on groceries"
-1. `trako account list --raw` → find the account
-2. `trako category list --raw` → find the food/grocery category
-3. `trako transaction add-expense --amount 500 --name "Groceries" --currency INR --category-name "FOOD" --account-name "Cash" --raw`
+- `stats summary` may crash with a deserialization error (backend returns int, SDK expects string for transactionType). If it fails, fall back to `transaction summary` for totals.
+- `transaction search` is not yet released. If it fails with "No such command", tell the user search isn't available yet and offer to list transactions by month instead.
 
-### "How much did I spend this month?"
-```
-trako transaction total-expense --start-date 2026-03-01 --end-date 2026-03-31 --raw
-```
-Or for a breakdown: `trako stats summary --range MONTH --type EXPENSE --raw`
+---
 
-### "Show my balances"
-```
-trako account balances --raw
-```
+## Limitations
 
-### "Move 1000 from Savings to Cash"
-```
-trako transaction add-transfer --amount 1000 --currency INR --from-account-name "Savings" --to-account-name "Cash" --raw
-```
-
-### "What's my budget looking like?"
-```
-trako budget view --raw
-```
-
-### "Who owes me money?"
-```
-trako split unsettled --raw
-```
-
-### "Find that restaurant transaction from last year"
-```
-trako transaction search "restaurant" --start-date 2025-01-01 --end-date 2025-12-31 --raw
-```
+- Cannot create new accounts or categories (only list existing ones)
+- Cannot do currency conversion or exchange rate lookups
+- Cannot batch-delete transactions
+- Delete and settle require terminal confirmation — cannot be fully automated
+- No `--yes` or `--force` flag exists for any destructive command
