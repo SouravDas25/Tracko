@@ -101,28 +101,6 @@ def get(
 
 
 @app.command()
-def find_phone(
-    phone: str = typer.Argument(..., help="Phone number"),
-    raw: bool = typer.Option(False, "--raw", help="Output raw JSON"),
-):
-    """Find user by phone number."""
-    base_url, token = get_config_for_api()
-
-    try:
-        with spinner(f"Searching for phone {phone}..."):
-            with get_api_client(base_url, token) as client:
-                result = unwrap_envelope(tracko_sdk.UsersApi(client).show_by_phone(phone_no=phone))
-
-        print_json(result)
-
-    except ApiException as e:
-        handle_api_error(e)
-    except (ConnectionError, MaxRetryError, NewConnectionError, OSError):
-        print_error("Could not connect to API. Is the server running?")
-        sys.exit(1)
-
-
-@app.command()
 def upsert(
     name: str = typer.Option(..., "--name", "-n", help="User name"),
     email: Optional[str] = typer.Option(None, "--email", "-e", help="Email address"),

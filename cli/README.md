@@ -70,7 +70,7 @@ All commands follow the pattern: `trako <group> <command> [options]`
 | `stats` | Spending analytics | `summary`, `category-summary` |
 | `currency` | Multi-currency management | `list`, `add`, `update`, `delete` |
 | `exchange` | Live exchange rates | `get` |
-| `user` | User management | `me`, `list`, `find-phone` |
+| `user` | User management | `me`, `list`, `get`, `upsert` |
 | `config` | CLI profiles | `list`, `show`, `use`, `set` |
 | `store` | Key-value JSON storage | `list`, `get`, `create`, `update`, `delete` |
 | `db` | Database operations | `seed` |

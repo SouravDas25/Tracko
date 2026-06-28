@@ -10,14 +10,15 @@ Name | Type | Description | Notes
 **phone_no** | **str** |  | 
 **email** | **str** |  | [optional] 
 **profile_pic** | **str** |  | [optional] 
-**password** | **str** |  | [optional] 
 **global_id** | **str** |  | [optional] 
 **base_currency** | **str** |  | [optional] 
 **is_shadow** | **int** |  | [optional] 
 **is_admin** | **int** |  | [optional] 
+**created_at** | **datetime** |  | [optional] 
+**updated_at** | **datetime** |  | [optional] 
 **secondary_currencies** | [**List[UserCurrency]**](UserCurrency.md) |  | [optional] 
-**shadow** | **bool** |  | [optional] 
 **admin** | **bool** |  | [optional] 
+**shadow** | **bool** |  | [optional] 
 
 ## Example
 

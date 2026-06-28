@@ -14,10 +14,10 @@
 
 import unittest
 
-from tracko_sdk.models.show_by_phone200_response import ShowByPhone200Response
+from tracko_sdk.models.show200_response import Show200Response
 
-class TestShowByPhone200Response(unittest.TestCase):
-    """ShowByPhone200Response unit test stubs"""
+class TestShow200Response(unittest.TestCase):
+    """Show200Response unit test stubs"""
 
     def setUp(self):
         pass
@@ -25,16 +25,16 @@ class TestShowByPhone200Response(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def make_instance(self, include_optional) -> ShowByPhone200Response:
-        """Test ShowByPhone200Response
+    def make_instance(self, include_optional) -> Show200Response:
+        """Test Show200Response
             include_option is a boolean, when False only required
             params are included, when True both required and
             optional params are included """
-        # uncomment below to create an instance of `ShowByPhone200Response`
+        # uncomment below to create an instance of `Show200Response`
         """
-        model = ShowByPhone200Response()
+        model = Show200Response()
         if include_optional:
-            return ShowByPhone200Response(
+            return Show200Response(
                 result = [
                     tracko_sdk.models.user.User(
                         id = '', 
@@ -42,29 +42,30 @@ class TestShowByPhone200Response(unittest.TestCase):
                         phone_no = '', 
                         email = '', 
                         profile_pic = '', 
-                        password = '', 
                         global_id = '', 
                         base_currency = '', 
                         is_shadow = 56, 
                         is_admin = 56, 
+                        created_at = datetime.datetime.strptime('2013-10-20 19:20:30.00', '%Y-%m-%d %H:%M:%S.%f'), 
+                        updated_at = datetime.datetime.strptime('2013-10-20 19:20:30.00', '%Y-%m-%d %H:%M:%S.%f'), 
                         secondary_currencies = [
                             tracko_sdk.models.user_currency.UserCurrency(
                                 id = 56, 
                                 currency_code = '', 
                                 exchange_rate = 1.337, )
                             ], 
-                        shadow = True, 
-                        admin = True, )
+                        admin = True, 
+                        shadow = True, )
                     ],
                 message = 'Resource retrieved successfully'
             )
         else:
-            return ShowByPhone200Response(
+            return Show200Response(
         )
         """
 
-    def testShowByPhone200Response(self):
-        """Test ShowByPhone200Response"""
+    def testShow200Response(self):
+        """Test Show200Response"""
         # inst_req_only = self.make_instance(include_optional=False)
         # inst_req_and_optional = self.make_instance(include_optional=True)
 

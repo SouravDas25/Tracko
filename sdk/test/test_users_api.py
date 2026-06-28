@@ -68,13 +68,6 @@ class TestUsersApi(unittest.TestCase):
         """
         pass
 
-    def test_show_by_phone(self) -> None:
-        """Test case for show_by_phone
-
-        Look up a user by phone number
-        """
-        pass
-
     def test_update_profile(self) -> None:
         """Test case for update_profile
 

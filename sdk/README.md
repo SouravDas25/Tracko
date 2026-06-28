@@ -166,7 +166,6 @@ Class | Method | HTTP request | Description
 *UsersApi* | [**reset_transactions**](docs/UsersApi.md#reset_transactions) | **DELETE** /api/user/transactions | Reset only transactions for the current user
 *UsersApi* | [**show**](docs/UsersApi.md#show) | **GET** /api/user | List users (admin) or get a user by ID
 *UsersApi* | [**show1**](docs/UsersApi.md#show1) | **GET** /api/user/{id} | List users (admin) or get a user by ID
-*UsersApi* | [**show_by_phone**](docs/UsersApi.md#show_by_phone) | **GET** /api/user/byPhoneNo | Look up a user by phone number
 *UsersApi* | [**update_profile**](docs/UsersApi.md#update_profile) | **POST** /api/user/me | Update the current user&#39;s profile
 
 
@@ -218,7 +217,7 @@ Class | Method | HTTP request | Description
  - [NamedSeriesDTO](docs/NamedSeriesDTO.md)
  - [RecurringTransaction](docs/RecurringTransaction.md)
  - [SearchTransactions200Response](docs/SearchTransactions200Response.md)
- - [ShowByPhone200Response](docs/ShowByPhone200Response.md)
+ - [Show200Response](docs/Show200Response.md)
  - [Split](docs/Split.md)
  - [SplitDetailDTO](docs/SplitDetailDTO.md)
  - [StatsPointDTO](docs/StatsPointDTO.md)

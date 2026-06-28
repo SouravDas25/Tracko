@@ -10,7 +10,6 @@ Method | HTTP request | Description
 [**reset_transactions**](UsersApi.md#reset_transactions) | **DELETE** /api/user/transactions | Reset only transactions for the current user
 [**show**](UsersApi.md#show) | **GET** /api/user | List users (admin) or get a user by ID
 [**show1**](UsersApi.md#show1) | **GET** /api/user/{id} | List users (admin) or get a user by ID
-[**show_by_phone**](UsersApi.md#show_by_phone) | **GET** /api/user/byPhoneNo | Look up a user by phone number
 [**update_profile**](UsersApi.md#update_profile) | **POST** /api/user/me | Update the current user&#39;s profile
 
 
@@ -308,7 +307,7 @@ This endpoint does not need any parameter.
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **show**
-> ShowByPhone200Response show()
+> Show200Response show()
 
 List users (admin) or get a user by ID
 
@@ -318,7 +317,7 @@ List users (admin) or get a user by ID
 
 ```python
 import tracko_sdk
-from tracko_sdk.models.show_by_phone200_response import ShowByPhone200Response
+from tracko_sdk.models.show200_response import Show200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -360,7 +359,7 @@ This endpoint does not need any parameter.
 
 ### Return type
 
-[**ShowByPhone200Response**](ShowByPhone200Response.md)
+[**Show200Response**](Show200Response.md)
 
 ### Authorization
 
@@ -380,7 +379,7 @@ This endpoint does not need any parameter.
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **show1**
-> ShowByPhone200Response show1(id)
+> Show200Response show1(id)
 
 List users (admin) or get a user by ID
 
@@ -390,7 +389,7 @@ List users (admin) or get a user by ID
 
 ```python
 import tracko_sdk
-from tracko_sdk.models.show_by_phone200_response import ShowByPhone200Response
+from tracko_sdk.models.show200_response import Show200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -436,83 +435,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**ShowByPhone200Response**](ShowByPhone200Response.md)
-
-### Authorization
-
-[bearerAuth](../README.md#bearerAuth)
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-### HTTP response details
-
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-**200** | OK |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **show_by_phone**
-> ShowByPhone200Response show_by_phone(phone_no)
-
-Look up a user by phone number
-
-### Example
-
-* Bearer (JWT) Authentication (bearerAuth):
-
-```python
-import tracko_sdk
-from tracko_sdk.models.show_by_phone200_response import ShowByPhone200Response
-from tracko_sdk.rest import ApiException
-from pprint import pprint
-
-# Defining the host is optional and defaults to http://localhost:8080
-# See configuration.py for a list of all supported configuration parameters.
-configuration = tracko_sdk.Configuration(
-    host = "http://localhost:8080"
-)
-
-# The client must configure the authentication and authorization parameters
-# in accordance with the API server security policy.
-# Examples for each auth method are provided below, use the example that
-# satisfies your auth use case.
-
-# Configure Bearer authorization (JWT): bearerAuth
-configuration = tracko_sdk.Configuration(
-    access_token = os.environ["BEARER_TOKEN"]
-)
-
-# Enter a context with an instance of the API client
-with tracko_sdk.ApiClient(configuration) as api_client:
-    # Create an instance of the API class
-    api_instance = tracko_sdk.UsersApi(api_client)
-    phone_no = 'phone_no_example' # str | 
-
-    try:
-        # Look up a user by phone number
-        api_response = api_instance.show_by_phone(phone_no)
-        print("The response of UsersApi->show_by_phone:\n")
-        pprint(api_response)
-    except Exception as e:
-        print("Exception when calling UsersApi->show_by_phone: %s\n" % e)
-```
-
-
-
-### Parameters
-
-
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **phone_no** | **str**|  | 
-
-### Return type
-
-[**ShowByPhone200Response**](ShowByPhone200Response.md)
+[**Show200Response**](Show200Response.md)
 
 ### Authorization
 

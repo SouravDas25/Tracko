@@ -7,7 +7,6 @@ import com.trako.models.request.UserSaveRequest;
 import com.trako.services.UserService;
 import com.trako.util.Response;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -24,7 +23,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
-import java.util.List;
 
 
 @Tag(name = "Users", description = "User management and profile")
@@ -72,20 +70,6 @@ public class UserController {
     ResponseEntity<?> me() {
         User user = userService.loggedInUser();
         return Response.ok(user);
-    }
-
-    @Operation(summary = "Look up a user by phone number")
-    @ApiResponse(responseCode = "200", content = @Content(array = @ArraySchema(schema = @Schema(implementation = User.class))))
-    @GetMapping(value = "/byPhoneNo")
-    ResponseEntity<?> showByPhone(@RequestParam("phone_no") @NotBlank @Size(max = 32) String phoneNo) {
-        // prevent user enumeration; only allow lookup when authenticated
-        userService.loggedInUser();
-        User byPhoneNo = userService.findByPhoneNo(phoneNo);
-        if (byPhoneNo == null) {
-            return Response.ok("Resource Empty");
-        }
-        List<User> users = Collections.singletonList(byPhoneNo);
-        return Response.ok(users);
     }
 
     @Operation(summary = "Create a new user (admin only)")

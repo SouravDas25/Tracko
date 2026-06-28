@@ -91,7 +91,7 @@ from tracko_sdk.models.me200_response import Me200Response
 from tracko_sdk.models.named_series_dto import NamedSeriesDTO
 from tracko_sdk.models.recurring_transaction import RecurringTransaction
 from tracko_sdk.models.search_transactions200_response import SearchTransactions200Response
-from tracko_sdk.models.show_by_phone200_response import ShowByPhone200Response
+from tracko_sdk.models.show200_response import Show200Response
 from tracko_sdk.models.split import Split
 from tracko_sdk.models.split_detail_dto import SplitDetailDTO
 from tracko_sdk.models.stats_point_dto import StatsPointDTO

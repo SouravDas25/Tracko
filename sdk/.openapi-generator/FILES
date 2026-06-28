@@ -59,7 +59,7 @@ docs/NamedSeriesDTO.md
 docs/RecurringTransaction.md
 docs/RecurringTransactionsApi.md
 docs/SearchTransactions200Response.md
-docs/ShowByPhone200Response.md
+docs/Show200Response.md
 docs/Split.md
 docs/SplitDetailDTO.md
 docs/SplitsApi.md
@@ -90,6 +90,7 @@ setup.cfg
 setup.py
 test-requirements.txt
 test/__init__.py
+test/test_show200_response.py
 tox.ini
 tracko_sdk/__init__.py
 tracko_sdk/api/__init__.py
@@ -159,7 +160,7 @@ tracko_sdk/models/me200_response.py
 tracko_sdk/models/named_series_dto.py
 tracko_sdk/models/recurring_transaction.py
 tracko_sdk/models/search_transactions200_response.py
-tracko_sdk/models/show_by_phone200_response.py
+tracko_sdk/models/show200_response.py
 tracko_sdk/models/split.py
 tracko_sdk/models/split_detail_dto.py
 tracko_sdk/models/stats_point_dto.py
