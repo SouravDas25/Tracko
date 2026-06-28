@@ -3,8 +3,10 @@ package com.trako.integration.currency;
 import com.trako.entities.*;
 import com.trako.enums.TransactionDbType;
 import com.trako.integration.BaseIntegrationTest;
+import com.trako.models.external.ExchangeRateApiResponse;
 import com.trako.models.request.AccountSaveRequest;
 import com.trako.repositories.UserCurrencyRepository;
+import com.trako.services.ExchangeRateService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,9 +21,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.Date;
+import java.util.Map;
 
 import static org.hamcrest.Matchers.closeTo;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -38,6 +42,9 @@ public class CurrencyIntegrationTest extends BaseIntegrationTest {
 
     @MockBean
     private AuthenticationManager authenticationManager;
+
+    @MockBean
+    private ExchangeRateService exchangeRateService;
 
     private User testUser;
     private String bearerToken;
@@ -78,6 +85,10 @@ public class CurrencyIntegrationTest extends BaseIntegrationTest {
         testAccount.setUserId(testUser.getId());
         testAccount.setCurrency("EUR");
         testAccount = accountRepository.save(testAccount);
+
+        // Mock exchange rate service to return predictable live rates
+        ExchangeRateApiResponse mockResponse = new ExchangeRateApiResponse("USD", Map.of("EUR", 1.12));
+        when(exchangeRateService.getRates(anyString())).thenReturn(mockResponse);
     }
 
     @Test
@@ -183,24 +194,31 @@ public class CurrencyIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    public void testTransactionFailsWhenNoUserCurrencyRateAndNoExchangeRateProvided() throws Exception {
+    public void testTransactionSucceedsWhenNoUserCurrencyRateAndNoExchangeRateProvided() throws Exception {
         // Ensure EUR is NOT configured for this user
         userCurrencyRepository.deleteAll();
 
+        // With the live rate fetch, the rate will be auto-resolved from the mock (1.12)
+        // so this should succeed with amount = 10.0 * 1.12 = 11.2
+
         Transaction transaction = new Transaction();
         transaction.setTransactionType(TransactionDbType.DEBIT);
-        transaction.setName("Unknown Currency");
+        transaction.setName("Auto-Resolved Currency");
         transaction.setDate(new Date());
         transaction.setAccountId(testAccount.getId());
         transaction.setCategoryId(testCategory.getId());
         transaction.setOriginalCurrency("EUR");
         transaction.setOriginalAmount(10.0);
-        // No exchangeRate and EUR not configured
+        // No exchangeRate and EUR not configured — now auto-resolves via live rate
 
         mockMvc.perform(post("/api/transactions")
                         .header("Authorization", bearerToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(transaction)))
-                .andExpect(status().isBadRequest()); // Service throws IllegalArgumentException
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.amount").value(closeTo(11.2, 1e-9)))
+                .andExpect(jsonPath("$.result.originalCurrency").value("EUR"))
+                .andExpect(jsonPath("$.result.originalAmount").value(10.0))
+                .andExpect(jsonPath("$.result.exchangeRate").value(1.12));
     }
 }

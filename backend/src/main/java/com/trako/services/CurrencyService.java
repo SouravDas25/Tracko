@@ -94,12 +94,21 @@ public class CurrencyService {
 
     /**
      * Resolves the exchange rate for a given currency and user.
+     * <p>
+     * Resolution priority:
+     * <ol>
+     *   <li>If {@code providedRate} is not null, returns it as-is.</li>
+     *   <li>If the currency is the user's base currency, returns {@code 1.0}.</li>
+     *   <li>Otherwise attempts to fetch the latest live rate from the exchange rate API.
+     *       On success the stored rate in {@code user_currencies} is also updated.
+     *       If the API call fails, the previously stored rate is used as a fallback.</li>
+     * </ol>
      *
      * @param userId       the user ID
      * @param currency     the currency code to resolve
      * @param providedRate optional explicitly provided rate (returns this if not null)
      * @return the exchange rate
-     * @throws IllegalArgumentException if currency is not configured for user
+     * @throws IllegalArgumentException if currency is not configured for user and live fetch also fails
      */
     public Double resolveExchangeRate(String userId, String currency, Double providedRate) {
         if (providedRate != null) {
@@ -109,13 +118,29 @@ public class CurrencyService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
-        if (currency.equals(user.getBaseCurrency())) {
+        String targetCurrency = currency.toUpperCase();
+
+        if (targetCurrency.equals(user.getBaseCurrency())) {
             return 1.0;
         }
 
-        UserCurrency uc = userCurrencyRepository.findByUserIdAndCurrencyCode(userId, currency);
+        // Try fetching the latest live rate for accuracy
+        try {
+            ExchangeRateApiResponse data = exchangeRateService.getRates(user.getBaseCurrency());
+            Map<String, Double> rates = data.getRates();
+            Double liveRate = rates.get(targetCurrency);
+            if (liveRate != null) {
+                save(user, targetCurrency, liveRate);
+                return liveRate;
+            }
+        } catch (Exception e) {
+            // Fall through to stored rate if live fetch fails
+        }
+
+        // Fallback: use the stored rate
+        UserCurrency uc = userCurrencyRepository.findByUserIdAndCurrencyCode(userId, targetCurrency);
         if (uc == null) {
-            throw new IllegalArgumentException("Currency not configured: " + currency);
+            throw new IllegalArgumentException("Currency not configured: " + targetCurrency);
         }
         return uc.getExchangeRate();
     }

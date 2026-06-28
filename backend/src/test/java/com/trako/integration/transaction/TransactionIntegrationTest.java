@@ -4,11 +4,13 @@ import com.trako.dtos.TransferResult;
 import com.trako.entities.*;
 import com.trako.enums.TransactionDbType;
 import com.trako.enums.TransactionType;
+import com.trako.models.external.ExchangeRateApiResponse;
 import com.trako.models.request.TransactionRequest;
 import com.trako.integration.BaseIntegrationTest;
 import com.trako.repositories.ContactRepository;
 import com.trako.repositories.SplitRepository;
 import com.trako.repositories.UserCurrencyRepository;
+import com.trako.services.ExchangeRateService;
 import com.trako.services.transactions.TransactionWriteService;
 import com.trako.services.transactions.TransferService;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,11 +18,15 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
@@ -51,6 +57,9 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
     @Autowired
     private UserCurrencyRepository userCurrencyRepository;
 
+    @MockBean
+    private ExchangeRateService exchangeRateService;
+
     private User testUser;
     private Account testAccount;
     private Category testCategory;
@@ -70,6 +79,10 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
         testCategory.setName("Food");
         testCategory.setUserId(testUser.getId());
         testCategory = categoryRepository.save(testCategory);
+
+        // Mock exchange rate service to return predictable live rates
+        ExchangeRateApiResponse mockResponse = new ExchangeRateApiResponse("INR", Map.of("GBP", 1.2, "USD", 80.0));
+        when(exchangeRateService.getRates(anyString())).thenReturn(mockResponse);
     }
 
     @Test
