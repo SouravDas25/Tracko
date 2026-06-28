@@ -54,7 +54,7 @@ public class SessionIntegrationTest extends BaseIntegrationTest {
     public void loginSuccessReturnsJwtToken() throws Exception {
         LoginRequest req = new LoginRequest();
         req.setUsername(testUser.getPhoneNo());
-        req.setPassword(testUser.getPassword());
+        req.setPassword(TEST_PASSWORD);
 
         mockMvc.perform(post("/api/login")
                         .contentType(MediaType.APPLICATION_JSON)

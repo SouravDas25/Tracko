@@ -77,9 +77,6 @@ public class SessionController {
             }
 
             boolean ok = passwordEncoder.matches(loginRequest.getPassword(), user.getPassword());
-            if (!ok && user != null) {
-                ok = loginRequest.getPassword() != null && loginRequest.getPassword().equals(user.getPassword());
-            }
             if (!ok) {
                 log.warn("Login failed for username={}", loginRequest.getUsername());
                 return Response.unauthorized();

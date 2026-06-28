@@ -9,6 +9,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.io.Serial;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
@@ -19,7 +20,8 @@ import java.util.function.Function;
 @Component
 public class JwtTokenUtil implements Serializable {
 
-    private static final long DEFAULT_TOKEN_VALIDITY = 90L * 24 * 60 * 60; // ~3 months in seconds
+    private static final long DEFAULT_TOKEN_VALIDITY = 86400; // 24 hours in seconds
+    @Serial
     private static final long serialVersionUID = -2550185165626007488L;
     @Value("${jwt.secret}")
     private String secret;

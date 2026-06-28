@@ -2,6 +2,7 @@ package com.trako.configs;
 
 import com.trako.filters.JwtAuthenticationEntryPoint;
 import com.trako.filters.JwtRequestFilter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -20,6 +21,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 @Configuration
@@ -38,6 +41,19 @@ public class SecurityConfig {
             "/swagger-ui/**"
     };
 
+    @Value("${cors.allowed-origins:}")
+    private String corsAllowedOrigins;
+
+    private List<String> allowedOrigins() {
+        if (corsAllowedOrigins == null || corsAllowedOrigins.isBlank()) {
+            return Collections.emptyList();
+        }
+        return Arrays.stream(corsAllowedOrigins.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .toList();
+    }
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -51,9 +67,9 @@ public class SecurityConfig {
     @Bean
     @Profile({"dev", "test"})
     public SecurityFilterChain devSecurityFilterChain(HttpSecurity http,
-                                                      JwtRequestFilter jwtRequestFilter,
-                                                      JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
-                                                      CorsConfigurationSource corsConfigurationSource) throws Exception {
+                                                       JwtRequestFilter jwtRequestFilter,
+                                                       JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
+                                                       CorsConfigurationSource corsConfigurationSource) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(request -> {
                     CorsConfiguration configuration = new CorsConfiguration();
@@ -80,13 +96,13 @@ public class SecurityConfig {
     @Bean
     @Profile("prod")
     public SecurityFilterChain prodSecurityFilterChain(HttpSecurity http,
-                                                       JwtRequestFilter jwtRequestFilter,
-                                                       JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
-                                                       CorsConfigurationSource corsConfigurationSource) throws Exception {
+                                                        JwtRequestFilter jwtRequestFilter,
+                                                        JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
+                                                        CorsConfigurationSource corsConfigurationSource) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(request -> {
                     CorsConfiguration configuration = new CorsConfiguration();
-                    configuration.setAllowedOrigins(List.of("*"));
+                    configuration.setAllowedOrigins(allowedOrigins());
                     configuration.setAllowedMethods(List.of("*"));
                     configuration.setAllowedHeaders(List.of("*"));
                     return configuration;
@@ -102,7 +118,6 @@ public class SecurityConfig {
 
         http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
-
 
     }
 }
