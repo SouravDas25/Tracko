@@ -58,7 +58,7 @@ public class StatsController {
             StatsService.Range r;
             try {
                 r = StatsService.Range.valueOf(range);
-            } catch (Exception e) {
+            } catch (IllegalArgumentException e) {
                 return Response.badRequest("Invalid range. Use weekly|monthly|yearly|fiveYearly|tenYearly|custom");
             }
 
@@ -98,7 +98,7 @@ public class StatsController {
             StatsService.Range r;
             try {
                 r = StatsService.Range.valueOf(range);
-            } catch (Exception e) {
+            } catch (IllegalArgumentException e) {
                 return Response.badRequest("Invalid range. Use weekly|monthly|yearly|fiveYearly|tenYearly|custom");
             }
 

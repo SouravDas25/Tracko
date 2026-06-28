@@ -79,8 +79,6 @@ public class RecurringTransactionController {
             return Response.unauthorized();
         } catch (AuthorizationException e) {
             return Response.unauthorized();
-        } catch (Exception e) {
-            return Response.badRequest(e.getMessage());
         }
     }
 
@@ -96,8 +94,6 @@ public class RecurringTransactionController {
             return Response.unauthorized();
         } catch (AuthorizationException e) {
             return Response.unauthorized();
-        } catch (Exception e) {
-            return Response.badRequest(e.getMessage());
         }
     }
 
@@ -113,8 +109,6 @@ public class RecurringTransactionController {
             return Response.unauthorized();
         } catch (AuthorizationException e) {
             return Response.unauthorized();
-        } catch (Exception e) {
-            return Response.badRequest(e.getMessage());
         }
     }
 }

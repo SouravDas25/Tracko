@@ -1442,7 +1442,7 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(payload)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Failed to create transaction: Transfer requires fromAccountId or accountId"));
+                .andExpect(jsonPath("$.message").value("Transfer requires fromAccountId or accountId"));
     }
 
     @Test
@@ -1499,7 +1499,7 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(payload)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Failed to create transaction: originalAmount must be greater than 0"));
+                .andExpect(jsonPath("$.message").value("originalAmount must be greater than 0"));
     }
 
     @Test

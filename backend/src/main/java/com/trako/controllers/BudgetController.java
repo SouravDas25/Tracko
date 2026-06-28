@@ -64,8 +64,6 @@ public class BudgetController {
             return Response.ok(budgetDetails);
         } catch (UserNotLoggedInException e) {
             return Response.unauthorized();
-        } catch (Exception e) {
-            return Response.badRequest(e.getMessage());
         }
     }
 
@@ -86,8 +84,6 @@ public class BudgetController {
             return Response.ok(result);
         } catch (UserNotLoggedInException e) {
             return Response.unauthorized();
-        } catch (Exception e) {
-            return Response.badRequest(e.getMessage());
         }
     }
 
@@ -110,8 +106,6 @@ public class BudgetController {
             return Response.ok(available);
         } catch (UserNotLoggedInException e) {
             return Response.unauthorized();
-        } catch (Exception e) {
-            return Response.badRequest(e.getMessage());
         }
     }
 

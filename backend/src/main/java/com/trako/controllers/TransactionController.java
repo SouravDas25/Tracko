@@ -494,16 +494,8 @@ public class TransactionController {
         } catch (UserNotLoggedInException e) {
             log.warn("Transaction/Transfer create failed: User not logged in");
             return Response.unauthorized();
-        } catch (NotFoundException e) {
-            return Response.notFound(e.getMessage());
         } catch (AuthorizationException e) {
             return Response.unauthorized();
-        } catch (IllegalArgumentException e) {
-            log.warn("Transaction/Transfer create failed with validation error: {}", e.getMessage());
-            return Response.badRequest(e.getMessage());
-        } catch (Exception e) {
-            log.error("Transaction/Transfer create failed with exception: {}", e.getMessage(), e);
-            return Response.badRequest("Failed to create transaction: " + e.getMessage());
         }
     }
 
@@ -528,16 +520,8 @@ public class TransactionController {
         } catch (UserNotLoggedInException e) {
             log.warn("Transaction update failed: User not logged in");
             return Response.unauthorized();
-        } catch (NotFoundException e) {
-            return Response.notFound(e.getMessage());
         } catch (AuthorizationException e) {
             return Response.unauthorized();
-        } catch (IllegalArgumentException e) {
-            log.warn("Transaction update failed with validation error: {}", e.getMessage());
-            return Response.badRequest(e.getMessage());
-        } catch (Exception e) {
-            log.error("Transaction update failed with exception: {}", e.getMessage(), e);
-            return Response.badRequest("Failed to update transaction: " + e.getMessage());
         }
     }
 
@@ -558,16 +542,8 @@ public class TransactionController {
             return Response.ok("Transaction deleted successfully");
         } catch (UserNotLoggedInException e) {
             return Response.unauthorized();
-        } catch (NotFoundException e) {
-            return Response.notFound(e.getMessage());
         } catch (AuthorizationException e) {
             return Response.unauthorized();
-        } catch (IllegalArgumentException e) {
-            log.warn("Delete failed with validation error: {}", e.getMessage());
-            return Response.badRequest(e.getMessage());
-        } catch (Exception e) {
-            log.error("Error deleting transaction {}: {}", id, e.getMessage(), e);
-            return Response.badRequest("Failed to delete transaction: " + e.getMessage());
         }
     }
 
