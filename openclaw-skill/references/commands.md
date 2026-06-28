@@ -96,7 +96,7 @@ trako transaction add-income \
   --raw
 ```
 
-Same required fields as add-expense.
+The same required fields as add-expense.
 
 ### Add Transfer
 
