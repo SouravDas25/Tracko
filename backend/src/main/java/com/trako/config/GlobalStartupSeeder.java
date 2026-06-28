@@ -5,7 +5,6 @@ import com.trako.enums.CategoryType;
 import com.trako.repositories.AccountRepository;
 import com.trako.repositories.CategoryRepository;
 import com.trako.repositories.UsersRepository;
-import com.trako.services.JsonStoreService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,9 +49,6 @@ public class GlobalStartupSeeder implements ApplicationRunner {
     private CategoryRepository categoryRepository;
 
     @Autowired
-    private JsonStoreService jsonStoreService;
-
-    @Autowired
     private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     @Override
@@ -66,7 +62,6 @@ public class GlobalStartupSeeder implements ApplicationRunner {
         }
 
         seedUsers();
-        seedJsonStore();
 
         if (isDevProfileActive() || isTestProfileActive()) {
             log.info("GlobalStartupSeeder: dev/test profile detected, seeding accounts/categories");
@@ -226,23 +221,4 @@ public class GlobalStartupSeeder implements ApplicationRunner {
         }
     }
 
-    private void seedJsonStore() {
-        seedJsonStoreIfMissing("autoBackUp", "0");
-        seedJsonStoreIfMissing("autoBackUpTimeStamp", "0");
-        seedJsonStoreIfMissing("lastReadSmsId", "0");
-    }
-
-    private void seedJsonStoreIfMissing(String name, String value) {
-        try {
-            if (jsonStoreService.findByName(name).isPresent()) {
-                return;
-            }
-            JsonStore jsonStore = new JsonStore();
-            jsonStore.setName(name);
-            jsonStore.setValue(value);
-            jsonStoreService.save(jsonStore);
-        } catch (Exception e) {
-            log.warn("Failed seeding JsonStore {}: {}", name, e.getMessage());
-        }
-    }
 }

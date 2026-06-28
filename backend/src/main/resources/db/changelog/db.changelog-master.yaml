@@ -11,3 +11,5 @@ databaseChangeLog:
             file: db/changelog/004-add-search-indexes.yaml
     -   include:
             file: db/changelog/005-add-login-lockout-columns.yaml
+    -   include:
+            file: db/changelog/006-scope-json-store-to-user.yaml
