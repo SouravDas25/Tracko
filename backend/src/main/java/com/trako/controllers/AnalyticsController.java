@@ -4,7 +4,6 @@ import com.trako.dtos.AnalyticsResponseDTO;
 import com.trako.enums.AnalyticsGranularity;
 import com.trako.enums.AnalyticsGroupBy;
 import com.trako.enums.TransactionType;
-import com.trako.exceptions.UserNotLoggedInException;
 import com.trako.services.AnalyticsService;
 import com.trako.services.UserService;
 import com.trako.util.Response;
@@ -49,34 +48,28 @@ public class AnalyticsController {
             @RequestParam(required = false) Long accountId,
             @RequestParam(required = false) Long categoryId
     ) {
-        try {
-            String currentUserId = userService.loggedInUser().getId();
+        String currentUserId = userService.loggedInUser().getId();
 
-            // Validate groupBy
-            AnalyticsGroupBy groupByEnum = null;
-            if (groupBy != null && !groupBy.isEmpty()) {
-                groupByEnum = AnalyticsGroupBy.fromString(groupBy);
-                if (groupByEnum == null) {
-                    return Response.badRequest("Invalid groupBy. Use category, account, or name");
-                }
+        AnalyticsGroupBy groupByEnum = null;
+        if (groupBy != null && !groupBy.isEmpty()) {
+            groupByEnum = AnalyticsGroupBy.fromString(groupBy);
+            if (groupByEnum == null) {
+                return Response.badRequest("Invalid groupBy. Use category, account, or name");
             }
-
-            // Validate granularity
-            AnalyticsGranularity granularityEnum = AnalyticsGranularity.fromString(granularity);
-            if (granularity != null && !granularity.isEmpty() && granularityEnum == null) {
-                return Response.badRequest("Invalid granularity. Use weekly, monthly, or yearly");
-            }
-
-            List<Long> accountIds = accountId != null ? List.of(accountId) : null;
-            List<Long> categoryIds = categoryId != null ? List.of(categoryId) : null;
-
-            AnalyticsResponseDTO dto = analyticsService.getChartData(
-                    currentUserId, transactionType, startDate, endDate,
-                    granularityEnum, groupByEnum, accountIds, categoryIds
-            );
-            return Response.ok(dto);
-        } catch (UserNotLoggedInException e) {
-            return Response.unauthorized();
         }
+
+        AnalyticsGranularity granularityEnum = AnalyticsGranularity.fromString(granularity);
+        if (granularity != null && !granularity.isEmpty() && granularityEnum == null) {
+            return Response.badRequest("Invalid granularity. Use weekly, monthly, or yearly");
+        }
+
+        List<Long> accountIds = accountId != null ? List.of(accountId) : null;
+        List<Long> categoryIds = categoryId != null ? List.of(categoryId) : null;
+
+        AnalyticsResponseDTO dto = analyticsService.getChartData(
+                currentUserId, transactionType, startDate, endDate,
+                granularityEnum, groupByEnum, accountIds, categoryIds
+        );
+        return Response.ok(dto);
     }
 }

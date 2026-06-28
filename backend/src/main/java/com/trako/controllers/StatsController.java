@@ -2,7 +2,6 @@ package com.trako.controllers;
 
 import com.trako.dtos.StatsResponseDTO;
 import com.trako.enums.TransactionType;
-import com.trako.exceptions.UserNotLoggedInException;
 import com.trako.services.StatsService;
 import com.trako.services.UserService;
 import com.trako.util.Response;
@@ -53,26 +52,23 @@ public class StatsController {
             @DateTimeFormat(pattern = "yyyy-MM-dd")
             Date endDate
     ) {
+        StatsService.Range r;
         try {
-            String currentUserId = userService.loggedInUser().getId();
-            StatsService.Range r;
-            try {
-                r = StatsService.Range.valueOf(range);
-            } catch (IllegalArgumentException e) {
-                return Response.badRequest("Invalid range. Use weekly|monthly|yearly|fiveYearly|tenYearly|custom");
-            }
-
-            Date anchor = (date == null) ? new Date() : date;
-            System.out.println("[StatsController] /api/stats/summary range=" + range
-                    + " transactionType=" + transactionType
-                    + " accountId=" + accountId
-                    + " anchor=" + anchor);
-
-            StatsResponseDTO dto = statsService.getStats(currentUserId, r, transactionType, accountId, anchor, startDate, endDate);
-            return Response.ok(dto);
-        } catch (UserNotLoggedInException e) {
-            return Response.unauthorized();
+            r = StatsService.Range.valueOf(range);
+        } catch (IllegalArgumentException e) {
+            return Response.badRequest("Invalid range. Use weekly|monthly|yearly|fiveYearly|tenYearly|custom");
         }
+
+        String currentUserId = userService.loggedInUser().getId();
+
+        Date anchor = (date == null) ? new Date() : date;
+        System.out.println("[StatsController] /api/stats/summary range=" + range
+                + " transactionType=" + transactionType
+                + " accountId=" + accountId
+                + " anchor=" + anchor);
+
+        StatsResponseDTO dto = statsService.getStats(currentUserId, r, transactionType, accountId, anchor, startDate, endDate);
+        return Response.ok(dto);
     }
 
     @Operation(summary = "Get stats for a specific category by range")
@@ -93,23 +89,19 @@ public class StatsController {
             @DateTimeFormat(pattern = "yyyy-MM-dd")
             Date endDate
     ) {
+        StatsService.Range r;
         try {
-            var currentUserId = userService.loggedInUser().getId();
-            StatsService.Range r;
-            try {
-                r = StatsService.Range.valueOf(range);
-            } catch (IllegalArgumentException e) {
-                return Response.badRequest("Invalid range. Use weekly|monthly|yearly|fiveYearly|tenYearly|custom");
-            }
-
-            if (categoryId == null || categoryId <= 0) {
-                return Response.badRequest("Invalid categoryId");
-            }
-
-            Date anchor = (date == null) ? new Date() : date;
-            return Response.ok(statsService.getCategoryStats(currentUserId, r, transactionType, accountId, anchor, categoryId, startDate, endDate));
-        } catch (UserNotLoggedInException e) {
-            return Response.unauthorized();
+            r = StatsService.Range.valueOf(range);
+        } catch (IllegalArgumentException e) {
+            return Response.badRequest("Invalid range. Use weekly|monthly|yearly|fiveYearly|tenYearly|custom");
         }
+
+        if (categoryId == null || categoryId <= 0) {
+            return Response.badRequest("Invalid categoryId");
+        }
+
+        var currentUserId = userService.loggedInUser().getId();
+        Date anchor = (date == null) ? new Date() : date;
+        return Response.ok(statsService.getCategoryStats(currentUserId, r, transactionType, accountId, anchor, categoryId, startDate, endDate));
     }
 }

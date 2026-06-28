@@ -10,9 +10,6 @@ import com.trako.entities.Account;
 import com.trako.entities.Transaction;
 import com.trako.enums.TransactionDbType;
 import com.trako.entities.User;
-import com.trako.exceptions.AuthorizationException;
-import com.trako.exceptions.NotFoundException;
-import com.trako.exceptions.UserNotLoggedInException;
 import com.trako.models.request.TransactionRequest;
 import com.trako.repositories.AccountRepository;
 import com.trako.repositories.CategoryRepository;
@@ -32,8 +29,6 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -55,8 +50,6 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/transactions")
 @Validated
 public class TransactionController {
-
-    private static final Logger log = LoggerFactory.getLogger(TransactionController.class);
 
     @Autowired
     private TransactionService transactionService;
@@ -156,43 +149,39 @@ public class TransactionController {
             @RequestParam(required = false) Long categoryId,
             @RequestParam(defaultValue = "0.7") Double fuzzyThreshold,
             @RequestParam(defaultValue = "false") Boolean expand) {
-        try {
-            // Validate query
-            if (query == null || query.isBlank()) {
-                return Response.badRequest("Search query cannot be empty");
-            }
-
-            // Validate size
-            if (size < 1 || size > 100) {
-                return Response.badRequest("Page size must be between 1 and 100");
-            }
-
-            // Validate date range
-            if (startDate != null && endDate != null && endDate.before(startDate)) {
-                return Response.badRequest("End date must be after start date");
-            }
-
-            String currentUserId = userService.loggedInUser().getId();
-
-            // Build SearchRequestDTO from query params
-            SearchRequestDTO request = new SearchRequestDTO();
-            request.setQuery(query);
-            request.setPage(page);
-            request.setSize(size);
-            request.setStartDate(startDate);
-            request.setEndDate(endDate);
-            request.setMinAmount(minAmount);
-            request.setMaxAmount(maxAmount);
-            request.setAccountIds(CommonUtil.parseAccountIds(accountIds));
-            request.setCategoryId(categoryId);
-            request.setFuzzyThreshold(fuzzyThreshold);
-            request.setExpand(expand);
-
-            TransactionSearchResultDTO result = transactionSearchService.search(currentUserId, request);
-            return Response.ok(result);
-        } catch (UserNotLoggedInException e) {
-            return Response.unauthorized();
+        // Validate query
+        if (query == null || query.isBlank()) {
+            return Response.badRequest("Search query cannot be empty");
         }
+
+        // Validate size
+        if (size < 1 || size > 100) {
+            return Response.badRequest("Page size must be between 1 and 100");
+        }
+
+        // Validate date range
+        if (startDate != null && endDate != null && endDate.before(startDate)) {
+            return Response.badRequest("End date must be after start date");
+        }
+
+        String currentUserId = userService.loggedInUser().getId();
+
+        // Build SearchRequestDTO from query params
+        SearchRequestDTO request = new SearchRequestDTO();
+        request.setQuery(query);
+        request.setPage(page);
+        request.setSize(size);
+        request.setStartDate(startDate);
+        request.setEndDate(endDate);
+        request.setMinAmount(minAmount);
+        request.setMaxAmount(maxAmount);
+        request.setAccountIds(CommonUtil.parseAccountIds(accountIds));
+        request.setCategoryId(categoryId);
+        request.setFuzzyThreshold(fuzzyThreshold);
+        request.setExpand(expand);
+
+        TransactionSearchResultDTO result = transactionSearchService.search(currentUserId, request);
+        return Response.ok(result);
     }
 
     /**
@@ -213,87 +202,38 @@ public class TransactionController {
             @RequestParam(defaultValue = "0") Integer page,
             @RequestParam(defaultValue = "500") Integer size,
             @RequestParam(defaultValue = "false") boolean expand) {
-        try {
-            if (page == null || page < 0) {
-                return Response.badRequest("page must be 0 or greater");
+        if (page == null || page < 0) {
+            return Response.badRequest("page must be 0 or greater");
+        }
+        if (size == null || size < 1 || size > 10000) {
+            return Response.badRequest("size must be between 1 and 10000");
+        }
+
+        Date start, end;
+        int resolvedYear = (year == null) ? Calendar.getInstance().get(Calendar.YEAR) : year;
+
+        if (startDate != null && endDate != null) {
+            start = startDate;
+            end = endDate;
+        } else if (month != null) {
+            if (month < 1 || month > 12) {
+                return Response.badRequest("month must be between 1 and 12");
             }
-            if (size == null || size < 1 || size > 10000) {
-                return Response.badRequest("size must be between 1 and 10000");
-            }
+            start = getStartOfMonth(resolvedYear, month);
+            end = getStartOfNextMonth(resolvedYear, month);
+        } else {
+            return Response.badRequest("Either month or startDate/endDate must be provided");
+        }
 
-            Date start, end;
-            int resolvedYear = (year == null) ? Calendar.getInstance().get(Calendar.YEAR) : year;
+        String currentUserId = userService.loggedInUser().getId();
+        List<Long> ids = com.trako.util.CommonUtil.parseAccountIds(accountIds);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "date").and(Sort.by(Sort.Direction.DESC, "id")));
 
-            if (startDate != null && endDate != null) {
-                start = startDate;
-                end = endDate;
-            } else if (month != null) {
-                if (month < 1 || month > 12) {
-                    return Response.badRequest("month must be between 1 and 12");
-                }
-                start = getStartOfMonth(resolvedYear, month);
-                end = getStartOfNextMonth(resolvedYear, month);
-            } else {
-                return Response.badRequest("Either month or startDate/endDate must be provided");
-            }
-
-            String currentUserId = userService.loggedInUser().getId();
-            List<Long> ids = com.trako.util.CommonUtil.parseAccountIds(accountIds);
-            Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "date").and(Sort.by(Sort.Direction.DESC, "id")));
-
-            if (expand) {
-                Page<TransactionDetailDTO> dtoPage;
-                if (categoryId != null && categoryId > 0) {
-                    if (ids.isEmpty()) {
-                        dtoPage = transactionService.findWithDetailsByUserIdAndCategoryIdAndDateBetween(
-                                currentUserId,
-                                categoryId,
-                                start,
-                                end,
-                                pageable
-                        );
-                    } else {
-                        dtoPage = transactionService.findWithDetailsByUserIdAndCategoryIdAndDateBetweenAndAccountIds(
-                                currentUserId,
-                                categoryId,
-                                start,
-                                end,
-                                ids,
-                                pageable
-                        );
-                    }
-                } else {
-                    dtoPage = transactionService.findWithDetailsByUserIdAndDateBetween(
-                            currentUserId,
-                            start,
-                            end,
-                            ids,
-                            pageable
-                    );
-                }
-
-                List<TransactionDetailDTO> dtos = new ArrayList<>(dtoPage.getContent());
-                dtos = hideTransferCreditsForDTO(dtos, currentUserId);
-                dtos = markTransferTypeAsTransferForDTO(dtos, currentUserId);
-
-                TransactionsPageDTO payload = new TransactionsPageDTO();
-                payload.setMonth(month);
-                payload.setYear(resolvedYear);
-                payload.setPage(dtoPage.getNumber());
-                payload.setSize(dtoPage.getSize());
-                payload.setTotalElements(dtoPage.getTotalElements());
-                payload.setTotalPages(dtoPage.getTotalPages());
-                payload.setHasNext(dtoPage.hasNext());
-                payload.setHasPrevious(dtoPage.hasPrevious());
-                payload.setTransactions(dtos);
-
-                return Response.ok(payload);
-            }
-
-            Page<Transaction> transactionPage;
+        if (expand) {
+            Page<TransactionDetailDTO> dtoPage;
             if (categoryId != null && categoryId > 0) {
                 if (ids.isEmpty()) {
-                    transactionPage = transactionService.findByUserIdAndCategoryIdAndDateBetween(
+                    dtoPage = transactionService.findWithDetailsByUserIdAndCategoryIdAndDateBetween(
                             currentUserId,
                             categoryId,
                             start,
@@ -301,7 +241,7 @@ public class TransactionController {
                             pageable
                     );
                 } else {
-                    transactionPage = transactionService.findByUserIdAndCategoryIdAndDateBetweenAndAccountIds(
+                    dtoPage = transactionService.findWithDetailsByUserIdAndCategoryIdAndDateBetweenAndAccountIds(
                             currentUserId,
                             categoryId,
                             start,
@@ -310,15 +250,8 @@ public class TransactionController {
                             pageable
                     );
                 }
-            } else if (ids.isEmpty()) {
-                transactionPage = transactionService.findByUserIdAndDateBetween(
-                        currentUserId,
-                        start,
-                        end,
-                        pageable
-                );
             } else {
-                transactionPage = transactionService.findByUserIdAndDateBetweenAndAccountIds(
+                dtoPage = transactionService.findWithDetailsByUserIdAndDateBetween(
                         currentUserId,
                         start,
                         end,
@@ -327,25 +260,77 @@ public class TransactionController {
                 );
             }
 
-            List<Transaction> transactions = new ArrayList<>(transactionPage.getContent());
-            transactions = hideTransferCredits(transactions, currentUserId);
-            transactions = markTransferTypeAsTransfer(transactions, currentUserId);
+            List<TransactionDetailDTO> dtos = new ArrayList<>(dtoPage.getContent());
+            dtos = hideTransferCreditsForDTO(dtos, currentUserId);
+            dtos = markTransferTypeAsTransferForDTO(dtos, currentUserId);
 
             TransactionsPageDTO payload = new TransactionsPageDTO();
             payload.setMonth(month);
             payload.setYear(resolvedYear);
-            payload.setPage(transactionPage.getNumber());
-            payload.setSize(transactionPage.getSize());
-            payload.setTotalElements(transactionPage.getTotalElements());
-            payload.setTotalPages(transactionPage.getTotalPages());
-            payload.setHasNext(transactionPage.hasNext());
-            payload.setHasPrevious(transactionPage.hasPrevious());
-            payload.setTransactions(transactions);
+            payload.setPage(dtoPage.getNumber());
+            payload.setSize(dtoPage.getSize());
+            payload.setTotalElements(dtoPage.getTotalElements());
+            payload.setTotalPages(dtoPage.getTotalPages());
+            payload.setHasNext(dtoPage.hasNext());
+            payload.setHasPrevious(dtoPage.hasPrevious());
+            payload.setTransactions(dtos);
 
             return Response.ok(payload);
-        } catch (UserNotLoggedInException e) {
-            return Response.unauthorized();
         }
+
+        Page<Transaction> transactionPage;
+        if (categoryId != null && categoryId > 0) {
+            if (ids.isEmpty()) {
+                transactionPage = transactionService.findByUserIdAndCategoryIdAndDateBetween(
+                        currentUserId,
+                        categoryId,
+                        start,
+                        end,
+                        pageable
+                );
+            } else {
+                transactionPage = transactionService.findByUserIdAndCategoryIdAndDateBetweenAndAccountIds(
+                        currentUserId,
+                        categoryId,
+                        start,
+                        end,
+                        ids,
+                        pageable
+                );
+            }
+        } else if (ids.isEmpty()) {
+            transactionPage = transactionService.findByUserIdAndDateBetween(
+                    currentUserId,
+                    start,
+                    end,
+                    pageable
+            );
+        } else {
+            transactionPage = transactionService.findByUserIdAndDateBetweenAndAccountIds(
+                    currentUserId,
+                    start,
+                    end,
+                    ids,
+                    pageable
+            );
+        }
+
+        List<Transaction> transactions = new ArrayList<>(transactionPage.getContent());
+        transactions = hideTransferCredits(transactions, currentUserId);
+        transactions = markTransferTypeAsTransfer(transactions, currentUserId);
+
+        TransactionsPageDTO payload = new TransactionsPageDTO();
+        payload.setMonth(month);
+        payload.setYear(resolvedYear);
+        payload.setPage(transactionPage.getNumber());
+        payload.setSize(transactionPage.getSize());
+        payload.setTotalElements(transactionPage.getTotalElements());
+        payload.setTotalPages(transactionPage.getTotalPages());
+        payload.setHasNext(transactionPage.hasNext());
+        payload.setHasPrevious(transactionPage.hasPrevious());
+        payload.setTransactions(transactions);
+
+        return Response.ok(payload);
     }
 
     private Date getStartOfMonth(int year, int month) {
@@ -383,13 +368,9 @@ public class TransactionController {
     public ResponseEntity<?> getMyTotalIncome(
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate) {
-        try {
-            String currentUserId = userService.loggedInUser().getId();
-            Double totalIncome = transactionService.getTotalIncome(currentUserId, startDate, endDate);
-            return Response.ok(totalIncome);
-        } catch (UserNotLoggedInException e) {
-            return Response.unauthorized();
-        }
+        String currentUserId = userService.loggedInUser().getId();
+        Double totalIncome = transactionService.getTotalIncome(currentUserId, startDate, endDate);
+        return Response.ok(totalIncome);
     }
 
     /**
@@ -402,13 +383,9 @@ public class TransactionController {
     public ResponseEntity<?> getMyTotalExpense(
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate) {
-        try {
-            String currentUserId = userService.loggedInUser().getId();
-            Double totalExpense = transactionService.getTotalExpense(currentUserId, startDate, endDate);
-            return Response.ok(totalExpense);
-        } catch (UserNotLoggedInException e) {
-            return Response.unauthorized();
-        }
+        String currentUserId = userService.loggedInUser().getId();
+        Double totalExpense = transactionService.getTotalExpense(currentUserId, startDate, endDate);
+        return Response.ok(totalExpense);
     }
 
     /**
@@ -425,19 +402,15 @@ public class TransactionController {
             @RequestParam(required = false) String accountIds,
             @RequestParam(required = false, defaultValue = "true") boolean includeRollover,
             @RequestParam(required = false) Long categoryId) {
-        try {
-            String currentUserId = userService.loggedInUser().getId();
-            List<Long> ids = com.trako.util.CommonUtil.parseAccountIds(accountIds);
-            TransactionSummaryDTO summary;
-            if (includeRollover) {
-                summary = transactionService.getSummaryWithRollover(currentUserId, startDate, endDate, ids, categoryId);
-            } else {
-                summary = transactionService.getSummary(currentUserId, startDate, endDate, ids, categoryId);
-            }
-            return Response.ok(summary);
-        } catch (UserNotLoggedInException e) {
-            return Response.unauthorized();
+        String currentUserId = userService.loggedInUser().getId();
+        List<Long> ids = com.trako.util.CommonUtil.parseAccountIds(accountIds);
+        TransactionSummaryDTO summary;
+        if (includeRollover) {
+            summary = transactionService.getSummaryWithRollover(currentUserId, startDate, endDate, ids, categoryId);
+        } else {
+            summary = transactionService.getSummary(currentUserId, startDate, endDate, ids, categoryId);
         }
+        return Response.ok(summary);
     }
 
     /**
@@ -449,20 +422,16 @@ public class TransactionController {
     @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = Transaction.class)))
     @GetMapping("/{id}")
     public ResponseEntity<?> getById(@PathVariable @Positive Long id) {
-        try {
-            String currentUserId = userService.loggedInUser().getId();
-            Transaction tx = transactionService.findById(id).orElse(null);
-            if (tx == null) {
-                return Response.notFound("Transaction not found");
-            }
-            Account acc = accountRepository.findById(tx.getAccountId()).orElse(null);
-            if (acc == null || !currentUserId.equals(acc.getUserId())) {
-                return Response.unauthorized();
-            }
-            return Response.ok(tx);
-        } catch (UserNotLoggedInException e) {
+        String currentUserId = userService.loggedInUser().getId();
+        Transaction tx = transactionService.findById(id).orElse(null);
+        if (tx == null) {
+            return Response.notFound("Transaction not found");
+        }
+        Account acc = accountRepository.findById(tx.getAccountId()).orElse(null);
+        if (acc == null || !currentUserId.equals(acc.getUserId())) {
             return Response.unauthorized();
         }
+        return Response.ok(tx);
     }
 
     /**
@@ -479,23 +448,15 @@ public class TransactionController {
     @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = Transaction.class)))
     @PostMapping
     public ResponseEntity<?> create(@Valid @RequestBody TransactionRequest request) {
-        try {
-            User user = userService.loggedInUser();
-            String currentUserId = user.getId();
+        User user = userService.loggedInUser();
+        String currentUserId = user.getId();
 
-            Transaction saved = transactionWriteService.createUnifiedTransaction(currentUserId, request);
+        Transaction saved = transactionWriteService.createUnifiedTransaction(currentUserId, request);
 
-            if (request.isTransfer()) {
-                return Response.ok(saved, "Transfer created successfully");
-            } else {
-                return Response.ok(saved, "Transaction created successfully");
-            }
-
-        } catch (UserNotLoggedInException e) {
-            log.warn("Transaction/Transfer create failed: User not logged in");
-            return Response.unauthorized();
-        } catch (AuthorizationException e) {
-            return Response.unauthorized();
+        if (request.isTransfer()) {
+            return Response.ok(saved, "Transfer created successfully");
+        } else {
+            return Response.ok(saved, "Transaction created successfully");
         }
     }
 
@@ -510,19 +471,11 @@ public class TransactionController {
     @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = Transaction.class)))
     @PutMapping("/{id}")
     public ResponseEntity<?> update(@PathVariable @Positive Long id, @Valid @RequestBody TransactionRequest request) {
-        try {
-            User user = userService.loggedInUser();
-            String currentUserId = user.getId();
+        User user = userService.loggedInUser();
+        String currentUserId = user.getId();
 
-            Transaction updated = transactionWriteService.updateTransaction(currentUserId, id, request);
-            return Response.ok(updated, "Transaction updated successfully");
-
-        } catch (UserNotLoggedInException e) {
-            log.warn("Transaction update failed: User not logged in");
-            return Response.unauthorized();
-        } catch (AuthorizationException e) {
-            return Response.unauthorized();
-        }
+        Transaction updated = transactionWriteService.updateTransaction(currentUserId, id, request);
+        return Response.ok(updated, "Transaction updated successfully");
     }
 
     /**
@@ -534,17 +487,11 @@ public class TransactionController {
     @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(type = "string")))
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable @Positive Long id) {
-        try {
-            String currentUserId = userService.loggedInUser().getId();
+        String currentUserId = userService.loggedInUser().getId();
 
-            transactionWriteService.deleteUnifiedTransaction(currentUserId, id);
+        transactionWriteService.deleteUnifiedTransaction(currentUserId, id);
 
-            return Response.ok("Transaction deleted successfully");
-        } catch (UserNotLoggedInException e) {
-            return Response.unauthorized();
-        } catch (AuthorizationException e) {
-            return Response.unauthorized();
-        }
+        return Response.ok("Transaction deleted successfully");
     }
 
     /**
@@ -558,18 +505,13 @@ public class TransactionController {
             @RequestParam(required = false) Integer year,
             @RequestParam(required = false) String accountIds,
             @RequestParam(required = false) Long categoryId) {
-        try {
-            String currentUserId = userService.loggedInUser().getId();
-            List<Long> ids = com.trako.util.CommonUtil.parseAccountIds(accountIds);
+        String currentUserId = userService.loggedInUser().getId();
+        List<Long> ids = com.trako.util.CommonUtil.parseAccountIds(accountIds);
 
-            // Default to current year if not provided
-            int resolvedYear = (year == null) ? Calendar.getInstance().get(Calendar.YEAR) : year;
+        int resolvedYear = (year == null) ? Calendar.getInstance().get(Calendar.YEAR) : year;
 
-            List<TransactionPeriodSummaryDTO> summaries = transactionService.getMonthlySummaries(currentUserId, resolvedYear, ids, categoryId);
-            return Response.ok(summaries);
-        } catch (UserNotLoggedInException e) {
-            return Response.unauthorized();
-        }
+        List<TransactionPeriodSummaryDTO> summaries = transactionService.getMonthlySummaries(currentUserId, resolvedYear, ids, categoryId);
+        return Response.ok(summaries);
     }
 
     /**
@@ -582,15 +524,11 @@ public class TransactionController {
     public ResponseEntity<?> getYearlySummaries(
             @RequestParam(required = false) String accountIds,
             @RequestParam(required = false) Long categoryId) {
-        try {
-            String currentUserId = userService.loggedInUser().getId();
-            List<Long> ids = com.trako.util.CommonUtil.parseAccountIds(accountIds);
+        String currentUserId = userService.loggedInUser().getId();
+        List<Long> ids = com.trako.util.CommonUtil.parseAccountIds(accountIds);
 
-            List<TransactionPeriodSummaryDTO> summaries = transactionService.getYearlySummaries(currentUserId, ids, categoryId);
-            return Response.ok(summaries);
-        } catch (UserNotLoggedInException e) {
-            return Response.unauthorized();
-        }
+        List<TransactionPeriodSummaryDTO> summaries = transactionService.getYearlySummaries(currentUserId, ids, categoryId);
+        return Response.ok(summaries);
     }
 
 }

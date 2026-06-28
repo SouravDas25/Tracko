@@ -1,7 +1,6 @@
 package com.trako.controllers;
 
 import com.trako.entities.User;
-import com.trako.exceptions.UserNotLoggedInException;
 import com.trako.models.request.UserProfileUpdateRequest;
 import com.trako.models.request.UserSaveRequest;
 import com.trako.services.UserService;
@@ -76,25 +75,20 @@ public class UserController {
     @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(type = "string", description = "New user ID")))
     @PostMapping(value = "/create")
     ResponseEntity<?> create(@Valid @RequestBody UserSaveRequest userSaveRequest) {
-        try {
-            User current = userService.loggedInUser();
+        User current = userService.loggedInUser();
 
-            // Only admins can create users
-            if (!current.isAdmin()) {
-                log.warn("Non-admin user {} attempted to create a user", current.getId());
-                return Response.unauthorized();
-            }
-
-            String id = userService.save(userSaveRequest);
-            if (id == null) {
-                return Response.badRequest("Invalid user request");
-            }
-
-            log.info("Admin {} created user: {}", current.getId(), id);
-            return Response.ok(id, "User Created Successfully.");
-        } catch (UserNotLoggedInException e) {
+        if (!current.isAdmin()) {
+            log.warn("Non-admin user {} attempted to create a user", current.getId());
             return Response.unauthorized();
         }
+
+        String id = userService.save(userSaveRequest);
+        if (id == null) {
+            return Response.badRequest("Invalid user request");
+        }
+
+        log.info("Admin {} created user: {}", current.getId(), id);
+        return Response.ok(id, "User Created Successfully.");
     }
 
     @Operation(summary = "Update the current user's profile")
