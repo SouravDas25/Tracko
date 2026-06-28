@@ -48,5 +48,12 @@ public class Response {
                 .body(ApiResponse.make(null, message));
     }
 
+    public static ResponseEntity<ApiResponse<Void>> tooManyRequests(String message, long retryAfterSeconds) {
+        return ResponseEntity
+                .status(HttpStatus.TOO_MANY_REQUESTS)
+                .header(HttpHeaders.RETRY_AFTER, String.valueOf(retryAfterSeconds))
+                .body(ApiResponse.make(null, message));
+    }
+
 
 }

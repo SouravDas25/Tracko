@@ -1,8 +1,11 @@
 package com.trako.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -11,6 +14,8 @@ import java.util.List;
 
 @Entity
 @Table(name = "users")
+@Getter
+@Setter
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class User extends AbstractBaseEntity {
 
@@ -27,6 +32,7 @@ public class User extends AbstractBaseEntity {
     @Column(name = "profile_pic")
     private String profilePic;
 
+    @JsonIgnore
     @Column(name = "password")
     private String password;
 
@@ -42,6 +48,19 @@ public class User extends AbstractBaseEntity {
     @Column(name = "is_admin")
     private Integer isAdmin = 0;
 
+    @JsonIgnore
+    @Column(name = "failed_login_attempts")
+    private Integer failedLoginAttempts = 0;
+
+    @JsonIgnore
+    @Column(name = "lockout_count")
+    private Integer lockoutCount = 0;
+
+    @JsonIgnore
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "lock_until")
+    private Date lockUntil;
+
     @CreationTimestamp
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "created_at", updatable = false)
@@ -55,100 +74,12 @@ public class User extends AbstractBaseEntity {
     @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserCurrency> secondaryCurrencies;
 
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getPhoneNo() {
-        return phoneNo;
-    }
-
-    public void setPhoneNo(String phoneNo) {
-        this.phoneNo = phoneNo;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getProfilePic() {
-        return profilePic;
-    }
-
-    public void setProfilePic(String profilePic) {
-        this.profilePic = profilePic;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getGlobalId() {
-        return globalId;
-    }
-
-    public void setGlobalId(String globalId) {
-        this.globalId = globalId;
-    }
-
-    public String getBaseCurrency() {
-        return baseCurrency;
-    }
-
-    public void setBaseCurrency(String baseCurrency) {
-        this.baseCurrency = baseCurrency;
-    }
-
-    public Integer getIsShadow() {
-        return isShadow;
-    }
-
-    public void setIsShadow(Integer isShadow) {
-        this.isShadow = isShadow;
-    }
-
     public boolean isShadow() {
         return isShadow != null && isShadow == 1;
     }
 
-    public Integer getIsAdmin() {
-        return isAdmin;
-    }
-
-    public void setIsAdmin(Integer isAdmin) {
-        this.isAdmin = isAdmin;
-    }
-
     public boolean isAdmin() {
         return isAdmin != null && isAdmin == 1;
-    }
-
-    public List<UserCurrency> getSecondaryCurrencies() {
-        return secondaryCurrencies;
-    }
-
-    public void setSecondaryCurrencies(List<UserCurrency> secondaryCurrencies) {
-        this.secondaryCurrencies = secondaryCurrencies;
     }
 
     @Override
