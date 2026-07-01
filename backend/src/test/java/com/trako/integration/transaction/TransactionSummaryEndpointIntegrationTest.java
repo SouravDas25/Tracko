@@ -95,7 +95,38 @@ public class TransactionSummaryEndpointIntegrationTest extends BaseIntegrationTe
                 .andExpect(jsonPath("$.result[?(@.year == 2023)].netTotal").value(1000.0));
     }
 
+    @Test
+    public void testGetSummary_PartialMonthRange_AggregatesOnlyRowsInRange() throws Exception {
+        // Jan 10: +1000 (inside [Jan 01, Jan 15)), Jan 20: -200 (outside the range)
+        createTransaction(account1.getId(), category.getId(), 2024, Calendar.JANUARY, 10, 1000.0, TransactionDbType.CREDIT);
+        createTransaction(account1.getId(), category.getId(), 2024, Calendar.JANUARY, 20, 200.0, TransactionDbType.DEBIT);
+
+        mockMvc.perform(get("/api/transactions/summary")
+                        .param("startDate", "2024-01-01")
+                        .param("endDate", "2024-01-15")
+                        .param("includeRollover", "false")
+                        .header("Authorization", bearerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.totalIncome").value(1000.0))
+                .andExpect(jsonPath("$.result.totalExpense").value(0.0))
+                .andExpect(jsonPath("$.result.netTotal").value(1000.0))
+                .andExpect(jsonPath("$.result.transactionCount").value(1));
+    }
+
+    @Test
+    public void testGetSummary_EndDateBeforeStartDate_ReturnsBadRequest() throws Exception {
+        mockMvc.perform(get("/api/transactions/summary")
+                        .param("startDate", "2024-01-15")
+                        .param("endDate", "2024-01-01")
+                        .header("Authorization", bearerToken))
+                .andExpect(status().isBadRequest());
+    }
+
     private void createTransaction(Long accountId, Long categoryId, int year, int month, double amount, TransactionDbType type) {
+        createTransaction(accountId, categoryId, year, month, 15, amount, type);
+    }
+
+    private void createTransaction(Long accountId, Long categoryId, int year, int month, int day, double amount, TransactionDbType type) {
         Transaction t = new Transaction();
         t.setAccountId(accountId);
         t.setCategoryId(categoryId);
@@ -105,7 +136,7 @@ public class TransactionSummaryEndpointIntegrationTest extends BaseIntegrationTe
         t.setExchangeRate(1.0);
         t.setIsCountable(1);
         t.setName("Txn");
-        t.setDate(new GregorianCalendar(year, month, 15).getTime());
+        t.setDate(new GregorianCalendar(year, month, day).getTime());
         transactionWriteService.saveForUser(testUser.getId(), t);
     }
 }

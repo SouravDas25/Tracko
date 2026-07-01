@@ -43,7 +43,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Tag(name = "Transactions", description = "Create, read, update and delete transactions and transfers")
 @RestController
@@ -69,64 +68,67 @@ public class TransactionController {
     @Autowired
     private TransactionSearchService transactionSearchService;
 
-    private List<Transaction> hideTransferCredits(List<Transaction> transactions, String userId) {
+    /**
+     * Applies transfer rendering rules to a page of transactions in a single pass:
+     * hides the CREDIT side of each transfer and labels the remaining (DEBIT) side as TRANSFER.
+     * Resolves the user's TRANSFER category once to avoid redundant lookups.
+     */
+    private List<Transaction> applyTransferRendering(List<Transaction> transactions, String userId) {
         var transferCats = categoryRepository.findByUserIdAndName(userId, "TRANSFER");
         if (transferCats == null || transferCats.isEmpty()) {
             return transactions;
         }
         Long transferCategoryId = transferCats.get(0).getId();
-        return transactions.stream()
-                .filter(t -> !(t.getCategoryId() != null
-                        && t.getCategoryId().equals(transferCategoryId)
-                        && t.getIsCountable() != null && t.getIsCountable() == 0
-                        && t.getTransactionType() != null && t.getTransactionType() == TransactionDbType.CREDIT)) // hide CREDIT side
-                .collect(Collectors.toList());
-    }
-
-    private List<Transaction> markTransferTypeAsTransfer(List<Transaction> transactions, String userId) {
-        var transferCats = categoryRepository.findByUserIdAndName(userId, "TRANSFER");
-        if (transferCats == null || transferCats.isEmpty()) {
-            return transactions;
-        }
-        Long transferCategoryId = transferCats.get(0).getId();
+        List<Transaction> result = new ArrayList<>(transactions.size());
         for (var t : transactions) {
-            if (t.getCategoryId() != null && t.getCategoryId().equals(transferCategoryId)
-                    && t.getIsCountable() != null && t.getIsCountable() == 0) {
-                t.setRenderedTransactionType(TransactionDbType.TRANSFER_RENDERING_VALUE); // mark as TRANSFER for response rendering
+            boolean isTransfer = t.getCategoryId() != null
+                    && t.getCategoryId().equals(transferCategoryId)
+                    && t.getIsCountable() != null && t.getIsCountable() == 0;
+            if (isTransfer && t.getTransactionType() != null && t.getTransactionType() == TransactionDbType.CREDIT) {
+                continue; // hide CREDIT side of transfer
             }
+            if (isTransfer) {
+                t.setRenderedTransactionType(TransactionDbType.TRANSFER_RENDERING_VALUE); // mark DEBIT side as TRANSFER for rendering
+            }
+            result.add(t);
         }
-        return transactions;
+        return result;
     }
 
-    private List<TransactionDetailDTO> hideTransferCreditsForDTO(List<TransactionDetailDTO> dtos, String userId) {
+    /**
+     * DTO counterpart of {@link #applyTransferRendering(List, String)}: hides the CREDIT side of
+     * each transfer and labels the remaining (DEBIT) side as TRANSFER, resolving the TRANSFER
+     * category once.
+     */
+    private List<TransactionDetailDTO> applyTransferRenderingForDTO(List<TransactionDetailDTO> dtos, String userId) {
         var transferCats = categoryRepository.findByUserIdAndName(userId, "TRANSFER");
         if (transferCats == null || transferCats.isEmpty()) {
             return dtos;
         }
         Long transferCategoryId = transferCats.get(0).getId();
-        return dtos.stream()
-                .filter(dto -> {
-                    return !(dto.getCategoryId() != null
-                            && dto.getCategoryId().equals(transferCategoryId)
-                            && dto.getIsCountable() != null && dto.getIsCountable() == 0
-                            && dto.getTransactionType() != null && dto.getTransactionType() == TransactionDbType.CREDIT.getValue());
-                })
-                .collect(Collectors.toList());
-    }
-
-    private List<TransactionDetailDTO> markTransferTypeAsTransferForDTO(List<TransactionDetailDTO> dtos, String userId) {
-        var transferCats = categoryRepository.findByUserIdAndName(userId, "TRANSFER");
-        if (transferCats == null || transferCats.isEmpty()) {
-            return dtos;
-        }
-        Long transferCategoryId = transferCats.get(0).getId();
+        List<TransactionDetailDTO> result = new ArrayList<>(dtos.size());
         for (var dto : dtos) {
-            if (dto.getCategoryId() != null && dto.getCategoryId().equals(transferCategoryId)
-                    && dto.getIsCountable() != null && dto.getIsCountable() == 0) {
-                dto.setTransactionType(TransactionDbType.TRANSFER_RENDERING_VALUE); // mark as TRANSFER for response rendering
+            boolean isTransfer = dto.getCategoryId() != null
+                    && dto.getCategoryId().equals(transferCategoryId)
+                    && dto.getIsCountable() != null && dto.getIsCountable() == 0;
+            if (isTransfer && dto.getTransactionType() != null && dto.getTransactionType() == TransactionDbType.CREDIT.getValue()) {
+                continue; // hide CREDIT side of transfer
             }
+            if (isTransfer) {
+                dto.setTransactionType(TransactionDbType.TRANSFER_RENDERING_VALUE); // mark DEBIT side as TRANSFER for rendering
+            }
+            result.add(dto);
         }
-        return dtos;
+        return result;
+    }
+
+    /**
+     * Returns true when both bounds are present and the end falls before the start.
+     * A null bound is treated as an open range and passes validation, since some
+     * endpoints allow an omitted start or end.
+     */
+    private static boolean isEndBeforeStart(Date startDate, Date endDate) {
+        return startDate != null && endDate != null && endDate.before(startDate);
     }
 
     /**
@@ -160,7 +162,7 @@ public class TransactionController {
         }
 
         // Validate date range
-        if (startDate != null && endDate != null && endDate.before(startDate)) {
+        if (isEndBeforeStart(startDate, endDate)) {
             return Response.badRequest("End date must be after start date");
         }
 
@@ -213,6 +215,9 @@ public class TransactionController {
         int resolvedYear = (year == null) ? Calendar.getInstance().get(Calendar.YEAR) : year;
 
         if (startDate != null && endDate != null) {
+            if (isEndBeforeStart(startDate, endDate)) {
+                return Response.badRequest("End date must be after start date");
+            }
             start = startDate;
             end = endDate;
         } else if (month != null) {
@@ -226,7 +231,7 @@ public class TransactionController {
         }
 
         String currentUserId = userService.loggedInUser().getId();
-        List<Long> ids = com.trako.util.CommonUtil.parseAccountIds(accountIds);
+        List<Long> ids = CommonUtil.parseAccountIds(accountIds);
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "date").and(Sort.by(Sort.Direction.DESC, "id")));
 
         if (expand) {
@@ -260,9 +265,7 @@ public class TransactionController {
                 );
             }
 
-            List<TransactionDetailDTO> dtos = new ArrayList<>(dtoPage.getContent());
-            dtos = hideTransferCreditsForDTO(dtos, currentUserId);
-            dtos = markTransferTypeAsTransferForDTO(dtos, currentUserId);
+            List<TransactionDetailDTO> dtos = applyTransferRenderingForDTO(new ArrayList<>(dtoPage.getContent()), currentUserId);
 
             TransactionsPageDTO payload = new TransactionsPageDTO();
             payload.setMonth(month);
@@ -315,9 +318,7 @@ public class TransactionController {
             );
         }
 
-        List<Transaction> transactions = new ArrayList<>(transactionPage.getContent());
-        transactions = hideTransferCredits(transactions, currentUserId);
-        transactions = markTransferTypeAsTransfer(transactions, currentUserId);
+        List<Transaction> transactions = applyTransferRendering(new ArrayList<>(transactionPage.getContent()), currentUserId);
 
         TransactionsPageDTO payload = new TransactionsPageDTO();
         payload.setMonth(month);
@@ -334,27 +335,18 @@ public class TransactionController {
     }
 
     private Date getStartOfMonth(int year, int month) {
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.YEAR, year);
-        calendar.set(Calendar.MONTH, month - 1);
-        calendar.set(Calendar.DAY_OF_MONTH, 1);
-        calendar.set(Calendar.HOUR_OF_DAY, 0);
-        calendar.set(Calendar.MINUTE, 0);
-        calendar.set(Calendar.SECOND, 0);
-        calendar.set(Calendar.MILLISECOND, 0);
-        return calendar.getTime();
+        return startOfMonth(year, month, 0);
     }
 
     private Date getStartOfNextMonth(int year, int month) {
+        return startOfMonth(year, month, 1);
+    }
+
+    private Date startOfMonth(int year, int month, int monthOffset) {
         Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.YEAR, year);
-        calendar.set(Calendar.MONTH, month - 1);
-        calendar.set(Calendar.DAY_OF_MONTH, 1);
-        calendar.set(Calendar.HOUR_OF_DAY, 0);
-        calendar.set(Calendar.MINUTE, 0);
-        calendar.set(Calendar.SECOND, 0);
-        calendar.set(Calendar.MILLISECOND, 0);
-        calendar.add(Calendar.MONTH, 1);
+        calendar.clear();
+        calendar.set(year, month - 1, 1, 0, 0, 0);
+        calendar.add(Calendar.MONTH, monthOffset);
         return calendar.getTime();
     }
 
@@ -368,6 +360,9 @@ public class TransactionController {
     public ResponseEntity<?> getMyTotalIncome(
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate) {
+        if (isEndBeforeStart(startDate, endDate)) {
+            return Response.badRequest("End date must be after start date");
+        }
         String currentUserId = userService.loggedInUser().getId();
         Double totalIncome = transactionService.getTotalIncome(currentUserId, startDate, endDate);
         return Response.ok(totalIncome);
@@ -383,6 +378,9 @@ public class TransactionController {
     public ResponseEntity<?> getMyTotalExpense(
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate) {
+        if (isEndBeforeStart(startDate, endDate)) {
+            return Response.badRequest("End date must be after start date");
+        }
         String currentUserId = userService.loggedInUser().getId();
         Double totalExpense = transactionService.getTotalExpense(currentUserId, startDate, endDate);
         return Response.ok(totalExpense);
@@ -402,8 +400,11 @@ public class TransactionController {
             @RequestParam(required = false) String accountIds,
             @RequestParam(required = false, defaultValue = "true") boolean includeRollover,
             @RequestParam(required = false) Long categoryId) {
+        if (isEndBeforeStart(startDate, endDate)) {
+            return Response.badRequest("End date must be after start date");
+        }
         String currentUserId = userService.loggedInUser().getId();
-        List<Long> ids = com.trako.util.CommonUtil.parseAccountIds(accountIds);
+        List<Long> ids = CommonUtil.parseAccountIds(accountIds);
         TransactionSummaryDTO summary;
         if (includeRollover) {
             summary = transactionService.getSummaryWithRollover(currentUserId, startDate, endDate, ids, categoryId);
@@ -506,7 +507,7 @@ public class TransactionController {
             @RequestParam(required = false) String accountIds,
             @RequestParam(required = false) Long categoryId) {
         String currentUserId = userService.loggedInUser().getId();
-        List<Long> ids = com.trako.util.CommonUtil.parseAccountIds(accountIds);
+        List<Long> ids = CommonUtil.parseAccountIds(accountIds);
 
         int resolvedYear = (year == null) ? Calendar.getInstance().get(Calendar.YEAR) : year;
 
@@ -525,7 +526,7 @@ public class TransactionController {
             @RequestParam(required = false) String accountIds,
             @RequestParam(required = false) Long categoryId) {
         String currentUserId = userService.loggedInUser().getId();
-        List<Long> ids = com.trako.util.CommonUtil.parseAccountIds(accountIds);
+        List<Long> ids = CommonUtil.parseAccountIds(accountIds);
 
         List<TransactionPeriodSummaryDTO> summaries = transactionService.getYearlySummaries(currentUserId, ids, categoryId);
         return Response.ok(summaries);
