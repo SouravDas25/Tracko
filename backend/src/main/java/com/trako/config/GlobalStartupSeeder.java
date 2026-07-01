@@ -61,14 +61,13 @@ public class GlobalStartupSeeder implements ApplicationRunner {
             log.warn("GlobalStartupSeeder: unable to read profiles: {}", e.getMessage());
         }
 
-        seedUsers();
-
         if (isDevProfileActive() || isTestProfileActive()) {
-            log.info("GlobalStartupSeeder: dev/test profile detected, seeding accounts/categories");
+            log.info("GlobalStartupSeeder: dev/test profile detected, seeding users/accounts/categories");
+            seedUsers();
             seedAccounts();
             seedCategories();
         } else {
-            log.info("GlobalStartupSeeder: dev/test profile NOT detected, skipping accounts/categories");
+            log.info("GlobalStartupSeeder: dev/test profile NOT detected, skipping seed data");
         }
 
         log.info("GlobalStartupSeeder: finished");
@@ -125,19 +124,7 @@ public class GlobalStartupSeeder implements ApplicationRunner {
                     changed = true;
                 }
 
-                if (existing.getPassword() == null || !passwordEncoder.matches(password, existing.getPassword())) {
-                    existing.setPassword(passwordEncoder.encode(password));
-                    changed = true;
-                }
 
-                if (existing.getEmail() == null || !existing.getEmail().equals(email)) {
-                    existing.setEmail(email);
-                    changed = true;
-                }
-                if (existing.getName() == null || !existing.getName().equals(name)) {
-                    existing.setName(name);
-                    changed = true;
-                }
                 if (changed) {
                     usersRepository.save(existing);
                     log.info("Updated seeded user: {} ({})", name, phoneNo);

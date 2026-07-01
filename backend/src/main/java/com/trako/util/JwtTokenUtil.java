@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
@@ -21,6 +22,7 @@ import java.util.function.Function;
 public class JwtTokenUtil implements Serializable {
 
     private static final long DEFAULT_TOKEN_VALIDITY = 86400; // 24 hours in seconds
+    private static final String KNOWN_DEFAULT_SECRET = "tracko_jwt_secret_change_me_to_32+_chars_min";
     @Serial
     private static final long serialVersionUID = -2550185165626007488L;
     @Value("${jwt.secret}")
@@ -28,6 +30,20 @@ public class JwtTokenUtil implements Serializable {
 
     @Value("${jwt.token.validity:" + DEFAULT_TOKEN_VALIDITY + "}")
     private long jwtTokenValidity;
+
+    @PostConstruct
+    private void init() {
+        if (secret == null || secret.isBlank()) {
+            throw new IllegalStateException(
+                    "JWT_SECRET environment variable is not set. Set a strong, unique secret at least 32 characters long."
+            );
+        }
+        if (KNOWN_DEFAULT_SECRET.equals(secret)) {
+            throw new IllegalStateException(
+                    "JWT_SECRET is set to a publicly known default. Change it to a strong, unique secret."
+            );
+        }
+    }
 
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));

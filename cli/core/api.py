@@ -25,7 +25,7 @@ from .output import print_error
 def get_config_for_api(require_token: bool = True) -> tuple[str, str | None]:
     """Read base_url and token from the active profile. Exits if token is missing and required."""
     config = get_active_profile_config()
-    base_url = config.get("base_url", "http://localhost:8080")
+    base_url = config.get("base_url", "https://trako.silent-samurai.org")
     token = config.get("token")
     if require_token and not token:
         print_error("Not authenticated. Please run 'tracko login' first.")

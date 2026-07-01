@@ -3,7 +3,7 @@ import os
 import sys
 from typing import Dict, Any, Tuple, Optional
 
-DEFAULT_BASE_URL = "http://localhost:8080"
+DEFAULT_BASE_URL = "https://trako.silent-samurai.org"
 
 ENV_VAR_PROFILE = "TRACKO_PROFILE"
 DEFAULT_PROFILE_NAME = "default"

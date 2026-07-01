@@ -35,10 +35,16 @@ public class SecurityConfig {
             "/api/login",
             "/api/health",
             "/h2-console/**",
-            // OpenAPI / Swagger UI
+            // OpenAPI / Swagger UI (dev/test only)
             "/v3/api-docs/**",
             "/swagger-ui.html",
             "/swagger-ui/**"
+    };
+
+    private static final String[] WHITE_LIST_API_PROD = {
+            "/api/oauth/token",
+            "/api/login",
+            "/api/health"
     };
 
     @Value("${cors.allowed-origins:}")
@@ -112,7 +118,7 @@ public class SecurityConfig {
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(jwtAuthenticationEntryPoint))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers(WHITE_LIST_API).permitAll()
+                        .requestMatchers(WHITE_LIST_API_PROD).permitAll()
                         .anyRequest().authenticated()
                 );
 
