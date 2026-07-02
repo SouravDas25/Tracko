@@ -76,6 +76,36 @@ def start_backend():
     proc.terminate()
     return None
 
+def configure_profile() -> bool:
+    """Pin the 'test' profile to the freshly started local backend.
+
+    The CLI resolves base_url from the active profile and otherwise falls back
+    to a *remote* DEFAULT_BASE_URL. Without pinning, `auth login` authenticates
+    against that remote server, mints a token signed with the remote JWT secret,
+    and the whole suite (plus the seed gate) then talks to the wrong backend —
+    the local one rejects the token with a SignatureException, surfacing in the
+    CLI as "Category 'INCOME' not found".
+    """
+    print(f"Pinning 'test' profile to {BASE_URL}...")
+    project_root = Path(__file__).parent.parent
+    env = dict(subprocess.os.environ)
+    env["PYTHONIOENCODING"] = "utf-8"
+    env["TRACKO_PROFILE"] = "test"
+
+    result = subprocess.run(
+        [sys.executable, "-m", "cli", "config", "set", "--base-url", BASE_URL, "--profile", "test"],
+        cwd=project_root,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        env=env,
+    )
+    if result.returncode != 0:
+        print(f"Failed to pin base_url: {result.stderr or result.stdout}")
+        return False
+    return True
+
+
 def login(max_attempts: int = 10) -> bool:
     """Login and save token to 'test' profile.
 
@@ -194,6 +224,10 @@ def main():
         return 1
 
     try:
+        if not configure_profile():
+            print("Could not pin 'test' profile to local backend — aborting.")
+            dump_backend_log_tail()
+            return 1
         if not login():
             print("Login failed after retries — aborting.")
             dump_backend_log_tail()
