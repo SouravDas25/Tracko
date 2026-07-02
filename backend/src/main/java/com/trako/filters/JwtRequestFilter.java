@@ -143,8 +143,6 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             // Remove "Bearer " prefix to get the actual token
             if (requestTokenHeader != null && requestTokenHeader.startsWith("Bearer ")) {
                 jwtToken = requestTokenHeader.substring(7);
-                logger.info("JwtRequestFilter: Token found (prefix): " + (jwtToken.length() > 10 ? jwtToken.substring(0, 10) + "..." : jwtToken));
-
                 // Validate that the token is not empty after extracting
                 if (jwtToken.isBlank()) {
                     logger.warn("JwtRequestFilter: Token is blank");

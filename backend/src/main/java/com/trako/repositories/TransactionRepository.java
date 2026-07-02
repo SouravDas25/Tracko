@@ -234,6 +234,11 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
     boolean existsByCategoryId(Long categoryId);
 
+    @Query("SELECT COUNT(t) FROM Transaction t " +
+            "WHERE t.id = :transactionId AND t.accountId IN " +
+            "(SELECT a.id FROM Account a WHERE a.userId = :userId)")
+    long countByIdAndUserId(@Param("transactionId") Long transactionId, @Param("userId") String userId);
+
     void deleteByAccountIdIn(List<Long> accountIds);
 
     @Query("SELECT YEAR(t.date) as y, MONTH(t.date) as m, " +

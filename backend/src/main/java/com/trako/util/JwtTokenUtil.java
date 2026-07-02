@@ -43,6 +43,11 @@ public class JwtTokenUtil implements Serializable {
                     "JWT_SECRET is set to a publicly known default. Change it to a strong, unique secret."
             );
         }
+        if (secret.length() < 32) {
+            throw new IllegalStateException(
+                    "JWT_SECRET must be at least 32 characters long. Current length: " + secret.length()
+            );
+        }
     }
 
     private SecretKey getSigningKey() {
