@@ -9,6 +9,7 @@ import 'package:tracko/pages/smart_add_item/components/amount_input_section.dart
 import 'package:tracko/pages/smart_add_item/components/transaction_details_form.dart';
 import 'package:tracko/pages/smart_add_item/components/split_manager_section.dart';
 import 'package:tracko/pages/smart_add_item/components/comments_section.dart';
+import 'package:tracko/pages/transaction_list_page/transaction_history_page.dart';
 
 class SmartAddItemPage extends StatefulWidget {
   final Transaction transaction;
@@ -48,6 +49,14 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
     super.dispose();
   }
 
+  void _openHistory(BuildContext context) {
+    final id = widget.transaction.id;
+    if (id == null) return;
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => TransactionHistoryPage(transactionId: id),
+    ));
+  }
+
   Future<void> _save() async {
     bool isSuccessfulSave = false;
     LoadingDialog.show(context);
@@ -74,15 +83,20 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: typeColor,
-        actions: _controller.transactionType == TransactionType.DEBIT
-            ? <Widget>[
-                IconButton(
-                  icon: Icon(Icons.call_split, size: 28.0),
-                  onPressed: () => _controller.callSplitPage(context),
-                  tooltip: "Split Transaction",
-                )
-              ]
-            : [],
+        actions: <Widget>[
+          if (_controller.isEdit && widget.transaction.id != null)
+            IconButton(
+              icon: Icon(Icons.history, size: 26.0),
+              onPressed: () => _openHistory(context),
+              tooltip: "History",
+            ),
+          if (_controller.transactionType == TransactionType.DEBIT)
+            IconButton(
+              icon: Icon(Icons.call_split, size: 28.0),
+              onPressed: () => _controller.callSplitPage(context),
+              tooltip: "Split Transaction",
+            ),
+        ],
         title:
             Text(_controller.isEdit ? "Edit Transaction" : "New Transaction"),
         centerTitle: true,

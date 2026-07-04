@@ -5,7 +5,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**result** | [**RecurringTransaction**](RecurringTransaction.md) |  | [optional] 
+**result** | [**Category**](Category.md) |  | [optional] 
 **message** | **str** | Human-readable status message | [optional] 
 
 ## Example

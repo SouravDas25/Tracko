@@ -11,6 +11,7 @@ import 'package:tracko/pages/category_page/category_page.dart';
 import 'package:tracko/pages/contact_page/contact_page.dart';
 import '../recurring_transaction_page/recurring_transaction_list_page.dart';
 import 'package:tracko/pages/settings_page/currency_settings_page.dart';
+import 'package:tracko/pages/transaction_list_page/transaction_history_page.dart';
 import 'package:tracko/repositories/user_repository.dart';
 import 'package:tracko/Utils/HealthCheckUtil.dart';
 import 'package:tracko/services/SessionService.dart';
@@ -351,6 +352,17 @@ class _SettingsPage extends State<SettingsPage> {
               context,
               MaterialPageRoute(
                   builder: (context) => RecurringTransactionListPage()),
+            ),
+          ),
+          _buildSettingsTile(
+            icon: Icons.history,
+            title: "Transaction History",
+            subtitle: "All changes across all transactions; restore deleted ones",
+            iconColor: Colors.blueGrey,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => const TransactionHistoryPage()),
             ),
           ),
 

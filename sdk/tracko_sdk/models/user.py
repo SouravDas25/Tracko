@@ -40,9 +40,9 @@ class User(BaseModel):
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     secondary_currencies: Optional[List[UserCurrency]] = Field(default=None, alias="secondaryCurrencies")
-    admin: Optional[StrictBool] = None
     shadow: Optional[StrictBool] = None
-    __properties: ClassVar[List[str]] = ["id", "name", "phoneNo", "email", "profilePic", "globalId", "baseCurrency", "isShadow", "isAdmin", "createdAt", "updatedAt", "secondaryCurrencies", "admin", "shadow"]
+    admin: Optional[StrictBool] = None
+    __properties: ClassVar[List[str]] = ["id", "name", "phoneNo", "email", "profilePic", "globalId", "baseCurrency", "isShadow", "isAdmin", "createdAt", "updatedAt", "secondaryCurrencies", "shadow", "admin"]
 
     model_config = ConfigDict(
         populate_by_name=True,
@@ -114,8 +114,8 @@ class User(BaseModel):
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "secondaryCurrencies": [UserCurrency.from_dict(_item) for _item in obj["secondaryCurrencies"]] if obj.get("secondaryCurrencies") is not None else None,
-            "admin": obj.get("admin"),
-            "shadow": obj.get("shadow")
+            "shadow": obj.get("shadow"),
+            "admin": obj.get("admin")
         })
         return _obj
 

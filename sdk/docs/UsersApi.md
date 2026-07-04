@@ -163,7 +163,7 @@ This endpoint does not need any parameter.
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **reset_data**
-> Delete1200Response reset_data()
+> Delete200Response reset_data()
 
 Reset all user data (accounts, categories, transactions)
 
@@ -173,7 +173,7 @@ Reset all user data (accounts, categories, transactions)
 
 ```python
 import tracko_sdk
-from tracko_sdk.models.delete1200_response import Delete1200Response
+from tracko_sdk.models.delete200_response import Delete200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -215,7 +215,7 @@ This endpoint does not need any parameter.
 
 ### Return type
 
-[**Delete1200Response**](Delete1200Response.md)
+[**Delete200Response**](Delete200Response.md)
 
 ### Authorization
 
@@ -235,7 +235,7 @@ This endpoint does not need any parameter.
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **reset_transactions**
-> Delete1200Response reset_transactions()
+> Delete200Response reset_transactions()
 
 Reset only transactions for the current user
 
@@ -245,7 +245,7 @@ Reset only transactions for the current user
 
 ```python
 import tracko_sdk
-from tracko_sdk.models.delete1200_response import Delete1200Response
+from tracko_sdk.models.delete200_response import Delete200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -287,7 +287,7 @@ This endpoint does not need any parameter.
 
 ### Return type
 
-[**Delete1200Response**](Delete1200Response.md)
+[**Delete200Response**](Delete200Response.md)
 
 ### Authorization
 

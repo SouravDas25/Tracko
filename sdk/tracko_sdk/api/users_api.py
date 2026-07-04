@@ -19,7 +19,7 @@ from typing_extensions import Annotated
 from pydantic import Field
 from typing_extensions import Annotated
 from tracko_sdk.models.create200_response import Create200Response
-from tracko_sdk.models.delete1200_response import Delete1200Response
+from tracko_sdk.models.delete200_response import Delete200Response
 from tracko_sdk.models.me200_response import Me200Response
 from tracko_sdk.models.show200_response import Show200Response
 from tracko_sdk.models.update_profile200_response import UpdateProfile200Response
@@ -567,7 +567,7 @@ class UsersApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> Delete1200Response:
+    ) -> Delete200Response:
         """Reset all user data (accounts, categories, transactions)
 
 
@@ -601,7 +601,7 @@ class UsersApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Delete1200Response",
+            '200': "Delete200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -629,7 +629,7 @@ class UsersApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[Delete1200Response]:
+    ) -> ApiResponse[Delete200Response]:
         """Reset all user data (accounts, categories, transactions)
 
 
@@ -663,7 +663,7 @@ class UsersApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Delete1200Response",
+            '200': "Delete200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -725,7 +725,7 @@ class UsersApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Delete1200Response",
+            '200': "Delete200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -807,7 +807,7 @@ class UsersApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> Delete1200Response:
+    ) -> Delete200Response:
         """Reset only transactions for the current user
 
 
@@ -841,7 +841,7 @@ class UsersApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Delete1200Response",
+            '200': "Delete200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -869,7 +869,7 @@ class UsersApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[Delete1200Response]:
+    ) -> ApiResponse[Delete200Response]:
         """Reset only transactions for the current user
 
 
@@ -903,7 +903,7 @@ class UsersApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Delete1200Response",
+            '200': "Delete200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -965,7 +965,7 @@ class UsersApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Delete1200Response",
+            '200': "Delete200Response",
         }
         response_data = self.api_client.call_api(
             *_param,

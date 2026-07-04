@@ -4,6 +4,7 @@ Assumes seeded data: Cash account, categories (FOOD, INCOME, TRANSFER, etc.)
 Run via: python cli/run_cli_test.py  (starts backend, logs in, runs pytest)
 """
 import json
+import re
 import tempfile
 
 import pytest
@@ -298,3 +299,95 @@ def test_transaction_search_pagination(runner):
         "--size", "5",
     ])
     assert result.exit_code == 0
+
+
+# ---------------------------------------------------------------------------
+# history
+# ---------------------------------------------------------------------------
+
+def test_transaction_history_renders(runner, created_expense):
+    """A transaction's history table renders after it has been edited."""
+    runner.invoke(app, [
+        "transaction", "update-expense", str(created_expense),
+        "--name", "HistoryEdited",
+    ])
+    result = runner.invoke(app, ["transaction", "history", str(created_expense)])
+    assert result.exit_code == 0
+    assert f"History for transaction {created_expense}" in result.stdout
+
+
+def test_transaction_history_raw(runner, created_expense):
+    """--raw history output is produced without error."""
+    result = runner.invoke(app, ["transaction", "history", str(created_expense), "--raw"])
+    assert result.exit_code == 0
+
+
+def test_transaction_history_none(runner):
+    """History for a non-existent transaction reports no history (exit 0)."""
+    result = runner.invoke(app, ["transaction", "history", "999999"])
+    assert result.exit_code == 0
+    assert "No history found" in result.stdout
+
+
+# ---------------------------------------------------------------------------
+# trash (recycle bin)
+# ---------------------------------------------------------------------------
+
+def test_transaction_trash_lists_deleted(runner, created_expense):
+    """A deleted transaction shows up in the recycle-bin listing."""
+    runner.invoke(app, ["transaction", "delete", str(created_expense)], input="y\n")
+    result = runner.invoke(app, ["transaction", "trash"])
+    assert result.exit_code == 0
+    assert "Recycle Bin" in result.stdout
+
+
+def test_transaction_trash_raw(runner):
+    """--raw recycle-bin output is produced without error."""
+    result = runner.invoke(app, ["transaction", "trash", "--raw"])
+    assert result.exit_code == 0
+
+
+# ---------------------------------------------------------------------------
+# revert
+# ---------------------------------------------------------------------------
+
+def test_transaction_revert_cancelled(runner):
+    """Declining the revert confirmation prints 'Cancelled' and exits 1."""
+    result = runner.invoke(app, ["transaction", "revert", "1"], input="n\n")
+    assert result.exit_code == 1
+    assert "Cancelled" in result.stdout
+
+
+def test_transaction_revert_nonexistent(runner):
+    """Reverting a non-existent history entry returns an error."""
+    result = runner.invoke(app, ["transaction", "revert", "999999"], input="y\n")
+    assert result.exit_code != 0
+
+
+def test_transaction_revert_restores_deleted(runner, created_expense):
+    """Full round-trip: delete a transaction, then revert its DELETE entry to restore it."""
+    txn_id = created_expense
+
+    # Delete → moves to the recycle bin (hard-deletes the row).
+    deleted = runner.invoke(app, ["transaction", "delete", str(txn_id)], input="y\n")
+    assert deleted.exit_code == 0
+    # The transaction row is gone.
+    assert runner.invoke(app, ["transaction", "get", str(txn_id)]).exit_code != 0
+
+    # The history is still addressable by transaction id; grab the most recent
+    # entry (the DELETE) so we can restore it.
+    hist = runner.invoke(app, ["transaction", "history", str(txn_id), "--raw"])
+    assert hist.exit_code == 0
+    match = re.search(r'(?<!\w)id["\s]*[=:]\s*(\d+)', hist.stdout)
+    assert match, f"Could not find a history id in output:\n{hist.stdout}"
+    history_id = match.group(1)
+
+    # Revert the delete → restores the transaction with its original id.
+    reverted = runner.invoke(app, ["transaction", "revert", history_id], input="y\n")
+    assert reverted.exit_code == 0
+    assert "Reverted" in reverted.stdout and "successfully" in reverted.stdout
+
+    # It is back, under the same id.
+    restored = runner.invoke(app, ["transaction", "get", str(txn_id)])
+    assert restored.exit_code == 0
+    assert "FixtureExpense" in restored.stdout

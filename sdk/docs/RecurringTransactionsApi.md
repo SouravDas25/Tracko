@@ -5,14 +5,14 @@ All URIs are relative to *http://localhost:8080*
 Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**create3**](RecurringTransactionsApi.md#create3) | **POST** /api/recurring-transactions | Create a recurring transaction
-[**delete3**](RecurringTransactionsApi.md#delete3) | **DELETE** /api/recurring-transactions/{id} | Delete a recurring transaction
+[**delete1**](RecurringTransactionsApi.md#delete1) | **DELETE** /api/recurring-transactions/{id} | Delete a recurring transaction
 [**get_all3**](RecurringTransactionsApi.md#get_all3) | **GET** /api/recurring-transactions | List all recurring transactions
-[**get_by_id2**](RecurringTransactionsApi.md#get_by_id2) | **GET** /api/recurring-transactions/{id} | Get a recurring transaction by ID
+[**get_by_id1**](RecurringTransactionsApi.md#get_by_id1) | **GET** /api/recurring-transactions/{id} | Get a recurring transaction by ID
 [**update1**](RecurringTransactionsApi.md#update1) | **PUT** /api/recurring-transactions/{id} | Update a recurring transaction
 
 
 # **create3**
-> GetById2200Response create3(recurring_transaction)
+> GetById1200Response create3(recurring_transaction)
 
 Create a recurring transaction
 
@@ -22,7 +22,7 @@ Create a recurring transaction
 
 ```python
 import tracko_sdk
-from tracko_sdk.models.get_by_id2200_response import GetById2200Response
+from tracko_sdk.models.get_by_id1200_response import GetById1200Response
 from tracko_sdk.models.recurring_transaction import RecurringTransaction
 from tracko_sdk.rest import ApiException
 from pprint import pprint
@@ -69,7 +69,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**GetById2200Response**](GetById2200Response.md)
+[**GetById1200Response**](GetById1200Response.md)
 
 ### Authorization
 
@@ -88,8 +88,8 @@ Name | Type | Description  | Notes
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **delete3**
-> Delete1200Response delete3(id)
+# **delete1**
+> Delete200Response delete1(id)
 
 Delete a recurring transaction
 
@@ -99,7 +99,7 @@ Delete a recurring transaction
 
 ```python
 import tracko_sdk
-from tracko_sdk.models.delete1200_response import Delete1200Response
+from tracko_sdk.models.delete200_response import Delete200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -127,11 +127,11 @@ with tracko_sdk.ApiClient(configuration) as api_client:
 
     try:
         # Delete a recurring transaction
-        api_response = api_instance.delete3(id)
-        print("The response of RecurringTransactionsApi->delete3:\n")
+        api_response = api_instance.delete1(id)
+        print("The response of RecurringTransactionsApi->delete1:\n")
         pprint(api_response)
     except Exception as e:
-        print("Exception when calling RecurringTransactionsApi->delete3: %s\n" % e)
+        print("Exception when calling RecurringTransactionsApi->delete1: %s\n" % e)
 ```
 
 
@@ -145,7 +145,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**Delete1200Response**](Delete1200Response.md)
+[**Delete200Response**](Delete200Response.md)
 
 ### Authorization
 
@@ -236,8 +236,8 @@ This endpoint does not need any parameter.
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **get_by_id2**
-> GetById2200Response get_by_id2(id)
+# **get_by_id1**
+> GetById1200Response get_by_id1(id)
 
 Get a recurring transaction by ID
 
@@ -247,7 +247,7 @@ Get a recurring transaction by ID
 
 ```python
 import tracko_sdk
-from tracko_sdk.models.get_by_id2200_response import GetById2200Response
+from tracko_sdk.models.get_by_id1200_response import GetById1200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -275,11 +275,11 @@ with tracko_sdk.ApiClient(configuration) as api_client:
 
     try:
         # Get a recurring transaction by ID
-        api_response = api_instance.get_by_id2(id)
-        print("The response of RecurringTransactionsApi->get_by_id2:\n")
+        api_response = api_instance.get_by_id1(id)
+        print("The response of RecurringTransactionsApi->get_by_id1:\n")
         pprint(api_response)
     except Exception as e:
-        print("Exception when calling RecurringTransactionsApi->get_by_id2: %s\n" % e)
+        print("Exception when calling RecurringTransactionsApi->get_by_id1: %s\n" % e)
 ```
 
 
@@ -293,7 +293,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**GetById2200Response**](GetById2200Response.md)
+[**GetById1200Response**](GetById1200Response.md)
 
 ### Authorization
 
@@ -313,7 +313,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **update1**
-> GetById2200Response update1(id, recurring_transaction)
+> GetById1200Response update1(id, recurring_transaction)
 
 Update a recurring transaction
 
@@ -323,7 +323,7 @@ Update a recurring transaction
 
 ```python
 import tracko_sdk
-from tracko_sdk.models.get_by_id2200_response import GetById2200Response
+from tracko_sdk.models.get_by_id1200_response import GetById1200Response
 from tracko_sdk.models.recurring_transaction import RecurringTransaction
 from tracko_sdk.rest import ApiException
 from pprint import pprint
@@ -372,7 +372,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**GetById2200Response**](GetById2200Response.md)
+[**GetById1200Response**](GetById1200Response.md)
 
 ### Authorization
 

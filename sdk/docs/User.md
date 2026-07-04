@@ -17,8 +17,8 @@ Name | Type | Description | Notes
 **created_at** | **datetime** |  | [optional] 
 **updated_at** | **datetime** |  | [optional] 
 **secondary_currencies** | [**List[UserCurrency]**](UserCurrency.md) |  | [optional] 
-**admin** | **bool** |  | [optional] 
 **shadow** | **bool** |  | [optional] 
+**admin** | **bool** |  | [optional] 
 
 ## Example
 

@@ -4,14 +4,14 @@ All URIs are relative to *http://localhost:8080*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**delete**](UserCurrenciesApi.md#delete) | **DELETE** /api/user-currencies/{code} | Remove a currency from the current user
+[**delete7**](UserCurrenciesApi.md#delete7) | **DELETE** /api/user-currencies/{code} | Remove a currency from the current user
 [**get_all**](UserCurrenciesApi.md#get_all) | **GET** /api/user-currencies | List currencies configured for the current user
 [**save**](UserCurrenciesApi.md#save) | **POST** /api/user-currencies | Add or update a currency with a manual exchange rate
 [**save_auto**](UserCurrenciesApi.md#save_auto) | **POST** /api/user-currencies/auto | Add a currency with an automatically fetched exchange rate
 
 
-# **delete**
-> Delete1200Response delete(code)
+# **delete7**
+> Delete200Response delete7(code)
 
 Remove a currency from the current user
 
@@ -21,7 +21,7 @@ Remove a currency from the current user
 
 ```python
 import tracko_sdk
-from tracko_sdk.models.delete1200_response import Delete1200Response
+from tracko_sdk.models.delete200_response import Delete200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -49,11 +49,11 @@ with tracko_sdk.ApiClient(configuration) as api_client:
 
     try:
         # Remove a currency from the current user
-        api_response = api_instance.delete(code)
-        print("The response of UserCurrenciesApi->delete:\n")
+        api_response = api_instance.delete7(code)
+        print("The response of UserCurrenciesApi->delete7:\n")
         pprint(api_response)
     except Exception as e:
-        print("Exception when calling UserCurrenciesApi->delete: %s\n" % e)
+        print("Exception when calling UserCurrenciesApi->delete7: %s\n" % e)
 ```
 
 
@@ -67,7 +67,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**Delete1200Response**](Delete1200Response.md)
+[**Delete200Response**](Delete200Response.md)
 
 ### Authorization
 
@@ -159,7 +159,7 @@ This endpoint does not need any parameter.
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **save**
-> Delete1200Response save(user_currency_request)
+> Delete200Response save(user_currency_request)
 
 Add or update a currency with a manual exchange rate
 
@@ -169,7 +169,7 @@ Add or update a currency with a manual exchange rate
 
 ```python
 import tracko_sdk
-from tracko_sdk.models.delete1200_response import Delete1200Response
+from tracko_sdk.models.delete200_response import Delete200Response
 from tracko_sdk.models.user_currency_request import UserCurrencyRequest
 from tracko_sdk.rest import ApiException
 from pprint import pprint
@@ -216,7 +216,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**Delete1200Response**](Delete1200Response.md)
+[**Delete200Response**](Delete200Response.md)
 
 ### Authorization
 
@@ -236,7 +236,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **save_auto**
-> Delete1200Response save_auto(currency_code)
+> Delete200Response save_auto(currency_code)
 
 Add a currency with an automatically fetched exchange rate
 
@@ -246,7 +246,7 @@ Add a currency with an automatically fetched exchange rate
 
 ```python
 import tracko_sdk
-from tracko_sdk.models.delete1200_response import Delete1200Response
+from tracko_sdk.models.delete200_response import Delete200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -292,7 +292,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**Delete1200Response**](Delete1200Response.md)
+[**Delete200Response**](Delete200Response.md)
 
 ### Authorization
 

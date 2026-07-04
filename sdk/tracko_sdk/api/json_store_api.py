@@ -18,7 +18,7 @@ from typing_extensions import Annotated
 
 from pydantic import Field
 from typing_extensions import Annotated
-from tracko_sdk.models.delete1200_response import Delete1200Response
+from tracko_sdk.models.delete200_response import Delete200Response
 from tracko_sdk.models.get_all4200_response import GetAll4200Response
 from tracko_sdk.models.get_by_name200_response import GetByName200Response
 from tracko_sdk.models.json_store import JsonStore
@@ -310,7 +310,7 @@ class JSONStoreApi:
 
 
     @validate_call
-    def delete4(
+    def delete2(
         self,
         name: Annotated[str, Field(min_length=0, strict=True, max_length=191)],
         _request_timeout: Union[
@@ -325,7 +325,7 @@ class JSONStoreApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> Delete1200Response:
+    ) -> Delete200Response:
         """Delete a JSON store entry by name
 
 
@@ -353,7 +353,7 @@ class JSONStoreApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._delete4_serialize(
+        _param = self._delete2_serialize(
             name=name,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -362,7 +362,7 @@ class JSONStoreApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Delete1200Response",
+            '200': "Delete200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -376,7 +376,7 @@ class JSONStoreApi:
 
 
     @validate_call
-    def delete4_with_http_info(
+    def delete2_with_http_info(
         self,
         name: Annotated[str, Field(min_length=0, strict=True, max_length=191)],
         _request_timeout: Union[
@@ -391,7 +391,7 @@ class JSONStoreApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[Delete1200Response]:
+    ) -> ApiResponse[Delete200Response]:
         """Delete a JSON store entry by name
 
 
@@ -419,7 +419,7 @@ class JSONStoreApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._delete4_serialize(
+        _param = self._delete2_serialize(
             name=name,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -428,7 +428,7 @@ class JSONStoreApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Delete1200Response",
+            '200': "Delete200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -442,7 +442,7 @@ class JSONStoreApi:
 
 
     @validate_call
-    def delete4_without_preload_content(
+    def delete2_without_preload_content(
         self,
         name: Annotated[str, Field(min_length=0, strict=True, max_length=191)],
         _request_timeout: Union[
@@ -485,7 +485,7 @@ class JSONStoreApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._delete4_serialize(
+        _param = self._delete2_serialize(
             name=name,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -494,7 +494,7 @@ class JSONStoreApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Delete1200Response",
+            '200': "Delete200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -503,7 +503,7 @@ class JSONStoreApi:
         return response_data.response
 
 
-    def _delete4_serialize(
+    def _delete2_serialize(
         self,
         name,
         _request_auth,

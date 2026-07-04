@@ -515,4 +515,30 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     @Modifying
     @Query("DELETE FROM Transaction t WHERE t.accountId IN (SELECT a.id FROM Account a WHERE a.userId = :userId)")
     void deleteByUserId(@Param("userId") String userId);
+
+    /**
+     * Re-inserts a transaction with an explicit id, used to restore a hard-deleted transaction from a
+     * history snapshot while preserving its original id (so transfer links keep resolving). The
+     * generated {@code amount} column is left out and recomputed by the DB. Prior pending changes are
+     * flushed first so a delete from earlier in the same transaction is applied before the insert.
+     */
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query(value = "INSERT INTO transactions " +
+            "(id, transaction_type, name, comments, date, account_id, category_id, is_countable, " +
+            "original_currency, original_amount, exchange_rate, linked_transaction_id) " +
+            "VALUES (:id, :transactionType, :name, :comments, :date, :accountId, :categoryId, :isCountable, " +
+            ":originalCurrency, :originalAmount, :exchangeRate, :linkedTransactionId)",
+            nativeQuery = true)
+    void insertWithId(@Param("id") Long id,
+                      @Param("transactionType") Integer transactionType,
+                      @Param("name") String name,
+                      @Param("comments") String comments,
+                      @Param("date") Date date,
+                      @Param("accountId") Long accountId,
+                      @Param("categoryId") Long categoryId,
+                      @Param("isCountable") Integer isCountable,
+                      @Param("originalCurrency") String originalCurrency,
+                      @Param("originalAmount") Double originalAmount,
+                      @Param("exchangeRate") Double exchangeRate,
+                      @Param("linkedTransactionId") Long linkedTransactionId);
 }

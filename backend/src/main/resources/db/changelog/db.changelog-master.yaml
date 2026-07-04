@@ -13,3 +13,5 @@ databaseChangeLog:
             file: db/changelog/005-add-login-lockout-columns.yaml
     -   include:
             file: db/changelog/006-scope-json-store-to-user.yaml
+    -   include:
+            file: db/changelog/007-add-transaction-history.yaml

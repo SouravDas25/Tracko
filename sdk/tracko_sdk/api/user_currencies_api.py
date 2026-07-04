@@ -18,7 +18,7 @@ from typing_extensions import Annotated
 
 from pydantic import Field, StrictStr, field_validator
 from typing_extensions import Annotated
-from tracko_sdk.models.delete1200_response import Delete1200Response
+from tracko_sdk.models.delete200_response import Delete200Response
 from tracko_sdk.models.get_all200_response import GetAll200Response
 from tracko_sdk.models.user_currency_request import UserCurrencyRequest
 
@@ -41,7 +41,7 @@ class UserCurrenciesApi:
 
 
     @validate_call
-    def delete(
+    def delete7(
         self,
         code: StrictStr,
         _request_timeout: Union[
@@ -56,7 +56,7 @@ class UserCurrenciesApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> Delete1200Response:
+    ) -> Delete200Response:
         """Remove a currency from the current user
 
 
@@ -84,7 +84,7 @@ class UserCurrenciesApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._delete_serialize(
+        _param = self._delete7_serialize(
             code=code,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -93,7 +93,7 @@ class UserCurrenciesApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Delete1200Response",
+            '200': "Delete200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -107,7 +107,7 @@ class UserCurrenciesApi:
 
 
     @validate_call
-    def delete_with_http_info(
+    def delete7_with_http_info(
         self,
         code: StrictStr,
         _request_timeout: Union[
@@ -122,7 +122,7 @@ class UserCurrenciesApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[Delete1200Response]:
+    ) -> ApiResponse[Delete200Response]:
         """Remove a currency from the current user
 
 
@@ -150,7 +150,7 @@ class UserCurrenciesApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._delete_serialize(
+        _param = self._delete7_serialize(
             code=code,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -159,7 +159,7 @@ class UserCurrenciesApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Delete1200Response",
+            '200': "Delete200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -173,7 +173,7 @@ class UserCurrenciesApi:
 
 
     @validate_call
-    def delete_without_preload_content(
+    def delete7_without_preload_content(
         self,
         code: StrictStr,
         _request_timeout: Union[
@@ -216,7 +216,7 @@ class UserCurrenciesApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._delete_serialize(
+        _param = self._delete7_serialize(
             code=code,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -225,7 +225,7 @@ class UserCurrenciesApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Delete1200Response",
+            '200': "Delete200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -234,7 +234,7 @@ class UserCurrenciesApi:
         return response_data.response
 
 
-    def _delete_serialize(
+    def _delete7_serialize(
         self,
         code,
         _request_auth,
@@ -551,7 +551,7 @@ class UserCurrenciesApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> Delete1200Response:
+    ) -> Delete200Response:
         """Add or update a currency with a manual exchange rate
 
 
@@ -588,7 +588,7 @@ class UserCurrenciesApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Delete1200Response",
+            '200': "Delete200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -617,7 +617,7 @@ class UserCurrenciesApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[Delete1200Response]:
+    ) -> ApiResponse[Delete200Response]:
         """Add or update a currency with a manual exchange rate
 
 
@@ -654,7 +654,7 @@ class UserCurrenciesApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Delete1200Response",
+            '200': "Delete200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -720,7 +720,7 @@ class UserCurrenciesApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Delete1200Response",
+            '200': "Delete200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -819,7 +819,7 @@ class UserCurrenciesApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> Delete1200Response:
+    ) -> Delete200Response:
         """Add a currency with an automatically fetched exchange rate
 
 
@@ -856,7 +856,7 @@ class UserCurrenciesApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Delete1200Response",
+            '200': "Delete200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -885,7 +885,7 @@ class UserCurrenciesApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[Delete1200Response]:
+    ) -> ApiResponse[Delete200Response]:
         """Add a currency with an automatically fetched exchange rate
 
 
@@ -922,7 +922,7 @@ class UserCurrenciesApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Delete1200Response",
+            '200': "Delete200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -988,7 +988,7 @@ class UserCurrenciesApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Delete1200Response",
+            '200': "Delete200Response",
         }
         response_data = self.api_client.call_api(
             *_param,

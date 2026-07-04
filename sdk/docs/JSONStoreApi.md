@@ -5,7 +5,7 @@ All URIs are relative to *http://localhost:8080*
 Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**create4**](JSONStoreApi.md#create4) | **POST** /api/json-store | Create a JSON store entry
-[**delete4**](JSONStoreApi.md#delete4) | **DELETE** /api/json-store/{name} | Delete a JSON store entry by name
+[**delete2**](JSONStoreApi.md#delete2) | **DELETE** /api/json-store/{name} | Delete a JSON store entry by name
 [**get_all4**](JSONStoreApi.md#get_all4) | **GET** /api/json-store | List all JSON store entries
 [**get_by_name**](JSONStoreApi.md#get_by_name) | **GET** /api/json-store/{name} | Get a JSON store entry by name
 [**update2**](JSONStoreApi.md#update2) | **PUT** /api/json-store/{name} | Update a JSON store entry by name
@@ -88,8 +88,8 @@ Name | Type | Description  | Notes
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **delete4**
-> Delete1200Response delete4(name)
+# **delete2**
+> Delete200Response delete2(name)
 
 Delete a JSON store entry by name
 
@@ -99,7 +99,7 @@ Delete a JSON store entry by name
 
 ```python
 import tracko_sdk
-from tracko_sdk.models.delete1200_response import Delete1200Response
+from tracko_sdk.models.delete200_response import Delete200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -127,11 +127,11 @@ with tracko_sdk.ApiClient(configuration) as api_client:
 
     try:
         # Delete a JSON store entry by name
-        api_response = api_instance.delete4(name)
-        print("The response of JSONStoreApi->delete4:\n")
+        api_response = api_instance.delete2(name)
+        print("The response of JSONStoreApi->delete2:\n")
         pprint(api_response)
     except Exception as e:
-        print("Exception when calling JSONStoreApi->delete4: %s\n" % e)
+        print("Exception when calling JSONStoreApi->delete2: %s\n" % e)
 ```
 
 
@@ -145,7 +145,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**Delete1200Response**](Delete1200Response.md)
+[**Delete200Response**](Delete200Response.md)
 
 ### Authorization
 

@@ -5,6 +5,7 @@ import 'package:tracko/component/amount_text.dart';
 import 'package:tracko/controllers/TransactionController.dart';
 import 'package:tracko/models/transaction.dart';
 import 'package:tracko/pages/add_item_page/add_item.dart';
+import 'package:tracko/pages/transaction_list_page/transaction_history_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 
@@ -56,9 +57,40 @@ class TransactionTile extends StatelessWidget {
     );
   }
 
+  Future<void> _openHistory(BuildContext context) async {
+    final id = transaction.id;
+    if (id == null) return;
+    final changed = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => TransactionHistoryPage(transactionId: id),
+      ),
+    );
+    if (changed == true) {
+      try {
+        (parent as dynamic).refresh();
+      } catch (e) {
+        print("Parent refresh failed: $e");
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Slidable(
+      startActionPane: ActionPane(
+        motion: ScrollMotion(),
+        children: [
+          SlidableAction(
+            onPressed: (context) {
+              _openHistory(context);
+            },
+            backgroundColor: Colors.indigo.shade400,
+            foregroundColor: Colors.white,
+            icon: Icons.history,
+            label: 'History',
+          ),
+        ],
+      ),
       endActionPane: ActionPane(
         motion: ScrollMotion(),
         children: [

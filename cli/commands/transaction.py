@@ -479,7 +479,7 @@ def update_transfer(
 def delete(
     id: int = typer.Argument(..., help="Transaction ID"),
 ):
-    """Delete a transaction."""
+    """Delete a transaction (moves it to the recycle bin; restore with 'transaction trash')."""
     if not confirm(f"Delete transaction {id}?", default=False):
         print_error("Cancelled")
         raise typer.Exit(1)
@@ -489,9 +489,128 @@ def delete(
     try:
         with spinner(f"Deleting transaction {id}..."):
             with get_api_client(base_url, token) as client:
-                unwrap_envelope(tracko_sdk.TransactionsApi(client).delete1(id=id))
+                unwrap_envelope(tracko_sdk.TransactionsApi(client).delete(id=id))
 
-        print_success(f"Transaction {id} deleted successfully")
+        print_success(f"Transaction {id} deleted (moved to the recycle bin)")
+        console.print("[dim]Restore it with: tracko transaction trash[/dim]")
+
+    except ApiException as e:
+        handle_api_error(e)
+    except (ConnectionError, MaxRetryError, NewConnectionError, OSError):
+        print_error("Could not connect to API. Is the server running?")
+        sys.exit(1)
+
+
+@app.command()
+def trash(
+    raw: bool = typer.Option(False, "--raw", help="Output raw JSON"),
+):
+    """List deleted transactions (recycle bin). Restore one with 'transaction revert <history-id>'."""
+    base_url, token = get_config_for_api()
+
+    try:
+        with spinner("Fetching recycle bin..."):
+            with get_api_client(base_url, token) as client:
+                result = unwrap_envelope(tracko_sdk.TransactionsApi(client).get_trash())
+
+        entries = result or []
+        if raw:
+            print_json(entries)
+            return
+
+        if not entries:
+            print_error("Recycle bin is empty")
+            return
+
+        table = create_table(title="Recycle Bin")
+        table.add_column("History ID", justify="right", style="cyan")
+        table.add_column("Txn ID", justify="right", style="dim")
+        table.add_column("Deleted At", style="yellow")
+        table.add_column("Name", style="green")
+        table.add_column("Amount", justify="right", style="magenta")
+
+        for e in entries:
+            table.add_row(
+                str(e.id or ""),
+                str(e.transaction_id or ""),
+                str(e.changed_at)[:19] if e.changed_at else "",
+                str(e.name or ""),
+                f"{float(e.amount or 0):.2f}",
+            )
+        console.print(table)
+        console.print("\n[dim]Restore with: tracko transaction revert <History ID>[/dim]")
+
+    except ApiException as e:
+        handle_api_error(e)
+    except (ConnectionError, MaxRetryError, NewConnectionError, OSError):
+        print_error("Could not connect to API. Is the server running?")
+        sys.exit(1)
+
+
+@app.command()
+def history(
+    id: int = typer.Argument(..., help="Transaction ID"),
+    raw: bool = typer.Option(False, "--raw", help="Output raw JSON"),
+):
+    """Show a transaction's change history (create/edit/delete/revert)."""
+    base_url, token = get_config_for_api()
+
+    try:
+        with spinner(f"Fetching history for transaction {id}..."):
+            with get_api_client(base_url, token) as client:
+                result = unwrap_envelope(tracko_sdk.TransactionsApi(client).get_history(id=id))
+
+        entries = result or []
+        if raw:
+            print_json(entries)
+            return
+
+        if not entries:
+            print_error("No history found for this transaction")
+            return
+
+        table = create_table(title=f"History for transaction {id}")
+        table.add_column("History ID", justify="right", style="cyan")
+        table.add_column("When", style="yellow")
+        table.add_column("Change", style="blue")
+        table.add_column("Name", style="green")
+        table.add_column("Amount", justify="right", style="magenta")
+
+        for e in entries:
+            table.add_row(
+                str(e.id or ""),
+                str(e.changed_at)[:19] if e.changed_at else "",
+                str(e.operation or ""),
+                str(e.name or ""),
+                f"{float(e.amount or 0):.2f}",
+            )
+        console.print(table)
+        console.print("\n[dim]Roll back with: tracko transaction revert <History ID>[/dim]")
+
+    except ApiException as e:
+        handle_api_error(e)
+    except (ConnectionError, MaxRetryError, NewConnectionError, OSError):
+        print_error("Could not connect to API. Is the server running?")
+        sys.exit(1)
+
+
+@app.command()
+def revert(
+    history_id: int = typer.Argument(..., help="History entry ID (from 'transaction history' or 'transaction trash')"),
+):
+    """Revert a transaction to a history snapshot: undo an edit, or restore a deleted transaction."""
+    if not confirm(f"Revert to history entry {history_id}?", default=False):
+        print_error("Cancelled")
+        raise typer.Exit(1)
+
+    base_url, token = get_config_for_api()
+
+    try:
+        with spinner(f"Reverting history entry {history_id}..."):
+            with get_api_client(base_url, token) as client:
+                unwrap_envelope(tracko_sdk.TransactionsApi(client).revert(history_id=history_id))
+
+        print_success(f"Reverted history entry {history_id} successfully")
 
     except ApiException as e:
         handle_api_error(e)

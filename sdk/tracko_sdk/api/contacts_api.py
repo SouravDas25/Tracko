@@ -18,7 +18,7 @@ from typing_extensions import Annotated
 
 from pydantic import StrictInt
 from tracko_sdk.models.contact_save_request import ContactSaveRequest
-from tracko_sdk.models.delete1200_response import Delete1200Response
+from tracko_sdk.models.delete200_response import Delete200Response
 from tracko_sdk.models.get_one200_response import GetOne200Response
 from tracko_sdk.models.list_mine200_response import ListMine200Response
 
@@ -309,7 +309,7 @@ class ContactsApi:
 
 
     @validate_call
-    def delete5(
+    def delete3(
         self,
         id: StrictInt,
         _request_timeout: Union[
@@ -324,7 +324,7 @@ class ContactsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> Delete1200Response:
+    ) -> Delete200Response:
         """Delete a contact
 
 
@@ -352,7 +352,7 @@ class ContactsApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._delete5_serialize(
+        _param = self._delete3_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -361,7 +361,7 @@ class ContactsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Delete1200Response",
+            '200': "Delete200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -375,7 +375,7 @@ class ContactsApi:
 
 
     @validate_call
-    def delete5_with_http_info(
+    def delete3_with_http_info(
         self,
         id: StrictInt,
         _request_timeout: Union[
@@ -390,7 +390,7 @@ class ContactsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[Delete1200Response]:
+    ) -> ApiResponse[Delete200Response]:
         """Delete a contact
 
 
@@ -418,7 +418,7 @@ class ContactsApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._delete5_serialize(
+        _param = self._delete3_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -427,7 +427,7 @@ class ContactsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Delete1200Response",
+            '200': "Delete200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -441,7 +441,7 @@ class ContactsApi:
 
 
     @validate_call
-    def delete5_without_preload_content(
+    def delete3_without_preload_content(
         self,
         id: StrictInt,
         _request_timeout: Union[
@@ -484,7 +484,7 @@ class ContactsApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._delete5_serialize(
+        _param = self._delete3_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -493,7 +493,7 @@ class ContactsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Delete1200Response",
+            '200': "Delete200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -502,7 +502,7 @@ class ContactsApi:
         return response_data.response
 
 
-    def _delete5_serialize(
+    def _delete3_serialize(
         self,
         id,
         _request_auth,
