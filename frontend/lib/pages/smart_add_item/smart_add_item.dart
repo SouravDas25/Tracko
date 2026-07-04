@@ -9,7 +9,7 @@ import 'package:tracko/pages/smart_add_item/components/amount_input_section.dart
 import 'package:tracko/pages/smart_add_item/components/transaction_details_form.dart';
 import 'package:tracko/pages/smart_add_item/components/split_manager_section.dart';
 import 'package:tracko/pages/smart_add_item/components/comments_section.dart';
-import 'package:tracko/pages/transaction_list_page/transaction_history_page.dart';
+
 
 class SmartAddItemPage extends StatefulWidget {
   final Transaction transaction;
@@ -52,9 +52,10 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
   void _openHistory(BuildContext context) {
     final id = widget.transaction.id;
     if (id == null) return;
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (_) => TransactionHistoryPage(transactionId: id),
-    ));
+    Navigator.of(context).pushNamed(
+      '/history',
+      arguments: {'transactionId': id},
+    );
   }
 
   Future<void> _save() async {

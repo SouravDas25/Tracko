@@ -15,6 +15,9 @@ public interface TransactionHistoryRepository extends JpaRepository<TransactionH
     /** A single transaction's change timeline, the most recent first. */
     List<TransactionHistory> findByUserIdAndTransactionIdOrderByChangedAtDesc(String userId, Long transactionId);
 
+    /** A single transaction's change timeline filtered to one operation (e.g. DELETE for deletions). */
+    List<TransactionHistory> findByUserIdAndTransactionIdAndOperationOrderByChangedAtDesc(String userId, Long transactionId, String operation);
+
     /** A page of the user's full change history across all transactions (ordering supplied by the Pageable). */
     Page<TransactionHistory> findByUserId(String userId, Pageable pageable);
 

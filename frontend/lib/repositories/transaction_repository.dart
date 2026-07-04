@@ -175,9 +175,13 @@ class TransactionRepository {
   }
 
   /// A single transaction's change timeline (create/edit/delete/revert).
-  Future<List<TransactionHistoryEntry>> getHistory(int id) async {
-    final res =
-        await _api.get<List<dynamic>>("${ApiConfig.transactions}/$id/history");
+  Future<List<TransactionHistoryEntry>> getHistory(int id, {String? operation}) async {
+    final res = await _api.get<List<dynamic>>(
+      "${ApiConfig.transactions}/$id/history",
+      query: {
+        if (operation != null) 'operation': operation,
+      },
+    );
     return res
         .map((e) => TransactionHistoryEntry.fromJson(e as Map<String, dynamic>))
         .toList();

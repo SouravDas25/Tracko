@@ -94,7 +94,7 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
           _isLoading = false;
         });
       } else {
-        final list = await _repository.getHistory(widget.transactionId!);
+        final list = await _repository.getHistory(widget.transactionId!, operation: _filter);
         setState(() {
           _entries = list;
           _hasNext = false;
@@ -351,7 +351,7 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
             ? const Center(child: CircularProgressIndicator())
             : Column(
                 children: [
-                  if (widget.isGlobal) _buildFilterBar(),
+                  _buildFilterBar(),
                   Expanded(child: _buildList()),
                 ],
               ),

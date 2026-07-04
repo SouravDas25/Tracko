@@ -4,7 +4,6 @@ import 'package:tracko/di/di.dart';
 import 'package:tracko/pages/backend_setup_page/backend_setup_page.dart';
 import 'package:tracko/pages/login_page/login_page.dart';
 import 'package:tracko/pages/route.dart';
-import 'package:tracko/pages/transaction_list_page/transaction_list_page.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:tracko/Utils/ssl_bypass.dart'
@@ -26,7 +25,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Trako',
-      routes: Routes.routes,
+      onGenerateRoute: Routes.onGenerateRoute,
       theme: ThemeData(
         brightness: Brightness.light,
         primarySwatch: Colors.blue,

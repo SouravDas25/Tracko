@@ -4,7 +4,7 @@ import 'package:tracko/pages/transaction_list_page/daily_transaction_view.dart';
 import 'package:tracko/pages/transaction_list_page/monthly_summary_view.dart';
 import 'package:tracko/pages/transaction_list_page/yearly_summary_view.dart';
 import 'package:tracko/pages/stats_page/stats_page.dart';
-import 'package:tracko/pages/transaction_list_page/transaction_history_page.dart';
+
 
 /// The main container page for the transaction list.
 /// It uses a [TabController] to switch between three levels of granularity:
@@ -135,11 +135,9 @@ class _TransactionListPageState extends State<TransactionListPage>
             icon: const Icon(Icons.restore_from_trash_outlined),
             tooltip: 'Recycle bin',
             onPressed: () async {
-              final changed = await Navigator.of(context).push<bool>(
-                MaterialPageRoute(
-                  builder: (_) =>
-                      const TransactionHistoryPage(initialFilter: 'DELETE'),
-                ),
+              final changed = await Navigator.of(context).pushNamed<bool>(
+                '/history',
+                arguments: {'initialFilter': 'DELETE'},
               );
               if (changed == true && mounted) setState(() {});
             },

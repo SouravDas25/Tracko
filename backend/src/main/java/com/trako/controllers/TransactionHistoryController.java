@@ -109,9 +109,14 @@ public class TransactionHistoryController {
     @Operation(summary = "Get a transaction's change history")
     @ApiResponse(responseCode = "200", content = @Content(array = @ArraySchema(schema = @Schema(implementation = TransactionHistoryDTO.class))))
     @GetMapping("/{id}/history")
-    public ResponseEntity<?> getHistory(@PathVariable @Positive Long id) {
+    public ResponseEntity<?> getHistory(@PathVariable @Positive Long id,
+                                        @RequestParam(required = false) String operation) {
         String currentUserId = userService.loggedInUser().getId();
-        return Response.ok(transactionHistoryService.listForTransaction(currentUserId, id));
+        String normalizedOperation = normalizeOperation(operation);
+        if (operation != null && !operation.isBlank() && normalizedOperation == null) {
+            return Response.badRequest("Invalid operation filter: " + operation);
+        }
+        return Response.ok(transactionHistoryService.listForTransaction(currentUserId, id, normalizedOperation));
     }
 
     /**

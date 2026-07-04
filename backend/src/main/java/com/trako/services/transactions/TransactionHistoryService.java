@@ -118,9 +118,10 @@ public class TransactionHistoryService {
      * show more than just "updated". The "after" state of an edit is the state captured just before
      * the next change (or the current live transaction for the most recent edit).
      */
-    public List<TransactionHistoryDTO> listForTransaction(String userId, Long transactionId) {
-        List<TransactionHistory> entries =
-                historyRepository.findByUserIdAndTransactionIdOrderByChangedAtDesc(userId, transactionId);
+    public List<TransactionHistoryDTO> listForTransaction(String userId, Long transactionId, String operation) {
+        List<TransactionHistory> entries = (operation == null)
+                ? historyRepository.findByUserIdAndTransactionIdOrderByChangedAtDesc(userId, transactionId)
+                : historyRepository.findByUserIdAndTransactionIdAndOperationOrderByChangedAtDesc(userId, transactionId, operation);
 
         // Parse each entry's primary snapshot once, and capture the live state (null if since deleted).
         List<TransactionSnapshot> primaries = new ArrayList<>(entries.size());
