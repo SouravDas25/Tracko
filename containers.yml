@@ -1,0 +1,34 @@
+# Declarative deployment manifest for Tracko (pve-oci)
+#
+# Usage:
+#   pve-oci apply containers.yml       # deploy/upgrade the container
+#   pve-oci validate containers.yml    # check YAML without deploying
+#   pve-oci destroy -f containers.yml  # stop and destroy the container
+#
+# NOTE: contains DB credentials + JWT secret, so this file is gitignored
+#       (same as pve-ct-303-config-backup.json). Do not commit real secrets.
+
+auth:
+  profile: default          # credentials profile from ~/.pve/credentials
+  node: chiki               # target Proxmox node
+
+defaults:
+  storage: cephfs            # storage for the pulled OCI template
+  rootfs_storage: pxpool01  # storage for the container rootfs
+  memory: 1024
+  swap: 512
+  cores: 2
+  rootfs_size: 8
+
+containers:
+  - vmid: 303
+    image: docker.io/sd25/trako:latest
+    hostname: Trako
+    net:
+      - name=eth0,bridge=vmbr0,ip=dhcp,ip6=dhcp
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://internal-db:5432/tracko-db"
+      SPRING_DATASOURCE_USERNAME: trako-db
+      SPRING_DATASOURCE_PASSWORD: change_me_to_a_strong_password
+      JWT_SECRET: change_me_to_a_strong_secret

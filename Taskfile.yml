@@ -187,9 +187,5 @@ tasks:
 
   lxc:upgrade:
     desc: Update the LXC container with the latest image
-    vars:
-      VMID: 303
-      NODE: chiki
-      IMAGE: docker.io/sd25/trako:latest
     cmds:
-      - cmd: pve-oci deploy --vmid "{{.VMID}}" --node "{{.NODE}}" --image "{{.IMAGE}}"
+      - cmd: pve-oci apply containers.yml
