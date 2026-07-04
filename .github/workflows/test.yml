@@ -90,10 +90,15 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Set up Chrome + chromedriver
-        uses: browser-actions/setup-chrome@v1
-        with:
-          install-chromedriver: true
+      # ubuntu-latest ships a version-matched Google Chrome + ChromeDriver pair
+      # (chromedriver lives in $CHROMEWEBDRIVER). We deliberately do NOT install
+      # a separate Chrome/driver: layering a newer chromedriver on top leaves it
+      # driving the preinstalled Chrome, which fails with SessionNotCreated
+      # ("only supports Chrome version N").
+      - name: Show Chrome / ChromeDriver versions
+        run: |
+          google-chrome --version
+          "$CHROMEWEBDRIVER/chromedriver" --version
 
       - name: Run Flutter E2E tests with backend
         run: xvfb-run -a python frontend/run_e2e_test.py

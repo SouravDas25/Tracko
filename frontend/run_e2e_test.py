@@ -12,6 +12,7 @@ has a display to attach to.
 Requires: Maven, Flutter, Chrome + chromedriver on PATH, and the Python
 packages ``requests`` and ``psutil``.
 """
+import os
 import shutil
 import subprocess
 import sys
@@ -153,11 +154,31 @@ def wait_for_seed(max_attempts: int = 60) -> bool:
     return False
 
 
+def _find_chromedriver():
+    """Locate a chromedriver binary.
+
+    Prefer one on PATH; otherwise fall back to the GitHub Actions
+    ``CHROMEWEBDRIVER`` directory, which ships a chromedriver matched to the
+    runner's preinstalled Google Chrome. Matching versions matters: a driver
+    newer/older than the Chrome it launches fails with SessionNotCreated.
+    """
+    found = shutil.which("chromedriver")
+    if found:
+        return found
+    webdriver_dir = os.environ.get("CHROMEWEBDRIVER")
+    if webdriver_dir:
+        exe = "chromedriver.exe" if sys.platform.startswith("win") else "chromedriver"
+        candidate = Path(webdriver_dir) / exe
+        if candidate.exists():
+            return str(candidate)
+    return None
+
+
 def start_chromedriver():
     """Start chromedriver for `flutter drive` to attach to."""
-    cmd = shutil.which("chromedriver")
+    cmd = _find_chromedriver()
     if not cmd:
-        print("chromedriver not found on PATH")
+        print("chromedriver not found on PATH or CHROMEWEBDRIVER")
         return None
 
     print(f"Starting chromedriver on port {CHROMEDRIVER_PORT}...")
