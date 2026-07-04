@@ -105,6 +105,7 @@ class TransactionDetailsForm extends StatelessWidget {
             children: [
               Expanded(
                 child: AppBottomSheetPicker<Category>(
+                  key: const Key('add_category_picker'),
                   value: _findCategory(categoryId),
                   items: filteredCategories,
                   title: 'Select Category',
@@ -189,6 +190,7 @@ class TransactionDetailsForm extends StatelessWidget {
             children: [
               Expanded(
                 child: AppBottomSheetPicker<Account>(
+                  key: const Key('add_account_picker'),
                   value: _findAccount(accountId),
                   items: accounts,
                   title: 'Select Account',
@@ -215,6 +217,7 @@ class TransactionDetailsForm extends StatelessWidget {
 
         // Name Input
         TextField(
+          key: const Key('add_description_field'),
           controller: nameController,
           decoration: _fieldDecoration(context,
               label: 'Description', icon: Icons.description_outlined),

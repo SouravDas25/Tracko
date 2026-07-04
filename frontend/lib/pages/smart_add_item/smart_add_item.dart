@@ -107,6 +107,7 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
           child: ElevatedButton(
+            key: const Key('add_save_button'),
             style: ElevatedButton.styleFrom(
               backgroundColor: typeColor,
               padding: EdgeInsets.symmetric(vertical: 14),

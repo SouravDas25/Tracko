@@ -168,6 +168,7 @@ class _LoginPage extends State<LoginForm> {
               child: LinearProgressIndicator(minHeight: 2),
             ),
           TextFormField(
+            key: const Key('login_email'),
             controller: _usernameController,
             decoration: InputDecoration(
               labelText: 'Email',
@@ -194,6 +195,7 @@ class _LoginPage extends State<LoginForm> {
           ),
           const SizedBox(height: 20),
           TextFormField(
+            key: const Key('login_password'),
             controller: _passwordController,
             decoration: InputDecoration(
               labelText: 'Password',
@@ -229,6 +231,7 @@ class _LoginPage extends State<LoginForm> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
+              key: const Key('login_submit'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.teal,
                 foregroundColor: Colors.white,

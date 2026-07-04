@@ -78,6 +78,7 @@ class AmountInputSection extends StatelessWidget {
               const SizedBox(width: 6),
               IntrinsicWidth(
                 child: TextField(
+                  key: const Key('add_amount_field'),
                   controller: amountController,
                   keyboardType:
                       TextInputType.numberWithOptions(decimal: true),

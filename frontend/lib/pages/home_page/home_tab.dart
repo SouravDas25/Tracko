@@ -79,6 +79,7 @@ class _HomeTab extends State<HomeTab> with SingleTickerProviderStateMixin {
     final bool isWide = _width >= 900;
     final bool isVeryWide = _width >= 1200;
     return Scaffold(
+      key: const Key('home_scaffold'),
       bottomNavigationBar: isWide
           ? null
           : NavigationBar(
@@ -93,6 +94,7 @@ class _HomeTab extends State<HomeTab> with SingleTickerProviderStateMixin {
             ),
       appBar: AppBar(
         leading: IconButton(
+            key: const Key('home_add_button'),
             iconSize: 35.0,
             icon: Icon(Icons.add),
             onPressed: () {
