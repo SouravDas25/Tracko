@@ -80,6 +80,50 @@ Negative = net outflow. Cross-reference with `account list` to get names.
 
 ---
 
+## transaction history
+
+```json
+[
+  {
+    "id": 423,
+    "transactionId": 4335,
+    "operation": "UPDATE",
+    "changedAt": "2026-05-28T05:30:00.000+00:00",
+    "linkedTransactionId": null,
+    "name": "New phone (edited)",
+    "amount": 4605.31,
+    "originalCurrency": "INR",
+    "date": "2026-05-28T00:00:00.000+00:00",
+    "transactionType": 1,
+    "changes": [
+      {
+        "field": "Name",
+        "before": "New phone",
+        "after": "New phone (edited)"
+      }
+    ]
+  }
+]
+```
+
+`operation` values: `CREATE`, `UPDATE`, `DELETE`, `REVERT`.
+`transactionType` values: `1` = DEBIT, `2` = CREDIT, `3` = TRANSFER.
+`changes` is populated only for `UPDATE` entries — shows which fields were modified.
+
+---
+
+## transaction trash
+
+Same schema as `transaction history` but only includes `DELETE` operations.
+
+---
+
+## transaction revert
+
+Returns the restored `TransactionHistoryDTO` entry with `operation`: `REVERT`.
+
+---
+
 ## transaction summary
 
 ```json

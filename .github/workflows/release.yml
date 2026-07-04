@@ -68,6 +68,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Write build version
+        run: |
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          DATE=$(date +'%Y.%m.%d')
+          echo "BUILD_VERSION = 'v${DATE}-${SHORT_SHA}'" > cli/core/_build_version.py
+
       - name: Install build dependencies
         run: |
           apt-get update && apt-get install -y --no-install-recommends binutils
@@ -109,6 +115,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Write build version
+        run: |
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          DATE=$(date +'%Y.%m.%d')
+          echo "BUILD_VERSION = 'v${DATE}-${SHORT_SHA}'" > cli/core/_build_version.py
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -140,6 +152,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Write build version
+        run: |
+          $SHORT_SHA = "${{ github.sha }}".Substring(0, 7)
+          $DATE = Get-Date -Format "yyyy.MM.dd"
+          "BUILD_VERSION = 'v${DATE}-${SHORT_SHA}'" | Out-File -FilePath cli\core\_build_version.py -Encoding utf8
 
       - name: Set up Python
         uses: actions/setup-python@v5
