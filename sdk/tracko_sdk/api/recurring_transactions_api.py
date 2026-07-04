@@ -17,9 +17,9 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from typing_extensions import Annotated
 
 from pydantic import StrictInt
-from tracko_sdk.models.delete1200_response import Delete1200Response
+from tracko_sdk.models.delete200_response import Delete200Response
 from tracko_sdk.models.get_all3200_response import GetAll3200Response
-from tracko_sdk.models.get_by_id2200_response import GetById2200Response
+from tracko_sdk.models.get_by_id1200_response import GetById1200Response
 from tracko_sdk.models.recurring_transaction import RecurringTransaction
 
 from tracko_sdk.api_client import ApiClient, RequestSerialized
@@ -56,7 +56,7 @@ class RecurringTransactionsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> GetById2200Response:
+    ) -> GetById1200Response:
         """Create a recurring transaction
 
 
@@ -93,7 +93,7 @@ class RecurringTransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "GetById2200Response",
+            '200': "GetById1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -122,7 +122,7 @@ class RecurringTransactionsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[GetById2200Response]:
+    ) -> ApiResponse[GetById1200Response]:
         """Create a recurring transaction
 
 
@@ -159,7 +159,7 @@ class RecurringTransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "GetById2200Response",
+            '200': "GetById1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -225,7 +225,7 @@ class RecurringTransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "GetById2200Response",
+            '200': "GetById1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -309,7 +309,7 @@ class RecurringTransactionsApi:
 
 
     @validate_call
-    def delete3(
+    def delete1(
         self,
         id: StrictInt,
         _request_timeout: Union[
@@ -324,7 +324,7 @@ class RecurringTransactionsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> Delete1200Response:
+    ) -> Delete200Response:
         """Delete a recurring transaction
 
 
@@ -352,7 +352,7 @@ class RecurringTransactionsApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._delete3_serialize(
+        _param = self._delete1_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -361,7 +361,7 @@ class RecurringTransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Delete1200Response",
+            '200': "Delete200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -375,7 +375,7 @@ class RecurringTransactionsApi:
 
 
     @validate_call
-    def delete3_with_http_info(
+    def delete1_with_http_info(
         self,
         id: StrictInt,
         _request_timeout: Union[
@@ -390,7 +390,7 @@ class RecurringTransactionsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[Delete1200Response]:
+    ) -> ApiResponse[Delete200Response]:
         """Delete a recurring transaction
 
 
@@ -418,7 +418,7 @@ class RecurringTransactionsApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._delete3_serialize(
+        _param = self._delete1_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -427,7 +427,7 @@ class RecurringTransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Delete1200Response",
+            '200': "Delete200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -441,7 +441,7 @@ class RecurringTransactionsApi:
 
 
     @validate_call
-    def delete3_without_preload_content(
+    def delete1_without_preload_content(
         self,
         id: StrictInt,
         _request_timeout: Union[
@@ -484,7 +484,7 @@ class RecurringTransactionsApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._delete3_serialize(
+        _param = self._delete1_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -493,7 +493,7 @@ class RecurringTransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Delete1200Response",
+            '200': "Delete200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -502,7 +502,7 @@ class RecurringTransactionsApi:
         return response_data.response
 
 
-    def _delete3_serialize(
+    def _delete1_serialize(
         self,
         id,
         _request_auth,
@@ -804,7 +804,7 @@ class RecurringTransactionsApi:
 
 
     @validate_call
-    def get_by_id2(
+    def get_by_id1(
         self,
         id: StrictInt,
         _request_timeout: Union[
@@ -819,7 +819,7 @@ class RecurringTransactionsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> GetById2200Response:
+    ) -> GetById1200Response:
         """Get a recurring transaction by ID
 
 
@@ -847,7 +847,7 @@ class RecurringTransactionsApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._get_by_id2_serialize(
+        _param = self._get_by_id1_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -856,7 +856,7 @@ class RecurringTransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "GetById2200Response",
+            '200': "GetById1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -870,7 +870,7 @@ class RecurringTransactionsApi:
 
 
     @validate_call
-    def get_by_id2_with_http_info(
+    def get_by_id1_with_http_info(
         self,
         id: StrictInt,
         _request_timeout: Union[
@@ -885,7 +885,7 @@ class RecurringTransactionsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[GetById2200Response]:
+    ) -> ApiResponse[GetById1200Response]:
         """Get a recurring transaction by ID
 
 
@@ -913,7 +913,7 @@ class RecurringTransactionsApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._get_by_id2_serialize(
+        _param = self._get_by_id1_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -922,7 +922,7 @@ class RecurringTransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "GetById2200Response",
+            '200': "GetById1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -936,7 +936,7 @@ class RecurringTransactionsApi:
 
 
     @validate_call
-    def get_by_id2_without_preload_content(
+    def get_by_id1_without_preload_content(
         self,
         id: StrictInt,
         _request_timeout: Union[
@@ -979,7 +979,7 @@ class RecurringTransactionsApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._get_by_id2_serialize(
+        _param = self._get_by_id1_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -988,7 +988,7 @@ class RecurringTransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "GetById2200Response",
+            '200': "GetById1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -997,7 +997,7 @@ class RecurringTransactionsApi:
         return response_data.response
 
 
-    def _get_by_id2_serialize(
+    def _get_by_id1_serialize(
         self,
         id,
         _request_auth,
@@ -1075,7 +1075,7 @@ class RecurringTransactionsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> GetById2200Response:
+    ) -> GetById1200Response:
         """Update a recurring transaction
 
 
@@ -1115,7 +1115,7 @@ class RecurringTransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "GetById2200Response",
+            '200': "GetById1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1145,7 +1145,7 @@ class RecurringTransactionsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[GetById2200Response]:
+    ) -> ApiResponse[GetById1200Response]:
         """Update a recurring transaction
 
 
@@ -1185,7 +1185,7 @@ class RecurringTransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "GetById2200Response",
+            '200': "GetById1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -1255,7 +1255,7 @@ class RecurringTransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "GetById2200Response",
+            '200': "GetById1200Response",
         }
         response_data = self.api_client.call_api(
             *_param,

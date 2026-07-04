@@ -1,7 +1,12 @@
 package com.trako.dtos;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.List;
 
+@Getter
+@Setter
 public class TransactionSearchResultDTO {
     private List<TransactionSearchHitDTO> results;
     private Long totalResults;
@@ -12,76 +17,4 @@ public class TransactionSearchResultDTO {
     private Boolean hasPrevious;
     private Long searchTimeMs;
     private String query;
-
-    public List<TransactionSearchHitDTO> getResults() {
-        return results;
-    }
-
-    public void setResults(List<TransactionSearchHitDTO> results) {
-        this.results = results;
-    }
-
-    public Long getTotalResults() {
-        return totalResults;
-    }
-
-    public void setTotalResults(Long totalResults) {
-        this.totalResults = totalResults;
-    }
-
-    public Integer getPage() {
-        return page;
-    }
-
-    public void setPage(Integer page) {
-        this.page = page;
-    }
-
-    public Integer getSize() {
-        return size;
-    }
-
-    public void setSize(Integer size) {
-        this.size = size;
-    }
-
-    public Integer getTotalPages() {
-        return totalPages;
-    }
-
-    public void setTotalPages(Integer totalPages) {
-        this.totalPages = totalPages;
-    }
-
-    public Boolean getHasNext() {
-        return hasNext;
-    }
-
-    public void setHasNext(Boolean hasNext) {
-        this.hasNext = hasNext;
-    }
-
-    public Boolean getHasPrevious() {
-        return hasPrevious;
-    }
-
-    public void setHasPrevious(Boolean hasPrevious) {
-        this.hasPrevious = hasPrevious;
-    }
-
-    public Long getSearchTimeMs() {
-        return searchTimeMs;
-    }
-
-    public void setSearchTimeMs(Long searchTimeMs) {
-        this.searchTimeMs = searchTimeMs;
-    }
-
-    public String getQuery() {
-        return query;
-    }
-
-    public void setQuery(String query) {
-        this.query = query;
-    }
 }

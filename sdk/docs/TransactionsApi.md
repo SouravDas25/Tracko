@@ -5,7 +5,7 @@ All URIs are relative to *http://localhost:8080*
 Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**create1**](TransactionsApi.md#create1) | **POST** /api/transactions | Create a transaction or transfer
-[**delete1**](TransactionsApi.md#delete1) | **DELETE** /api/transactions/{id} | Delete a transaction or transfer
+[**delete**](TransactionsApi.md#delete) | **DELETE** /api/transactions/{id} | Delete a transaction or transfer
 [**get_all1**](TransactionsApi.md#get_all1) | **GET** /api/transactions | List transactions with optional filters
 [**get_by_id**](TransactionsApi.md#get_by_id) | **GET** /api/transactions/{id} | Get a transaction by ID
 [**get_monthly_summaries**](TransactionsApi.md#get_monthly_summaries) | **GET** /api/transactions/summary/monthly | Monthly summaries for a year
@@ -94,8 +94,8 @@ Name | Type | Description  | Notes
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **delete1**
-> Delete1200Response delete1(id)
+# **delete**
+> Delete200Response delete(id)
 
 Delete a transaction or transfer
 
@@ -105,7 +105,7 @@ Delete a transaction or transfer
 
 ```python
 import tracko_sdk
-from tracko_sdk.models.delete1200_response import Delete1200Response
+from tracko_sdk.models.delete200_response import Delete200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -133,11 +133,11 @@ with tracko_sdk.ApiClient(configuration) as api_client:
 
     try:
         # Delete a transaction or transfer
-        api_response = api_instance.delete1(id)
-        print("The response of TransactionsApi->delete1:\n")
+        api_response = api_instance.delete(id)
+        print("The response of TransactionsApi->delete:\n")
         pprint(api_response)
     except Exception as e:
-        print("Exception when calling TransactionsApi->delete1: %s\n" % e)
+        print("Exception when calling TransactionsApi->delete: %s\n" % e)
 ```
 
 
@@ -151,7 +151,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**Delete1200Response**](Delete1200Response.md)
+[**Delete200Response**](Delete200Response.md)
 
 ### Authorization
 

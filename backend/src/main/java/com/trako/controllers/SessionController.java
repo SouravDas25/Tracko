@@ -1,9 +1,11 @@
 package com.trako.controllers;
 
+import com.trako.entities.User;
 import com.trako.models.request.AuthicationRequest;
 import com.trako.models.request.LoginRequest;
 import com.trako.models.responses.JwtResponse;
-import com.trako.services.UserService;
+import com.trako.repositories.UsersRepository;
+import com.trako.services.LoginAttemptService;
 import com.trako.util.JwtTokenUtil;
 import com.trako.util.Response;
 import io.swagger.v3.oas.annotations.Operation;
@@ -34,8 +36,7 @@ public class SessionController {
 
     private static final Logger log = LoggerFactory.getLogger(SessionController.class);
 
-    @Autowired
-    UserService userService;
+    private static final String LOCKED_MESSAGE = "Too many failed login attempts. Please try again later.";
 
     @Autowired
     private JwtTokenUtil jwtTokenUtil;
@@ -49,19 +50,39 @@ public class SessionController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private UsersRepository usersRepository;
+
+    @Autowired
+    private LoginAttemptService loginAttemptService;
+
     @Operation(summary = "Sign in with phone number and password")
     @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = JwtResponse.class)))
     @SecurityRequirements
     @PostMapping("/api/oauth/token")
     public ResponseEntity<?> signIn(@Valid @RequestBody AuthicationRequest authicationRequest) {
 
-        UsernamePasswordAuthenticationToken token =
-                new UsernamePasswordAuthenticationToken(authicationRequest.getPhoneNo(), authicationRequest.getPassword());
-        Authentication authenticate = authenticationManager.authenticate(token);
+        User user = resolveUser(authicationRequest.getPhoneNo());
+        if (loginAttemptService.isLocked(user)) {
+            return lockedResponse(user);
+        }
 
-        String jwtToken = jwtTokenUtil.generateToken((UserDetails) authenticate.getPrincipal());
+        try {
+            UsernamePasswordAuthenticationToken token =
+                    new UsernamePasswordAuthenticationToken(authicationRequest.getPhoneNo(), authicationRequest.getPassword());
+            Authentication authenticate = authenticationManager.authenticate(token);
 
-        return ResponseEntity.ok(new JwtResponse(jwtToken));
+            loginAttemptService.onSuccess(user);
+
+            String jwtToken = jwtTokenUtil.generateToken((UserDetails) authenticate.getPrincipal());
+            return ResponseEntity.ok(new JwtResponse(jwtToken));
+        } catch (AuthenticationException ex) {
+            log.warn("AuthenticationException during sign-in for phoneNo={}", authicationRequest.getPhoneNo());
+            if (user != null && loginAttemptService.onFailure(user)) {
+                return lockedResponse(user);
+            }
+            return Response.unauthorized();
+        }
     }
 
     @Operation(summary = "Log in with username and password")
@@ -70,21 +91,28 @@ public class SessionController {
     @PostMapping("/api/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest) {
         try {
-            UserDetails user = userDetailsService.loadUserByUsername(loginRequest.getUsername());
-
+            User user = resolveUser(loginRequest.getUsername());
             if (user == null) {
                 return Response.unauthorized();
             }
 
-            boolean ok = passwordEncoder.matches(loginRequest.getPassword(), user.getPassword());
-            if (!ok && user != null) {
-                ok = loginRequest.getPassword() != null && loginRequest.getPassword().equals(user.getPassword());
+            if (loginAttemptService.isLocked(user)) {
+                return lockedResponse(user);
             }
+
+            boolean ok = passwordEncoder.matches(loginRequest.getPassword(), user.getPassword());
             if (!ok) {
                 log.warn("Login failed for username={}", loginRequest.getUsername());
+                if (loginAttemptService.onFailure(user)) {
+                    return lockedResponse(user);
+                }
                 return Response.unauthorized();
             }
-            String jwtToken = jwtTokenUtil.generateToken(user);
+
+            loginAttemptService.onSuccess(user);
+
+            UserDetails userDetails = userDetailsService.loadUserByUsername(loginRequest.getUsername());
+            String jwtToken = jwtTokenUtil.generateToken(userDetails);
             return ResponseEntity.ok(new JwtResponse(jwtToken));
         } catch (AuthenticationException ex) {
             log.warn("AuthenticationException during login for username={}", loginRequest.getUsername());
@@ -92,5 +120,23 @@ public class SessionController {
         }
     }
 
+    /**
+     * Resolves the persisted user by phone number then email, mirroring how
+     * {@link com.trako.services.JwtUserDetailsService} resolves credentials during
+     * authentication. Returns {@code null} when no matching account exists.
+     */
+    private User resolveUser(String identifier) {
+        if (identifier == null || identifier.isBlank()) {
+            return null;
+        }
+        User user = usersRepository.findByPhoneNo(identifier);
+        if (user == null) {
+            user = usersRepository.findByEmail(identifier);
+        }
+        return user;
+    }
 
+    private ResponseEntity<?> lockedResponse(User user) {
+        return Response.tooManyRequests(LOCKED_MESSAGE, loginAttemptService.retryAfterSeconds(user));
+    }
 }

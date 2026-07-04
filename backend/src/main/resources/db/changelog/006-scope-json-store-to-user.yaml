@@ -1,0 +1,43 @@
+databaseChangeLog:
+    -   changeSet:
+            id: 006-scope-json-store-to-user
+            author: sd25
+            changes:
+                # Existing rows are unattributable global settings; drop and
+                # recreate the table scoped per user (id PK + user_id).
+                -   dropTable:
+                        tableName: json_store
+                -   createTable:
+                        tableName: json_store
+                        columns:
+                            -   column:
+                                    name: id
+                                    type: BIGINT
+                                    autoIncrement: true
+                                    constraints:
+                                        primaryKey: true
+                                        nullable: false
+                            -   column:
+                                    name: user_id
+                                    type: VARCHAR(36)
+                                    constraints:
+                                        nullable: false
+                            -   column:
+                                    name: name
+                                    type: VARCHAR(191)
+                                    constraints:
+                                        nullable: false
+                            -   column:
+                                    name: json_value
+                                    type: ${clob.type}
+                -   addForeignKeyConstraint:
+                        baseTableName: json_store
+                        baseColumnNames: user_id
+                        referencedTableName: users
+                        referencedColumnNames: id
+                        constraintName: fk_json_store_user
+                        onDelete: CASCADE
+                -   addUniqueConstraint:
+                        tableName: json_store
+                        columnNames: user_id, name
+                        constraintName: uq_json_store_user_name

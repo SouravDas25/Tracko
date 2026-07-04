@@ -4,11 +4,13 @@ import com.trako.dtos.TransferResult;
 import com.trako.entities.*;
 import com.trako.enums.TransactionDbType;
 import com.trako.enums.TransactionType;
+import com.trako.models.external.ExchangeRateApiResponse;
 import com.trako.models.request.TransactionRequest;
 import com.trako.integration.BaseIntegrationTest;
 import com.trako.repositories.ContactRepository;
 import com.trako.repositories.SplitRepository;
 import com.trako.repositories.UserCurrencyRepository;
+import com.trako.services.ExchangeRateService;
 import com.trako.services.transactions.TransactionWriteService;
 import com.trako.services.transactions.TransferService;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,11 +18,15 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
@@ -51,6 +57,9 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
     @Autowired
     private UserCurrencyRepository userCurrencyRepository;
 
+    @MockBean
+    private ExchangeRateService exchangeRateService;
+
     private User testUser;
     private Account testAccount;
     private Category testCategory;
@@ -70,6 +79,10 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
         testCategory.setName("Food");
         testCategory.setUserId(testUser.getId());
         testCategory = categoryRepository.save(testCategory);
+
+        // Mock exchange rate service to return predictable live rates
+        ExchangeRateApiResponse mockResponse = new ExchangeRateApiResponse("INR", Map.of("GBP", 1.2, "USD", 80.0));
+        when(exchangeRateService.getRates(anyString())).thenReturn(mockResponse);
     }
 
     @Test
@@ -1442,7 +1455,7 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(payload)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Failed to create transaction: Transfer requires fromAccountId or accountId"));
+                .andExpect(jsonPath("$.message").value("Transfer requires fromAccountId or accountId"));
     }
 
     @Test
@@ -1499,7 +1512,7 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(payload)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Failed to create transaction: originalAmount must be greater than 0"));
+                .andExpect(jsonPath("$.message").value("originalAmount must be greater than 0"));
     }
 
     @Test
@@ -1795,8 +1808,9 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
         transaction.setCategoryId(testCategory.getId());
         Transaction saved = transactionWriteService.saveForUser(testUser.getId(), transaction);
 
-        // 3. Update transaction to use "GBP" and originalAmount 100.
-        // Expected amount: 100 * 1.2 = 120.0
+        // 3. Update transaction to use "GBP" and originalAmount 1, WITHOUT providing an exchangeRate.
+        // The rate is resolved for GBP (1.2 from the mocked live rate / stored UserCurrency)
+        // and amount recalculated: 1 * 1.2 = 1.2
         TransactionRequest updatePayload = new TransactionRequest(
                 null,                    // id
                 null,                    // accountId (keep existing)
@@ -1807,29 +1821,28 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
                 null,                    // transactionType (keep existing)
                 "GBP",                   // originalCurrency (change to GBP)
                 1.0,                     // originalAmount (change to 1)
-                120.0,                   // exchangeRate (explicitly set to 120.0)
+                null,                    // exchangeRate (omitted -> resolved to 1.2)
                 null,                    // linkedTransactionId
                 null,                    // toAccountId
                 null                     // fromAccountId
         );
-        // We do NOT send exchangeRate, so it should be looked up from UserCurrency
 
         mockMvc.perform(put("/api/transactions/" + saved.getId())
                         .header("Authorization", bearerToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updatePayload)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result.amount").value(120.00))
+                .andExpect(jsonPath("$.result.amount").value(1.20))
                 .andExpect(jsonPath("$.result.originalCurrency").value("GBP"))
-                .andExpect(jsonPath("$.result.exchangeRate").value(120));
+                .andExpect(jsonPath("$.result.exchangeRate").value(1.2));
     }
 
     @Test
-    public void testUpdateTransaction_DoesNotRecalculate_WhenExplicitAmountProvided() throws Exception {
-        // 1. Create a transaction
+    public void testUpdateTransaction_ChangeOriginalAmount_RecalculatesAmountWithExistingRate() throws Exception {
+        // 1. Create a base-currency transaction (originalAmount 50, rate 1.0 -> amount 50)
         Transaction transaction = new Transaction();
         transaction.setTransactionType(TransactionDbType.DEBIT);
-        transaction.setName("Explicit Amount Txn");
+        transaction.setName("Base Amount Txn");
         transaction.setOriginalAmount(50.00);
         transaction.setOriginalCurrency("INR");
         transaction.setExchangeRate(1.0);
@@ -1838,9 +1851,8 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
         transaction.setCategoryId(testCategory.getId());
         Transaction saved = transactionWriteService.saveForUser(testUser.getId(), transaction);
 
-        // 2. Update with currency fields BUT also provide explicit amount.
-        // If logic was strict: 10 * 2.0 = 20.0.
-        // But we send amount = 99.99.
+        // 2. Update only originalAmount (10) with no exchangeRate provided.
+        // The existing rate (1.0) is retained and amount is recalculated: 10 * 1.0 = 10.0.
         TransactionRequest updatePayload = new TransactionRequest(
                 null,                    // id
                 null,                    // accountId (keep existing)
@@ -1862,14 +1874,14 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updatePayload)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result.amount").value(10.00)) // Explicit amount wins
+                .andExpect(jsonPath("$.result.amount").value(10.00)) // 10 * existing rate 1.0
                 .andExpect(jsonPath("$.result.originalAmount").value(10.00))
                 .andExpect(jsonPath("$.result.exchangeRate").value(1.0));
     }
 
     @Test
-    public void testUpdateTransaction_BaseToSecondary() throws Exception {
-        // 1. Setup: Create a UserCurrency for "GBP" with rate 1.2
+    public void testUpdateTransaction_ExplicitExchangeRate_OverridesResolvedRate() throws Exception {
+        // 1. Setup: GBP would resolve to 1.2 (both the mocked live rate and this stored UserCurrency)
         com.trako.entities.UserCurrency userCurrency = new com.trako.entities.UserCurrency();
         userCurrency.setUser(testUser);
         userCurrency.setCurrencyCode("GBP");
@@ -1888,8 +1900,8 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
         transaction.setCategoryId(testCategory.getId());
         Transaction saved = transactionWriteService.saveForUser(testUser.getId(), transaction);
 
-        // 3. Update to GBP (Secondary)
-        // Should use the stored exchange rate (1.2)
+        // 3. Update to GBP AND pass an explicit exchangeRate of 120.0.
+        // The explicit rate must be used verbatim (overriding the resolvable 1.2): amount = 1 * 120 = 120.
         TransactionRequest updatePayload = new TransactionRequest(
                 null,                    // id
                 null,                    // accountId (keep existing)
@@ -1900,7 +1912,7 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
                 TransactionType.DEBIT,                    // transactionType (keep existing)
                 "GBP",                   // originalCurrency (change to GBP)
                 1.00,                    // originalAmount (change to 1.00)
-                120.0,                   // exchangeRate (set to 120.0)
+                120.0,                   // exchangeRate (explicit -> overrides resolved 1.2)
                 null,                    // linkedTransactionId
                 null,                    // toAccountId
                 null                     // fromAccountId
@@ -1912,6 +1924,7 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
                         .content(objectMapper.writeValueAsString(updatePayload)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.amount").value(120.00))
+                .andExpect(jsonPath("$.result.exchangeRate").value(120.0)) // explicit rate kept, not resolved 1.2
                 .andExpect(jsonPath("$.result.originalCurrency").value("GBP"));
     }
 

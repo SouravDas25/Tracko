@@ -63,6 +63,30 @@ Full-text fuzzy search across transaction names, amounts and comments.
 trako transaction get <ID> --raw
 ```
 
+### History
+
+```bash
+trako transaction history <ID> --raw
+```
+
+Show the full change history for a transaction (CREATE, UPDATE, DELETE, REVERT operations).
+
+### Revert
+
+```bash
+trako transaction revert <HISTORY_ID>
+```
+
+Revert a transaction to a previous history snapshot — undo an edit or restore a deleted transaction.
+
+### Recycle Bin
+
+```bash
+trako transaction trash --raw
+```
+
+List all deleted transactions for the current user.
+
 ### Add Expense
 
 ```bash
@@ -96,7 +120,7 @@ trako transaction add-income \
   --raw
 ```
 
-Same required fields as add-expense.
+The same required fields as add-expense.
 
 ### Add Transfer
 
@@ -201,4 +225,21 @@ trako stats category-summary --category-id <ID> --range <RANGE> --type <TYPE> --
 ```bash
 trako transaction csv-template    # Print expected CSV format
 trako transaction import-csv <FILE> --account-id <ID> --raw
+```
+
+---
+
+## Self-Update
+
+```bash
+trako update                        # Show current vs latest version
+trako update check                  # Check if a newer version is available
+trako update apply                  # Download and install the latest version (packaged binary only)
+```
+
+The CLI checks for updates automatically on startup (once per 24 hours) and prints a notice (on stderr) if a new version is available. Toggle the check with:
+
+```bash
+trako update disable                # Turn off the automatic startup check
+trako update enable                 # Turn it back on
 ```

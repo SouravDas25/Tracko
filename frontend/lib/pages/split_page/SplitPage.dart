@@ -17,6 +17,10 @@ class _ContactDue {
 }
 
 class SplitPage extends StatefulWidget {
+  final bool showAppBar;
+
+  SplitPage({super.key, this.showAppBar = false});
+
   @override
   State<StatefulWidget> createState() {
     return _SplitPage();
@@ -241,5 +245,17 @@ class _SplitPage extends RefreshableState<SplitPage> {
         itemCount: this.contacts.length,
       ),
     );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final body = super.build(context);
+    if (widget.showAppBar) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Splits')),
+        body: body,
+      );
+    }
+    return body;
   }
 }

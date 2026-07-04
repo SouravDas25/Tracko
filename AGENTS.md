@@ -118,7 +118,8 @@ The transaction system has a deliberate read/write split:
 - All writes go through `TransactionWriteService.createTransaction(userId, TransactionRequest)`
 - `TransactionRequest` is the single inbound model for all transaction creates/updates
 - `TransactionValidationService` handles ownership checks: `validateAccountOwnership`, `validateCategoryOwnership` — throws `AuthorizationException` on failure
-- Controllers must catch `AuthorizationException` explicitly before the broad `catch (Exception e)` handler, otherwise it maps to 400 instead of 401
+- `AuthorizationException` and `UserNotLoggedInException` are handled globally by `GlobalExceptionHandler` returning 401 — no need for local try-catch in controllers
+- Unauthenticated requests to protected endpoints are rejected by `JwtRequestFilter` with 401 before reaching controllers
 
 **Update flow**:
 - Convert transfer → regular: requires `categoryId` in the update payload; triggers when a TRANSFER transaction is updated with `transactionType = DEBIT` or `CREDIT`

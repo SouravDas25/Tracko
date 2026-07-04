@@ -3,9 +3,13 @@ package com.trako.entities;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
 @Table(name = "budget_category_allocations")
+@Getter
+@Setter
 public class BudgetCategoryAllocation {
 
     @Id
@@ -44,78 +48,14 @@ public class BudgetCategoryAllocation {
     @JoinColumn(name = "category_id", insertable = false, updatable = false)
     private Category category;
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Long getBudgetMonthId() {
-        return budgetMonthId;
-    }
-
-    public void setBudgetMonthId(Long budgetMonthId) {
-        this.budgetMonthId = budgetMonthId;
-    }
-
-    public Long getCategoryId() {
-        return categoryId;
-    }
-
-    public void setCategoryId(Long categoryId) {
-        this.categoryId = categoryId;
-    }
-
-    public String getUserId() {
-        return userId;
-    }
-
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
-
-    public Double getAllocatedAmount() {
-        return allocatedAmount;
-    }
-
     public void setAllocatedAmount(Double allocatedAmount) {
         this.allocatedAmount = allocatedAmount;
         recalculateRemaining();
     }
 
-    public Double getActualSpent() {
-        return actualSpent;
-    }
-
     public void setActualSpent(Double actualSpent) {
         this.actualSpent = actualSpent;
         recalculateRemaining();
-    }
-
-    public Double getRemainingBalance() {
-        return remainingBalance;
-    }
-
-    public void setRemainingBalance(Double remainingBalance) {
-        this.remainingBalance = remainingBalance;
-    }
-
-    public BudgetMonth getBudgetMonth() {
-        return budgetMonth;
-    }
-
-    public void setBudgetMonth(BudgetMonth budgetMonth) {
-        this.budgetMonth = budgetMonth;
-    }
-
-    public Category getCategory() {
-        return category;
-    }
-
-    public void setCategory(Category category) {
-        this.category = category;
     }
 
     private void recalculateRemaining() {

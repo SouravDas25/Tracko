@@ -5,7 +5,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**result** | [**Category**](Category.md) |  | [optional] 
+**result** | [**Account**](Account.md) |  | [optional] 
 **message** | **str** | Human-readable status message | [optional] 
 
 ## Example

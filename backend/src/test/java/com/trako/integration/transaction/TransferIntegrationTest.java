@@ -1042,24 +1042,7 @@ public class TransferIntegrationTest extends BaseIntegrationTest {
                 .findFirst()
                 .orElseThrow();
 
-        // WHEN: Try to update to make both accounts the same
-        TransactionRequest invalidUpdate = new TransactionRequest(
-                null,                    // id
-                sourceAccount.getId(),   // accountId (same as from)
-                new java.util.Date(),    // date
-                "Invalid Update",       // name
-                null,                    // comments
-                null,                    // categoryId
-                null,                    // transactionType (keep existing)
-                null,                    // originalCurrency (keep existing)
-                null,                    // originalAmount (keep existing)
-                null,                    // exchangeRate (keep existing)
-                null,                    // linkedTransactionId
-                null,                    // toAccountId (keep existing)
-                null                     // fromAccountId
-        );
-
-        // Get the credit transaction to try changing its account
+        // WHEN: Try to update the credit side to use the same account as the debit side
         Transaction credit = transactionRepository.findById(debit.getLinkedTransactionId()).orElseThrow();
 
         // Try updating credit to use same account as debit

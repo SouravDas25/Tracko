@@ -5,20 +5,26 @@ import com.trako.entities.Category;
 import com.trako.entities.User;
 import com.trako.entities.UserCurrency;
 import com.trako.enums.TransactionType;
+import com.trako.models.external.ExchangeRateApiResponse;
 import com.trako.models.request.TransactionRequest;
 import com.trako.integration.BaseIntegrationTest;
 import com.trako.repositories.UserCurrencyRepository;
+import com.trako.services.ExchangeRateService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
+import java.util.Map;
 
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -31,6 +37,9 @@ public class TransactionCreateValidationTest extends BaseIntegrationTest {
 
     @Autowired
     private UserCurrencyRepository userCurrencyRepository;
+
+    @MockBean
+    private ExchangeRateService exchangeRateService;
 
     private String bearerToken;
     private User testUser;
@@ -56,6 +65,10 @@ public class TransactionCreateValidationTest extends BaseIntegrationTest {
         cat.setName("Food");
         cat.setUserId(testUser.getId());
         cat = categoryRepository.save(cat);
+
+        // Mock exchange rate service to return predictable live rates
+        ExchangeRateApiResponse mockResponse = new ExchangeRateApiResponse("INR", Map.of("USD", 2.0));
+        when(exchangeRateService.getRates(anyString())).thenReturn(mockResponse);
     }
 
     // ==================== Transfer create validations ====================
@@ -193,7 +206,9 @@ public class TransactionCreateValidationTest extends BaseIntegrationTest {
     }
 
     @Test
-    public void createTransfer_currencyNotConfigured_returnsBadRequest() throws Exception {
+    public void createTransfer_currencyNotConfigured_autoResolvesViaLiveRate() throws Exception {
+        // With the live rate fetch, unconfigured currencies are now auto-resolved
+        // The mock returns USD=2.0, so the transfer should succeed
         TransactionRequest payload = new TransactionRequest(
                 null,                    // id
                 acc.getId(),             // accountId
@@ -202,7 +217,7 @@ public class TransactionCreateValidationTest extends BaseIntegrationTest {
                 null,                    // comments
                 null,                    // categoryId
                 TransactionType.TRANSFER,// transactionType
-                "USD",                   // originalCurrency (not configured)
+                "USD",                   // originalCurrency (not configured but auto-resolved)
                 10.0,                    // originalAmount
                 null,                    // exchangeRate
                 null,                    // linkedTransactionId
@@ -213,7 +228,7 @@ public class TransactionCreateValidationTest extends BaseIntegrationTest {
                         .header("Authorization", bearerToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(payload)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isOk());
     }
 
     // ==================== Regular transaction create validations ====================

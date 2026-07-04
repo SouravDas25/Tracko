@@ -5,7 +5,7 @@ All URIs are relative to *http://localhost:8080*
 Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**create5**](ContactsApi.md#create5) | **POST** /api/contacts | Create a new contact
-[**delete5**](ContactsApi.md#delete5) | **DELETE** /api/contacts/{id} | Delete a contact
+[**delete3**](ContactsApi.md#delete3) | **DELETE** /api/contacts/{id} | Delete a contact
 [**get_one**](ContactsApi.md#get_one) | **GET** /api/contacts/{id} | Get a contact by ID
 [**list_mine**](ContactsApi.md#list_mine) | **GET** /api/contacts | List all contacts for the current user
 [**update3**](ContactsApi.md#update3) | **PUT** /api/contacts/{id} | Update a contact
@@ -88,8 +88,8 @@ Name | Type | Description  | Notes
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **delete5**
-> Delete1200Response delete5(id)
+# **delete3**
+> Delete200Response delete3(id)
 
 Delete a contact
 
@@ -99,7 +99,7 @@ Delete a contact
 
 ```python
 import tracko_sdk
-from tracko_sdk.models.delete1200_response import Delete1200Response
+from tracko_sdk.models.delete200_response import Delete200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -127,11 +127,11 @@ with tracko_sdk.ApiClient(configuration) as api_client:
 
     try:
         # Delete a contact
-        api_response = api_instance.delete5(id)
-        print("The response of ContactsApi->delete5:\n")
+        api_response = api_instance.delete3(id)
+        print("The response of ContactsApi->delete3:\n")
         pprint(api_response)
     except Exception as e:
-        print("Exception when calling ContactsApi->delete5: %s\n" % e)
+        print("Exception when calling ContactsApi->delete3: %s\n" % e)
 ```
 
 
@@ -145,7 +145,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**Delete1200Response**](Delete1200Response.md)
+[**Delete200Response**](Delete200Response.md)
 
 ### Authorization
 

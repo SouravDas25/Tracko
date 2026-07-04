@@ -5,6 +5,7 @@ import 'package:tracko/pages/transaction_list_page/monthly_summary_view.dart';
 import 'package:tracko/pages/transaction_list_page/yearly_summary_view.dart';
 import 'package:tracko/pages/stats_page/stats_page.dart';
 
+
 /// The main container page for the transaction list.
 /// It uses a [TabController] to switch between three levels of granularity:
 /// 1. Daily: Detailed transactions for a specific month ([DailyTransactionView]).
@@ -130,6 +131,17 @@ class _TransactionListPageState extends State<TransactionListPage>
         centerTitle: true,
         elevation: 0,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.restore_from_trash_outlined),
+            tooltip: 'Recycle bin',
+            onPressed: () async {
+              final changed = await Navigator.of(context).pushNamed<bool>(
+                '/history',
+                arguments: {'initialFilter': 'DELETE'},
+              );
+              if (changed == true && mounted) setState(() {});
+            },
+          ),
           if (widget.initialAccountIds != null &&
               widget.initialAccountIds!.length == 1)
             IconButton(

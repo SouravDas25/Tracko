@@ -9,6 +9,7 @@ import '../Utils/enums.dart';
 import '../Utils/AppLog.dart';
 
 import '../models/transaction_period_summary.dart';
+import '../models/transaction_history_entry.dart';
 
 class TransactionRepository {
   final ApiClient _api;
@@ -153,6 +154,44 @@ class TransactionRepository {
 
   Future<void> deleteById(int id) async {
     await _api.delete<void>("${ApiConfig.transactions}/$id");
+  }
+
+  /// One page of the change history across all transactions (every create/edit/delete/revert),
+  /// optionally filtered to a single [operation] server-side (e.g. `DELETE` for the recycle bin).
+  Future<TransactionHistoryPageResult> getAllHistory({
+    String? operation,
+    int page = 0,
+    int size = 30,
+  }) async {
+    final res = await _api.get<Map<String, dynamic>>(
+      "${ApiConfig.transactions}/history",
+      query: {
+        if (operation != null) 'operation': operation,
+        'page': page,
+        'size': size,
+      },
+    );
+    return TransactionHistoryPageResult.fromJson(res);
+  }
+
+  /// A single transaction's change timeline (create/edit/delete/revert).
+  Future<List<TransactionHistoryEntry>> getHistory(int id, {String? operation}) async {
+    final res = await _api.get<List<dynamic>>(
+      "${ApiConfig.transactions}/$id/history",
+      query: {
+        if (operation != null) 'operation': operation,
+      },
+    );
+    return res
+        .map((e) => TransactionHistoryEntry.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Rolls back to a history snapshot: undoes an edit, or restores a deleted
+  /// transaction (both linked sides for a transfer).
+  Future<void> revertHistory(int historyId) async {
+    await _api.post<dynamic>(
+        "${ApiConfig.transactions}/history/$historyId/revert");
   }
 
   Future<legacy.Transaction> getById(int id) async {

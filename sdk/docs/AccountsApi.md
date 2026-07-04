@@ -5,19 +5,19 @@ All URIs are relative to *http://localhost:8080*
 Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**create7**](AccountsApi.md#create7) | **POST** /api/accounts | Create a new account
-[**delete7**](AccountsApi.md#delete7) | **DELETE** /api/accounts/{id} | Delete an account
+[**delete5**](AccountsApi.md#delete5) | **DELETE** /api/accounts/{id} | Delete an account
 [**get_account_monthly_summaries**](AccountsApi.md#get_account_monthly_summaries) | **GET** /api/accounts/{id}/summary/monthly | Get monthly summaries for an account
 [**get_account_summary**](AccountsApi.md#get_account_summary) | **GET** /api/accounts/{id}/summary | Get income/expense summary for an account in a date range
 [**get_account_transactions**](AccountsApi.md#get_account_transactions) | **GET** /api/accounts/{id}/transactions | List transactions for an account with optional filters
 [**get_account_yearly_summaries**](AccountsApi.md#get_account_yearly_summaries) | **GET** /api/accounts/{id}/summary/yearly | Get yearly summaries for an account
 [**get_all6**](AccountsApi.md#get_all6) | **GET** /api/accounts | List all accounts for the current user
-[**get_by_id4**](AccountsApi.md#get_by_id4) | **GET** /api/accounts/{id} | Get an account by ID
+[**get_by_id3**](AccountsApi.md#get_by_id3) | **GET** /api/accounts/{id} | Get an account by ID
 [**get_my_account_balances**](AccountsApi.md#get_my_account_balances) | **GET** /api/accounts/balances | Get balances for all accounts (derived from transactions)
 [**update5**](AccountsApi.md#update5) | **PUT** /api/accounts/{id} | Update an account
 
 
 # **create7**
-> GetById4200Response create7(account_save_request)
+> GetById3200Response create7(account_save_request)
 
 Create a new account
 
@@ -28,7 +28,7 @@ Create a new account
 ```python
 import tracko_sdk
 from tracko_sdk.models.account_save_request import AccountSaveRequest
-from tracko_sdk.models.get_by_id4200_response import GetById4200Response
+from tracko_sdk.models.get_by_id3200_response import GetById3200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -74,7 +74,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**GetById4200Response**](GetById4200Response.md)
+[**GetById3200Response**](GetById3200Response.md)
 
 ### Authorization
 
@@ -93,8 +93,8 @@ Name | Type | Description  | Notes
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **delete7**
-> Delete1200Response delete7(id)
+# **delete5**
+> Delete200Response delete5(id)
 
 Delete an account
 
@@ -104,7 +104,7 @@ Delete an account
 
 ```python
 import tracko_sdk
-from tracko_sdk.models.delete1200_response import Delete1200Response
+from tracko_sdk.models.delete200_response import Delete200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -132,11 +132,11 @@ with tracko_sdk.ApiClient(configuration) as api_client:
 
     try:
         # Delete an account
-        api_response = api_instance.delete7(id)
-        print("The response of AccountsApi->delete7:\n")
+        api_response = api_instance.delete5(id)
+        print("The response of AccountsApi->delete5:\n")
         pprint(api_response)
     except Exception as e:
-        print("Exception when calling AccountsApi->delete7: %s\n" % e)
+        print("Exception when calling AccountsApi->delete5: %s\n" % e)
 ```
 
 
@@ -150,7 +150,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**Delete1200Response**](Delete1200Response.md)
+[**Delete200Response**](Delete200Response.md)
 
 ### Authorization
 
@@ -569,8 +569,8 @@ This endpoint does not need any parameter.
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **get_by_id4**
-> GetById4200Response get_by_id4(id)
+# **get_by_id3**
+> GetById3200Response get_by_id3(id)
 
 Get an account by ID
 
@@ -580,7 +580,7 @@ Get an account by ID
 
 ```python
 import tracko_sdk
-from tracko_sdk.models.get_by_id4200_response import GetById4200Response
+from tracko_sdk.models.get_by_id3200_response import GetById3200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -608,11 +608,11 @@ with tracko_sdk.ApiClient(configuration) as api_client:
 
     try:
         # Get an account by ID
-        api_response = api_instance.get_by_id4(id)
-        print("The response of AccountsApi->get_by_id4:\n")
+        api_response = api_instance.get_by_id3(id)
+        print("The response of AccountsApi->get_by_id3:\n")
         pprint(api_response)
     except Exception as e:
-        print("Exception when calling AccountsApi->get_by_id4: %s\n" % e)
+        print("Exception when calling AccountsApi->get_by_id3: %s\n" % e)
 ```
 
 
@@ -626,7 +626,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**GetById4200Response**](GetById4200Response.md)
+[**GetById3200Response**](GetById3200Response.md)
 
 ### Authorization
 
@@ -718,7 +718,7 @@ This endpoint does not need any parameter.
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **update5**
-> GetById4200Response update5(id, account_save_request)
+> GetById3200Response update5(id, account_save_request)
 
 Update an account
 
@@ -729,7 +729,7 @@ Update an account
 ```python
 import tracko_sdk
 from tracko_sdk.models.account_save_request import AccountSaveRequest
-from tracko_sdk.models.get_by_id4200_response import GetById4200Response
+from tracko_sdk.models.get_by_id3200_response import GetById3200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -777,7 +777,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**GetById4200Response**](GetById4200Response.md)
+[**GetById3200Response**](GetById3200Response.md)
 
 ### Authorization
 

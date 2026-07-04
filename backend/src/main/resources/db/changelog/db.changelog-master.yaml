@@ -9,3 +9,9 @@ databaseChangeLog:
             file: db/changelog/003-add-unique-email-constraint.yaml
     -   include:
             file: db/changelog/004-add-search-indexes.yaml
+    -   include:
+            file: db/changelog/005-add-login-lockout-columns.yaml
+    -   include:
+            file: db/changelog/006-scope-json-store-to-user.yaml
+    -   include:
+            file: db/changelog/007-add-transaction-history.yaml

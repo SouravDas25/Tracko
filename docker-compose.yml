@@ -29,7 +29,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${DB_NAME:-tracko_db}
       SPRING_DATASOURCE_USERNAME: ${DB_USER:-tracko}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-tracko}
-      JWT_SECRET: ${JWT_SECRET:-tracko_jwt_secret_change_me_to_32+_chars_min}
+      JWT_SECRET: ${JWT_SECRET}
 
 volumes:
   tracko_postgres_data:

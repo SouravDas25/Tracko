@@ -6,7 +6,7 @@ class ApiConfig {
   static const String devBaseUrl = 'http://localhost:8080';
 
   // Production
-  static const String prodBaseUrl = 'https://your-production-url.com';
+  static const String prodBaseUrl = 'https://trako.silent-samurai.org';
 
   // Toggle via build-time flag: --dart-define=IS_PRODUCTION=true
   static const bool isProduction =

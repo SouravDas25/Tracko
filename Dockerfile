@@ -56,7 +56,11 @@ ENV SPRING_PROFILES_ACTIVE=prod
 ENV SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/tracko_db
 ENV SPRING_DATASOURCE_USERNAME=tracko
 ENV SPRING_DATASOURCE_PASSWORD=tracko
-ENV JWT_SECRET=tracko_jwt_secret_change_me_to_32+_chars_min
+# Replace this auto-generated JWT secret on every deploy:
+#   docker run -e JWT_SECRET=$(openssl rand -base64 48) ...
+# or set JWT_SECRET in docker-compose.yml / your orchestrator.
+# Failure to replace means a unique-but-public per-image secret.
+ENV JWT_SECRET=KllEUelV5v8P/ZAI+XST7HWyN3ipCk56oc/Mh+6NfDkGJf7oCbAcVLmGOzXBg//W
 
 EXPOSE 80 443
 

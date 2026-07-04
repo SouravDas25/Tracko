@@ -10,6 +10,7 @@ import 'package:tracko/pages/smart_add_item/components/transaction_details_form.
 import 'package:tracko/pages/smart_add_item/components/split_manager_section.dart';
 import 'package:tracko/pages/smart_add_item/components/comments_section.dart';
 
+
 class SmartAddItemPage extends StatefulWidget {
   final Transaction transaction;
   final Function saveCallback;
@@ -48,6 +49,15 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
     super.dispose();
   }
 
+  void _openHistory(BuildContext context) {
+    final id = widget.transaction.id;
+    if (id == null) return;
+    Navigator.of(context).pushNamed(
+      '/history',
+      arguments: {'transactionId': id},
+    );
+  }
+
   Future<void> _save() async {
     bool isSuccessfulSave = false;
     LoadingDialog.show(context);
@@ -74,15 +84,20 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: typeColor,
-        actions: _controller.transactionType == TransactionType.DEBIT
-            ? <Widget>[
-                IconButton(
-                  icon: Icon(Icons.call_split, size: 28.0),
-                  onPressed: () => _controller.callSplitPage(context),
-                  tooltip: "Split Transaction",
-                )
-              ]
-            : [],
+        actions: <Widget>[
+          if (_controller.isEdit && widget.transaction.id != null)
+            IconButton(
+              icon: Icon(Icons.history, size: 26.0),
+              onPressed: () => _openHistory(context),
+              tooltip: "History",
+            ),
+          if (_controller.transactionType == TransactionType.DEBIT)
+            IconButton(
+              icon: Icon(Icons.call_split, size: 28.0),
+              onPressed: () => _controller.callSplitPage(context),
+              tooltip: "Split Transaction",
+            ),
+        ],
         title:
             Text(_controller.isEdit ? "Edit Transaction" : "New Transaction"),
         centerTitle: true,
@@ -92,6 +107,7 @@ class _SmartAddItemPage extends State<SmartAddItemPage> {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
           child: ElevatedButton(
+            key: const Key('add_save_button'),
             style: ElevatedButton.styleFrom(
               backgroundColor: typeColor,
               padding: EdgeInsets.symmetric(vertical: 14),

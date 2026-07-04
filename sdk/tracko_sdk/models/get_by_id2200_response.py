@@ -19,7 +19,7 @@ import json
 
 from pydantic import BaseModel, ConfigDict, Field, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
-from tracko_sdk.models.recurring_transaction import RecurringTransaction
+from tracko_sdk.models.category import Category
 from typing import Optional, Set
 from typing_extensions import Self
 
@@ -27,7 +27,7 @@ class GetById2200Response(BaseModel):
     """
     GetById2200Response
     """ # noqa: E501
-    result: Optional[RecurringTransaction] = None
+    result: Optional[Category] = None
     message: Optional[StrictStr] = Field(default=None, description="Human-readable status message")
     __properties: ClassVar[List[str]] = ["result", "message"]
 
@@ -85,7 +85,7 @@ class GetById2200Response(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "result": RecurringTransaction.from_dict(obj["result"]) if obj.get("result") is not None else None,
+            "result": Category.from_dict(obj["result"]) if obj.get("result") is not None else None,
             "message": obj.get("message")
         })
         return _obj

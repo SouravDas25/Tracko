@@ -52,9 +52,68 @@ jobs:
       - name: Run CLI tests with backend
         run: python cli/run_cli_test.py
 
+      - name: Upload backend log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cli-backend-log
+          path: cli/tests/backend.log
+          if-no-files-found: warn
+
+  frontend-e2e:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: pip
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests psutil
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      # ubuntu-latest ships a version-matched Google Chrome + ChromeDriver pair
+      # (chromedriver lives in $CHROMEWEBDRIVER). We deliberately do NOT install
+      # a separate Chrome/driver: layering a newer chromedriver on top leaves it
+      # driving the preinstalled Chrome, which fails with SessionNotCreated
+      # ("only supports Chrome version N").
+      - name: Show Chrome / ChromeDriver versions
+        run: |
+          google-chrome --version
+          "$CHROMEWEBDRIVER/chromedriver" --version
+
+      - name: Run Flutter E2E tests with backend
+        run: xvfb-run -a python frontend/run_e2e_test.py
+
+      - name: Upload backend log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-e2e-backend-log
+          path: frontend/integration_test/backend.log
+          if-no-files-found: warn
+
   docker-build:
     runs-on: ubuntu-latest
-    needs: [backend-test, cli-test]
+    needs: [backend-test, cli-test, frontend-e2e]
 
     steps:
       - uses: actions/checkout@v4

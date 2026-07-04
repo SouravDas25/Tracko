@@ -93,7 +93,6 @@ The tests expect the following backend endpoints to be available:
 - `POST /api/oauth/token` - Authentication token
 - `POST /api/account/create` - Create global account
 - `POST /api/user/save` - Update user profile
-- `GET /api/user/byPhoneNo` - Get user by phone number
 
 ## Troubleshooting
 

@@ -1,0 +1,23 @@
+databaseChangeLog:
+    -   changeSet:
+            id: 005-add-login-lockout-columns
+            author: sd25
+            changes:
+                -   addColumn:
+                        tableName: users
+                        columns:
+                            -   column:
+                                    name: failed_login_attempts
+                                    type: int
+                                    defaultValueNumeric: 0
+                                    constraints:
+                                        nullable: false
+                            -   column:
+                                    name: lockout_count
+                                    type: int
+                                    defaultValueNumeric: 0
+                                    constraints:
+                                        nullable: false
+                            -   column:
+                                    name: lock_until
+                                    type: timestamp

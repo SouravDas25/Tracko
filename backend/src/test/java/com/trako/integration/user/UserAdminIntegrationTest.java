@@ -160,13 +160,6 @@ public class UserAdminIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    public void byPhoneNoRequiresAuth() throws Exception {
-        mockMvc.perform(get("/api/user/byPhoneNo")
-                        .param("phone_no", generateUniquePhone()))
-                .andExpect(status().isUnauthorized());
-    }
-
-    @Test
     public void nonAdminCanUpdateOwnProfileViaMeEndpoint() throws Exception {
         var body = new java.util.HashMap<String, Object>();
         body.put("name", "Normal Updated");

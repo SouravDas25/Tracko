@@ -20,7 +20,7 @@ from datetime import datetime
 from pydantic import Field, StrictBool, StrictFloat, StrictInt, StrictStr
 from typing import Optional, Union
 from typing_extensions import Annotated
-from tracko_sdk.models.delete1200_response import Delete1200Response
+from tracko_sdk.models.delete200_response import Delete200Response
 from tracko_sdk.models.get_all1200_response import GetAll1200Response
 from tracko_sdk.models.get_by_id200_response import GetById200Response
 from tracko_sdk.models.get_my_summary200_response import GetMySummary200Response
@@ -316,7 +316,7 @@ class TransactionsApi:
 
 
     @validate_call
-    def delete1(
+    def delete(
         self,
         id: StrictInt,
         _request_timeout: Union[
@@ -331,7 +331,7 @@ class TransactionsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> Delete1200Response:
+    ) -> Delete200Response:
         """Delete a transaction or transfer
 
 
@@ -359,7 +359,7 @@ class TransactionsApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._delete1_serialize(
+        _param = self._delete_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -368,7 +368,7 @@ class TransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Delete1200Response",
+            '200': "Delete200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -382,7 +382,7 @@ class TransactionsApi:
 
 
     @validate_call
-    def delete1_with_http_info(
+    def delete_with_http_info(
         self,
         id: StrictInt,
         _request_timeout: Union[
@@ -397,7 +397,7 @@ class TransactionsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[Delete1200Response]:
+    ) -> ApiResponse[Delete200Response]:
         """Delete a transaction or transfer
 
 
@@ -425,7 +425,7 @@ class TransactionsApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._delete1_serialize(
+        _param = self._delete_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -434,7 +434,7 @@ class TransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Delete1200Response",
+            '200': "Delete200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -448,7 +448,7 @@ class TransactionsApi:
 
 
     @validate_call
-    def delete1_without_preload_content(
+    def delete_without_preload_content(
         self,
         id: StrictInt,
         _request_timeout: Union[
@@ -491,7 +491,7 @@ class TransactionsApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._delete1_serialize(
+        _param = self._delete_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -500,7 +500,7 @@ class TransactionsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Delete1200Response",
+            '200': "Delete200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -509,7 +509,7 @@ class TransactionsApi:
         return response_data.response
 
 
-    def _delete1_serialize(
+    def _delete_serialize(
         self,
         id,
         _request_auth,

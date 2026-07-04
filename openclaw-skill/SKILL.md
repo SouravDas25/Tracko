@@ -56,6 +56,8 @@ For response JSON shapes, read `references/response-schemas.md`.
 | "balance", "how much do I have" | `account balances` |
 | "budget", "how much is left" | `budget view` |
 | "who owes me", "splits" | `split unsettled` |
+| "transaction history", "what changed", "show edits" | `transaction history` |
+| "deleted transactions", "recycle bin", "trash" | `transaction trash` |
 | "spending breakdown", "stats" | `stats summary` |
 
 ### Ambiguous cases — ASK:

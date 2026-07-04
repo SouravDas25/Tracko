@@ -12,7 +12,7 @@ Grab the latest binary for your OS from [GitHub Releases](https://github.com/Sou
 ```powershell
 # Move the downloaded binary to a folder in your PATH
 mkdir $env:USERPROFILE\trako
-move $env:USERPROFILE\Downloads\trako-windows.exe $env:USERPROFILE\trako\trako.exe
+move $env:USERPROFILE\Downloads\trako-windows-x86_64.exe $env:USERPROFILE\trako\trako.exe
 # Add to PATH (run once)
 [Environment]::SetEnvironmentVariable("Path", $env:Path + ";$env:USERPROFILE\trako", "User")
 # Restart terminal, then:
@@ -21,7 +21,7 @@ trako --help
 
 **Linux:**
 ```bash
-curl -L https://github.com/SouravDas25/Tracko/releases/latest/download/trako-linux -o trako
+curl -L https://github.com/SouravDas25/Tracko/releases/latest/download/trako-linux-x86_64 -o trako
 chmod +x trako
 sudo mv trako /usr/local/bin/
 trako --help
@@ -29,11 +29,15 @@ trako --help
 
 **macOS:**
 ```bash
-curl -L https://github.com/SouravDas25/Tracko/releases/latest/download/trako-macos -o trako
+# Apple Silicon (M1/M2/M3): use trako-macos-arm64
+# Intel: use trako-macos-x86_64
+curl -L https://github.com/SouravDas25/Tracko/releases/latest/download/trako-macos-arm64 -o trako
 chmod +x trako
 sudo mv trako /usr/local/bin/
 trako --help
 ```
+
+Once installed, the binary can update itself — see [Updating](#updating).
 
 ### Install from Source (requires Python 3.10+)
 
@@ -70,10 +74,11 @@ All commands follow the pattern: `trako <group> <command> [options]`
 | `stats` | Spending analytics | `summary`, `category-summary` |
 | `currency` | Multi-currency management | `list`, `add`, `update`, `delete` |
 | `exchange` | Live exchange rates | `get` |
-| `user` | User management | `me`, `list`, `find-phone` |
+| `user` | User management | `me`, `list`, `get`, `upsert` |
 | `config` | CLI profiles | `list`, `show`, `use`, `set` |
 | `store` | Key-value JSON storage | `list`, `get`, `create`, `update`, `delete` |
 | `db` | Database operations | `seed` |
+| `update` | Self-update the binary | `check`, `apply`, `enable`, `disable` |
 | `health` | API health check | `check` |
 
 Use `trako <group> --help` for full details on any group.
@@ -153,6 +158,32 @@ trako config use production               # Switch profile
 trako config set --base-url <url>         # Update URL
 ```
 
+## Updating
+
+If you installed the standalone binary, it can update itself in place:
+
+```bash
+trako update                              # Show current vs. latest version
+trako update check                        # Exit non-zero if an update is available
+trako update apply                        # Download & install the latest release
+```
+
+`trako update apply` fetches the matching binary for your OS/architecture from
+[GitHub Releases](https://github.com/SouravDas25/Tracko/releases/latest) and
+replaces the running executable. It only works for the packaged binary — for a
+source or `pip` install, update via `pip` instead.
+
+The CLI also checks for updates automatically on startup, at most once every 24
+hours, and prints a notice on **stderr** when a newer version exists (so it never
+interferes with `--raw`/piped output). Toggle this behavior:
+
+```bash
+trako update disable                      # Turn off the automatic check
+trako update enable                       # Turn it back on
+```
+
+The setting is stored in `~/.tracko-cli.json` as `auto_update_check`.
+
 ## Troubleshooting
 
 | Problem | Fix |
@@ -161,6 +192,8 @@ trako config set --base-url <url>         # Update URL
 | Wrong backend URL | `trako config set --base-url http://localhost:8080` |
 | Need different environment | `trako config use <profile>` |
 | Backend not running | Start with `task start` from project root |
+| `update apply` says "packaged binary only" | You have a source/`pip` install — update with `pip` instead |
+| Too many update notices | `trako update disable` |
 
 ## Development
 

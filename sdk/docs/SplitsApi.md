@@ -5,10 +5,10 @@ All URIs are relative to *http://localhost:8080*
 Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**create2**](SplitsApi.md#create2) | **POST** /api/splits | Create a split for a transaction
-[**delete2**](SplitsApi.md#delete2) | **DELETE** /api/splits/{id} | Delete a split
+[**delete6**](SplitsApi.md#delete6) | **DELETE** /api/splits/{id} | Delete a split
 [**get_all2**](SplitsApi.md#get_all2) | **GET** /api/splits | List all splits for the current user
 [**get_by_contact_id**](SplitsApi.md#get_by_contact_id) | **GET** /api/splits/contact/{contactId} | List all splits for a contact
-[**get_by_id1**](SplitsApi.md#get_by_id1) | **GET** /api/splits/{id} | Get a split by ID
+[**get_by_id4**](SplitsApi.md#get_by_id4) | **GET** /api/splits/{id} | Get a split by ID
 [**get_by_transaction_id**](SplitsApi.md#get_by_transaction_id) | **GET** /api/splits/transaction/{transactionId} | List splits for a transaction
 [**get_my_unsettled**](SplitsApi.md#get_my_unsettled) | **GET** /api/splits/unsettled | List all unsettled splits for the current user
 [**get_unsettled_by_contact_id**](SplitsApi.md#get_unsettled_by_contact_id) | **GET** /api/splits/contact/{contactId}/unsettled | List unsettled splits for a contact
@@ -93,8 +93,8 @@ Name | Type | Description  | Notes
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **delete2**
-> Delete1200Response delete2(id)
+# **delete6**
+> Delete200Response delete6(id)
 
 Delete a split
 
@@ -104,7 +104,7 @@ Delete a split
 
 ```python
 import tracko_sdk
-from tracko_sdk.models.delete1200_response import Delete1200Response
+from tracko_sdk.models.delete200_response import Delete200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -132,11 +132,11 @@ with tracko_sdk.ApiClient(configuration) as api_client:
 
     try:
         # Delete a split
-        api_response = api_instance.delete2(id)
-        print("The response of SplitsApi->delete2:\n")
+        api_response = api_instance.delete6(id)
+        print("The response of SplitsApi->delete6:\n")
         pprint(api_response)
     except Exception as e:
-        print("Exception when calling SplitsApi->delete2: %s\n" % e)
+        print("Exception when calling SplitsApi->delete6: %s\n" % e)
 ```
 
 
@@ -150,7 +150,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**Delete1200Response**](Delete1200Response.md)
+[**Delete200Response**](Delete200Response.md)
 
 ### Authorization
 
@@ -317,8 +317,8 @@ Name | Type | Description  | Notes
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **get_by_id1**
-> Create2200Response get_by_id1(id)
+# **get_by_id4**
+> Create2200Response get_by_id4(id)
 
 Get a split by ID
 
@@ -356,11 +356,11 @@ with tracko_sdk.ApiClient(configuration) as api_client:
 
     try:
         # Get a split by ID
-        api_response = api_instance.get_by_id1(id)
-        print("The response of SplitsApi->get_by_id1:\n")
+        api_response = api_instance.get_by_id4(id)
+        print("The response of SplitsApi->get_by_id4:\n")
         pprint(api_response)
     except Exception as e:
-        print("Exception when calling SplitsApi->get_by_id1: %s\n" % e)
+        print("Exception when calling SplitsApi->get_by_id4: %s\n" % e)
 ```
 
 
@@ -618,7 +618,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **settle**
-> Delete1200Response settle(split_id)
+> Delete200Response settle(split_id)
 
 Mark a split as settled
 
@@ -628,7 +628,7 @@ Mark a split as settled
 
 ```python
 import tracko_sdk
-from tracko_sdk.models.delete1200_response import Delete1200Response
+from tracko_sdk.models.delete200_response import Delete200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -674,7 +674,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**Delete1200Response**](Delete1200Response.md)
+[**Delete200Response**](Delete200Response.md)
 
 ### Authorization
 
@@ -694,7 +694,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **unsettle**
-> Delete1200Response unsettle(split_id)
+> Delete200Response unsettle(split_id)
 
 Reverse a settlement on a split
 
@@ -704,7 +704,7 @@ Reverse a settlement on a split
 
 ```python
 import tracko_sdk
-from tracko_sdk.models.delete1200_response import Delete1200Response
+from tracko_sdk.models.delete200_response import Delete200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -750,7 +750,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**Delete1200Response**](Delete1200Response.md)
+[**Delete200Response**](Delete200Response.md)
 
 ### Authorization
 

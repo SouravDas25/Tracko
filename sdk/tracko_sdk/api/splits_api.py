@@ -18,7 +18,7 @@ from typing_extensions import Annotated
 
 from pydantic import StrictInt
 from tracko_sdk.models.create2200_response import Create2200Response
-from tracko_sdk.models.delete1200_response import Delete1200Response
+from tracko_sdk.models.delete200_response import Delete200Response
 from tracko_sdk.models.get_all2200_response import GetAll2200Response
 from tracko_sdk.models.split import Split
 
@@ -309,7 +309,7 @@ class SplitsApi:
 
 
     @validate_call
-    def delete2(
+    def delete6(
         self,
         id: StrictInt,
         _request_timeout: Union[
@@ -324,7 +324,7 @@ class SplitsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> Delete1200Response:
+    ) -> Delete200Response:
         """Delete a split
 
 
@@ -352,7 +352,7 @@ class SplitsApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._delete2_serialize(
+        _param = self._delete6_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -361,7 +361,7 @@ class SplitsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Delete1200Response",
+            '200': "Delete200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -375,7 +375,7 @@ class SplitsApi:
 
 
     @validate_call
-    def delete2_with_http_info(
+    def delete6_with_http_info(
         self,
         id: StrictInt,
         _request_timeout: Union[
@@ -390,7 +390,7 @@ class SplitsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[Delete1200Response]:
+    ) -> ApiResponse[Delete200Response]:
         """Delete a split
 
 
@@ -418,7 +418,7 @@ class SplitsApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._delete2_serialize(
+        _param = self._delete6_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -427,7 +427,7 @@ class SplitsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Delete1200Response",
+            '200': "Delete200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -441,7 +441,7 @@ class SplitsApi:
 
 
     @validate_call
-    def delete2_without_preload_content(
+    def delete6_without_preload_content(
         self,
         id: StrictInt,
         _request_timeout: Union[
@@ -484,7 +484,7 @@ class SplitsApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._delete2_serialize(
+        _param = self._delete6_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -493,7 +493,7 @@ class SplitsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Delete1200Response",
+            '200': "Delete200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -502,7 +502,7 @@ class SplitsApi:
         return response_data.response
 
 
-    def _delete2_serialize(
+    def _delete6_serialize(
         self,
         id,
         _request_auth,
@@ -1059,7 +1059,7 @@ class SplitsApi:
 
 
     @validate_call
-    def get_by_id1(
+    def get_by_id4(
         self,
         id: StrictInt,
         _request_timeout: Union[
@@ -1102,7 +1102,7 @@ class SplitsApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._get_by_id1_serialize(
+        _param = self._get_by_id4_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -1125,7 +1125,7 @@ class SplitsApi:
 
 
     @validate_call
-    def get_by_id1_with_http_info(
+    def get_by_id4_with_http_info(
         self,
         id: StrictInt,
         _request_timeout: Union[
@@ -1168,7 +1168,7 @@ class SplitsApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._get_by_id1_serialize(
+        _param = self._get_by_id4_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -1191,7 +1191,7 @@ class SplitsApi:
 
 
     @validate_call
-    def get_by_id1_without_preload_content(
+    def get_by_id4_without_preload_content(
         self,
         id: StrictInt,
         _request_timeout: Union[
@@ -1234,7 +1234,7 @@ class SplitsApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._get_by_id1_serialize(
+        _param = self._get_by_id4_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -1252,7 +1252,7 @@ class SplitsApi:
         return response_data.response
 
 
-    def _get_by_id1_serialize(
+    def _get_by_id4_serialize(
         self,
         id,
         _request_auth,
@@ -2079,7 +2079,7 @@ class SplitsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> Delete1200Response:
+    ) -> Delete200Response:
         """Mark a split as settled
 
 
@@ -2116,7 +2116,7 @@ class SplitsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Delete1200Response",
+            '200': "Delete200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -2145,7 +2145,7 @@ class SplitsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[Delete1200Response]:
+    ) -> ApiResponse[Delete200Response]:
         """Mark a split as settled
 
 
@@ -2182,7 +2182,7 @@ class SplitsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Delete1200Response",
+            '200': "Delete200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -2248,7 +2248,7 @@ class SplitsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Delete1200Response",
+            '200': "Delete200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -2334,7 +2334,7 @@ class SplitsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> Delete1200Response:
+    ) -> Delete200Response:
         """Reverse a settlement on a split
 
 
@@ -2371,7 +2371,7 @@ class SplitsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Delete1200Response",
+            '200': "Delete200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -2400,7 +2400,7 @@ class SplitsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[Delete1200Response]:
+    ) -> ApiResponse[Delete200Response]:
         """Reverse a settlement on a split
 
 
@@ -2437,7 +2437,7 @@ class SplitsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Delete1200Response",
+            '200': "Delete200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -2503,7 +2503,7 @@ class SplitsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Delete1200Response",
+            '200': "Delete200Response",
         }
         response_data = self.api_client.call_api(
             *_param,

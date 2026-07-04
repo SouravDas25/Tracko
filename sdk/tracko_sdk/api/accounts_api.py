@@ -20,10 +20,10 @@ from datetime import datetime
 from pydantic import StrictBool, StrictInt
 from typing import Optional
 from tracko_sdk.models.account_save_request import AccountSaveRequest
-from tracko_sdk.models.delete1200_response import Delete1200Response
+from tracko_sdk.models.delete200_response import Delete200Response
 from tracko_sdk.models.get_all1200_response import GetAll1200Response
 from tracko_sdk.models.get_all6200_response import GetAll6200Response
-from tracko_sdk.models.get_by_id4200_response import GetById4200Response
+from tracko_sdk.models.get_by_id3200_response import GetById3200Response
 from tracko_sdk.models.get_my_account_balances200_response import GetMyAccountBalances200Response
 from tracko_sdk.models.get_my_summary200_response import GetMySummary200Response
 from tracko_sdk.models.get_yearly_summaries200_response import GetYearlySummaries200Response
@@ -62,7 +62,7 @@ class AccountsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> GetById4200Response:
+    ) -> GetById3200Response:
         """Create a new account
 
 
@@ -99,7 +99,7 @@ class AccountsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "GetById4200Response",
+            '200': "GetById3200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -128,7 +128,7 @@ class AccountsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[GetById4200Response]:
+    ) -> ApiResponse[GetById3200Response]:
         """Create a new account
 
 
@@ -165,7 +165,7 @@ class AccountsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "GetById4200Response",
+            '200': "GetById3200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -231,7 +231,7 @@ class AccountsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "GetById4200Response",
+            '200': "GetById3200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -315,7 +315,7 @@ class AccountsApi:
 
 
     @validate_call
-    def delete7(
+    def delete5(
         self,
         id: StrictInt,
         _request_timeout: Union[
@@ -330,7 +330,7 @@ class AccountsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> Delete1200Response:
+    ) -> Delete200Response:
         """Delete an account
 
 
@@ -358,7 +358,7 @@ class AccountsApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._delete7_serialize(
+        _param = self._delete5_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -367,7 +367,7 @@ class AccountsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Delete1200Response",
+            '200': "Delete200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -381,7 +381,7 @@ class AccountsApi:
 
 
     @validate_call
-    def delete7_with_http_info(
+    def delete5_with_http_info(
         self,
         id: StrictInt,
         _request_timeout: Union[
@@ -396,7 +396,7 @@ class AccountsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[Delete1200Response]:
+    ) -> ApiResponse[Delete200Response]:
         """Delete an account
 
 
@@ -424,7 +424,7 @@ class AccountsApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._delete7_serialize(
+        _param = self._delete5_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -433,7 +433,7 @@ class AccountsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Delete1200Response",
+            '200': "Delete200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -447,7 +447,7 @@ class AccountsApi:
 
 
     @validate_call
-    def delete7_without_preload_content(
+    def delete5_without_preload_content(
         self,
         id: StrictInt,
         _request_timeout: Union[
@@ -490,7 +490,7 @@ class AccountsApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._delete7_serialize(
+        _param = self._delete5_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -499,7 +499,7 @@ class AccountsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Delete1200Response",
+            '200': "Delete200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -508,7 +508,7 @@ class AccountsApi:
         return response_data.response
 
 
-    def _delete7_serialize(
+    def _delete5_serialize(
         self,
         id,
         _request_auth,
@@ -2070,7 +2070,7 @@ class AccountsApi:
 
 
     @validate_call
-    def get_by_id4(
+    def get_by_id3(
         self,
         id: StrictInt,
         _request_timeout: Union[
@@ -2085,7 +2085,7 @@ class AccountsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> GetById4200Response:
+    ) -> GetById3200Response:
         """Get an account by ID
 
 
@@ -2113,7 +2113,7 @@ class AccountsApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._get_by_id4_serialize(
+        _param = self._get_by_id3_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -2122,7 +2122,7 @@ class AccountsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "GetById4200Response",
+            '200': "GetById3200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -2136,7 +2136,7 @@ class AccountsApi:
 
 
     @validate_call
-    def get_by_id4_with_http_info(
+    def get_by_id3_with_http_info(
         self,
         id: StrictInt,
         _request_timeout: Union[
@@ -2151,7 +2151,7 @@ class AccountsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[GetById4200Response]:
+    ) -> ApiResponse[GetById3200Response]:
         """Get an account by ID
 
 
@@ -2179,7 +2179,7 @@ class AccountsApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._get_by_id4_serialize(
+        _param = self._get_by_id3_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -2188,7 +2188,7 @@ class AccountsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "GetById4200Response",
+            '200': "GetById3200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -2202,7 +2202,7 @@ class AccountsApi:
 
 
     @validate_call
-    def get_by_id4_without_preload_content(
+    def get_by_id3_without_preload_content(
         self,
         id: StrictInt,
         _request_timeout: Union[
@@ -2245,7 +2245,7 @@ class AccountsApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._get_by_id4_serialize(
+        _param = self._get_by_id3_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -2254,7 +2254,7 @@ class AccountsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "GetById4200Response",
+            '200': "GetById3200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -2263,7 +2263,7 @@ class AccountsApi:
         return response_data.response
 
 
-    def _get_by_id4_serialize(
+    def _get_by_id3_serialize(
         self,
         id,
         _request_auth,
@@ -2581,7 +2581,7 @@ class AccountsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> GetById4200Response:
+    ) -> GetById3200Response:
         """Update an account
 
 
@@ -2621,7 +2621,7 @@ class AccountsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "GetById4200Response",
+            '200': "GetById3200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -2651,7 +2651,7 @@ class AccountsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[GetById4200Response]:
+    ) -> ApiResponse[GetById3200Response]:
         """Update an account
 
 
@@ -2691,7 +2691,7 @@ class AccountsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "GetById4200Response",
+            '200': "GetById3200Response",
         }
         response_data = self.api_client.call_api(
             *_param,
@@ -2761,7 +2761,7 @@ class AccountsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "GetById4200Response",
+            '200': "GetById3200Response",
         }
         response_data = self.api_client.call_api(
             *_param,

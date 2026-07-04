@@ -79,4 +79,13 @@ public class TransactionGetAllValidationTest extends BaseIntegrationTest {
                         .param("startDate", "2025-01-01"))
                 .andExpect(status().isBadRequest());
     }
+
+    @Test
+    public void getAll_endDateBeforeStartDate_returnsBadRequest() throws Exception {
+        mockMvc.perform(get("/api/transactions")
+                        .header("Authorization", bearerToken)
+                        .param("startDate", "2025-06-30")
+                        .param("endDate", "2025-06-01"))
+                .andExpect(status().isBadRequest());
+    }
 }

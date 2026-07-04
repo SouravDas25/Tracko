@@ -3,7 +3,7 @@ import os
 import sys
 from typing import Dict, Any, Tuple, Optional
 
-DEFAULT_BASE_URL = "http://localhost:8080"
+DEFAULT_BASE_URL = "https://trako.silent-samurai.org"
 
 ENV_VAR_PROFILE = "TRACKO_PROFILE"
 DEFAULT_PROFILE_NAME = "default"
@@ -176,3 +176,15 @@ def list_profiles() -> Dict[str, Any]:
         "active": get_active_profile_name(),
         "profiles": list(cfg.get("profiles", {}).keys())
     }
+
+
+def get_update_setting(key: str, default: Any = None) -> Any:
+    """Get an update-related setting from the config root."""
+    return load_config().get(key, default)
+
+
+def set_update_setting(key: str, value: Any) -> None:
+    """Set an update-related setting in the config root and save."""
+    cfg = load_config()
+    cfg[key] = value
+    save_config(cfg)

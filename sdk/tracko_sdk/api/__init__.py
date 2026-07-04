@@ -13,6 +13,7 @@ from tracko_sdk.api.json_store_api import JSONStoreApi
 from tracko_sdk.api.recurring_transactions_api import RecurringTransactionsApi
 from tracko_sdk.api.splits_api import SplitsApi
 from tracko_sdk.api.statistics_api import StatisticsApi
+from tracko_sdk.api.transaction_history_api import TransactionHistoryApi
 from tracko_sdk.api.transactions_api import TransactionsApi
 from tracko_sdk.api.user_currencies_api import UserCurrenciesApi
 from tracko_sdk.api.users_api import UsersApi

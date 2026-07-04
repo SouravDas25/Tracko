@@ -1,38 +1,19 @@
 package com.trako.models.external;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.util.Map;
 
-/**
- * Simple representation of the external exchange-rate API response
- * with only the fields we currently need.
- */
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class ExchangeRateApiResponse {
-
     private String baseCode;
     @JsonDeserialize(contentAs = Double.class)
     private Map<String, Double> rates;
-
-    public ExchangeRateApiResponse() {}
-
-    public ExchangeRateApiResponse(String baseCode, Map<String, Double> rates) {
-        this.baseCode = baseCode;
-        this.rates = rates;
-    }
-
-    public String getBaseCode() {
-        return baseCode;
-    }
-
-    public void setBaseCode(String baseCode) {
-        this.baseCode = baseCode;
-    }
-
-    public Map<String, Double> getRates() {
-        return rates;
-    }
-
-    public void setRates(Map<String, Double> rates) {
-        this.rates = rates;
-    }
 }

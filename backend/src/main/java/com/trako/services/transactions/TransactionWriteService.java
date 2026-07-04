@@ -2,6 +2,7 @@ package com.trako.services.transactions;
 
 import com.trako.dtos.TransferResult;
 import com.trako.entities.Transaction;
+import com.trako.enums.HistoryOperation;
 import com.trako.enums.TransactionDbType;
 import com.trako.enums.TransactionType;
 import com.trako.exceptions.NotFoundException;
@@ -13,6 +14,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Write-oriented service for {@link Transaction} mutations.
@@ -46,6 +50,9 @@ public class TransactionWriteService {
     @Autowired
     private TransactionValidationService validationService;
 
+    @Autowired
+    private TransactionHistoryService historyService;
+
     /**
      * Unified entry point for creating a transaction or transfer.
      * Handles all branching logic based on request data.
@@ -57,11 +64,14 @@ public class TransactionWriteService {
         if (request.transactionType() == null) {
             throw new IllegalArgumentException("transactionType cannot be null");
         }
+        Transaction created;
         if (request.transactionType() == TransactionType.TRANSFER) {
-            return createTransfer(userId, request);
+            created = createTransfer(userId, request);
         } else {
-            return createRegularTransaction(userId, request);
+            created = createRegularTransaction(userId, request);
         }
+        historyService.record(userId, HistoryOperation.CREATE, created, List.of(created));
+        return created;
     }
 
     private Transaction createRegularTransaction(String userId, TransactionRequest request) {
@@ -108,6 +118,9 @@ public class TransactionWriteService {
                 () -> new NotFoundException("Transaction not found")
         );
         validationService.validateAccountOwnership(userId, existing.getAccountId());
+
+        // Snapshot the before-state (both linked sides for a transfer) so the edit can be rolled back.
+        recordBeforeChange(userId, HistoryOperation.UPDATE, existing);
 
         boolean isExistingTransfer = existing.getLinkedTransactionId() != null;
         TransactionType requestedType = request.transactionType();
@@ -194,12 +207,30 @@ public class TransactionWriteService {
         Transaction tx = transactionRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Transaction not found"));
 
+        // Snapshot the before-state (both linked sides + splits for a transfer) before the hard delete,
+        // so the transaction can be restored from the recycle bin.
+        recordBeforeChange(userId, HistoryOperation.DELETE, tx);
+
         // We delegate to specific methods which will re-fetch and verify ownership/locking.
         if (tx.getLinkedTransactionId() != null) {
             transferService.deleteTransfer(userId, id);
         } else {
             deleteForUser(userId, id);
         }
+    }
+
+    /**
+     * Records a history snapshot of {@code primary} and, when it is one side of a transfer, its linked
+     * sibling — so an edit or delete can be rolled back as a single unit. Must be called before the
+     * change is applied so the captured state is the pre-change state.
+     */
+    private void recordBeforeChange(String userId, HistoryOperation operation, Transaction primary) {
+        List<Transaction> unit = new ArrayList<>();
+        unit.add(primary);
+        if (primary.getLinkedTransactionId() != null) {
+            transactionRepository.findById(primary.getLinkedTransactionId()).ifPresent(unit::add);
+        }
+        historyService.record(userId, operation, primary, unit);
     }
 
     @Transactional

@@ -2,13 +2,15 @@ package com.trako.util;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.io.Serial;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
@@ -19,13 +21,34 @@ import java.util.function.Function;
 @Component
 public class JwtTokenUtil implements Serializable {
 
-    private static final long DEFAULT_TOKEN_VALIDITY = 90L * 24 * 60 * 60; // ~3 months in seconds
+    private static final long DEFAULT_TOKEN_VALIDITY = 86400; // 24 hours in seconds
+    private static final String KNOWN_DEFAULT_SECRET = "tracko_jwt_secret_change_me_to_32+_chars_min";
+    @Serial
     private static final long serialVersionUID = -2550185165626007488L;
     @Value("${jwt.secret}")
     private String secret;
 
     @Value("${jwt.token.validity:" + DEFAULT_TOKEN_VALIDITY + "}")
     private long jwtTokenValidity;
+
+    @PostConstruct
+    private void init() {
+        if (secret == null || secret.isBlank()) {
+            throw new IllegalStateException(
+                    "JWT_SECRET environment variable is not set. Set a strong, unique secret at least 32 characters long."
+            );
+        }
+        if (KNOWN_DEFAULT_SECRET.equals(secret)) {
+            throw new IllegalStateException(
+                    "JWT_SECRET is set to a publicly known default. Change it to a strong, unique secret."
+            );
+        }
+        if (secret.length() < 32) {
+            throw new IllegalStateException(
+                    "JWT_SECRET must be at least 32 characters long. Current length: " + secret.length()
+            );
+        }
+    }
 
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
@@ -78,7 +101,7 @@ public class JwtTokenUtil implements Serializable {
                 .setSubject(subject)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + jwtTokenValidity * 1000))
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .signWith(getSigningKey(), Jwts.SIG.HS256)
                 .compact();
     }
 

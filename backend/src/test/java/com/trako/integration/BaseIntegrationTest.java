@@ -10,6 +10,7 @@ import com.trako.util.JwtTokenUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,6 +44,11 @@ public abstract class BaseIntegrationTest {
     @Autowired
     protected JwtTokenUtil jwtTokenUtil;
 
+    @Autowired
+    protected PasswordEncoder passwordEncoder;
+
+    protected static final String TEST_PASSWORD = "password";
+
     protected User createUniqueUser() {
         return createUniqueUser("Test User");
     }
@@ -52,7 +58,7 @@ public abstract class BaseIntegrationTest {
         user.setName(name);
         user.setPhoneNo(generateUniquePhone());
         user.setEmail("test_" + UUID.randomUUID() + "@example.com");
-        user.setPassword("password");
+        user.setPassword(passwordEncoder.encode(TEST_PASSWORD));
         user.setBaseCurrency("INR");
         return usersRepository.save(user);
     }

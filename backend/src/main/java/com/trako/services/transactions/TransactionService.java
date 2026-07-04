@@ -5,7 +5,6 @@ import com.trako.dtos.TransactionDetailDTO;
 import com.trako.dtos.TransactionPeriodSummaryDTO;
 import com.trako.dtos.TransactionSummaryDTO;
 import com.trako.entities.*;
-import com.trako.enums.TransactionDbType;
 import com.trako.repositories.*;
 import com.trako.util.NumberUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -238,69 +237,24 @@ public class TransactionService {
     }
 
     /**
-     * Returns a transaction summary for the given date range.
-     *
-     * <p>Fast path: if the range is exactly a full calendar month (start at first-day midnight,
-     * end at the start of the next month), the result is computed by aggregating countable
-     * transactions directly in SQL.
-     *
-     * <p>Fallback: otherwise, the result is computed by scanning raw transactions in the range.
+     * Returns a transaction summary (income/expense/net/count over countable transactions) for the
+     * given date range. Aggregation is performed directly in SQL for any range.
      *
      * @param userId     user id
      * @param startDate  range start (inclusive)
      * @param endDate    range end (exclusive)
      * @param accountIds optional account filter
+     * @param categoryId optional category filter
      * @return summary DTO
      */
     public TransactionSummaryDTO getSummary(String userId, Date startDate, Date endDate, List<Long> accountIds, Long categoryId) {
-        YearMonthKey ym = toYearMonthKey(startDate);
-        boolean fullMonth = isFullMonthRange(startDate, endDate);
-
-        if (ym != null && fullMonth) {
-            // Fast-path: aggregate countable transactions directly for full calendar months.
-            Object[] row;
-            if (accountIds == null || accountIds.isEmpty()) {
-                row = transactionRepository.sumCountableTotalsForUserInRange(userId, startDate, endDate, categoryId);
-            } else {
-                row = transactionRepository.sumCountableTotalsForUserInRangeAndAccounts(userId, accountIds, startDate, endDate, categoryId);
-            }
-            return summaryFromAggregateRow(row);
-        }
-
-        // Fallback for arbitrary date ranges (preserve old behavior): scan raw transactions
-        // since account_month_summary is only maintained at month granularity.
-        List<Transaction> transactions;
-        if (categoryId != null && categoryId > 0) {
-            if (accountIds == null || accountIds.isEmpty()) {
-                transactions = transactionRepository.findByUserIdAndCategoryIdAndDateBetween(userId, categoryId, startDate, endDate);
-            } else {
-                transactions = transactionRepository.findByUserIdAndCategoryIdAndDateBetweenAndAccountIds(userId, categoryId, startDate, endDate, accountIds);
-            }
+        Object[] row;
+        if (accountIds == null || accountIds.isEmpty()) {
+            row = transactionRepository.sumCountableTotalsForUserInRange(userId, startDate, endDate, categoryId);
         } else {
-            if (accountIds == null || accountIds.isEmpty()) {
-                transactions = transactionRepository.findByUserIdAndDateBetween(userId, startDate, endDate);
-            } else {
-                transactions = transactionRepository.findByUserIdAndDateBetweenAndAccountIds(userId, startDate, endDate, accountIds);
-            }
+            row = transactionRepository.sumCountableTotalsForUserInRangeAndAccounts(userId, accountIds, startDate, endDate, categoryId);
         }
-
-        double totalIncome = 0.0;
-        double totalExpense = 0.0;
-        int count = 0;
-
-        for (Transaction t : transactions) {
-            if (t.getIsCountable() != null && t.getIsCountable() == 1) {
-                count++;
-                if (t.getTransactionType() == TransactionDbType.CREDIT) {
-                    totalIncome += t.getAmount();
-                } else if (t.getTransactionType() == TransactionDbType.DEBIT) {
-                    totalExpense += t.getAmount();
-                }
-            }
-        }
-
-        double netTotal = totalIncome - totalExpense;
-        return new TransactionSummaryDTO(totalIncome, totalExpense, netTotal, count);
+        return summaryFromAggregateRow(row);
     }
 
     public TransactionSummaryDTO getAccountSummary(String userId, Long accountId, Date startDate, Date endDate) {
@@ -360,33 +314,6 @@ public class TransactionService {
         return cal.getTime();
     }
 
-    private boolean isFullMonthRange(Date startDate, Date endDate) {
-        if (startDate == null || endDate == null) return false;
-
-        Calendar s = Calendar.getInstance();
-        s.setTime(startDate);
-
-        Calendar e = Calendar.getInstance();
-        e.setTime(endDate);
-
-        boolean startIsFirstDayMidnight =
-                s.get(Calendar.DAY_OF_MONTH) == 1 &&
-                        s.get(Calendar.HOUR_OF_DAY) == 0 &&
-                        s.get(Calendar.MINUTE) == 0 &&
-                        s.get(Calendar.SECOND) == 0;
-
-        if (!startIsFirstDayMidnight) return false;
-
-        Calendar expectedEnd = (Calendar) s.clone();
-        expectedEnd.add(Calendar.MONTH, 1);
-
-        // End is treated as an exclusive boundary (start of next month at the same time as startDate).
-
-        return expectedEnd.get(Calendar.YEAR) == e.get(Calendar.YEAR)
-                && expectedEnd.get(Calendar.MONTH) == e.get(Calendar.MONTH)
-                && expectedEnd.get(Calendar.DAY_OF_MONTH) == e.get(Calendar.DAY_OF_MONTH);
-    }
-
     private double safe(Double v) {
         return v == null ? 0.0 : v;
     }
@@ -409,19 +336,15 @@ public class TransactionService {
     }
 
     public Double getTotalIncome(String userId, Date startDate, Date endDate) {
-        List<Transaction> transactions = transactionRepository.findByUserIdAndDateBetween(userId, startDate, endDate);
-        return transactions.stream()
-                .filter(t -> t.getIsCountable() != null && t.getIsCountable() == 1 && t.getTransactionType() == TransactionDbType.CREDIT) // CREDIT = income
-                .mapToDouble(Transaction::getAmount)
-                .sum();
+        // Aggregate row: [income, expense, net, count] over countable transactions.
+        Object[] row = normalizeAggregateRow(transactionRepository.sumCountableTotalsForUserInRange(userId, startDate, endDate, null));
+        return NumberUtil.asDouble(row[0]);
     }
 
     public Double getTotalExpense(String userId, Date startDate, Date endDate) {
-        List<Transaction> transactions = transactionRepository.findByUserIdAndDateBetween(userId, startDate, endDate);
-        return transactions.stream()
-                .filter(t -> t.getIsCountable() != null && t.getIsCountable() == 1 && t.getTransactionType() == TransactionDbType.DEBIT) // DEBIT = expense
-                .mapToDouble(Transaction::getAmount)
-                .sum();
+        // Aggregate row: [income, expense, net, count] over countable transactions.
+        Object[] row = normalizeAggregateRow(transactionRepository.sumCountableTotalsForUserInRange(userId, startDate, endDate, null));
+        return NumberUtil.asDouble(row[1]);
     }
 
     public List<TransactionPeriodSummaryDTO> getMonthlySummaries(String userId, int year, List<Long> accountIds, Long categoryId) {

@@ -110,9 +110,7 @@ public class SplitController {
         if (split == null) {
             return Response.notFound("Split not found");
         }
-        boolean owned = transactionRepository.findByUserId(currentUserId)
-                .stream()
-                .anyMatch(t -> t.getId().equals(split.getTransactionId()));
+        boolean owned = transactionRepository.countByIdAndUserId(split.getTransactionId(), currentUserId) > 0;
         if (!owned) {
             return Response.unauthorized();
         }
@@ -129,9 +127,7 @@ public class SplitController {
             return Response.notFound("Transaction not found");
         }
         // TransactionRepository resolves userId via account ownership
-        boolean owned = transactionRepository.findByUserId(currentUserId)
-                .stream()
-                .anyMatch(t -> t.getId().equals(transactionId));
+        boolean owned = transactionRepository.countByIdAndUserId(transactionId, currentUserId) > 0;
         if (!owned) {
             return Response.unauthorized();
         }
@@ -157,9 +153,7 @@ public class SplitController {
         if (txId == null) {
             return Response.badRequest("transactionId required");
         }
-        boolean owned = transactionRepository.findByUserId(currentUserId)
-                .stream()
-                .anyMatch(t -> t.getId().equals(txId));
+        boolean owned = transactionRepository.countByIdAndUserId(txId, currentUserId) > 0;
         if (!owned) {
             return Response.unauthorized();
         }
@@ -185,9 +179,7 @@ public class SplitController {
         if (split == null) {
             return Response.notFound("Split not found");
         }
-        boolean owned = transactionRepository.findByUserId(currentUserId)
-                .stream()
-                .anyMatch(t -> t.getId().equals(split.getTransactionId()));
+        boolean owned = transactionRepository.countByIdAndUserId(split.getTransactionId(), currentUserId) > 0;
         if (!owned) {
             return Response.unauthorized();
         }
@@ -204,9 +196,7 @@ public class SplitController {
         if (split == null) {
             return Response.notFound("Split not found");
         }
-        boolean owned = transactionRepository.findByUserId(currentUserId)
-                .stream()
-                .anyMatch(t -> t.getId().equals(split.getTransactionId()));
+        boolean owned = transactionRepository.countByIdAndUserId(split.getTransactionId(), currentUserId) > 0;
         if (!owned) {
             return Response.unauthorized();
         }
@@ -223,9 +213,7 @@ public class SplitController {
         if (split == null) {
             return Response.notFound("Split not found");
         }
-        boolean owned = transactionRepository.findByUserId(currentUserId)
-                .stream()
-                .anyMatch(t -> t.getId().equals(split.getTransactionId()));
+        boolean owned = transactionRepository.countByIdAndUserId(split.getTransactionId(), currentUserId) > 0;
         if (!owned) {
             return Response.unauthorized();
         }

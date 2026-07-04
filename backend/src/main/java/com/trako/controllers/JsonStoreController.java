@@ -36,8 +36,8 @@ public class JsonStoreController {
     @ApiResponse(responseCode = "200", content = @Content(array = @ArraySchema(schema = @Schema(implementation = JsonStore.class))))
     @GetMapping
     public ResponseEntity<?> getAll() {
-        userService.loggedInUser();
-        List<JsonStore> items = jsonStoreService.findAll();
+        String userId = userService.loggedInUser().getId();
+        List<JsonStore> items = jsonStoreService.findAllByUser(userId);
         return Response.ok(items);
     }
 
@@ -45,8 +45,8 @@ public class JsonStoreController {
     @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = JsonStore.class)))
     @GetMapping("/{name}")
     public ResponseEntity<?> getByName(@PathVariable @NotBlank @Size(max = 191) String name) {
-        userService.loggedInUser();
-        return jsonStoreService.findByName(name)
+        String userId = userService.loggedInUser().getId();
+        return jsonStoreService.findByNameAndUser(name, userId)
                 .<ResponseEntity<?>>map(Response::ok)
                 .orElse(Response.notFound("Setting not found"));
     }
@@ -55,7 +55,8 @@ public class JsonStoreController {
     @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = JsonStore.class)))
     @PostMapping
     public ResponseEntity<?> create(@Valid @RequestBody JsonStore jsonStore) {
-        userService.loggedInUser();
+        String userId = userService.loggedInUser().getId();
+        jsonStore.setUserId(userId);
         JsonStore saved = jsonStoreService.save(jsonStore);
         return Response.ok(saved, "Setting saved successfully");
     }
@@ -64,8 +65,9 @@ public class JsonStoreController {
     @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = JsonStore.class)))
     @PutMapping("/{name}")
     public ResponseEntity<?> update(@PathVariable @NotBlank @Size(max = 191) String name, @Valid @RequestBody JsonStore jsonStore) {
-        userService.loggedInUser();
+        String userId = userService.loggedInUser().getId();
         jsonStore.setName(name);
+        jsonStore.setUserId(userId);
         JsonStore updated = jsonStoreService.save(jsonStore);
         return Response.ok(updated, "Setting updated successfully");
     }
@@ -74,8 +76,8 @@ public class JsonStoreController {
     @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(type = "string")))
     @DeleteMapping("/{name}")
     public ResponseEntity<?> delete(@PathVariable @NotBlank @Size(max = 191) String name) {
-        userService.loggedInUser();
-        jsonStoreService.delete(name);
+        String userId = userService.loggedInUser().getId();
+        jsonStoreService.delete(name, userId);
         return Response.ok("Setting deleted successfully");
     }
 }

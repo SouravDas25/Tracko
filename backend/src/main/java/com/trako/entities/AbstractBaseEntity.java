@@ -4,11 +4,17 @@ import jakarta.persistence.Column;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.GenericGenerator;
 
 import java.io.Serializable;
 
 @MappedSuperclass
+@Getter
+@Setter
+@EqualsAndHashCode(of = "id")
 public abstract class AbstractBaseEntity implements Serializable {
     protected static final long serialVersionUID = 1L;
 
@@ -20,37 +26,4 @@ public abstract class AbstractBaseEntity implements Serializable {
     )
     @Column(name = "id")
     protected String id;
-
-//    public AbstractBaseEntity() {
-//        this.id = UUID.randomUUID().toString();
-//    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    @Override
-    public int hashCode() {
-        if (this.id != null)
-            return id.hashCode();
-        return super.hashCode();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this.id == null)
-            return super.equals(obj);
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (!(obj instanceof AbstractBaseEntity other)) {
-            return false;
-        }
-        return getId().equals(other.getId());
-    }
 }

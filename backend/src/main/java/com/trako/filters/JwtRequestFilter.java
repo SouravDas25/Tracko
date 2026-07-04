@@ -13,10 +13,12 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -28,16 +30,28 @@ import java.io.IOException;
  * 1. Extract JWT token from Authorization header (Bearer format)
  * 2. Validate the token and extract username
  * 3. Load user details and authenticate the user in Spring Security context
- * 4. Allow the request to proceed through the filter chain
+ * 4. Reject unauthenticated requests to protected endpoints with HTTP 401
  * <p>
- * The filter ensures that only authenticated users can access protected endpoints
- * while allowing public endpoints to be accessed without authentication.
+ * Whitelisted public endpoints (login, health, Swagger UI, H2 console) are allowed
+ * without authentication. All other endpoints require a valid JWT token.
  *
  * @author Tracko Team
  * @since 1.0
  */
 @Component
 public class JwtRequestFilter extends OncePerRequestFilter {
+
+    private static final String[] WHITE_LIST_API = {
+            "/api/oauth/token",
+            "/api/login",
+            "/api/health",
+            "/h2-console/**",
+            "/v3/api-docs/**",
+            "/swagger-ui.html",
+            "/swagger-ui/**"
+    };
+
+    private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
     /**
      * JWT utility for token validation and username extraction
@@ -72,6 +86,27 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         return "OPTIONS".equalsIgnoreCase(request.getMethod());
     }
 
+    private boolean isWhitelisted(String requestUri) {
+        for (String pattern : WHITE_LIST_API) {
+            if (pathMatcher.match(pattern, requestUri)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void proceedOrReject(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
+            throws IOException, ServletException {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if ((auth == null || auth instanceof AnonymousAuthenticationToken)
+                && !isWhitelisted(request.getRequestURI())) {
+            logger.warn("JwtRequestFilter: No valid authentication for protected endpoint " + request.getMethod() + " " + request.getRequestURI());
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+            return;
+        }
+        chain.doFilter(request, response);
+    }
+
     /**
      * Core filter method that processes each incoming HTTP request for JWT authentication.
      * <p>
@@ -81,11 +116,10 @@ public class JwtRequestFilter extends OncePerRequestFilter {
      * 3. Loads user details from the database
      * 4. Validates token against user details
      * 5. Sets authentication in Spring Security context if valid
-     * 6. Continues the filter chain regardless of authentication status
+     * 6. Rejects unauthenticated requests to protected endpoints with HTTP 401
      * <p>
-     * The filter is designed to be permissive - it allows requests to proceed
-     * even without valid authentication, letting Spring Security's authorization
-     * rules determine access to protected resources.
+     * Whitelisted endpoints (login, health, Swagger, H2 console) are allowed
+     * without authentication. All other endpoints require a valid JWT token.
      *
      * @param httpServletRequest  The incoming HTTP request
      * @param httpServletResponse The HTTP response
@@ -109,8 +143,6 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             // Remove "Bearer " prefix to get the actual token
             if (requestTokenHeader != null && requestTokenHeader.startsWith("Bearer ")) {
                 jwtToken = requestTokenHeader.substring(7);
-                logger.info("JwtRequestFilter: Token found (prefix): " + (jwtToken.length() > 10 ? jwtToken.substring(0, 10) + "..." : jwtToken));
-
                 // Validate that the token is not empty after extracting
                 if (jwtToken.isBlank()) {
                     logger.warn("JwtRequestFilter: Token is blank");
@@ -171,13 +203,13 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                 }
             }
 
-            // Continue with the filter chain regardless of authentication status
-            // This allows Spring Security to handle authorization based on endpoint configuration
-            filterChain.doFilter(httpServletRequest, httpServletResponse);
+            // Continue with the filter chain via proceedOrReject which blocks
+            // unauthenticated requests to protected endpoints
+            proceedOrReject(httpServletRequest, httpServletResponse, filterChain);
         } catch (Exception e) {
             // Catch any unexpected errors to prevent the filter from breaking the request processing
             logger.error("Unexpected error in JwtRequestFilter", e);
-            filterChain.doFilter(httpServletRequest, httpServletResponse);
+            proceedOrReject(httpServletRequest, httpServletResponse, filterChain);
         }
     }
 }

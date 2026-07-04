@@ -3,11 +3,15 @@ package com.trako.entities;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.Date;
 
 @Entity
 @Table(name = "splits")
+@Getter
+@Setter
 public class Split {
 
     @Id
@@ -52,84 +56,4 @@ public class Split {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "contact_id", insertable = false, updatable = false)
     private Contact contact;
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Long getTransactionId() {
-        return transactionId;
-    }
-
-    public void setTransactionId(Long transactionId) {
-        this.transactionId = transactionId;
-    }
-
-    public String getUserId() {
-        return userId;
-    }
-
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
-
-    public Double getAmount() {
-        return amount;
-    }
-
-    public void setAmount(Double amount) {
-        this.amount = amount;
-    }
-
-    public Date getSettledAt() {
-        return settledAt;
-    }
-
-    public void setSettledAt(Date settledAt) {
-        this.settledAt = settledAt;
-    }
-
-    public Integer getIsSettled() {
-        return isSettled;
-    }
-
-    public void setIsSettled(Integer isSettled) {
-        this.isSettled = isSettled;
-    }
-
-    public Transaction getTransaction() {
-        return transaction;
-    }
-
-    public void setTransaction(Transaction transaction) {
-        this.transaction = transaction;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public Long getContactId() {
-        return contactId;
-    }
-
-    public void setContactId(Long contactId) {
-        this.contactId = contactId;
-    }
-
-    public Contact getContact() {
-        return contact;
-    }
-
-    public void setContact(Contact contact) {
-        this.contact = contact;
-    }
 }

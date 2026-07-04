@@ -17,6 +17,7 @@ import pprint
 import re  # noqa: F401
 import json
 
+from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
 from tracko_sdk.models.user_currency import UserCurrency
@@ -32,15 +33,16 @@ class User(BaseModel):
     phone_no: StrictStr = Field(alias="phoneNo")
     email: Optional[StrictStr] = None
     profile_pic: Optional[StrictStr] = Field(default=None, alias="profilePic")
-    password: Optional[StrictStr] = None
     global_id: Optional[StrictStr] = Field(default=None, alias="globalId")
     base_currency: Optional[StrictStr] = Field(default=None, alias="baseCurrency")
     is_shadow: Optional[StrictInt] = Field(default=None, alias="isShadow")
     is_admin: Optional[StrictInt] = Field(default=None, alias="isAdmin")
+    created_at: Optional[datetime] = Field(default=None, alias="createdAt")
+    updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     secondary_currencies: Optional[List[UserCurrency]] = Field(default=None, alias="secondaryCurrencies")
     shadow: Optional[StrictBool] = None
     admin: Optional[StrictBool] = None
-    __properties: ClassVar[List[str]] = ["id", "name", "phoneNo", "email", "profilePic", "password", "globalId", "baseCurrency", "isShadow", "isAdmin", "secondaryCurrencies", "shadow", "admin"]
+    __properties: ClassVar[List[str]] = ["id", "name", "phoneNo", "email", "profilePic", "globalId", "baseCurrency", "isShadow", "isAdmin", "createdAt", "updatedAt", "secondaryCurrencies", "shadow", "admin"]
 
     model_config = ConfigDict(
         populate_by_name=True,
@@ -105,11 +107,12 @@ class User(BaseModel):
             "phoneNo": obj.get("phoneNo"),
             "email": obj.get("email"),
             "profilePic": obj.get("profilePic"),
-            "password": obj.get("password"),
             "globalId": obj.get("globalId"),
             "baseCurrency": obj.get("baseCurrency"),
             "isShadow": obj.get("isShadow"),
             "isAdmin": obj.get("isAdmin"),
+            "createdAt": obj.get("createdAt"),
+            "updatedAt": obj.get("updatedAt"),
             "secondaryCurrencies": [UserCurrency.from_dict(_item) for _item in obj["secondaryCurrencies"]] if obj.get("secondaryCurrencies") is not None else None,
             "shadow": obj.get("shadow"),
             "admin": obj.get("admin")

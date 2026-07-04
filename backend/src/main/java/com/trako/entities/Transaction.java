@@ -6,6 +6,8 @@ import com.trako.enums.TransactionDbType;
 import com.trako.enums.TransactionEntryTypeConverter;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.GenerationTime;
 
@@ -13,6 +15,8 @@ import java.util.Date;
 
 @Entity
 @Table(name = "transactions")
+@Getter
+@Setter
 public class Transaction {
 
     @Id
@@ -80,133 +84,13 @@ public class Transaction {
     @Transient
     private Integer renderedTransactionType;
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
     @JsonIgnore
     public TransactionDbType getTransactionType() {
         return transactionType;
     }
 
-    public void setTransactionType(TransactionDbType transactionType) {
-        this.transactionType = transactionType;
-    }
-
     @JsonProperty("transactionType")
     public Integer getRenderedTransactionType() {
         return renderedTransactionType != null ? renderedTransactionType : (transactionType != null ? transactionType.getValue() : null);
-    }
-
-    public void setRenderedTransactionType(Integer renderedTransactionType) {
-        this.renderedTransactionType = renderedTransactionType;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getComments() {
-        return comments;
-    }
-
-    public void setComments(String comments) {
-        this.comments = comments;
-    }
-
-    public Date getDate() {
-        return date;
-    }
-
-    public void setDate(Date date) {
-        this.date = date;
-    }
-
-    public Double getAmount() {
-        return amount;
-    }
-
-    public void setAmount(Double amount) {
-        this.amount = amount;
-    }
-
-    public String getOriginalCurrency() {
-        return originalCurrency;
-    }
-
-    public void setOriginalCurrency(String originalCurrency) {
-        this.originalCurrency = originalCurrency;
-    }
-
-    public Double getOriginalAmount() {
-        return originalAmount;
-    }
-
-    public void setOriginalAmount(Double originalAmount) {
-        this.originalAmount = originalAmount;
-    }
-
-    public Double getExchangeRate() {
-        return exchangeRate;
-    }
-
-    public void setExchangeRate(Double exchangeRate) {
-        this.exchangeRate = exchangeRate;
-    }
-
-    public Long getAccountId() {
-        return accountId;
-    }
-
-    public void setAccountId(Long accountId) {
-        this.accountId = accountId;
-    }
-
-    public Long getCategoryId() {
-        return categoryId;
-    }
-
-    public void setCategoryId(Long categoryId) {
-        this.categoryId = categoryId;
-    }
-
-    public Integer getIsCountable() {
-        return isCountable;
-    }
-
-    public void setIsCountable(Integer isCountable) {
-        this.isCountable = isCountable;
-    }
-
-    public Long getLinkedTransactionId() {
-        return linkedTransactionId;
-    }
-
-    public void setLinkedTransactionId(Long linkedTransactionId) {
-        this.linkedTransactionId = linkedTransactionId;
-    }
-
-    public Account getAccount() {
-        return account;
-    }
-
-    public void setAccount(Account account) {
-        this.account = account;
-    }
-
-    public Category getCategory() {
-        return category;
-    }
-
-    public void setCategory(Category category) {
-        this.category = category;
     }
 }

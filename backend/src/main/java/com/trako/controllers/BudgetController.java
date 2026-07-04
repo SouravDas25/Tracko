@@ -3,7 +3,6 @@ package com.trako.controllers;
 import com.trako.dtos.BudgetAllocationRequestDTO;
 import com.trako.dtos.BudgetCategoryDTO;
 import com.trako.dtos.BudgetResponseDTO;
-import com.trako.exceptions.UserNotLoggedInException;
 import com.trako.services.BudgetCalculationService;
 import com.trako.services.UserService;
 import com.trako.util.Response;
@@ -43,30 +42,22 @@ public class BudgetController {
             @RequestParam(required = false) String sortBy,
             @RequestParam(defaultValue = "asc") String sortOrder) {
 
-        try {
-            String userId = userService.loggedInUser().getId();
+        String userId = userService.loggedInUser().getId();
 
-            // Default to current date if not provided
-            if (month == null || year == null) {
-                LocalDate now = LocalDate.now();
-                if (month == null) month = now.getMonthValue();
-                if (year == null) year = now.getYear();
-            }
-
-            BudgetResponseDTO budgetDetails = budgetCalculationService.getBudgetDetails(
-                    userId, month, year, includeActual, categoryId);
-
-            // Handle sorting of categories if requested
-            if (sortBy != null && budgetDetails.getCategories() != null) {
-                sortCategories(budgetDetails.getCategories(), sortBy, sortOrder);
-            }
-
-            return Response.ok(budgetDetails);
-        } catch (UserNotLoggedInException e) {
-            return Response.unauthorized();
-        } catch (Exception e) {
-            return Response.badRequest(e.getMessage());
+        if (month == null || year == null) {
+            LocalDate now = LocalDate.now();
+            if (month == null) month = now.getMonthValue();
+            if (year == null) year = now.getYear();
         }
+
+        BudgetResponseDTO budgetDetails = budgetCalculationService.getBudgetDetails(
+                userId, month, year, includeActual, categoryId);
+
+        if (sortBy != null && budgetDetails.getCategories() != null) {
+            sortCategories(budgetDetails.getCategories(), sortBy, sortOrder);
+        }
+
+        return Response.ok(budgetDetails);
     }
 
     @Operation(summary = "Get budget for the current month")
@@ -80,15 +71,9 @@ public class BudgetController {
     @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = BudgetCategoryDTO.class)))
     @PostMapping("/allocate")
     public ResponseEntity<?> allocateFunds(@Valid @RequestBody BudgetAllocationRequestDTO request) {
-        try {
-            String userId = userService.loggedInUser().getId();
-            BudgetCategoryDTO result = budgetCalculationService.allocateFunds(userId, request);
-            return Response.ok(result);
-        } catch (UserNotLoggedInException e) {
-            return Response.unauthorized();
-        } catch (Exception e) {
-            return Response.badRequest(e.getMessage());
-        }
+        String userId = userService.loggedInUser().getId();
+        BudgetCategoryDTO result = budgetCalculationService.allocateFunds(userId, request);
+        return Response.ok(result);
     }
 
     @Operation(summary = "Get the amount available to assign for a month")
@@ -97,22 +82,16 @@ public class BudgetController {
     public ResponseEntity<?> getAvailableToAssign(
             @RequestParam(required = false) Integer month,
             @RequestParam(required = false) Integer year) {
-        try {
-            String userId = userService.loggedInUser().getId();
+        String userId = userService.loggedInUser().getId();
 
-            if (month == null || year == null) {
-                LocalDate now = LocalDate.now();
-                if (month == null) month = now.getMonthValue();
-                if (year == null) year = now.getYear();
-            }
-
-            Double available = budgetCalculationService.calculateAvailableToAssign(userId, month, year);
-            return Response.ok(available);
-        } catch (UserNotLoggedInException e) {
-            return Response.unauthorized();
-        } catch (Exception e) {
-            return Response.badRequest(e.getMessage());
+        if (month == null || year == null) {
+            LocalDate now = LocalDate.now();
+            if (month == null) month = now.getMonthValue();
+            if (year == null) year = now.getYear();
         }
+
+        Double available = budgetCalculationService.calculateAvailableToAssign(userId, month, year);
+        return Response.ok(available);
     }
 
     private void sortCategories(List<BudgetCategoryDTO> categories, String sortBy, String sortOrder) {

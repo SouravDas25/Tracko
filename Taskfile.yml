@@ -12,7 +12,7 @@ tasks:
   help:
     desc: Show available tasks
     cmds:
-      - echo "Tracko - Expense Manager"
+      - echo "Trako - Expense Manager"
       - echo ""
       - echo "Available tasks:"
       - echo "  task start          # Start Flutter UI and Java Backend"
@@ -107,10 +107,22 @@ tasks:
       - cmd: mvn clean verify
 
   test:flutter:
-    desc: Run Flutter tests
+    desc: Run Flutter widget/unit tests and E2E UI tests
+    cmds:
+      - task: test:flutter:widget
+      - task: test:flutter:e2e
+
+  test:flutter:widget:
+    desc: Run Flutter widget/unit tests
     dir: "{{.FRONTEND_DIR}}"
     cmds:
       - cmd: flutter test
+
+  test:flutter:e2e:
+    desc: Run Flutter E2E UI tests (boots backend + chromedriver, drives Chrome)
+    dir: "{{.FRONTEND_DIR}}"
+    cmds:
+      - cmd: python run_e2e_test.py
 
   test:cli:
     desc: Run CLI tests

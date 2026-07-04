@@ -95,13 +95,13 @@ All URIs are relative to *http://localhost:8080*
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
 *AccountsApi* | [**create7**](docs/AccountsApi.md#create7) | **POST** /api/accounts | Create a new account
-*AccountsApi* | [**delete7**](docs/AccountsApi.md#delete7) | **DELETE** /api/accounts/{id} | Delete an account
+*AccountsApi* | [**delete5**](docs/AccountsApi.md#delete5) | **DELETE** /api/accounts/{id} | Delete an account
 *AccountsApi* | [**get_account_monthly_summaries**](docs/AccountsApi.md#get_account_monthly_summaries) | **GET** /api/accounts/{id}/summary/monthly | Get monthly summaries for an account
 *AccountsApi* | [**get_account_summary**](docs/AccountsApi.md#get_account_summary) | **GET** /api/accounts/{id}/summary | Get income/expense summary for an account in a date range
 *AccountsApi* | [**get_account_transactions**](docs/AccountsApi.md#get_account_transactions) | **GET** /api/accounts/{id}/transactions | List transactions for an account with optional filters
 *AccountsApi* | [**get_account_yearly_summaries**](docs/AccountsApi.md#get_account_yearly_summaries) | **GET** /api/accounts/{id}/summary/yearly | Get yearly summaries for an account
 *AccountsApi* | [**get_all6**](docs/AccountsApi.md#get_all6) | **GET** /api/accounts | List all accounts for the current user
-*AccountsApi* | [**get_by_id4**](docs/AccountsApi.md#get_by_id4) | **GET** /api/accounts/{id} | Get an account by ID
+*AccountsApi* | [**get_by_id3**](docs/AccountsApi.md#get_by_id3) | **GET** /api/accounts/{id} | Get an account by ID
 *AccountsApi* | [**get_my_account_balances**](docs/AccountsApi.md#get_my_account_balances) | **GET** /api/accounts/balances | Get balances for all accounts (derived from transactions)
 *AccountsApi* | [**update5**](docs/AccountsApi.md#update5) | **PUT** /api/accounts/{id} | Update an account
 *AnalyticsApi* | [**get_chart_data**](docs/AnalyticsApi.md#get_chart_data) | **GET** /api/analytics/chart | Get chart data with optional grouping and granularity
@@ -112,32 +112,32 @@ Class | Method | HTTP request | Description
 *BudgetApi* | [**get_budget**](docs/BudgetApi.md#get_budget) | **GET** /api/budget | Get budget details for a month/year
 *BudgetApi* | [**get_current_budget**](docs/BudgetApi.md#get_current_budget) | **GET** /api/budget/current | Get budget for the current month
 *CategoriesApi* | [**create6**](docs/CategoriesApi.md#create6) | **POST** /api/categories | Create a new category
-*CategoriesApi* | [**delete6**](docs/CategoriesApi.md#delete6) | **DELETE** /api/categories/{id} | Delete a category
+*CategoriesApi* | [**delete4**](docs/CategoriesApi.md#delete4) | **DELETE** /api/categories/{id} | Delete a category
 *CategoriesApi* | [**get_all5**](docs/CategoriesApi.md#get_all5) | **GET** /api/categories | List all categories for the current user
-*CategoriesApi* | [**get_by_id3**](docs/CategoriesApi.md#get_by_id3) | **GET** /api/categories/{id} | Get a category by ID
+*CategoriesApi* | [**get_by_id2**](docs/CategoriesApi.md#get_by_id2) | **GET** /api/categories/{id} | Get a category by ID
 *CategoriesApi* | [**update4**](docs/CategoriesApi.md#update4) | **PUT** /api/categories/{id} | Update a category
 *ContactsApi* | [**create5**](docs/ContactsApi.md#create5) | **POST** /api/contacts | Create a new contact
-*ContactsApi* | [**delete5**](docs/ContactsApi.md#delete5) | **DELETE** /api/contacts/{id} | Delete a contact
+*ContactsApi* | [**delete3**](docs/ContactsApi.md#delete3) | **DELETE** /api/contacts/{id} | Delete a contact
 *ContactsApi* | [**get_one**](docs/ContactsApi.md#get_one) | **GET** /api/contacts/{id} | Get a contact by ID
 *ContactsApi* | [**list_mine**](docs/ContactsApi.md#list_mine) | **GET** /api/contacts | List all contacts for the current user
 *ContactsApi* | [**update3**](docs/ContactsApi.md#update3) | **PUT** /api/contacts/{id} | Update a contact
 *ExchangeRatesApi* | [**get_rates**](docs/ExchangeRatesApi.md#get_rates) | **GET** /api/exchange-rates/{baseCurrency} | Get exchange rates for a base currency (e.g. USD)
 *HealthApi* | [**health**](docs/HealthApi.md#health) | **GET** /api/health | Check service health
 *JSONStoreApi* | [**create4**](docs/JSONStoreApi.md#create4) | **POST** /api/json-store | Create a JSON store entry
-*JSONStoreApi* | [**delete4**](docs/JSONStoreApi.md#delete4) | **DELETE** /api/json-store/{name} | Delete a JSON store entry by name
+*JSONStoreApi* | [**delete2**](docs/JSONStoreApi.md#delete2) | **DELETE** /api/json-store/{name} | Delete a JSON store entry by name
 *JSONStoreApi* | [**get_all4**](docs/JSONStoreApi.md#get_all4) | **GET** /api/json-store | List all JSON store entries
 *JSONStoreApi* | [**get_by_name**](docs/JSONStoreApi.md#get_by_name) | **GET** /api/json-store/{name} | Get a JSON store entry by name
 *JSONStoreApi* | [**update2**](docs/JSONStoreApi.md#update2) | **PUT** /api/json-store/{name} | Update a JSON store entry by name
 *RecurringTransactionsApi* | [**create3**](docs/RecurringTransactionsApi.md#create3) | **POST** /api/recurring-transactions | Create a recurring transaction
-*RecurringTransactionsApi* | [**delete3**](docs/RecurringTransactionsApi.md#delete3) | **DELETE** /api/recurring-transactions/{id} | Delete a recurring transaction
+*RecurringTransactionsApi* | [**delete1**](docs/RecurringTransactionsApi.md#delete1) | **DELETE** /api/recurring-transactions/{id} | Delete a recurring transaction
 *RecurringTransactionsApi* | [**get_all3**](docs/RecurringTransactionsApi.md#get_all3) | **GET** /api/recurring-transactions | List all recurring transactions
-*RecurringTransactionsApi* | [**get_by_id2**](docs/RecurringTransactionsApi.md#get_by_id2) | **GET** /api/recurring-transactions/{id} | Get a recurring transaction by ID
+*RecurringTransactionsApi* | [**get_by_id1**](docs/RecurringTransactionsApi.md#get_by_id1) | **GET** /api/recurring-transactions/{id} | Get a recurring transaction by ID
 *RecurringTransactionsApi* | [**update1**](docs/RecurringTransactionsApi.md#update1) | **PUT** /api/recurring-transactions/{id} | Update a recurring transaction
 *SplitsApi* | [**create2**](docs/SplitsApi.md#create2) | **POST** /api/splits | Create a split for a transaction
-*SplitsApi* | [**delete2**](docs/SplitsApi.md#delete2) | **DELETE** /api/splits/{id} | Delete a split
+*SplitsApi* | [**delete6**](docs/SplitsApi.md#delete6) | **DELETE** /api/splits/{id} | Delete a split
 *SplitsApi* | [**get_all2**](docs/SplitsApi.md#get_all2) | **GET** /api/splits | List all splits for the current user
 *SplitsApi* | [**get_by_contact_id**](docs/SplitsApi.md#get_by_contact_id) | **GET** /api/splits/contact/{contactId} | List all splits for a contact
-*SplitsApi* | [**get_by_id1**](docs/SplitsApi.md#get_by_id1) | **GET** /api/splits/{id} | Get a split by ID
+*SplitsApi* | [**get_by_id4**](docs/SplitsApi.md#get_by_id4) | **GET** /api/splits/{id} | Get a split by ID
 *SplitsApi* | [**get_by_transaction_id**](docs/SplitsApi.md#get_by_transaction_id) | **GET** /api/splits/transaction/{transactionId} | List splits for a transaction
 *SplitsApi* | [**get_my_unsettled**](docs/SplitsApi.md#get_my_unsettled) | **GET** /api/splits/unsettled | List all unsettled splits for the current user
 *SplitsApi* | [**get_unsettled_by_contact_id**](docs/SplitsApi.md#get_unsettled_by_contact_id) | **GET** /api/splits/contact/{contactId}/unsettled | List unsettled splits for a contact
@@ -145,8 +145,12 @@ Class | Method | HTTP request | Description
 *SplitsApi* | [**unsettle**](docs/SplitsApi.md#unsettle) | **PATCH** /api/splits/unsettle/{splitId} | Reverse a settlement on a split
 *StatisticsApi* | [**get_category_stats**](docs/StatisticsApi.md#get_category_stats) | **GET** /api/stats/category-summary | Get stats for a specific category by range
 *StatisticsApi* | [**get_stats**](docs/StatisticsApi.md#get_stats) | **GET** /api/stats/summary | Get aggregated stats by range (weekly/monthly/yearly/fiveYearly/tenYearly/custom)
+*TransactionHistoryApi* | [**get_all_history**](docs/TransactionHistoryApi.md#get_all_history) | **GET** /api/transactions/history | List transaction change history (paged) across all transactions
+*TransactionHistoryApi* | [**get_history**](docs/TransactionHistoryApi.md#get_history) | **GET** /api/transactions/{id}/history | Get a transaction&#39;s change history
+*TransactionHistoryApi* | [**get_trash**](docs/TransactionHistoryApi.md#get_trash) | **GET** /api/transactions/trash | List deleted transactions (recycle bin)
+*TransactionHistoryApi* | [**revert**](docs/TransactionHistoryApi.md#revert) | **POST** /api/transactions/history/{historyId}/revert | Revert a transaction to a history snapshot
 *TransactionsApi* | [**create1**](docs/TransactionsApi.md#create1) | **POST** /api/transactions | Create a transaction or transfer
-*TransactionsApi* | [**delete1**](docs/TransactionsApi.md#delete1) | **DELETE** /api/transactions/{id} | Delete a transaction or transfer
+*TransactionsApi* | [**delete**](docs/TransactionsApi.md#delete) | **DELETE** /api/transactions/{id} | Delete a transaction or transfer
 *TransactionsApi* | [**get_all1**](docs/TransactionsApi.md#get_all1) | **GET** /api/transactions | List transactions with optional filters
 *TransactionsApi* | [**get_by_id**](docs/TransactionsApi.md#get_by_id) | **GET** /api/transactions/{id} | Get a transaction by ID
 *TransactionsApi* | [**get_monthly_summaries**](docs/TransactionsApi.md#get_monthly_summaries) | **GET** /api/transactions/summary/monthly | Monthly summaries for a year
@@ -156,7 +160,7 @@ Class | Method | HTTP request | Description
 *TransactionsApi* | [**get_yearly_summaries**](docs/TransactionsApi.md#get_yearly_summaries) | **GET** /api/transactions/summary/yearly | Yearly summaries
 *TransactionsApi* | [**search_transactions**](docs/TransactionsApi.md#search_transactions) | **GET** /api/transactions/search | Search transactions across all time periods
 *TransactionsApi* | [**update**](docs/TransactionsApi.md#update) | **PUT** /api/transactions/{id} | Update a transaction or transfer
-*UserCurrenciesApi* | [**delete**](docs/UserCurrenciesApi.md#delete) | **DELETE** /api/user-currencies/{code} | Remove a currency from the current user
+*UserCurrenciesApi* | [**delete7**](docs/UserCurrenciesApi.md#delete7) | **DELETE** /api/user-currencies/{code} | Remove a currency from the current user
 *UserCurrenciesApi* | [**get_all**](docs/UserCurrenciesApi.md#get_all) | **GET** /api/user-currencies | List currencies configured for the current user
 *UserCurrenciesApi* | [**save**](docs/UserCurrenciesApi.md#save) | **POST** /api/user-currencies | Add or update a currency with a manual exchange rate
 *UserCurrenciesApi* | [**save_auto**](docs/UserCurrenciesApi.md#save_auto) | **POST** /api/user-currencies/auto | Add a currency with an automatically fetched exchange rate
@@ -166,7 +170,6 @@ Class | Method | HTTP request | Description
 *UsersApi* | [**reset_transactions**](docs/UsersApi.md#reset_transactions) | **DELETE** /api/user/transactions | Reset only transactions for the current user
 *UsersApi* | [**show**](docs/UsersApi.md#show) | **GET** /api/user | List users (admin) or get a user by ID
 *UsersApi* | [**show1**](docs/UsersApi.md#show1) | **GET** /api/user/{id} | List users (admin) or get a user by ID
-*UsersApi* | [**show_by_phone**](docs/UsersApi.md#show_by_phone) | **GET** /api/user/byPhoneNo | Look up a user by phone number
 *UsersApi* | [**update_profile**](docs/UsersApi.md#update_profile) | **POST** /api/user/me | Update the current user&#39;s profile
 
 
@@ -187,7 +190,7 @@ Class | Method | HTTP request | Description
  - [ContactSaveRequest](docs/ContactSaveRequest.md)
  - [Create200Response](docs/Create200Response.md)
  - [Create2200Response](docs/Create2200Response.md)
- - [Delete1200Response](docs/Delete1200Response.md)
+ - [Delete200Response](docs/Delete200Response.md)
  - [ExchangeRateApiResponse](docs/ExchangeRateApiResponse.md)
  - [GetAll1200Response](docs/GetAll1200Response.md)
  - [GetAll200Response](docs/GetAll200Response.md)
@@ -196,13 +199,15 @@ Class | Method | HTTP request | Description
  - [GetAll4200Response](docs/GetAll4200Response.md)
  - [GetAll5200Response](docs/GetAll5200Response.md)
  - [GetAll6200Response](docs/GetAll6200Response.md)
+ - [GetAllHistory200Response](docs/GetAllHistory200Response.md)
  - [GetBudget200Response](docs/GetBudget200Response.md)
+ - [GetById1200Response](docs/GetById1200Response.md)
  - [GetById200Response](docs/GetById200Response.md)
  - [GetById2200Response](docs/GetById2200Response.md)
  - [GetById3200Response](docs/GetById3200Response.md)
- - [GetById4200Response](docs/GetById4200Response.md)
  - [GetByName200Response](docs/GetByName200Response.md)
  - [GetChartData200Response](docs/GetChartData200Response.md)
+ - [GetHistory200Response](docs/GetHistory200Response.md)
  - [GetMyAccountBalances200Response](docs/GetMyAccountBalances200Response.md)
  - [GetMySummary200Response](docs/GetMySummary200Response.md)
  - [GetMyTotalIncome200Response](docs/GetMyTotalIncome200Response.md)
@@ -218,13 +223,15 @@ Class | Method | HTTP request | Description
  - [NamedSeriesDTO](docs/NamedSeriesDTO.md)
  - [RecurringTransaction](docs/RecurringTransaction.md)
  - [SearchTransactions200Response](docs/SearchTransactions200Response.md)
- - [ShowByPhone200Response](docs/ShowByPhone200Response.md)
+ - [Show200Response](docs/Show200Response.md)
  - [Split](docs/Split.md)
  - [SplitDetailDTO](docs/SplitDetailDTO.md)
  - [StatsPointDTO](docs/StatsPointDTO.md)
  - [StatsResponseDTO](docs/StatsResponseDTO.md)
  - [Transaction](docs/Transaction.md)
  - [TransactionDetailDTO](docs/TransactionDetailDTO.md)
+ - [TransactionHistoryDTO](docs/TransactionHistoryDTO.md)
+ - [TransactionHistoryPageDTO](docs/TransactionHistoryPageDTO.md)
  - [TransactionPeriodSummaryDTO](docs/TransactionPeriodSummaryDTO.md)
  - [TransactionRequest](docs/TransactionRequest.md)
  - [TransactionSearchHitDTO](docs/TransactionSearchHitDTO.md)

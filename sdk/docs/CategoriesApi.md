@@ -5,14 +5,14 @@ All URIs are relative to *http://localhost:8080*
 Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**create6**](CategoriesApi.md#create6) | **POST** /api/categories | Create a new category
-[**delete6**](CategoriesApi.md#delete6) | **DELETE** /api/categories/{id} | Delete a category
+[**delete4**](CategoriesApi.md#delete4) | **DELETE** /api/categories/{id} | Delete a category
 [**get_all5**](CategoriesApi.md#get_all5) | **GET** /api/categories | List all categories for the current user
-[**get_by_id3**](CategoriesApi.md#get_by_id3) | **GET** /api/categories/{id} | Get a category by ID
+[**get_by_id2**](CategoriesApi.md#get_by_id2) | **GET** /api/categories/{id} | Get a category by ID
 [**update4**](CategoriesApi.md#update4) | **PUT** /api/categories/{id} | Update a category
 
 
 # **create6**
-> GetById3200Response create6(category_save_request)
+> GetById2200Response create6(category_save_request)
 
 Create a new category
 
@@ -23,7 +23,7 @@ Create a new category
 ```python
 import tracko_sdk
 from tracko_sdk.models.category_save_request import CategorySaveRequest
-from tracko_sdk.models.get_by_id3200_response import GetById3200Response
+from tracko_sdk.models.get_by_id2200_response import GetById2200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -69,7 +69,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**GetById3200Response**](GetById3200Response.md)
+[**GetById2200Response**](GetById2200Response.md)
 
 ### Authorization
 
@@ -88,8 +88,8 @@ Name | Type | Description  | Notes
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **delete6**
-> Delete1200Response delete6(id)
+# **delete4**
+> Delete200Response delete4(id)
 
 Delete a category
 
@@ -99,7 +99,7 @@ Delete a category
 
 ```python
 import tracko_sdk
-from tracko_sdk.models.delete1200_response import Delete1200Response
+from tracko_sdk.models.delete200_response import Delete200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -127,11 +127,11 @@ with tracko_sdk.ApiClient(configuration) as api_client:
 
     try:
         # Delete a category
-        api_response = api_instance.delete6(id)
-        print("The response of CategoriesApi->delete6:\n")
+        api_response = api_instance.delete4(id)
+        print("The response of CategoriesApi->delete4:\n")
         pprint(api_response)
     except Exception as e:
-        print("Exception when calling CategoriesApi->delete6: %s\n" % e)
+        print("Exception when calling CategoriesApi->delete4: %s\n" % e)
 ```
 
 
@@ -145,7 +145,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**Delete1200Response**](Delete1200Response.md)
+[**Delete200Response**](Delete200Response.md)
 
 ### Authorization
 
@@ -236,8 +236,8 @@ This endpoint does not need any parameter.
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **get_by_id3**
-> GetById3200Response get_by_id3(id)
+# **get_by_id2**
+> GetById2200Response get_by_id2(id)
 
 Get a category by ID
 
@@ -247,7 +247,7 @@ Get a category by ID
 
 ```python
 import tracko_sdk
-from tracko_sdk.models.get_by_id3200_response import GetById3200Response
+from tracko_sdk.models.get_by_id2200_response import GetById2200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -275,11 +275,11 @@ with tracko_sdk.ApiClient(configuration) as api_client:
 
     try:
         # Get a category by ID
-        api_response = api_instance.get_by_id3(id)
-        print("The response of CategoriesApi->get_by_id3:\n")
+        api_response = api_instance.get_by_id2(id)
+        print("The response of CategoriesApi->get_by_id2:\n")
         pprint(api_response)
     except Exception as e:
-        print("Exception when calling CategoriesApi->get_by_id3: %s\n" % e)
+        print("Exception when calling CategoriesApi->get_by_id2: %s\n" % e)
 ```
 
 
@@ -293,7 +293,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**GetById3200Response**](GetById3200Response.md)
+[**GetById2200Response**](GetById2200Response.md)
 
 ### Authorization
 
@@ -313,7 +313,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **update4**
-> GetById3200Response update4(id, category_save_request)
+> GetById2200Response update4(id, category_save_request)
 
 Update a category
 
@@ -324,7 +324,7 @@ Update a category
 ```python
 import tracko_sdk
 from tracko_sdk.models.category_save_request import CategorySaveRequest
-from tracko_sdk.models.get_by_id3200_response import GetById3200Response
+from tracko_sdk.models.get_by_id2200_response import GetById2200Response
 from tracko_sdk.rest import ApiException
 from pprint import pprint
 
@@ -372,7 +372,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**GetById3200Response**](GetById3200Response.md)
+[**GetById2200Response**](GetById2200Response.md)
 
 ### Authorization
 
