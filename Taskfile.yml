@@ -12,7 +12,7 @@ tasks:
   help:
     desc: Show available tasks
     cmds:
-      - echo "Tracko - Expense Manager"
+      - echo "Trako - Expense Manager"
       - echo ""
       - echo "Available tasks:"
       - echo "  task start          # Start Flutter UI and Java Backend"

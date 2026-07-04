@@ -511,7 +511,7 @@ def trash(
     try:
         with spinner("Fetching recycle bin..."):
             with get_api_client(base_url, token) as client:
-                result = unwrap_envelope(tracko_sdk.TransactionsApi(client).get_trash())
+                result = unwrap_envelope(tracko_sdk.TransactionHistoryApi(client).get_trash())
 
         entries = result or []
         if raw:
@@ -558,7 +558,7 @@ def history(
     try:
         with spinner(f"Fetching history for transaction {id}..."):
             with get_api_client(base_url, token) as client:
-                result = unwrap_envelope(tracko_sdk.TransactionsApi(client).get_history(id=id))
+                result = unwrap_envelope(tracko_sdk.TransactionHistoryApi(client).get_history(id=id))
 
         entries = result or []
         if raw:
@@ -608,7 +608,7 @@ def revert(
     try:
         with spinner(f"Reverting history entry {history_id}..."):
             with get_api_client(base_url, token) as client:
-                unwrap_envelope(tracko_sdk.TransactionsApi(client).revert(history_id=history_id))
+                unwrap_envelope(tracko_sdk.TransactionHistoryApi(client).revert(history_id=history_id))
 
         print_success(f"Reverted history entry {history_id} successfully")
 
