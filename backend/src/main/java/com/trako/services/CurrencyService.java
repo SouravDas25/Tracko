@@ -60,6 +60,26 @@ public class CurrencyService {
     }
 
     /**
+     * Converts a rate provider quote into the rate this application stores.
+     *
+     * <p>The provider quotes <em>target units per 1 base unit</em> (a request for base INR
+     * answers "1 INR = 0.01 EUR"). The stored rate runs the other way: {@code transactions.amount}
+     * is a generated column defined as {@code original_amount * exchange_rate} and is denominated
+     * in the user's base currency, so {@code exchange_rate} must be <em>base units per 1 target
+     * unit</em> ("1 EUR = 100 INR"). The two are reciprocals.
+     *
+     * @param providerQuote the provider's target-per-base quote
+     * @return the equivalent base-per-target rate
+     * @throws IllegalArgumentException if the quote cannot be inverted
+     */
+    private static double toBaseCurrencyRate(double providerQuote) {
+        if (providerQuote <= 0 || !Double.isFinite(providerQuote)) {
+            throw new IllegalArgumentException("Rate provider returned an unusable quote: " + providerQuote);
+        }
+        return 1.0 / providerQuote;
+    }
+
+    /**
      * Saves a UserCurrency for the given user and currency code, automatically
      * resolving the exchange rate against the user's base currency using
      * {@link ExchangeRateService}.
@@ -83,7 +103,7 @@ public class CurrencyService {
             throw new IllegalArgumentException("Currency not supported by rate provider: " + targetCurrency);
         }
 
-        return save(user, targetCurrency, value);
+        return save(user, targetCurrency, toBaseCurrencyRate(value));
     }
 
     public UserCurrency saveWithAutoRate(String userId, String currencyCode) {
@@ -100,6 +120,7 @@ public class CurrencyService {
      *   <li>If {@code providedRate} is not null, returns it as-is.</li>
      *   <li>If the currency is the user's base currency, returns {@code 1.0}.</li>
      *   <li>Otherwise attempts to fetch the latest live rate from the exchange rate API.
+     *       The provider's quote is inverted via {@link #toBaseCurrencyRate(double)} before use.
      *       On success the stored rate in {@code user_currencies} is also updated.
      *       If the API call fails, the previously stored rate is used as a fallback.</li>
      * </ol>
@@ -128,8 +149,9 @@ public class CurrencyService {
         try {
             ExchangeRateApiResponse data = exchangeRateService.getRates(user.getBaseCurrency());
             Map<String, Double> rates = data.getRates();
-            Double liveRate = rates.get(targetCurrency);
-            if (liveRate != null) {
+            Double quote = rates.get(targetCurrency);
+            if (quote != null) {
+                double liveRate = toBaseCurrencyRate(quote);
                 save(user, targetCurrency, liveRate);
                 return liveRate;
             }

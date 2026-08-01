@@ -27,6 +27,7 @@ public class DebitTransactionService {
         validationService.validateCategoryOwnership(userId, request.categoryId());
 
         Double exchangeRate = currencyService.resolveExchangeRate(userId, request.originalCurrency(), request.exchangeRate());
+        validationService.validateResolvedExchangeRate(exchangeRate, request.originalCurrency());
 
         Transaction transaction = new Transaction();
         transaction.setAccountId(request.accountId());
@@ -70,6 +71,7 @@ public class DebitTransactionService {
                 newRate = existing.getExchangeRate();
             }
         }
+        validationService.validateResolvedExchangeRate(newRate, newCurrency);
 
         existing.setOriginalCurrency(newCurrency);
         existing.setExchangeRate(newRate);
