@@ -66,8 +66,10 @@ public class TransactionCreateValidationTest extends BaseIntegrationTest {
         cat.setUserId(testUser.getId());
         cat = categoryRepository.save(cat);
 
-        // Mock exchange rate service to return predictable live rates
-        ExchangeRateApiResponse mockResponse = new ExchangeRateApiResponse("INR", Map.of("USD", 2.0));
+        // Mock exchange rate service to return predictable live rates.
+        // The provider quotes target-per-base, so an INR-based response carries USD-per-INR.
+        // Intent here is 1 USD = 2 INR, which the provider expresses as its reciprocal.
+        ExchangeRateApiResponse mockResponse = new ExchangeRateApiResponse("INR", Map.of("USD", 1.0 / 2.0));
         when(exchangeRateService.getRates(anyString())).thenReturn(mockResponse);
     }
 

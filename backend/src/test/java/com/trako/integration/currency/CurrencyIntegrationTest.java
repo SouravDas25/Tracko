@@ -86,8 +86,10 @@ public class CurrencyIntegrationTest extends BaseIntegrationTest {
         testAccount.setCurrency("EUR");
         testAccount = accountRepository.save(testAccount);
 
-        // Mock exchange rate service to return predictable live rates
-        ExchangeRateApiResponse mockResponse = new ExchangeRateApiResponse("USD", Map.of("EUR", 1.12));
+        // Mock exchange rate service to return predictable live rates.
+        // The provider quotes target-per-base, so a USD-based response carries EUR-per-USD.
+        // Intent here is 1 EUR = 1.12 USD, which the provider expresses as its reciprocal.
+        ExchangeRateApiResponse mockResponse = new ExchangeRateApiResponse("USD", Map.of("EUR", 1.0 / 1.12));
         when(exchangeRateService.getRates(anyString())).thenReturn(mockResponse);
     }
 

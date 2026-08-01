@@ -84,6 +84,12 @@ public class TransferService {
         if (exchangeRate == null) {
             throw new IllegalArgumentException("Exchange rate is required for transfer");
         }
+        // transactions.amount is generated as original_amount * exchange_rate, so a non-positive
+        // or non-finite rate would silently write a nonsense base-currency amount on both legs.
+        if (!Double.isFinite(exchangeRate) || exchangeRate <= 0) {
+            throw new IllegalArgumentException(
+                    "Exchange rate for transfer must be a positive, finite number but was " + exchangeRate);
+        }
         if (fromAccountId.equals(toAccountId)) {
             throw new IllegalArgumentException("fromAccountId and toAccountId cannot be same");
         }

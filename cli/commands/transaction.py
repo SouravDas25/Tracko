@@ -248,6 +248,7 @@ def add_transfer(
     name: Optional[str] = typer.Option(None, "--name", "-n", help="Transfer description"),
     comments: Optional[str] = typer.Option(None, "--comments", "-c", help="Comments"),
     date: Optional[str] = typer.Option(None, "--date", help="Date (YYYY-MM-DD)"),
+    exchange_rate: Optional[float] = typer.Option(None, "--exchange-rate", help="Exchange rate"),
     raw: bool = typer.Option(False, "--raw", help="Output raw JSON"),
 ):
     """Create a transfer between accounts."""
@@ -293,7 +294,8 @@ def add_transfer(
                 name=name or f"Transfer to account {to_account_id}",
                 comments=comments,
                 date=txn_date,
-                original_currency=currency
+                original_currency=currency,
+                exchange_rate=exchange_rate
             )
 
         with spinner("Creating transfer..."):
@@ -437,12 +439,19 @@ def update_transfer(
     from_account_id: Optional[int] = typer.Option(None, "--from-account-id", help="Source account ID"),
     to_account_id: Optional[int] = typer.Option(None, "--to-account-id", help="Destination account ID"),
     amount: Optional[float] = typer.Option(None, "--amount", "-a", help="Transfer amount"),
+    currency: Optional[str] = typer.Option(None, "--currency", help="Currency code"),
     name: Optional[str] = typer.Option(None, "--name", "-n", help="Transfer description"),
     comments: Optional[str] = typer.Option(None, "--comments", "-c", help="Comments"),
     date: Optional[str] = typer.Option(None, "--date", help="Date (YYYY-MM-DD)"),
+    exchange_rate: Optional[float] = typer.Option(None, "--exchange-rate", help="Exchange rate"),
     raw: bool = typer.Option(False, "--raw", help="Output raw JSON"),
 ):
-    """Update a transfer."""
+    """Update a transfer.
+
+    Passing --exchange-rate on its own re-rates the transfer without touching its currency,
+    and without consulting the live rate provider. Passing --currency without --exchange-rate
+    re-resolves the rate from the provider instead, overwriting any hand-set rate.
+    """
     base_url, token = get_config_for_api()
 
     try:
@@ -451,11 +460,13 @@ def update_transfer(
         req = TransactionRequest(
             account_id=from_account_id,
             to_account_id=to_account_id,
-            amount=amount,
+            original_amount=amount,
             transaction_type="3",
             name=name,
             comments=comments,
-            date=txn_date
+            date=txn_date,
+            original_currency=currency,
+            exchange_rate=exchange_rate
         )
 
         with spinner(f"Updating transfer {id}..."):

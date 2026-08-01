@@ -103,6 +103,25 @@ public class TransactionValidationService {
         }
     }
 
+    /**
+     * Validates an exchange rate that has already been resolved, immediately before it is
+     * written onto a transaction.
+     *
+     * <p>{@code transactions.amount} is a generated column defined as
+     * {@code original_amount * exchange_rate}, so a null, non-positive or non-finite rate does not
+     * fail on its own — it silently produces a nonsense base-currency amount that is then hard to
+     * trace back. Fail at the write boundary instead.
+     */
+    public void validateResolvedExchangeRate(Double exchangeRate, String currency) {
+        if (exchangeRate == null) {
+            throw new BadRequestException("Could not resolve an exchange rate for " + currency);
+        }
+        if (!Double.isFinite(exchangeRate) || exchangeRate <= 0) {
+            throw new BadRequestException(
+                    "Exchange rate for " + currency + " must be a positive, finite number but was " + exchangeRate);
+        }
+    }
+
     // ==================== Update Validators ====================
 
     /**
