@@ -80,8 +80,11 @@ public class TransactionIntegrationTest extends BaseIntegrationTest {
         testCategory.setUserId(testUser.getId());
         testCategory = categoryRepository.save(testCategory);
 
-        // Mock exchange rate service to return predictable live rates
-        ExchangeRateApiResponse mockResponse = new ExchangeRateApiResponse("INR", Map.of("GBP", 1.2, "USD", 80.0));
+        // Mock exchange rate service to return predictable live rates.
+        // The provider quotes target-per-base, so an INR-based response carries GBP-per-INR and
+        // USD-per-INR. Intent is 1 GBP = 1.2 INR and 1 USD = 80 INR — the reciprocals of these.
+        ExchangeRateApiResponse mockResponse =
+                new ExchangeRateApiResponse("INR", Map.of("GBP", 1.0 / 1.2, "USD", 1.0 / 80.0));
         when(exchangeRateService.getRates(anyString())).thenReturn(mockResponse);
     }
 

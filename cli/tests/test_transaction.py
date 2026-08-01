@@ -88,6 +88,28 @@ def test_transaction_add_transfer_success(runner, transfer_target_account):
     assert "transfer" in result.stdout.lower()
 
 
+def test_transaction_add_transfer_honors_explicit_exchange_rate(runner, transfer_target_account):
+    """An explicit --exchange-rate is stored verbatim instead of a live provider quote.
+
+    Mirrors a remittance booked at a contracted rate: without the flag the backend falls back
+    to the live mid-market quote, which will not match what the transfer actually settled at.
+    """
+    result = runner.invoke(app, [
+        "transaction", "add-transfer",
+        "--from-account-name", "Cash",
+        "--to-account-name", transfer_target_account,
+        "--amount", "3000.0",
+        "--name", "Instarem",
+        "--currency", "EUR",
+        "--exchange-rate", "109.78",
+        "--raw",
+    ])
+    assert result.exit_code == 0
+    match = re.search(r'"exchangeRate"\s*:\s*([\d.]+)', result.output)
+    assert match, f"exchangeRate not found in output:\n{result.output}"
+    assert float(match.group(1)) == pytest.approx(109.78)
+
+
 # ---------------------------------------------------------------------------
 # get
 # ---------------------------------------------------------------------------
@@ -138,6 +160,41 @@ def test_transaction_update_transfer(runner, created_transfer):
     ])
     assert result.exit_code == 0
     assert "updated" in result.stdout.lower()
+
+
+def test_transaction_update_transfer_re_rates_without_touching_currency(runner, created_transfer):
+    """--exchange-rate alone re-rates an existing transfer to the given value.
+
+    This is the repair path for transfers written with a wrong rate: omitting --currency
+    keeps the backend off the live provider, so the supplied rate is stored verbatim.
+    """
+    result = runner.invoke(app, [
+        "transaction", "update-transfer", str(created_transfer),
+        "--exchange-rate", "109.78",
+        "--raw",
+    ])
+    assert result.exit_code == 0
+    match = re.search(r'"exchangeRate"\s*:\s*([\d.]+)', result.output)
+    assert match, f"exchangeRate not found in output:\n{result.output}"
+    assert float(match.group(1)) == pytest.approx(109.78)
+
+
+def test_transaction_update_transfer_applies_amount(runner, created_transfer):
+    """--amount actually changes the stored amount.
+
+    Regression test: the request was previously built with an `amount=` keyword, which is not
+    a field on the SDK model and was silently dropped, so the command reported success while
+    changing nothing.
+    """
+    result = runner.invoke(app, [
+        "transaction", "update-transfer", str(created_transfer),
+        "--amount", "500.0",
+        "--raw",
+    ])
+    assert result.exit_code == 0
+    match = re.search(r'"originalAmount"\s*:\s*([\d.]+)', result.output)
+    assert match, f"originalAmount not found in output:\n{result.output}"
+    assert float(match.group(1)) == pytest.approx(500.0)
 
 
 # ---------------------------------------------------------------------------

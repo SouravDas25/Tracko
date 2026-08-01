@@ -90,6 +90,7 @@ public class TransactionWriteService {
                 request.getSourceAccountId(), request.toAccountId());
 
         Double exchangeRate = currencyService.resolveExchangeRate(userId, request.originalCurrency(), request.exchangeRate());
+        validationService.validateResolvedExchangeRate(exchangeRate, request.originalCurrency());
 
         // Delegate to internal transfer creation
         TransferResult result = transferService.createTransfer(
@@ -181,6 +182,7 @@ public class TransactionWriteService {
                 rate = existing.getExchangeRate();
             }
         }
+        validationService.validateResolvedExchangeRate(rate, currency);
 
         TransferResult result = transferService.updateTransfer(
                 userId,
